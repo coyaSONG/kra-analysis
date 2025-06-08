@@ -16,27 +16,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **requirements.txt**: Python 패키지 의존성
 
 #### 2. API 관련
-- **KRA_PUBLIC_API_GUIDE.md**: KRA 공식 API 가이드
+- **KRA_PUBLIC_API_GUIDE.md**: KRA 공식 API 가이드 (5개 API)
 - **examples/**: API 응답 예시 파일들
-  - `api12_response.json/xml`: 경주 상세 정보 (API12_1)
   - `api214_response.json/xml`: 출전 정보 (API214_1)  
   - `api299_response.json/xml`: 경주 결과 (API299)
+  - 추가 API: API8_2(말), API12_1(기수), API19_1(조교사)
 
 #### 3. 핵심 스크립트 (/scripts)
 - **evaluate_prompt.py**: 프롬프트 평가 메인 스크립트
 - **recursive_prompt_improvement.py**: 재귀 개선 프로세스 자동화
 - **analyze_and_improve_prompt.py**: 평가 결과 분석 및 개선안 도출
 - **evaluate_prompt_debug.py**: 디버그용 평가 스크립트
-- **compare_success_fail_data.py**: 성공/실패 경주 데이터 비교 분석
-- **find_problematic_chars.py**: 특수문자 문제 분석
 - **evaluate_all_races.py**: 전체 경주 평가 스크립트
+
+#### 3-1. 데이터 수집 (/scripts/race_collector)
+- **collect_and_preprocess.js**: API214_1 데이터 수집 및 전처리
+- **api_clients.js**: API8_2, API12_1, API19_1 클라이언트 및 캐싱
+- **enrich_race_data.js**: 데이터 보강 (말/기수/조교사 상세정보 추가)
+- **smart_preprocess_races.py**: 스마트 전처리 (완료된 경주만)
 
 #### 4. 프롬프트 템플릿 (/prompts)
 - **v2.0 ~ v9.0**: 각 버전별 프롬프트 템플릿
 - **최종 권장**: `prediction-template-v9.0-final.md`
 
 #### 5. 데이터 (/data)
-- **raw/results/2025/**: 2025년 경주 결과 데이터 (절대 삭제 금지)
+- **races/**: 전처리된 경주 데이터 (YYYY/MM/DD/venue 구조)
+  - `*_prerace.json`: 기본 전처리 데이터
+  - `*_enriched.json`: 상세정보 보강 데이터
+- **cache/**: API 캐시 (horses/, jockeys/, trainers/)
 - **prompt_evaluation/**: 각 프롬프트 버전별 평가 결과
 - **full_evaluation/**: 전체 데이터셋 평가 결과
 
@@ -46,6 +53,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **prompt-improvement-analysis.md**: 경마 예측 특화 개선 분석
 - **api-analysis.md**: KRA API 상세 분석
 - **data-structure.md**: 데이터 구조 설명
+- **data-enrichment-system.md**: 데이터 보강 시스템 설명
+- **enriched-data-structure.md**: 보강된 데이터 구조 상세
 - **claude-code-prompt-best-practices.md**: Claude Code 효과적 사용법
 
 ## 재귀 개선 프로세스 요약
@@ -92,10 +101,25 @@ python3 scripts/evaluate_prompt_debug.py [프롬프트파일] [경주파일]
 python3 scripts/evaluate_all_races.py [프롬프트파일] [버전명]
 ```
 
-### 데이터 전처리
+### 데이터 수집 및 전처리
+
+#### 기본 데이터 수집
+```bash
+# API214_1로 경주 데이터 수집
+node scripts/race_collector/collect_and_preprocess.js 20250608 1
+```
+
+#### 데이터 보강
+```bash
+# 말/기수/조교사 상세정보 추가
+node scripts/race_collector/enrich_race_data.js 20250608 1
+```
+
+#### 전처리 규칙
 - win_odds가 0인 말은 기권/제외이므로 반드시 제거
-- 결과 필드(result, ord, rc_time) 제거 후 예측
-- 예측 시에는 win_odds와 plc_odds는 유지
+- 결과 필드(ord, rcTime) 0으로 초기화
+- 배당률(winOdds, plcOdds)은 유지
+- 보강 데이터는 `_enriched.json`으로 저장
 
 ### Python 실행
 - 항상 `python3` 명령어 사용
@@ -105,13 +129,16 @@ python3 scripts/evaluate_all_races.py [프롬프트파일] [버전명]
 
 ### 절대 삭제 금지
 1. **.env 파일** - 환경 변수
-2. **/data/raw/results/** - 모든 경주 원본 데이터
-3. **KRA_PUBLIC_API_GUIDE.md** - API 공식 문서
+2. **/data/races/** - 모든 경주 데이터
+3. **/data/cache/** - API 캐시 (성능 중요)
+4. **KRA_PUBLIC_API_GUIDE.md** - API 공식 문서
 
 ### 파일 관리
 - 새로운 분석은 docs/ 폴더에 문서화
 - 프롬프트는 버전 번호와 함께 prompts/ 폴더에 저장
 - 평가 결과는 data/prompt_evaluation/에 자동 저장
+- 경주 데이터는 data/races/YYYY/MM/DD/venue/ 구조로 저장
+- API 캐시는 data/cache/에 7일간 보관
 
 ## Current Status
 
@@ -120,10 +147,14 @@ python3 scripts/evaluate_all_races.py [프롬프트파일] [버전명]
 - 최적 프롬프트 도출 및 검증
 - Execution Error 원인 파악 및 해결
 - 전체 프로세스 문서화
-- 불필요한 파일 정리 완료
+- 데이터 수집/전처리 시스템 구축
+- 데이터 보강 시스템 구현 (API8_2, API12_1, API19_1)
+- 캐싱 시스템 구현 (7일 유효)
 
 ### 향후 개선 방향
-1. 남은 18% Execution Error 추가 분석
-2. 앙상블 전략 도입 검토
-3. 실시간 배당률 변화 반영
-4. 기계학습 모델과의 하이브리드 접근
+1. 보강된 데이터를 활용한 프롬프트 개선
+2. 혈통/성적 정보 활용 전략 개발
+3. 남은 18% Execution Error 추가 분석
+4. 앙상블 전략 도입 검토
+5. 실시간 배당률 변화 반영
+6. 기계학습 모델과의 하이브리드 접근
