@@ -57,6 +57,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **enriched-data-structure.md**: 보강된 데이터 구조 상세
 - **claude-code-prompt-best-practices.md**: Claude Code 효과적 사용법
 
+#### 7. 작업 관리 (/tasks)
+- **todo.md**: 프로젝트 작업 관리 (모든 작업 기록 필수)
+
 ## 재귀 개선 프로세스 요약
 
 ### 핵심 발견사항
@@ -82,6 +85,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 오류율: 50% → 18%
 
 ## 개발 가이드라인
+
+### 작업 관리 (중요!)
+1. **모든 신규 작업은 tasks/todo.md에 먼저 기록**
+   - 작업 시작 전 todo.md 확인 및 업데이트
+   - 진행 상황을 실시간으로 반영
+   - 완료된 작업은 날짜와 함께 완료 섹션으로 이동
+2. **작업 단위가 명확할 때마다 todo.md 활용**
+   - 데이터 수집, API 개발, 문서화, 버그 수정 등
+   - 구체적이고 측정 가능한 목표로 작성
+   - 관련 파일이나 커밋은 링크로 연결
 
 ### 프롬프트 개발 시
 1. 구체적인 JSON 예시를 반드시 포함

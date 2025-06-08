@@ -38,7 +38,7 @@ async function enrichRaceData(inputPath) {
             if (detail) {
                 horse.hrDetail = detail;
             }
-            await delay(500); // API 호출 제한 방지
+            await delay(1000); // 말 정보 API는 1초 딜레이
         }
         
         // 기수 정보 수집
@@ -49,7 +49,7 @@ async function enrichRaceData(inputPath) {
             if (detail) {
                 jockeyDetails[jkNo] = detail;
             }
-            await delay(500);
+            await delay(800); // 기수 정보 API는 0.8초 딜레이
         }
         
         // 조교사 정보 수집
@@ -60,7 +60,7 @@ async function enrichRaceData(inputPath) {
             if (detail) {
                 trainerDetails[trNo] = detail;
             }
-            await delay(500);
+            await delay(800); // 조교사 정보 API는 0.8초 딜레이
         }
         
         // 기수/조교사 정보를 각 말에 추가
@@ -123,10 +123,19 @@ async function enrichDayRaces(dateStr, meet = '1') {
         console.log(`총 ${preraceFiles.length}개 경주 발견`);
         
         const results = [];
-        for (const file of preraceFiles) {
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+        
+        for (let i = 0; i < preraceFiles.length; i++) {
+            const file = preraceFiles[i];
             const filePath = path.join(raceDir, file);
             const result = await enrichRaceData(filePath);
             results.push({ file, ...result });
+            
+            // 마지막 경주가 아니면 경주 간 추가 딜레이
+            if (i < preraceFiles.length - 1) {
+                console.log('\n⏱️ 다음 경주 처리까지 3초 대기...\n');
+                await delay(3000);
+            }
         }
         
         // 전체 통계

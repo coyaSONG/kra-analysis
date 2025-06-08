@@ -1,0 +1,20 @@
+{
+  "faHrName": "한센",
+  "faHrNo": "0032990",
+  "moHrName": "윌링미스",
+  "moHrNo": "0028966",
+  "rcCntT": 8,
+  "ord1CntT": 3,
+  "ord2CntT": 2,
+  "ord3CntT": 2,
+  "rcCntY": 8,
+  "ord1CntY": 3,
+  "ord2CntY": 2,
+  "ord3CntY": 2,
+  "chaksunT": 149850000,
+  "rating": 0,
+  "hrLastAmt": "자가생산",
+  "winRateT": "37.5",
+  "plcRateT": "62.5",
+  "winRateY": "37.5"
+}

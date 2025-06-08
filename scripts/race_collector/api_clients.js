@@ -7,6 +7,36 @@ const API_KEY = process.env.KRA_SERVICE_KEY;
 const CACHE_DIR = 'data/cache';
 const CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7일
 
+// 재시도 로직을 위한 헬퍼 함수
+async function fetchWithRetry(url, maxRetries = 3, initialDelay = 1000) {
+    let lastError;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const response = await fetch(url);
+            
+            // 429 오류 (Too Many Requests) 체크
+            if (response.status === 429) {
+                const retryDelay = initialDelay * Math.pow(2, attempt);
+                console.log(`  ⚠️ API 제한 도달. ${retryDelay}ms 후 재시도... (시도 ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                continue;
+            }
+            
+            return response;
+        } catch (error) {
+            lastError = error;
+            if (attempt < maxRetries - 1) {
+                const retryDelay = initialDelay * Math.pow(2, attempt);
+                console.log(`  ⚠️ 요청 실패. ${retryDelay}ms 후 재시도... (시도 ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+            }
+        }
+    }
+    
+    throw lastError;
+}
+
 // 캐시 디렉토리 생성
 async function ensureCacheDir() {
     await fs.mkdir(CACHE_DIR, { recursive: true });
@@ -52,7 +82,7 @@ async function getHorseDetail(hrNo, hrName) {
     
     try {
         console.log(`  🔍 API 호출: 말 ${hrName} (${hrNo})`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url, 3, 1000);
         const data = await response.json();
         
         if (data.response.header.resultCode === '00' && data.response.body.items) {
@@ -111,7 +141,7 @@ async function getJockeyDetail(jkNo, jkName) {
     
     try {
         console.log(`  🔍 API 호출: 기수 ${jkName} (${jkNo})`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url, 3, 800);
         const data = await response.json();
         
         if (data.response.header.resultCode === '00' && data.response.body.items) {
@@ -165,7 +195,7 @@ async function getTrainerDetail(trNo, trName) {
     
     try {
         console.log(`  🔍 API 호출: 조교사 ${trName} (${trNo})`);
-        const response = await fetch(url);
+        const response = await fetchWithRetry(url, 3, 800);
         const data = await response.json();
         
         if (data.response.header.resultCode === '00' && data.response.body.items) {

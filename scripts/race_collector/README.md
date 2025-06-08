@@ -22,13 +22,20 @@
 - 기본 데이터에 말/기수/조교사 상세 정보 추가
 - 혈통, 성적 통계, 승률 등 추가
 - enriched 파일로 별도 저장
+- 재시도 로직으로 API 제한 대응
 
-### 4. `smart_preprocess_races.py`
+### 4. `retry_failed_enrichment.js` (NEW)
+실패한 데이터 재수집 스크립트
+- 누락된 정보만 선택적 재처리
+- 캐시 활용으로 효율적 재시도
+- 더 긴 딜레이로 안정성 확보
+
+### 5. `smart_preprocess_races.py`
 스마트 전처리 스크립트
 - 경주 상태 자동 판단
 - 완료된 경주만 전처리
 
-### 5. `preprocess_race_data_v2.py`
+### 6. `preprocess_race_data_v2.py`
 전처리 핵심 로직
 - 경주 결과 필드 초기화
 - 기권/제외 말 필터링
@@ -51,6 +58,15 @@ node enrich_race_data.js data/races/2025/06/20250608/seoul/race_1_20250608_1_pre
 
 # 날짜별 전체 보강
 node enrich_race_data.js 20250608 1
+```
+
+### 3단계: 실패한 데이터 재수집 (필요시)
+```bash
+# 단일 파일 재시도
+node retry_failed_enrichment.js data/races/2025/06/20250608/seoul/race_1_20250608_7_enriched.json
+
+# 날짜별 전체 재시도
+node retry_failed_enrichment.js 20250608 1
 ```
 
 ## 📊 데이터 구조
@@ -109,9 +125,16 @@ node enrich_race_data.js 20250608 1
 
 ## ⚡ 성능 최적화
 
-- API 호출 간 500ms 딜레이로 제한 회피
+### API 딜레이 전략
+- 말 정보: 1000ms (가장 많은 호출)
+- 기수/조교사 정보: 800ms
+- 경주 간 추가 딜레이: 3000ms
+- 재시도 시 지수 백오프 적용
+
+### 효율성 개선
 - 캐시 활용으로 중복 호출 최소화
-- 고유 기수/조교사만 조회하여 효율성 향상
+- 고유 기수/조교사만 조회
+- 재시도 로직으로 실패 최소화
 
 ## 📝 주의사항
 
