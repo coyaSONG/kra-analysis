@@ -1,0 +1,35 @@
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "items": {
+        "item": {
+          "age": 43,
+          "birthday": 19820212,
+          "debut": 20050504,
+          "jkName": "김용근",
+          "jkNo": "080405",
+          "meet": "서울",
+          "ord1CntT": 968,
+          "ord1CntY": 59,
+          "ord2CntT": 791,
+          "ord2CntY": 48,
+          "ord3CntT": 685,
+          "ord3CntY": 40,
+          "part": "프리기수",
+          "rcCntT": 6254,
+          "rcCntY": 415,
+          "spDate": "-",
+          "wgOther": 51,
+          "wgPart": 51
+        }
+      },
+      "numOfRows": 5,
+      "pageNo": 1,
+      "totalCount": 1
+    }
+  }
+}

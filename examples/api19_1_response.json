@@ -1,0 +1,38 @@
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "items": {
+        "item": {
+          "age": "-",
+          "birthday": "-",
+          "meet": "부산경남",
+          "ord1CntT": 323,
+          "ord1CntY": 16,
+          "ord2CntT": 333,
+          "ord2CntY": 30,
+          "ord3CntT": 308,
+          "ord3CntY": 38,
+          "part": 15,
+          "plcRateT": 35,
+          "plcRateY": 32,
+          "qnlRateT": 24,
+          "qnlRateY": 18,
+          "rcCntT": 2684,
+          "rcCntY": 256,
+          "stDate": 20140601,
+          "trName": "안우성",
+          "trNo": "070180",
+          "winRateT": 12,
+          "winRateY": 6
+        }
+      },
+      "numOfRows": 10,
+      "pageNo": 1,
+      "totalCount": 1
+    }
+  }
+}

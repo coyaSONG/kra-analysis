@@ -1,0 +1,52 @@
+{
+  "prompt_version": "v2.0",
+  "test_date": "20250607_191451",
+  "total_races": 3,
+  "successful_predictions": 0,
+  "success_rate": 0.0,
+  "average_correct_horses": 0.6666666666666666,
+  "total_correct_horses": 2,
+  "detailed_results": [
+    {
+      "race_id": "race_1_20250503_1",
+      "predicted": [
+        3,
+        7,
+        8
+      ],
+      "actual": [
+        3,
+        7,
+        1
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 65,
+      "reasoning": "외국인 기수(씨씨웡), 우수 조교사(홍대유), 안정적 기수(유승완) 중심 선택. 모든 말이 신마급으로 기수/조교사 능력이 결정적",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 1,
+            "hr_name": "더블나인",
+            "popularity_rank": 1,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "레이저런",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "race_info": {
+    "meet": "서울",
+    "meet_code": "1",
+    "race_date": "20250511",
+    "race_no": 11,
+    "race_name": "일반",
+    "distance": 1600,
+    "track": "포화 (16%)",
+    "weather": "맑음",
+    "race_time": 99.9,
+    "age_condition": "연령오픈",
+    "prize_condition": "R60~80",
+    "collected_at": "2025-06-07T09:09:59.742Z",
+    "is_post_race": true
+  },
+  "horses": [
+    {
+      "chul_no": 2,
+      "hr_no": "0045229",
+      "hr_name": "새내타운",
+      "age": 5,
+      "sex": "수",
+      "weight": "490(-10)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080603",
+        "jk_name": "김태희"
+      },
+      "trainer": {
+        "tr_no": "070160",
+        "tr_name": "서홍수"
+      },
+      "owner": "문종원",
+      "rank": "2등급",
+      "rating": 74,
+      "win_odds": 5.9,
+      "plc_odds": 1.8,
+      "result": {
+        "ord": 1,
+        "rc_time": 99.9,
+        "win_odds": 5.9,
+        "plc_odds": 1.8
+      }
+    },
+    {
+      "chul_no": 3,
+      "hr_no": "0050162",
+      "hr_name": "드론킬러",
+      "age": 4,
+      "sex": "거",
+      "weight": "501(+1)",
+      "burden_weight": 52,
+      "jockey": {
+        "jk_no": "080366",
+        "jk_name": "문세영"
+      },
+      "trainer": {
+        "tr_no": "070164",
+        "tr_name": "박재우"
+      },
+      "owner": "이관형",
+      "rank": "2등급",
+      "rating": 67,
+      "win_odds": 3.2,
+      "plc_odds": 1.5,
+      "result": {
+        "ord": 2,
+        "rc_time": 100,
+        "win_odds": 3.2,
+        "plc_odds": 1.5
+      }
+    },
+    {
+      "chul_no": 8,
+      "hr_no": "0047080",
+      "hr_name": "섀도헌터",
+      "age": 4,
+      "sex": "수",
+      "weight": "456(-3)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080476",
+        "jk_name": "장추열"
+      },
+      "trainer": {
+        "tr_no": "070225",
+        "tr_name": "문병기"
+      },
+      "owner": "윤우환",
+      "rank": "2등급",
+      "rating": 76,
+      "win_odds": 3.2,
+      "plc_odds": 1.3,
+      "result": {
+        "ord": 3,
+        "rc_time": 100.9,
+        "win_odds": 3.2,
+        "plc_odds": 1.3
+      }
+    },
+    {
+      "chul_no": 5,
+      "hr_no": "0054026",
+      "hr_name": "이스트점프",
+      "age": 4,
+      "sex": "암",
+      "weight": "525(-3)",
+      "burden_weight": 52,
+      "jockey": {
+        "jk_no": "080582",
+        "jk_name": "빅투아르"
+      },
+      "trainer": {
+        "tr_no": "070165",
+        "tr_name": "서인석"
+      },
+      "owner": "김영구",
+      "rank": "2등급",
+      "rating": 72,
+      "win_odds": 5.6,
+      "plc_odds": 1.9,
+      "result": {
+        "ord": 4,
+        "rc_time": 101,
+        "win_odds": 5.6,
+        "plc_odds": 1.9
+      }
+    },
+    {
+      "chul_no": 10,
+      "hr_no": "0045611",
+      "hr_name": "베트캡틴",
+      "age": 5,
+      "sex": "수",
+      "weight": "503(+1)",
+      "burden_weight": 52,
+      "jockey": {
+        "jk_no": "080473",
+        "jk_name": "김정준"
+      },
+      "trainer": {
+        "tr_no": "070179",
+        "tr_name": "송문길"
+      },
+      "owner": "박정재",
+      "rank": "2등급",
+      "rating": 68,
+      "win_odds": 23.7,
+      "plc_odds": 5.4,
+      "result": {
+        "ord": 5,
+        "rc_time": 101.4,
+        "win_odds": 23.7,
+        "plc_odds": 5.4
+      }
+    },
+    {
+      "chul_no": 9,
+      "hr_no": "0043477",
+      "hr_name": "매직그레이스",
+      "age": 6,
+      "sex": "암",
+      "weight": "469(-1)",
+      "burden_weight": 52,
+      "jockey": {
+        "jk_no": "080578",
+        "jk_name": "김효정"
+      },
+      "trainer": {
+        "tr_no": "070265",
+        "tr_name": "토니"
+      },
+      "owner": "최상일",
+      "rank": "2등급",
+      "rating": 68,
+      "win_odds": 12.6,
+      "plc_odds": 2.7,
+      "result": {
+        "ord": 6,
+        "rc_time": 101.8,
+        "win_odds": 12.6,
+        "plc_odds": 2.7
+      }
+    },
+    {
+      "chul_no": 6,
+      "hr_no": "0045981",
+      "hr_name": "드림플레이",
+      "age": 5,
+      "sex": "수",
+      "weight": "488(-8)",
+      "burden_weight": 52,
+      "jockey": {
+        "jk_no": "080550",
+        "jk_name": "조재로"
+      },
+      "trainer": {
+        "tr_no": "070177",
+        "tr_name": "김동철"
+      },
+      "owner": "조현영",
+      "rank": "2등급",
+      "rating": 61,
+      "win_odds": 33.7,
+      "plc_odds": 6.5,
+      "result": {
+        "ord": 7,
+        "rc_time": 102.3,
+        "win_odds": 33.7,
+        "plc_odds": 6.5
+      }
+    },
+    {
+      "chul_no": 4,
+      "hr_no": "0038052",
+      "hr_name": "서울탱크",
+      "age": 11,
+      "sex": "거",
+      "weight": "463(-1)",
+      "burden_weight": 54,
+      "jockey": {
+        "jk_no": "080608",
+        "jk_name": "오수철"
+      },
+      "trainer": {
+        "tr_no": "070247",
+        "tr_name": "이동국"
+      },
+      "owner": "조병해",
+      "rank": "2등급",
+      "rating": 72,
+      "win_odds": 57.9,
+      "plc_odds": 12.2,
+      "result": {
+        "ord": 8,
+        "rc_time": 103.4,
+        "win_odds": 57.9,
+        "plc_odds": 12.2
+      }
+    },
+    {
+      "chul_no": 1,
+      "hr_no": "0044813",
+      "hr_name": "원더풀키티",
+      "age": 6,
+      "sex": "암",
+      "weight": "499(-7)",
+      "burden_weight": 53,
+      "jockey": {
+        "jk_no": "080103",
+        "jk_name": "박태종"
+      },
+      "trainer": {
+        "tr_no": "070165",
+        "tr_name": "서인석"
+      },
+      "owner": "(주)녹원목장",
+      "rank": "2등급",
+      "rating": 74,
+      "win_odds": 24.4,
+      "plc_odds": 5.8,
+      "result": {
+        "ord": 9,
+        "rc_time": 103.6,
+        "win_odds": 24.4,
+        "plc_odds": 5.8
+      }
+    },
+    {
+      "chul_no": 7,
+      "hr_no": "0045903",
+      "hr_name": "미스터퀄리티",
+      "age": 5,
+      "sex": "거",
+      "weight": "476(+2)",
+      "burden_weight": 51,
+      "jockey": {
+        "jk_no": "080515",
+        "jk_name": "조한별"
+      },
+      "trainer": {
+        "tr_no": "070146",
+        "tr_name": "안병기"
+      },
+      "owner": "김용래",
+      "rank": "2등급",
+      "rating": 66,
+      "win_odds": 14.5,
+      "plc_odds": 3.5,
+      "result": {
+        "ord": 10,
+        "rc_time": 106.6,
+        "win_odds": 14.5,
+        "plc_odds": 3.5
+      }
+    }
+  ]
+}

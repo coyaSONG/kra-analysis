@@ -1,0 +1,411 @@
+{
+  "race_info": {
+    "meet": "부경",
+    "meet_code": "3",
+    "race_date": "20250601",
+    "race_no": 6,
+    "race_name": "KNN배(G3)",
+    "distance": 1600,
+    "track": "건조 (2%)",
+    "weather": "맑음",
+    "race_time": 98.6,
+    "age_condition": "3세이상",
+    "prize_condition": "R0~140",
+    "collected_at": "2025-06-07T09:13:50.743Z",
+    "is_post_race": true
+  },
+  "horses": [
+    {
+      "chul_no": 6,
+      "hr_no": "0046086",
+      "hr_name": "[서울]라온포레스트",
+      "age": 5,
+      "sex": "암",
+      "weight": "476(+1)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080361",
+        "jk_name": "최범현"
+      },
+      "trainer": {
+        "tr_no": "070095",
+        "tr_name": "박종곤"
+      },
+      "owner": "라온랜드(주)",
+      "rank": "혼OPEN",
+      "rating": 102,
+      "win_odds": 13.8,
+      "plc_odds": 2.4,
+      "result": {
+        "ord": 1,
+        "rc_time": 98.6,
+        "win_odds": 13.8,
+        "plc_odds": 2.4
+      }
+    },
+    {
+      "chul_no": 11,
+      "hr_no": 1411343,
+      "hr_name": "뱅뱅뱅",
+      "age": 4,
+      "sex": "암",
+      "weight": "473(+12)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080456",
+        "jk_name": "김혜선"
+      },
+      "trainer": {
+        "tr_no": "070251",
+        "tr_name": "임성실"
+      },
+      "owner": "혼디",
+      "rank": "혼OPEN",
+      "rating": 73,
+      "win_odds": 22.4,
+      "plc_odds": 3.8,
+      "result": {
+        "ord": 2,
+        "rc_time": 98.7,
+        "win_odds": 22.4,
+        "plc_odds": 3.8
+      }
+    },
+    {
+      "chul_no": 7,
+      "hr_no": "0045717",
+      "hr_name": "[서울]원더풀슬루",
+      "age": 5,
+      "sex": "암",
+      "weight": "474(-2)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080366",
+        "jk_name": "문세영"
+      },
+      "trainer": {
+        "tr_no": "070244",
+        "tr_name": "리카디"
+      },
+      "owner": "(주)녹원목장",
+      "rank": "혼OPEN",
+      "rating": 108,
+      "win_odds": 3.7,
+      "plc_odds": 1.2,
+      "result": {
+        "ord": 3,
+        "rc_time": 98.8,
+        "win_odds": 3.7,
+        "plc_odds": 1.2
+      }
+    },
+    {
+      "chul_no": 14,
+      "hr_no": "0050004",
+      "hr_name": "[서울]글라디우스",
+      "age": 4,
+      "sex": "암",
+      "weight": "479(-9)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080405",
+        "jk_name": "김용근"
+      },
+      "trainer": {
+        "tr_no": "070174",
+        "tr_name": "강성오"
+      },
+      "owner": "김기종",
+      "rank": "혼OPEN",
+      "rating": 100,
+      "win_odds": 10,
+      "plc_odds": 2.2,
+      "result": {
+        "ord": 4,
+        "rc_time": 98.9,
+        "win_odds": 10,
+        "plc_odds": 2.2
+      }
+    },
+    {
+      "chul_no": 9,
+      "hr_no": "0045245",
+      "hr_name": "즐거운여정",
+      "age": 5,
+      "sex": "암",
+      "weight": "493(+8)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080484",
+        "jk_name": "서승운"
+      },
+      "trainer": {
+        "tr_no": "070123",
+        "tr_name": "김영관"
+      },
+      "owner": "(주)나스카",
+      "rank": "혼OPEN",
+      "rating": 109,
+      "win_odds": 1.6,
+      "plc_odds": 1,
+      "result": {
+        "ord": 5,
+        "rc_time": 99.2,
+        "win_odds": 1.6,
+        "plc_odds": 1
+      }
+    },
+    {
+      "chul_no": 13,
+      "hr_no": "0046006",
+      "hr_name": "레이디베이더",
+      "age": 5,
+      "sex": "암",
+      "weight": "477(+12)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080551",
+        "jk_name": "진겸"
+      },
+      "trainer": {
+        "tr_no": "070123",
+        "tr_name": "김영관"
+      },
+      "owner": "이일형",
+      "rank": "혼OPEN",
+      "rating": 70,
+      "win_odds": 50,
+      "plc_odds": 7.5,
+      "result": {
+        "ord": 6,
+        "rc_time": 99.2,
+        "win_odds": 50,
+        "plc_odds": 7.5
+      }
+    },
+    {
+      "chul_no": 8,
+      "hr_no": "0044544",
+      "hr_name": "[서울]베스트토치",
+      "age": 6,
+      "sex": "암",
+      "weight": "503(-4)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080617",
+        "jk_name": "코지"
+      },
+      "trainer": {
+        "tr_no": "070181",
+        "tr_name": "이관호"
+      },
+      "owner": "베스트샤인조합",
+      "rank": "혼OPEN",
+      "rating": 77,
+      "win_odds": 129.8,
+      "plc_odds": 17.5,
+      "result": {
+        "ord": 7,
+        "rc_time": 99.6,
+        "win_odds": 129.8,
+        "plc_odds": 17.5
+      }
+    },
+    {
+      "chul_no": 10,
+      "hr_no": "0050241",
+      "hr_name": "[서울]플라잉스타",
+      "age": 4,
+      "sex": "암",
+      "weight": "513(-5)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080417",
+        "jk_name": "유승완"
+      },
+      "trainer": {
+        "tr_no": "070165",
+        "tr_name": "서인석"
+      },
+      "owner": "송창오",
+      "rank": "혼OPEN",
+      "rating": 87,
+      "win_odds": 24.8,
+      "plc_odds": 4,
+      "result": {
+        "ord": 8,
+        "rc_time": 99.7,
+        "win_odds": 24.8,
+        "plc_odds": 4
+      }
+    },
+    {
+      "chul_no": 3,
+      "hr_no": "0054026",
+      "hr_name": "[서울]이스트점프",
+      "age": 4,
+      "sex": "암",
+      "weight": "532(+7)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080512",
+        "jk_name": "김태훈"
+      },
+      "trainer": {
+        "tr_no": "070165",
+        "tr_name": "서인석"
+      },
+      "owner": "김영구",
+      "rank": "혼OPEN",
+      "rating": 72,
+      "win_odds": 147.4,
+      "plc_odds": 17.8,
+      "result": {
+        "ord": 9,
+        "rc_time": 99.8,
+        "win_odds": 147.4,
+        "plc_odds": 17.8
+      }
+    },
+    {
+      "chul_no": 12,
+      "hr_no": "0052001",
+      "hr_name": "[서울]마이티룩",
+      "age": 5,
+      "sex": "암",
+      "weight": "464(-3)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080611",
+        "jk_name": "푸르칸"
+      },
+      "trainer": {
+        "tr_no": "070248",
+        "tr_name": "함완식"
+      },
+      "owner": "조제형",
+      "rank": "혼OPEN",
+      "rating": 89,
+      "win_odds": 122.5,
+      "plc_odds": 20.6,
+      "result": {
+        "ord": 10,
+        "rc_time": 101.1,
+        "win_odds": 122.5,
+        "plc_odds": 20.6
+      }
+    },
+    {
+      "chul_no": 4,
+      "hr_no": "0047081",
+      "hr_name": "[서울]블루레몬",
+      "age": 4,
+      "sex": "암",
+      "weight": "455(-7)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080562",
+        "jk_name": "이동하"
+      },
+      "trainer": {
+        "tr_no": "070225",
+        "tr_name": "문병기"
+      },
+      "owner": "(주)나스카",
+      "rank": "혼OPEN",
+      "rating": 80,
+      "win_odds": 55.3,
+      "plc_odds": 5.8,
+      "result": {
+        "ord": 11,
+        "rc_time": 101.8,
+        "win_odds": 55.3,
+        "plc_odds": 5.8
+      }
+    },
+    {
+      "chul_no": 5,
+      "hr_no": "0045764",
+      "hr_name": "[서울]행복한문막",
+      "age": 5,
+      "sex": "암",
+      "weight": "474(-8)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080515",
+        "jk_name": "조한별"
+      },
+      "trainer": {
+        "tr_no": "070098",
+        "tr_name": "최영주"
+      },
+      "owner": "조현영",
+      "rank": "혼OPEN",
+      "rating": 72,
+      "win_odds": 219.9,
+      "plc_odds": 45.8,
+      "result": {
+        "ord": 12,
+        "rc_time": 102.1,
+        "win_odds": 219.9,
+        "plc_odds": 45.8
+      }
+    },
+    {
+      "chul_no": 2,
+      "hr_no": "0046627",
+      "hr_name": "[서울]걸작원",
+      "age": 4,
+      "sex": "암",
+      "weight": "518(-7)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080602",
+        "jk_name": "임다빈"
+      },
+      "trainer": {
+        "tr_no": "070117",
+        "tr_name": "박윤규"
+      },
+      "owner": "박덕희",
+      "rank": "혼OPEN",
+      "rating": 76,
+      "win_odds": 69.6,
+      "plc_odds": 10.8,
+      "result": {
+        "ord": 13,
+        "rc_time": 103.2,
+        "win_odds": 69.6,
+        "plc_odds": 10.8
+      }
+    },
+    {
+      "chul_no": 1,
+      "hr_no": "0051920",
+      "hr_name": "카르페바벨",
+      "age": 5,
+      "sex": "암",
+      "weight": "()",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "080600",
+        "jk_name": "모준호"
+      },
+      "trainer": {
+        "tr_no": "070249",
+        "tr_name": "문현철"
+      },
+      "owner": "김명환",
+      "rank": "혼OPEN",
+      "rating": 77,
+      "win_odds": 0,
+      "plc_odds": 0,
+      "result": {
+        "ord": 95,
+        "rc_time": 0,
+        "win_odds": 0,
+        "plc_odds": 0
+      }
+    }
+  ]
+}

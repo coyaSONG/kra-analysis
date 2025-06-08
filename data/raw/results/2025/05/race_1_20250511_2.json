@@ -1,0 +1,243 @@
+{
+  "race_info": {
+    "meet": "서울",
+    "meet_code": "1",
+    "race_date": "20250511",
+    "race_no": 2,
+    "race_name": "일반",
+    "distance": 1400,
+    "track": "포화 (19%)",
+    "weather": "흐림",
+    "race_time": 89.5,
+    "age_condition": "연령오픈",
+    "prize_condition": "R0~0",
+    "collected_at": "2025-06-07T09:09:55.670Z",
+    "is_post_race": true
+  },
+  "horses": [
+    {
+      "chul_no": 7,
+      "hr_no": "0051396",
+      "hr_name": "스위트송",
+      "age": 3,
+      "sex": "암",
+      "weight": "476(-7)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080562",
+        "jk_name": "이동하"
+      },
+      "trainer": {
+        "tr_no": "070174",
+        "tr_name": "강성오"
+      },
+      "owner": "김정철",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 4.3,
+      "plc_odds": 1.6,
+      "result": {
+        "ord": 1,
+        "rc_time": 89.5,
+        "win_odds": 4.3,
+        "plc_odds": 1.6
+      }
+    },
+    {
+      "chul_no": 6,
+      "hr_no": "0047049",
+      "hr_name": "퍼지루비",
+      "age": 4,
+      "sex": "암",
+      "weight": "471()",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080515",
+        "jk_name": "조한별"
+      },
+      "trainer": {
+        "tr_no": "070198",
+        "tr_name": "임채덕"
+      },
+      "owner": "간용기",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 6.9,
+      "plc_odds": 1.8,
+      "result": {
+        "ord": 2,
+        "rc_time": 89.8,
+        "win_odds": 6.9,
+        "plc_odds": 1.8
+      }
+    },
+    {
+      "chul_no": 2,
+      "hr_no": "0051528",
+      "hr_name": "승리바로우즈",
+      "age": 3,
+      "sex": "수",
+      "weight": "496()",
+      "burden_weight": 57,
+      "jockey": {
+        "jk_no": "080616",
+        "jk_name": "마이아"
+      },
+      "trainer": {
+        "tr_no": "070165",
+        "tr_name": "서인석"
+      },
+      "owner": "이노쿠마 히로츠구",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 2,
+      "plc_odds": 1.2,
+      "result": {
+        "ord": 3,
+        "rc_time": 90.1,
+        "win_odds": 2,
+        "plc_odds": 1.2
+      }
+    },
+    {
+      "chul_no": 4,
+      "hr_no": "0051208",
+      "hr_name": "시크릿울프",
+      "age": 3,
+      "sex": "암",
+      "weight": "475(+8)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080603",
+        "jk_name": "김태희"
+      },
+      "trainer": {
+        "tr_no": "070161",
+        "tr_name": "신삼영"
+      },
+      "owner": "(주)나스카",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 4.8,
+      "plc_odds": 1.2,
+      "result": {
+        "ord": 4,
+        "rc_time": 90.3,
+        "win_odds": 4.8,
+        "plc_odds": 1.2
+      }
+    },
+    {
+      "chul_no": 5,
+      "hr_no": "0050261",
+      "hr_name": "강철파워",
+      "age": 4,
+      "sex": "수",
+      "weight": "493(+1)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080612",
+        "jk_name": "김성현"
+      },
+      "trainer": {
+        "tr_no": "070110",
+        "tr_name": "유재길"
+      },
+      "owner": "허건호",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 31.2,
+      "plc_odds": 4.1,
+      "result": {
+        "ord": 5,
+        "rc_time": 91.1,
+        "win_odds": 31.2,
+        "plc_odds": 4.1
+      }
+    },
+    {
+      "chul_no": 1,
+      "hr_no": "0050908",
+      "hr_name": "스텝바이스텝",
+      "age": 3,
+      "sex": "암",
+      "weight": "419(-17)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080476",
+        "jk_name": "장추열"
+      },
+      "trainer": {
+        "tr_no": "070264",
+        "tr_name": "박지헌"
+      },
+      "owner": "죽마조합",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 10.4,
+      "plc_odds": 2.3,
+      "result": {
+        "ord": 6,
+        "rc_time": 92,
+        "win_odds": 10.4,
+        "plc_odds": 2.3
+      }
+    },
+    {
+      "chul_no": 3,
+      "hr_no": "0046299",
+      "hr_name": "베아트리스",
+      "age": 5,
+      "sex": "암",
+      "weight": "488(+4)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080608",
+        "jk_name": "오수철"
+      },
+      "trainer": {
+        "tr_no": "070150",
+        "tr_name": "손영표"
+      },
+      "owner": "배영한",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 32.9,
+      "plc_odds": 7.8,
+      "result": {
+        "ord": 7,
+        "rc_time": 93,
+        "win_odds": 32.9,
+        "plc_odds": 7.8
+      }
+    },
+    {
+      "chul_no": 8,
+      "hr_no": "0052291",
+      "hr_name": "라페스타",
+      "age": 3,
+      "sex": "암",
+      "weight": "471(+5)",
+      "burden_weight": 55,
+      "jockey": {
+        "jk_no": "080588",
+        "jk_name": "정우주"
+      },
+      "trainer": {
+        "tr_no": "070103",
+        "tr_name": "김윤섭"
+      },
+      "owner": "간용기",
+      "rank": "국6등급",
+      "rating": 0,
+      "win_odds": 67.7,
+      "plc_odds": 12.7,
+      "result": {
+        "ord": 8,
+        "rc_time": 93.7,
+        "win_odds": 67.7,
+        "plc_odds": 12.7
+      }
+    }
+  ]
+}

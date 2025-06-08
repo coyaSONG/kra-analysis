@@ -1,0 +1,180 @@
+{
+  "prompt_version": "v3.0",
+  "evaluation_date": "20250607_200134",
+  "total_races": 11,
+  "total_files": 20,
+  "successful_predictions": 1,
+  "partial_correct_2": 5,
+  "partial_correct_1": 3,
+  "no_correct": 2,
+  "success_rate": 9.090909090909092,
+  "average_correct_horses": 1.4545454545454546,
+  "total_correct_horses": 16,
+  "detailed_results": [
+    {
+      "race_id": "race_1_20250511_3",
+      "predicted": [
+        3,
+        6,
+        1
+      ],
+      "actual": [
+        1,
+        6,
+        3
+      ],
+      "correct_count": 3,
+      "confidence": 40
+    },
+    {
+      "race_id": "race_1_20250511_5",
+      "predicted": [
+        3,
+        1,
+        9
+      ],
+      "actual": [
+        8,
+        9,
+        2
+      ],
+      "correct_count": 1,
+      "confidence": 75
+    },
+    {
+      "race_id": "race_1_20250531_8",
+      "predicted": [
+        3,
+        2,
+        6
+      ],
+      "actual": [
+        6,
+        2,
+        8
+      ],
+      "correct_count": 2,
+      "confidence": 75
+    },
+    {
+      "race_id": "race_3_20250606_2",
+      "predicted": [
+        8,
+        3,
+        2
+      ],
+      "actual": [
+        2,
+        4,
+        8
+      ],
+      "correct_count": 2,
+      "confidence": 75
+    },
+    {
+      "race_id": "race_1_20250105_7",
+      "predicted": [
+        8,
+        10,
+        9
+      ],
+      "actual": [
+        1,
+        3,
+        4
+      ],
+      "correct_count": 0,
+      "confidence": 70
+    },
+    {
+      "race_id": "race_3_20250523_5",
+      "predicted": [
+        7,
+        3,
+        2
+      ],
+      "actual": [
+        8,
+        2,
+        9
+      ],
+      "correct_count": 1,
+      "confidence": 70
+    },
+    {
+      "race_id": "race_1_20250601_5",
+      "predicted": [
+        8,
+        7,
+        6
+      ],
+      "actual": [
+        9,
+        5,
+        10
+      ],
+      "correct_count": 0,
+      "confidence": 65
+    },
+    {
+      "race_id": "race_1_20250531_5",
+      "predicted": [
+        5,
+        9,
+        4
+      ],
+      "actual": [
+        5,
+        9,
+        6
+      ],
+      "correct_count": 2,
+      "confidence": 70
+    },
+    {
+      "race_id": "race_3_20250606_5",
+      "predicted": [
+        2,
+        8,
+        9
+      ],
+      "actual": [
+        6,
+        2,
+        8
+      ],
+      "correct_count": 2,
+      "confidence": 65
+    },
+    {
+      "race_id": "race_2_20250517_7",
+      "predicted": [
+        2,
+        9,
+        7
+      ],
+      "actual": [
+        3,
+        7,
+        8
+      ],
+      "correct_count": 1,
+      "confidence": 70
+    },
+    {
+      "race_id": "race_2_20250110_4",
+      "predicted": [
+        9,
+        5,
+        1
+      ],
+      "actual": [
+        2,
+        9,
+        5
+      ],
+      "correct_count": 2,
+      "confidence": 75
+    }
+  ]
+}

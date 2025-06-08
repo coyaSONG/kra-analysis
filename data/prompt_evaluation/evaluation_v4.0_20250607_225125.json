@@ -1,0 +1,160 @@
+{
+  "prompt_version": "v4.0",
+  "test_date": "20250607_225125",
+  "total_races": 20,
+  "successful_predictions": 0,
+  "success_rate": 0.0,
+  "average_correct_horses": 0.2,
+  "total_correct_horses": 4,
+  "detailed_results": [
+    {
+      "race_id": "race_1_20250503_5",
+      "predicted": [
+        9,
+        5,
+        2
+      ],
+      "actual": [
+        9,
+        4,
+        2
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 75,
+      "reasoning": "배당률 1-3위 선택, 체중 변화 정상 범위",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 4,
+            "hr_name": "빅브리지",
+            "popularity_rank": 5,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 5,
+            "hr_name": "파워밴드",
+            "predicted_reason": "분석 필요",
+            "actual_position": 7
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_3",
+      "predicted": [
+        2,
+        8,
+        5
+      ],
+      "actual": [
+        2,
+        4,
+        11
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "배당률 1-3위 인기마 선택, 모두 체중 변화 정상 범위",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 11,
+            "hr_name": "스마트테이크",
+            "popularity_rank": 3,
+            "data_count": 0,
+            "actual_position": 3
+          },
+          {
+            "chul_no": 4,
+            "hr_name": "메니참",
+            "popularity_rank": 10,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "라온노던댄스",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          },
+          {
+            "chul_no": 5,
+            "hr_name": "브리도트로피",
+            "predicted_reason": "분석 필요",
+            "actual_position": 6
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_7",
+      "predicted": [
+        9,
+        2,
+        8
+      ],
+      "actual": [
+        1,
+        9,
+        7
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "배당률 1-3위 인기마 선택, 체중 변화 모두 정상 범위",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 1,
+            "hr_name": "위즈러너",
+            "popularity_rank": 5,
+            "data_count": 0,
+            "actual_position": 1
+          },
+          {
+            "chul_no": 7,
+            "hr_name": "금빛천하",
+            "popularity_rank": 4,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "엔딩파이어",
+            "predicted_reason": "분석 필요",
+            "actual_position": 6
+          },
+          {
+            "chul_no": 2,
+            "hr_name": "콜긴",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          }
+        ]
+      }
+    }
+  ]
+}

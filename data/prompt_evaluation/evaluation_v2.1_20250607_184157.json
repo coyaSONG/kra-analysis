@@ -1,0 +1,106 @@
+{
+  "prompt_version": "v2.1",
+  "test_date": "20250607_184157",
+  "total_races": 5,
+  "successful_predictions": 0,
+  "success_rate": 0.0,
+  "average_correct_horses": 0.6,
+  "total_correct_horses": 3,
+  "detailed_results": [
+    {
+      "race_id": "race_1_20250503_10",
+      "predicted": [
+        11,
+        2,
+        7
+      ],
+      "actual": [
+        7,
+        1,
+        6
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "레이팅 최상위 2마리(11번 63점, 2번 59점)와 3세 신마 다크호스(7번) 조합. 11번의 체중감소는 1800m 장거리 적응으로 긍정적이며, 7번은 가벼운 부담중량(52kg)으로 변수 창출 가능",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 1,
+            "hr_name": "마이티탭",
+            "popularity_rank": 6,
+            "data_count": 0,
+            "actual_position": 2
+          },
+          {
+            "chul_no": 6,
+            "hr_name": "우마포이",
+            "popularity_rank": 7,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 2,
+            "hr_name": "태평히어로",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          },
+          {
+            "chul_no": 11,
+            "hr_name": "스톰브레이커",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250503_3",
+      "predicted": [
+        3,
+        10,
+        7
+      ],
+      "actual": [
+        7,
+        3,
+        8
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 75,
+      "reasoning": "레이팅 최상위 그룹(32점) 중심 선택. 포화 주로에 유리한 경량마와 부담중량이 적은 말 우선 고려. 데이터 부족 상황에서 시장 평가를 중시하여 선정",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "원더풀파피",
+            "popularity_rank": 2,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 10,
+            "hr_name": "마이티러브",
+            "predicted_reason": "분석 필요",
+            "actual_position": 8
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,481 @@
+{
+  "prompt_version": "v7.0-strategic",
+  "test_date": "20250608_002550",
+  "total_races": 20,
+  "successful_predictions": 1,
+  "success_rate": 5.0,
+  "average_correct_horses": 0.75,
+  "total_correct_horses": 15,
+  "detailed_results": [
+    {
+      "race_id": "race_1_20250503_2",
+      "predicted": [
+        4,
+        9,
+        7
+      ],
+      "actual": [
+        2,
+        6,
+        7
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 80,
+      "reasoning": "1-3위 인기마 선택, 체중 변화 안정적",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 2,
+            "hr_name": "플라잉라이언",
+            "popularity_rank": 8,
+            "data_count": 0,
+            "actual_position": 1
+          },
+          {
+            "chul_no": 6,
+            "hr_name": "아이엠고",
+            "popularity_rank": 6,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 9,
+            "hr_name": "호세",
+            "predicted_reason": "분석 필요",
+            "actual_position": 6
+          },
+          {
+            "chul_no": 4,
+            "hr_name": "히트플라이",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250503_3",
+      "predicted": [
+        2,
+        8,
+        6
+      ],
+      "actual": [
+        7,
+        3,
+        8
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 3,
+            "hr_name": "아치러너",
+            "popularity_rank": 7,
+            "data_count": 0,
+            "actual_position": 2
+          },
+          {
+            "chul_no": 7,
+            "hr_name": "정성바이스",
+            "popularity_rank": 6,
+            "data_count": 0,
+            "actual_position": 1
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 2,
+            "hr_name": "질주의여왕",
+            "predicted_reason": "분석 필요",
+            "actual_position": 10
+          },
+          {
+            "chul_no": 6,
+            "hr_name": "세광질주",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250503_4",
+      "predicted": [
+        1,
+        5,
+        7
+      ],
+      "actual": [
+        9,
+        1,
+        7
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 9,
+            "hr_name": "벌교디와이",
+            "popularity_rank": 4,
+            "data_count": 0,
+            "actual_position": 1
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 5,
+            "hr_name": "영원자이언트",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250503_6",
+      "predicted": [
+        3,
+        7,
+        4
+      ],
+      "actual": [
+        7,
+        3,
+        4
+      ],
+      "reward": {
+        "correct_count": 3,
+        "base_score": 99.99,
+        "bonus": 10,
+        "total_score": 109.99,
+        "hit_rate": 100.0
+      },
+      "confidence": 75,
+      "reasoning": "1-3위 인기마 선택, 체중 변화 안정적",
+      "failure_analysis": null
+    },
+    {
+      "race_id": "race_1_20250503_7",
+      "predicted": [
+        3,
+        2,
+        1
+      ],
+      "actual": [
+        3,
+        9,
+        5
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 9,
+            "hr_name": "스피디루키",
+            "popularity_rank": 4,
+            "data_count": 0,
+            "actual_position": 2
+          },
+          {
+            "chul_no": 5,
+            "hr_name": "글로리시티",
+            "popularity_rank": 5,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 1,
+            "hr_name": "티나케이",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          },
+          {
+            "chul_no": 2,
+            "hr_name": "골든드래곤",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250503_9",
+      "predicted": [
+        3,
+        7,
+        8
+      ],
+      "actual": [
+        3,
+        10,
+        2
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 2,
+            "hr_name": "파노라마킹",
+            "popularity_rank": 7,
+            "data_count": 0,
+            "actual_position": 3
+          },
+          {
+            "chul_no": 10,
+            "hr_name": "블루밍스타",
+            "popularity_rank": 4,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "파르키우스",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          },
+          {
+            "chul_no": 7,
+            "hr_name": "글로벌매직",
+            "predicted_reason": "분석 필요",
+            "actual_position": 9
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_1",
+      "predicted": [
+        1,
+        4,
+        5
+      ],
+      "actual": [
+        10,
+        1,
+        9
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 9,
+            "hr_name": "빛나라",
+            "popularity_rank": 6,
+            "data_count": 0,
+            "actual_position": 3
+          },
+          {
+            "chul_no": 10,
+            "hr_name": "하이크라운",
+            "popularity_rank": 5,
+            "data_count": 0,
+            "actual_position": 1
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 4,
+            "hr_name": "학산프린스",
+            "predicted_reason": "분석 필요",
+            "actual_position": 6
+          },
+          {
+            "chul_no": 5,
+            "hr_name": "라온파라노마",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_10",
+      "predicted": [
+        2,
+        6,
+        5
+      ],
+      "actual": [
+        6,
+        3,
+        8
+      ],
+      "reward": {
+        "correct_count": 1,
+        "base_score": 33.33,
+        "bonus": 0,
+        "total_score": 33.33,
+        "hit_rate": 33.33333333333333
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "슈퍼선더",
+            "popularity_rank": 6,
+            "data_count": 0,
+            "actual_position": 3
+          },
+          {
+            "chul_no": 3,
+            "hr_name": "아치메모리",
+            "popularity_rank": 7,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 2,
+            "hr_name": "창조의아침",
+            "predicted_reason": "분석 필요",
+            "actual_position": 7
+          },
+          {
+            "chul_no": 5,
+            "hr_name": "서머파티",
+            "predicted_reason": "분석 필요",
+            "actual_position": 4
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_11",
+      "predicted": [
+        6,
+        11,
+        5
+      ],
+      "actual": [
+        6,
+        5,
+        3
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 75,
+      "reasoning": "1-3위 인기마 선택, 체중 변화 모두 정상 범위",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 3,
+            "hr_name": "머스탱파워",
+            "popularity_rank": 8,
+            "data_count": 0,
+            "actual_position": 3
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 11,
+            "hr_name": "엘도라도강남",
+            "predicted_reason": "분석 필요",
+            "actual_position": 8
+          }
+        ]
+      }
+    },
+    {
+      "race_id": "race_1_20250504_3",
+      "predicted": [
+        2,
+        8,
+        11
+      ],
+      "actual": [
+        2,
+        4,
+        11
+      ],
+      "reward": {
+        "correct_count": 2,
+        "base_score": 66.66,
+        "bonus": 0,
+        "total_score": 66.66,
+        "hit_rate": 66.66666666666666
+      },
+      "confidence": 75,
+      "reasoning": "1-2위 인기 + 3위 선택",
+      "failure_analysis": {
+        "missed_horses": [
+          {
+            "chul_no": 4,
+            "hr_name": "메니참",
+            "popularity_rank": 10,
+            "data_count": 0,
+            "actual_position": 2
+          }
+        ],
+        "wrong_horses": [
+          {
+            "chul_no": 8,
+            "hr_name": "라온노던댄스",
+            "predicted_reason": "분석 필요",
+            "actual_position": 5
+          }
+        ]
+      }
+    }
+  ]
+}

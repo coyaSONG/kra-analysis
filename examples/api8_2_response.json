@@ -1,0 +1,43 @@
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "items": {
+        "item": {
+          "birthday": 20220303,
+          "chaksunT": 18750000,
+          "faHrName": "사이먼퓨어",
+          "faHrNo": "0031261",
+          "hrLastAmt": "30,000천원(경매)",
+          "hrName": "올라운드원",
+          "hrNo": "0051228",
+          "meet": "부산경남",
+          "moHrName": "모닝퀸",
+          "moHrNo": "0031853",
+          "name": "한국",
+          "ord1CntT": 1,
+          "ord1CntY": 1,
+          "ord2CntT": 0,
+          "ord2CntY": 0,
+          "ord3CntT": 0,
+          "ord3CntY": 0,
+          "owName": "김혜진",
+          "owNo": 118011,
+          "rank": "국5",
+          "rating": 0,
+          "rcCntT": 2,
+          "rcCntY": 2,
+          "sex": "거",
+          "trName": "안우성",
+          "trNo": "070180"
+        }
+      },
+      "numOfRows": 10,
+      "pageNo": 1,
+      "totalCount": 1
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(python3 scripts/enrich_race_data.py:*)",
+      "Bash(chmod:*)",
+      "Bash(python3 scripts/enrich_race_data_fast.py:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(python scripts/recursive_prompt_improvement.py:*)",
+      "Bash(python3 scripts/recursive_prompt_improvement.py:*)",
+      "Bash(python3 scripts/evaluate_prompt.py:*)",
+      "Bash(python3 scripts/evaluate_all_races.py:*)",
+      "Bash(python3 scripts/evaluate_sample_races.py:*)",
+      "Bash(python3:*)"
+    ],
+    "deny": []
+  }
+}

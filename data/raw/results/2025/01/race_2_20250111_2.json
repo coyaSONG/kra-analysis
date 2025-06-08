@@ -1,0 +1,299 @@
+{
+  "race_info": {
+    "meet": "제주",
+    "meet_code": "2",
+    "race_date": "20250111",
+    "race_no": 2,
+    "race_name": "일반",
+    "distance": 1000,
+    "track": "포화 (16%)",
+    "weather": "흐림",
+    "race_time": 85.8,
+    "age_condition": "2세이상",
+    "prize_condition": "R1~20",
+    "collected_at": "2025-06-07T09:06:28.396Z",
+    "is_post_race": true
+  },
+  "horses": [
+    {
+      "chul_no": 5,
+      "hr_no": 3103900,
+      "hr_name": "천마용사",
+      "age": 4,
+      "sex": "수",
+      "weight": "276(-2)",
+      "burden_weight": 55.5,
+      "jockey": {
+        "jk_no": "003079",
+        "jk_name": "김경휴"
+      },
+      "trainer": {
+        "tr_no": "002009",
+        "tr_name": "좌윤철"
+      },
+      "owner": "진창배",
+      "rank": "제5등급",
+      "rating": 10,
+      "win_odds": 5.1,
+      "plc_odds": 1.8,
+      "result": {
+        "ord": 1,
+        "rc_time": 85.8,
+        "win_odds": 5.1,
+        "plc_odds": 1.8
+      }
+    },
+    {
+      "chul_no": 4,
+      "hr_no": 3104260,
+      "hr_name": "동백천하",
+      "age": 3,
+      "sex": "거",
+      "weight": "274()",
+      "burden_weight": 54,
+      "jockey": {
+        "jk_no": "003082",
+        "jk_name": "김홍권"
+      },
+      "trainer": {
+        "tr_no": "002028",
+        "tr_name": "박병진"
+      },
+      "owner": "고경수",
+      "rank": "제5등급",
+      "rating": 7,
+      "win_odds": 7.3,
+      "plc_odds": 2.4,
+      "result": {
+        "ord": 2,
+        "rc_time": 86.5,
+        "win_odds": 7.3,
+        "plc_odds": 2.4
+      }
+    },
+    {
+      "chul_no": 10,
+      "hr_no": 3103562,
+      "hr_name": "빅이벤트",
+      "age": 4,
+      "sex": "암",
+      "weight": "287(-1)",
+      "burden_weight": 51,
+      "jockey": {
+        "jk_no": "003089",
+        "jk_name": "박성광"
+      },
+      "trainer": {
+        "tr_no": "002029",
+        "tr_name": "이준호"
+      },
+      "owner": "조경수",
+      "rank": "제5등급",
+      "rating": 1,
+      "win_odds": 6.6,
+      "plc_odds": 1.9,
+      "result": {
+        "ord": 3,
+        "rc_time": 86.7,
+        "win_odds": 6.6,
+        "plc_odds": 1.9
+      }
+    },
+    {
+      "chul_no": 9,
+      "hr_no": 3104067,
+      "hr_name": "동부파이터",
+      "age": 4,
+      "sex": "수",
+      "weight": "307()",
+      "burden_weight": 53,
+      "jockey": {
+        "jk_no": "003061",
+        "jk_name": "곽용남"
+      },
+      "trainer": {
+        "tr_no": "002034",
+        "tr_name": "이태용"
+      },
+      "owner": "현동부",
+      "rank": "제5등급",
+      "rating": 5,
+      "win_odds": 18.4,
+      "plc_odds": 4.7,
+      "result": {
+        "ord": 4,
+        "rc_time": 87.2,
+        "win_odds": 18.4,
+        "plc_odds": 4.7
+      }
+    },
+    {
+      "chul_no": 2,
+      "hr_no": 3104684,
+      "hr_name": "진면목",
+      "age": 3,
+      "sex": "거",
+      "weight": "264(-4)",
+      "burden_weight": 56,
+      "jockey": {
+        "jk_no": "003070",
+        "jk_name": "전현준"
+      },
+      "trainer": {
+        "tr_no": "002021",
+        "tr_name": "윤덕상"
+      },
+      "owner": "송문관",
+      "rank": "제5등급",
+      "rating": 11,
+      "win_odds": 2,
+      "plc_odds": 1.2,
+      "result": {
+        "ord": 5,
+        "rc_time": 87.2,
+        "win_odds": 2,
+        "plc_odds": 1.2
+      }
+    },
+    {
+      "chul_no": 8,
+      "hr_no": 3018629,
+      "hr_name": "탐라인기",
+      "age": 7,
+      "sex": "암",
+      "weight": "287(-5)",
+      "burden_weight": 58,
+      "jockey": {
+        "jk_no": "003075",
+        "jk_name": "원유일"
+      },
+      "trainer": {
+        "tr_no": "002030",
+        "tr_name": "최기호"
+      },
+      "owner": "조창규",
+      "rank": "제5등급",
+      "rating": 15,
+      "win_odds": 19.5,
+      "plc_odds": 2.7,
+      "result": {
+        "ord": 6,
+        "rc_time": 87.5,
+        "win_odds": 19.5,
+        "plc_odds": 2.7
+      }
+    },
+    {
+      "chul_no": 3,
+      "hr_no": 3101805,
+      "hr_name": "남송이",
+      "age": 5,
+      "sex": "암",
+      "weight": "277(-3)",
+      "burden_weight": 52.5,
+      "jockey": {
+        "jk_no": "003084",
+        "jk_name": "김한남"
+      },
+      "trainer": {
+        "tr_no": "002018",
+        "tr_name": "신경호"
+      },
+      "owner": "이영대",
+      "rank": "제5등급",
+      "rating": 4,
+      "win_odds": 13.1,
+      "plc_odds": 2.6,
+      "result": {
+        "ord": 7,
+        "rc_time": 87.5,
+        "win_odds": 13.1,
+        "plc_odds": 2.6
+      }
+    },
+    {
+      "chul_no": 6,
+      "hr_no": 3102262,
+      "hr_name": "오라정월",
+      "age": 5,
+      "sex": "거",
+      "weight": "289(-3)",
+      "burden_weight": 51,
+      "jockey": {
+        "jk_no": "003080",
+        "jk_name": "문현진"
+      },
+      "trainer": {
+        "tr_no": "002026",
+        "tr_name": "고영덕"
+      },
+      "owner": "강진숙",
+      "rank": "제5등급",
+      "rating": 1,
+      "win_odds": 38.4,
+      "plc_odds": 6.7,
+      "result": {
+        "ord": 8,
+        "rc_time": 88,
+        "win_odds": 38.4,
+        "plc_odds": 6.7
+      }
+    },
+    {
+      "chul_no": 7,
+      "hr_no": 3101983,
+      "hr_name": "소나타",
+      "age": 5,
+      "sex": "수",
+      "weight": "283(-2)",
+      "burden_weight": 51,
+      "jockey": {
+        "jk_no": "003086",
+        "jk_name": "이동준"
+      },
+      "trainer": {
+        "tr_no": "002027",
+        "tr_name": "강대은"
+      },
+      "owner": "부용식",
+      "rank": "제5등급",
+      "rating": 1,
+      "win_odds": 57,
+      "plc_odds": 8.9,
+      "result": {
+        "ord": 9,
+        "rc_time": 88.4,
+        "win_odds": 57,
+        "plc_odds": 8.9
+      }
+    },
+    {
+      "chul_no": 1,
+      "hr_no": 3102757,
+      "hr_name": "고품격",
+      "age": 5,
+      "sex": "암",
+      "weight": "287(-11)",
+      "burden_weight": 51,
+      "jockey": {
+        "jk_no": "003066",
+        "jk_name": "나유나"
+      },
+      "trainer": {
+        "tr_no": "002029",
+        "tr_name": "이준호"
+      },
+      "owner": "에린",
+      "rank": "제5등급",
+      "rating": 1,
+      "win_odds": 22.9,
+      "plc_odds": 5,
+      "result": {
+        "ord": 10,
+        "rc_time": 89,
+        "win_odds": 22.9,
+        "plc_odds": 5
+      }
+    }
+  ]
+}
