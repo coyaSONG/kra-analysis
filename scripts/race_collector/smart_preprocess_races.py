@@ -107,7 +107,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> Dict[str
             'file': os.path.basename(input_path),
             'status': status_msg,
             'processed': False,
-            'output': output_filename
+            'output': os.path.basename(output_path)
         }
         
         if is_completed:
@@ -119,7 +119,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> Dict[str
                 json.dump(cleaned_data, f, ensure_ascii=False, indent=2)
             
             result['processed'] = True
-            print(f"✅ 전처리 완료 → {output_filename}")
+            print(f"✅ 전처리 완료 → {os.path.basename(output_path)}")
             
         else:
             # 경주가 진행되지 않은 경우: 그대로 복사
@@ -128,7 +128,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> Dict[str
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(raw_data, f, ensure_ascii=False, indent=2)
             
-            print(f"📋 원본 복사 → {output_filename}")
+            print(f"📋 원본 복사 → {os.path.basename(output_path)}")
         
         # 간단한 정보 출력
         horses = raw_data['response']['body']['items']['item']
@@ -241,10 +241,18 @@ if __name__ == "__main__":
     import sys
     
     if len(sys.argv) > 1:
-        pattern = sys.argv[1]
+        input_arg = sys.argv[1]
+        
+        # 단일 파일인지 패턴인지 확인
+        if os.path.isfile(input_arg):
+            # 단일 파일 처리
+            smart_process_race_file(input_arg)
+        else:
+            # 패턴으로 배치 처리
+            print(f"🔍 패턴: {input_arg}")
+            batch_smart_process(input_arg)
     else:
         # 기본값: 오늘 서울 경마장 데이터
         pattern = "data/race_1_20250608_*.json"
-    
-    print(f"🔍 패턴: {pattern}")
-    batch_smart_process(pattern)
+        print(f"🔍 패턴: {pattern}")
+        batch_smart_process(pattern)

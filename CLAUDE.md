@@ -96,6 +96,12 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
   - 평가 결과: `data/prompt_evaluation/`
   - API 캐시: `data/cache/` (7일 유효)
 
+### Git 관리 (중요!)
+- **data/ 폴더는 절대 git에 push하지 않음**
+  - 경주 데이터, 평가 결과, API 캐시 등은 로컬에서만 관리
+  - .gitignore에 이미 설정되어 있음
+  - 실수로 추가되지 않도록 주의
+
 ## 🎯 현재 진행 중
 
 ### 1. 보강된 데이터 활용 프롬프트 개발
