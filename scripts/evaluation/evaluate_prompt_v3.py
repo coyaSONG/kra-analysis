@@ -175,7 +175,7 @@ class PromptEvaluatorV3:
                     cmd, 
                     capture_output=True, 
                     text=True, 
-                    timeout=120,
+                    timeout=3000,
                     env=self.claude_env
                 )
             

@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+data/
 
 # Dependencies
 node_modules/

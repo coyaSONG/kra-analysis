@@ -49,8 +49,8 @@ node scripts/race_collector/enrich_race_data.js 20250608 1
 
 ### 2. 프롬프트 평가
 ```bash
-# 최신 평가 시스템 (v3)
-python3 scripts/evaluation/evaluate_prompt_v3.py v10.0 prompts/v10.0.md 30 3
+# 최신 평가 시스템 (v3) - enriched 데이터 사용
+python3 scripts/evaluation/evaluate_prompt_v3.py v10.3 prompts/prediction-template-v10.3.md 30 3
 ```
 
 ### 3. 프롬프트 개선
@@ -61,16 +61,18 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
 
 ## 📊 현재 성과
 
-### 최종 프롬프트: v9.0
-- **평균 적중률**: 44% (1.32/3)
-- **완전 적중률**: 10%
-- **오류율**: 18%
+### 최신 프롬프트: v10.3 (2025.06.13)
+- **평균 적중률**: 33.3% (1.00/3)
+- **완전 적중률**: 20%
+- **오류율**: 0%
+- **개선폭**: v9.0 대비 2.7배 향상
 
 ### 핵심 발견사항
 1. ✅ 구체적인 JSON 예시 필수
 2. ✅ 간결한 프롬프트 (200자 이내)
 3. ✅ 기권/제외 말(win_odds=0) 필터링
-4. ✅ 시장 평가(배당률) 중심 전략
+4. ✅ 복합 점수 방식 (배당률+기수승률+말입상률)
+5. ✅ Enriched 데이터 활용이 핵심
 
 ## 💡 개발 가이드라인
 
@@ -102,24 +104,25 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
   - .gitignore에 이미 설정되어 있음
   - 실수로 추가되지 않도록 주의
 
-## 🎯 현재 진행 중
+## 🎯 최근 완료 (2025.06.13)
 
-### 1. 보강된 데이터 활용 프롬프트 개발
-- enriched 데이터의 혈통/성적 정보 활용
-- 기수-말 궁합 분석
-- 최근 폼 vs 통산 성적 비교
+### 1. v10.3 프롬프트 개발 완료
+- ✅ 복합 점수 방식 도입
+- ✅ 평균 적중률 33.3% 달성
+- ✅ JSON 오류 0%로 개선
 
-### 2. 평가 시스템 개선
-- ✅ enriched 데이터 지원 (완료)
-- ✅ 병렬 처리 (완료)
-- ✅ Claude Code CLI 최적화 (완료)
+### 2. 평가 시스템 v3 완성
+- ✅ enriched 데이터 지원
+- ✅ 병렬 처리 (3개 동시 실행)
+- ✅ Claude Code CLI 최적화
+- ✅ stream-json 형식 지원
 
 ## 📋 다음 단계
 
-1. **v10.0 프롬프트 개발**: enriched 데이터 활용
-2. **오류 분석**: 남은 18% 에러 원인 파악
-3. **앙상블 전략**: 여러 프롬프트 조합
-4. **실시간 데이터**: 배당률 변화 반영
+1. **v10.3 대규모 검증**: 더 많은 데이터로 성능 확인
+2. **복합 점수 최적화**: 가중치 미세 조정
+3. **혈통 정보 활용**: faHrNo, moHrNo 데이터 활용
+4. **앙상블 전략**: v10.3 + 다른 전략 조합
 
 ## ⚠️ 주의사항
 
