@@ -1,0 +1,11 @@
+# <type>(<scope>): <subject>
+# 
+# <body>
+# 
+# <footer>
+
+# Type: feat, fix, docs, style, refactor, perf, test, chore, ci, revert
+# Scope: component or file name
+# Subject: what you did (present tense, lowercase, no period)
+# Body: why you did it (wrap at 72 chars)
+# Footer: Fixes #123, BREAKING CHANGE: description

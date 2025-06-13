@@ -135,3 +135,8 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
 - 모든 작업은 tasks/todo.md에 기록
 - 진행 상황 실시간 업데이트
 - 완료 시 날짜와 함께 이동
+
+### Git 커밋 규칙
+- Conventional Commits 사용 ([상세 가이드](docs/git-commit-convention.md))
+- 형식: `type(scope): description`
+- 예: `feat(prompt): add v10.3 composite scoring`
