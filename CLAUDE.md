@@ -56,3 +56,4 @@ python3 scripts/prompt_improvement/analyze_enriched_patterns.py
 - Python 실행: 항상 `python3` 사용
 - 새 문서 생성 전 기존 문서 확인 필수
 - 중복 내용 생성 금지
+- Git 커밋 시 Claude 워터마크 제거 (Co-Authored-By 등)
