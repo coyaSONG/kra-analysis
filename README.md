@@ -70,11 +70,22 @@ node scripts/race_collector/enrich_race_data.js 20250608 1
 # 프롬프트 평가 (최신 v3 시스템)
 python3 scripts/evaluation/evaluate_prompt_v3.py v10.3 prompts/prediction-template-v10.3.md 30 3
 
+# 예측 전용 테스트 (경주 전 데이터만 사용, 결과 비교 없음)
+python3 scripts/evaluation/predict_only_test.py prompts/base-prompt-v1.0.md 20250601 10
+
+# 재귀적 프롬프트 개선 (v4)
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/base-prompt-v1.0.md all 5 3
+
 # 파라미터: 버전명, 프롬프트파일, 테스트경주수, 병렬실행수
 ```
 
-## 📊 성능 (v10.3 기준)
+## 📊 성능 현황
 
+### 현재 성과 (base-prompt-v1.0)
+- **평균 적중률**: 50% (초기 테스트 2경주 기준)
+- **목표**: 70% 이상 완전 적중률
+
+### 이전 성과 (v10.3)
 - **평균 적중률**: 33.3% (3마리 중 평균 1.00마리 적중)
 - **완전 적중률**: 20% (3마리 모두 적중)
 - **오류율**: 0% (JSON 파싱 오류 완전 해결)

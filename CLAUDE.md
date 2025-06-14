@@ -30,6 +30,9 @@ node scripts/race_collector/enrich_race_data.js [날짜] [경주번호]
 # 프롬프트 평가
 python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [경주수] [병렬수]
 
+# 예측 전용 테스트 (결과 비교 없음)
+python3 scripts/evaluation/predict_only_test.py [프롬프트파일] [날짜/all] [제한]
+
 # 재귀 개선 (v4 - 최신)
 python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py [프롬프트] [날짜/all] [반복] [병렬]
 
