@@ -55,8 +55,11 @@ python3 scripts/evaluation/evaluate_prompt_v3.py v10.3 prompts/prediction-templa
 
 ### 3. 프롬프트 개선
 ```bash
-# 재귀적 개선
-python3 scripts/prompt_improvement/recursive_prompt_improvement.py
+# 재귀적 개선 v3 (날짜 기반)
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v3.py prompts/prediction-template-v10.3.md all 5 3
+
+# 특정 날짜만 테스트
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v3.py prompts/prediction-template-v10.3.md 20250601 5 3
 ```
 
 ## 📊 현재 성과
@@ -104,7 +107,7 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
   - .gitignore에 이미 설정되어 있음
   - 실수로 추가되지 않도록 주의
 
-## 🎯 최근 완료 (2025.06.13)
+## 🎯 최근 완료 (2025.06.14)
 
 ### 1. v10.3 프롬프트 개발 완료
 - ✅ 복합 점수 방식 도입
@@ -117,12 +120,18 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement.py
 - ✅ Claude Code CLI 최적화
 - ✅ stream-json 형식 지원
 
+### 3. 재귀적 개선 시스템 v2/v3 구현
+- ✅ evaluate_prompt_v3와 완벽 호환
+- ✅ 날짜 기반 경주 선택 (all 또는 특정 날짜)
+- ✅ 고도화된 분석 및 개선 전략
+- ✅ 자동 버전 관리 (v11.x 시리즈)
+
 ## 📋 다음 단계
 
-1. **v10.3 대규모 검증**: 더 많은 데이터로 성능 확인
-2. **복합 점수 최적화**: 가중치 미세 조정
+1. **재귀적 개선 실행**: recursive_prompt_improvement_v3.py로 v11 시리즈 개발
+2. **날짜별 성능 분석**: 특정 날짜의 패턴 파악
 3. **혈통 정보 활용**: faHrNo, moHrNo 데이터 활용
-4. **앙상블 전략**: v10.3 + 다른 전략 조합
+4. **앙상블 전략**: 최적 프롬프트 조합
 
 ## ⚠️ 주의사항
 
