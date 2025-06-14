@@ -64,6 +64,7 @@ enriched 데이터를 사용하여 말, 기수, 조교사의 상세 정보를 �
 </analysis_steps>
 
 <output_format>
+반드시 아래 JSON 형식으로만 응답하세요:
 ```json
 {
   "predicted": [출전번호1, 출전번호2, 출전번호3],
@@ -72,10 +73,11 @@ enriched 데이터를 사용하여 말, 기수, 조교사의 상세 정보를 �
 }
 ```
 
-주의사항:
-- predicted는 반드시 3개의 출전번호(chulNo)를 포함
-- confidence는 60-90 사이의 정수
-- brief_reason은 20자 이내 한글로 핵심 선정 이유
+필수 규칙:
+- predicted: 정확히 3개의 출전번호(chulNo) 배열
+- confidence: 60-90 사이의 정수
+- brief_reason: 20자 이내 한글 설명
+- 다른 필드 추가 금지 (selected_horses 등 사용하지 않음)
 </output_format>
 
 <examples>
