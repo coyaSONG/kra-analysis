@@ -30,19 +30,24 @@ node scripts/race_collector/enrich_race_data.js [날짜] [경주번호]
 # 프롬프트 평가
 python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [경주수] [병렬수]
 
-# 재귀 개선
-python3 scripts/prompt_improvement/recursive_prompt_improvement_v3.py [프롬프트] [날짜/all] [반복] [병렬]
+# 재귀 개선 (v4 - 최신)
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py [프롬프트] [날짜/all] [반복] [병렬]
+
+# 데이터 패턴 분석
+python3 scripts/prompt_improvement/analyze_enriched_patterns.py
 ```
 
 ## 현재 상태
-- 최고 성능: v10.3 (적중률 33.3%)
-- 목표: 40% 이상
+- 기본 프롬프트: base-prompt-v1.0.md (50% 적중률 - 2경주 테스트)
+- 목표: 70% 이상
+- v4 개선 시스템 개발 완료
 
 ## 참조 문서
 - 프로젝트 상세: `docs/project-overview.md`
 - API 가이드: `KRA_PUBLIC_API_GUIDE.md`
 - Git 규칙: `docs/git-commit-convention.md`
 - 재귀 개선: `docs/recursive-improvement-guide.md`
+- v4 시스템: `scripts/prompt_improvement/recursive_prompt_improvement_v4.py`
 
 ## 중요 규칙
 - Python 실행: 항상 `python3` 사용
