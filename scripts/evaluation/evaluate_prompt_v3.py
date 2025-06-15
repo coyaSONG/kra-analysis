@@ -226,8 +226,11 @@ class PromptEvaluatorV3:
                     
                     if isinstance(data, dict):
                         # 직접 JSON 응답인 경우
-                        if 'selected_horses' in data:
+                        if 'selected_horses' in data or 'predicted' in data:
                             data['execution_time'] = execution_time
+                            # predicted를 selected_horses로 변환
+                            if 'predicted' in data and 'selected_horses' not in data:
+                                data['selected_horses'] = [{"chulNo": no} for no in data['predicted']]
                             return data
                         
                         # stream 형식인 경우
@@ -239,11 +242,14 @@ class PromptEvaluatorV3:
                             content = data['text']
                     
                     if content:
-                        # content에서 JSON 추출
-                        json_match = re.search(r'\{.*"selected_horses".*?\}', content, re.DOTALL)
+                        # content에서 JSON 추출 (selected_horses 또는 predicted)
+                        json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', content, re.DOTALL)
                         if json_match:
                             prediction = json.loads(json_match.group())
                             prediction['execution_time'] = execution_time
+                            # predicted를 selected_horses로 변환
+                            if 'predicted' in prediction and 'selected_horses' not in prediction:
+                                prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
                             return prediction
                             
                 except json.JSONDecodeError:
@@ -263,16 +269,22 @@ class PromptEvaluatorV3:
                 try:
                     prediction = json.loads(code_block_match.group(1))
                     prediction['execution_time'] = execution_time
+                    # predicted를 selected_horses로 변환
+                    if 'predicted' in prediction and 'selected_horses' not in prediction:
+                        prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
                     return prediction
                 except:
                     pass
             
-            # 일반 JSON
-            json_match = re.search(r'\{.*"selected_horses".*?\}', output, re.DOTALL)
+            # 일반 JSON (selected_horses 또는 predicted)
+            json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', output, re.DOTALL)
             if json_match:
                 try:
                     prediction = json.loads(json_match.group())
                     prediction['execution_time'] = execution_time
+                    # predicted를 selected_horses로 변환
+                    if 'predicted' in prediction and 'selected_horses' not in prediction:
+                        prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
                     return prediction
                 except:
                     pass
