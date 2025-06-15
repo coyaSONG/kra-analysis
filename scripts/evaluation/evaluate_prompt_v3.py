@@ -415,6 +415,10 @@ class PromptEvaluatorV3:
         print(f"동시 실행 수: {max_workers}")
         print("-" * 60)
         
+        # 진행 상황 추적 변수
+        start_time = time.time()
+        completed_count = 0
+        
         # 병렬 처리
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # 작업 제출
@@ -443,8 +447,18 @@ class PromptEvaluatorV3:
                                 successful_predictions += 1
                             total_correct_horses += result['reward']['correct_count']
                         
+                        completed_count += 1
+                        elapsed = time.time() - start_time
+                        avg_time = elapsed / completed_count
+                        eta = avg_time * (total_races - completed_count)
+                        
                         status = "✓" if result['prediction'] else "✗"
-                        print(f"[{i+1}/{total_races}] {status} {race_info['race_id']} 완료")
+                        if result['prediction']:
+                            correct = result['reward']['correct_count']
+                            hit_rate = result['reward']['hit_rate']
+                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
+                        else:
+                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 에러: {result.get('error_type', 'unknown')} | 진행률: {completed_count/total_races*100:.1f}%")
                         
                 except Exception as e:
                     print(f"Error processing {race_info['race_id']}: {e}")

@@ -69,16 +69,29 @@ class RecursivePromptImproverV4:
         ]
         
         if date_filter == "all":
-            print(f"\n평가 실행: {prompt_version} (모든 경주)")
+            available_dates = self.get_available_dates()
+            total_races = sum(self.count_races_by_date(d) for d in available_dates)
+            print(f"\n평가 실행: {prompt_version}")
+            print(f"  - 대상: 모든 경주")
+            print(f"  - 총 경주 수: {total_races}개")
+            print(f"  - 병렬 처리: {max_workers}개")
+            print(f"  - 예상 시간: {total_races / max_workers * 5:.0f}초 ~ {total_races / max_workers * 10:.0f}초")
         else:
             race_count = self.count_races_by_date(date_filter)
-            print(f"\n평가 실행: {prompt_version} (날짜: {date_filter}, {race_count}개 경주)")
+            print(f"\n평가 실행: {prompt_version}")
+            print(f"  - 날짜: {date_filter}")
+            print(f"  - 경주 수: {race_count}개")
+            print(f"  - 병렬 처리: {max_workers}개")
+        
+        print("\n평가 진행 중...")
+        print("-" * 60)
         
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            # 실시간 출력을 위해 capture_output=False로 변경
+            result = subprocess.run(cmd, capture_output=False, text=True)
             
             if result.returncode != 0:
-                print(f"Error: {result.stderr}")
+                print(f"Error: 평가 실행 실패 (return code: {result.returncode})")
                 return None
             
             # 최신 평가 결과 파일 찾기
@@ -507,25 +520,30 @@ class RecursivePromptImproverV4:
                 f'enriched_files = sorted(glob.glob(enriched_pattern)){filter_code}'
             )
         
-        # main 함수의 파라미터 수정 (test_limit 제거)
-        content = re.sub(
-            r'def main\(\):[^}]+if len\(sys\.argv\) < 3:.*?sys\.exit\(1\)',
-            '''def main():
+        # main 함수 수정 - test_limit를 None으로 설정
+        new_main = '''def main():
     if len(sys.argv) < 3:
         print("Usage: python evaluate_prompt_filtered.py <prompt_version> <prompt_file> [max_workers]")
         sys.exit(1)
     
     prompt_version = sys.argv[1]
     prompt_file = sys.argv[2]
-    max_workers = int(sys.argv[3]) if len(sys.argv) > 3 else 3''',
+    max_workers = int(sys.argv[3]) if len(sys.argv) > 3 else 3
+    
+    # 평가 실행
+    evaluator = PromptEvaluatorV3(prompt_version, prompt_file)
+    results = evaluator.evaluate_all_parallel(test_limit=None, max_workers=max_workers)
+
+
+if __name__ == "__main__":
+    main()'''
+        
+        # main 함수 전체를 교체
+        content = re.sub(
+            r'def main\(\):.*?if __name__ == "__main__":\s*main\(\)',
+            new_main,
             content,
             flags=re.DOTALL
-        )
-        
-        # test_limit=None으로 모든 경주 사용
-        content = content.replace(
-            'evaluator.evaluate_races(test_limit)',
-            'evaluator.evaluate_races(limit=None)'
         )
         
         with open(output_path, 'w', encoding='utf-8') as f:
