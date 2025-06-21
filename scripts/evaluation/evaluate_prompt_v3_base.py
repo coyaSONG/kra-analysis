@@ -429,11 +429,20 @@ class PromptEvaluatorV3Base:
                         
                         # 통계 업데이트
                         if result["reward"]["status"] == "evaluated":
+                            correct = result["reward"]["correct_count"]
+                            hit_rate = result["reward"]["hit_rate"]
+                            predicted = result.get('predicted', [])
+                            actual = result.get('actual', [])
+                            
+                            # 예측과 실제 결과를 문자열로 포맷
+                            pred_str = f"[{','.join(map(str, predicted))}]" if predicted else "[?]"
+                            actual_str = f"[{','.join(map(str, actual))}]" if actual else "[?]"
+                            
                             if result["reward"]["correct_count"] == 3:
                                 successful_predictions += 1
-                                print(f"[{completed}/{total_races}] ✓ {race_info['race_id']} 완료")
+                                print(f"[{completed}/{total_races}] ✓ {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}")
                             else:
-                                print(f"[{completed}/{total_races}] ✗ {race_info['race_id']} 완료")
+                                print(f"[{completed}/{total_races}] ✗ {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}")
                             total_correct_horses += result["reward"]["correct_count"]
                         else:
                             print(f"[{completed}/{total_races}] ? {race_info['race_id']} (결과 없음)")

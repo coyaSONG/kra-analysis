@@ -468,7 +468,14 @@ class PromptEvaluatorV3:
                         if result['prediction']:
                             correct = result['reward']['correct_count']
                             hit_rate = result['reward']['hit_rate']
-                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
+                            predicted = result.get('predicted', [])
+                            actual = result.get('actual', [])
+                            
+                            # 예측과 실제 결과를 문자열로 포맷
+                            pred_str = f"[{','.join(map(str, predicted))}]" if predicted else "[?]"
+                            actual_str = f"[{','.join(map(str, actual))}]" if actual else "[?]"
+                            
+                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
                         else:
                             print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 에러: {result.get('error_type', 'unknown')} | 진행률: {completed_count/total_races*100:.1f}%")
                         
