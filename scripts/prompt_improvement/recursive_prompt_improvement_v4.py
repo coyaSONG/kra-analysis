@@ -116,6 +116,14 @@ class RecursivePromptImproverV4:
     
     def analyze_individual_race(self, race_result: Dict, race_data: Optional[Dict] = None) -> Dict:
         """개별 경주에 대한 상세 분석"""
+        # 예측 결과가 없는 경우 처리
+        if race_result.get("prediction") is None or "predicted" not in race_result:
+            return {
+                "race_id": race_result["race_id"],
+                "error": "No prediction available",
+                "error_type": race_result.get("error_type", "unknown")
+            }
+        
         analysis = {
             "race_id": race_result["race_id"],
             "predicted": race_result["predicted"],
@@ -606,7 +614,9 @@ if __name__ == "__main__":
                 race_data = self._load_race_data(race_result["race_id"])
                 
                 analysis = self.analyze_individual_race(race_result, race_data)
-                individual_analyses.append(analysis)
+                # 오류가 있는 경주는 분석에서 제외
+                if "error" not in analysis:
+                    individual_analyses.append(analysis)
             
             # 3. 통합 복기 및 인사이트 도출
             print("\n🔍 이터레이션 복기 중...")
