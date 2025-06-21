@@ -5,17 +5,20 @@
 ## 🚀 주요 기능
 
 ### 1. 데이터 수집 및 전처리
+
 - KRA 공식 API를 통한 실시간 데이터 수집
 - 경주 완료 데이터를 경주 전 상태로 자동 전처리
 - 5개 API 활용: API214_1(기본), API8_2(말), API12_1(기수), API19_1(조교사), API299(통계)
 
 ### 2. 데이터 보강 시스템
+
 - 말: 혈통 정보, 통산/연간 성적, 승률
 - 기수: 경력, 나이, 통산/연간 성적
 - 조교사: 소속, 승률, 복승률, 연승률
 - 7일 캐싱으로 API 호출 최적화
 
 ### 3. AI 프롬프트 최적화
+
 - 재귀 개선 프로세스로 v10.3 개발 완료
 - 평균 적중률 12.3% → 33.3% 향상 (2.7배)
 - 완전 적중률 3.7% → 20% 달성 (5.4배)
@@ -41,6 +44,7 @@ kra-analysis/
 ## 🛠️ 설치 및 실행
 
 ### 환경 설정
+
 ```bash
 # 저장소 클론
 git clone https://github.com/coyaSONG/kra-analysis.git
@@ -57,6 +61,7 @@ pip install -r requirements.txt
 ```
 
 ### 데이터 수집
+
 ```bash
 # 기본 데이터 수집 (API214_1)
 node scripts/race_collector/collect_and_preprocess.js 20250608 1
@@ -66,6 +71,7 @@ node scripts/race_collector/enrich_race_data.js 20250608 1
 ```
 
 ### 예측 실행
+
 ```bash
 # 프롬프트 평가 (최신 v3 시스템)
 python3 scripts/evaluation/evaluate_prompt_v3.py v10.3 prompts/prediction-template-v10.3.md 30 3
@@ -82,10 +88,12 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 ## 📊 성능 현황
 
 ### 현재 성과 (base-prompt-v1.0)
+
 - **평균 적중률**: 50% (초기 테스트 2경주 기준)
 - **목표**: 70% 이상 완전 적중률
 
 ### 이전 성과 (v10.3)
+
 - **평균 적중률**: 33.3% (3마리 중 평균 1.00마리 적중)
 - **완전 적중률**: 20% (3마리 모두 적중)
 - **오류율**: 0% (JSON 파싱 오류 완전 해결)
@@ -101,12 +109,14 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 ## 📚 문서
 
 ### 핵심 문서
+
 - [KRA API 가이드](KRA_PUBLIC_API_GUIDE.md) - KRA 공공 API 상세 사용법
 - [프로젝트 개요](docs/project-overview.md)
 - [데이터 보강 시스템](docs/data-enrichment-system.md)
 - [보강된 데이터 구조](docs/enriched-data-structure.md)
 
 ### 분석 및 전략
+
 - [API 분석](docs/api-analysis.md)
 - [데이터 구조](docs/data-structure.md)
 - [프롬프트 개발 전략](docs/prompt-development-strategy.md)
@@ -122,12 +132,9 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 
 ## 🚧 향후 계획
 
-1. v10.3 대규모 검증 (100+ 경주)
-2. 복합 점수 가중치 최적화
-3. 혈통 정보 활용 전략 개발
-4. 실시간 예측 시스템 구축
-5. 웹/모바일 인터페이스 개발
+1. 웹 인터페이스 개발
 
 ## 📝 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+
