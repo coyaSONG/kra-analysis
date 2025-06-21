@@ -471,6 +471,10 @@ class RecursivePromptImproverV4:
         examples = []
         
         for race in evaluation_results.get("detailed_results", []):
+            # 예측이 없거나 reward가 없는 경우 건너뛰기
+            if race.get("prediction") is None or "reward" not in race or "correct_count" not in race["reward"]:
+                continue
+                
             if example_type == "success" and race["reward"]["correct_count"] == 3:
                 examples.append({
                     "race_id": race["race_id"],
