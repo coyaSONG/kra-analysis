@@ -25,7 +25,7 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from v5_modules import (
     PromptParser, PromptStructure,
-    InsightAnalyzer, InsightAnalysis,
+    InsightAnalyzer,
     DynamicReconstructor,
     ExamplesManager
 )
@@ -258,12 +258,15 @@ class RecursivePromptImprovementV5:
             version = structure.version or "unknown"
             
             # evaluate_prompt_v3.py 실행
+            # 테스트 모드에서는 경주 수를 줄임
+            race_count = "5" if self.max_iterations <= 2 else "30"
+            
             cmd = [
                 "python3",
                 str(Path(__file__).parent.parent / "evaluation" / "evaluate_prompt_v3.py"),
                 version,
                 str(prompt_path),
-                "30",  # 평가할 경주 수
+                race_count,  # 평가할 경주 수
                 str(self.parallel_count)
             ]
             
@@ -285,12 +288,25 @@ class RecursivePromptImprovementV5:
                 self.logger.error(f"평가 실패: {result.stderr}")
                 return None
             
+            # 잠시 대기 (파일 생성 시간)
+            time.sleep(2)
+            
             # 결과 파일 찾기
             eval_dir = get_data_dir() / "prompt_evaluation"
+            # v2.3 형식도 지원
             eval_files = list(eval_dir.glob(f"evaluation_{version}_*.json"))
             
+            self.logger.info(f"평가 디렉토리: {eval_dir}")
+            self.logger.info(f"검색 패턴: evaluation_{version}_*.json")
+            self.logger.info(f"찾은 파일 수: {len(eval_files)}")
+            
             if not eval_files:
-                self.logger.error("평가 결과 파일을 찾을 수 없습니다")
+                self.logger.error(f"평가 결과 파일을 찾을 수 없습니다: evaluation_{version}_*.json")
+                # 디렉토리 내용 확인
+                all_files = list(eval_dir.glob("evaluation_*.json"))
+                self.logger.info(f"디렉토리의 모든 평가 파일: {len(all_files)}개")
+                if all_files:
+                    self.logger.info(f"최근 파일 예시: {all_files[-1].name}")
                 return None
             
             # 가장 최근 파일 읽기

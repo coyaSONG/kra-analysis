@@ -263,8 +263,8 @@ def get_project_root() -> Path:
     current = Path(__file__).resolve()
     
     # scripts/prompt_improvement/v5_modules/utils.py
-    # -> 3단계 상위가 프로젝트 루트
-    return current.parent.parent.parent
+    # -> 3단계 상위가 scripts, 4단계 상위가 프로젝트 루트
+    return current.parent.parent.parent.parent
 
 
 def get_data_dir() -> Path:

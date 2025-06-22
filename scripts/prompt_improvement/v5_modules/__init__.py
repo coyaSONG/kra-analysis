@@ -14,7 +14,7 @@ __author__ = "KRA Racing Prediction System"
 
 # 모듈 임포트
 from .prompt_parser import PromptParser, PromptStructure, PromptSection
-from .insight_analyzer import InsightAnalyzer
+from .insight_analyzer import InsightAnalyzer, InsightAnalysis
 from .dynamic_reconstructor import DynamicReconstructor
 from .examples_manager import ExamplesManager
 
@@ -23,6 +23,7 @@ __all__ = [
     'PromptStructure', 
     'PromptSection',
     'InsightAnalyzer',
+    'InsightAnalysis',
     'DynamicReconstructor',
     'ExamplesManager'
 ]
