@@ -14,17 +14,9 @@ import json
 
 from .prompt_parser import PromptStructure, PromptSection, RequirementsEditor, AnalysisStepsEditor
 from .insight_analyzer import InsightAnalysis, Recommendation
+from .common_types import Change
 
 
-@dataclass
-class Change:
-    """개별 변경사항을 표현하는 클래스"""
-    change_type: str  # 'modify', 'add', 'remove'
-    target_section: str
-    description: str
-    old_value: Optional[str] = None
-    new_value: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.now)
 
 
 @dataclass
@@ -295,6 +287,17 @@ class DynamicReconstructor:
         self.conflict_resolver = ConflictResolver()
         self.change_tracker = ChangeTracker()
         self.aggressiveness = 0.3  # 한 번에 적용할 변경의 비율
+        
+        # 고급 기법 엔진 초기화 (lazy import to avoid circular dependency)
+        from .guide_loader import PromptEngineeringGuideLoader
+        from .extended_thinking import ExtendedThinkingEngine
+        from .self_verification import SelfVerificationEngine
+        from .token_optimizer import TokenOptimizationEngine
+        
+        self.guide_loader = PromptEngineeringGuideLoader()
+        self.extended_thinking = ExtendedThinkingEngine()
+        self.self_verification = SelfVerificationEngine()
+        self.token_optimizer = TokenOptimizationEngine()
     
     def reconstruct_prompt(
         self,
@@ -344,10 +347,54 @@ class DynamicReconstructor:
         )
         all_changes.extend(rule_changes)
         
-        # 6. 버전 업데이트
+        # 6. 고급 기법 적용
+        current_success_rate = current_performance.get('success_rate', 0)
+        
+        # 6.1 Extended Thinking Mode
+        if self.guide_loader.should_apply_technique('extended_thinking', current_success_rate):
+            thinking_changes = self.extended_thinking.apply_extended_thinking(
+                modified_structure,
+                current_success_rate
+            )
+            all_changes.extend(thinking_changes)
+            
+            # 사고 검증 추가
+            verification_changes = self.extended_thinking.add_thinking_verification(modified_structure)
+            all_changes.extend(verification_changes)
+        
+        # 6.2 강화된 자가 검증
+        if self.guide_loader.should_apply_technique('self_verification', current_success_rate):
+            # 검증 섹션 추가
+            verification_changes = self.self_verification.add_verification_section(modified_structure)
+            all_changes.extend(verification_changes)
+            
+            # 출력 형식에 검증 필드 추가
+            output_changes = self.self_verification.add_verification_to_output_format(modified_structure)
+            all_changes.extend(output_changes)
+            
+            # 사후 검증 단계 추가
+            post_verification_changes = self.self_verification.create_post_analysis_verification(modified_structure)
+            all_changes.extend(post_verification_changes)
+            
+            # 오류 복구 가이드 추가
+            recovery_changes = self.self_verification.add_error_recovery_guidance(modified_structure)
+            all_changes.extend(recovery_changes)
+        
+        # 6.3 토큰 최적화 (항상 적용)
+        if self.guide_loader.should_apply_technique('token_optimization', current_success_rate):
+            # 기본 최적화
+            _, token_changes = self.token_optimizer.optimize_prompt(modified_structure)
+            all_changes.extend(token_changes)
+            
+            # 고급 압축 (성능이 안정적일 때만)
+            if current_success_rate >= 65:
+                compression_changes = self.token_optimizer.apply_advanced_compression(modified_structure)
+                all_changes.extend(compression_changes)
+        
+        # 7. 버전 업데이트
         modified_structure.version = new_version
         
-        # 7. 변경사항 기록
+        # 8. 변경사항 기록
         if all_changes:
             self.change_tracker.record_changes(
                 version_from=current_structure.version,
@@ -403,6 +450,14 @@ class DynamicReconstructor:
                 issues.append("output_format의 JSON 형식 오류")
         
         return issues
+    
+    def get_advanced_techniques_status(self, current_performance: float) -> Dict[str, bool]:
+        """고급 기법 적용 상태 조회"""
+        return {
+            'extended_thinking': self.guide_loader.should_apply_technique('extended_thinking', current_performance),
+            'self_verification': self.guide_loader.should_apply_technique('self_verification', current_performance),
+            'token_optimization': self.guide_loader.should_apply_technique('token_optimization', current_performance)
+        }
     
     def generate_change_report(self) -> str:
         """전체 변경 이력 보고서 생성"""

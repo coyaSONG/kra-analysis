@@ -45,12 +45,14 @@ class RecursivePromptImprovementV5:
                  initial_prompt_path: Path,
                  target_date: str = "all",
                  max_iterations: int = 5,
-                 parallel_count: int = 5):
+                 parallel_count: int = 5,
+                 race_limit: str = None):
         
         self.initial_prompt_path = initial_prompt_path
         self.target_date = target_date
         self.max_iterations = max_iterations
         self.parallel_count = parallel_count
+        self.race_limit = race_limit
         
         # 작업 디렉토리 설정
         self.working_dir = get_data_dir() / f"recursive_improvement_v5/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -177,6 +179,12 @@ class RecursivePromptImprovementV5:
                 metrics
             )
             
+            # 고급 기법 적용 상태 로깅
+            advanced_status = self.reconstructor.get_advanced_techniques_status(current_performance)
+            applied_techniques = [tech for tech, applied in advanced_status.items() if applied]
+            if applied_techniques:
+                self.logger.info(f"  - 적용된 고급 기법: {', '.join(applied_techniques)}")
+            
             # 예시 업데이트
             used_example_ids = self.examples_manager.update_examples_section(
                 new_structure,
@@ -190,8 +198,17 @@ class RecursivePromptImprovementV5:
             )
             
             self.logger.info(f"  - 적용된 변경사항: {len(changes)}개")
-            for change in changes[:3]:  # 상위 3개만 표시
+            for change in changes[:5]:  # 상위 5개 표시
                 self.logger.info(f"    • {change.description}")
+            
+            # 특별히 고급 기법 관련 변경사항 강조
+            advanced_changes = [c for c in changes if any(
+                tech in c.description.lower() for tech in ['thinking', '검증', '토큰', '최적화']
+            )]
+            if advanced_changes:
+                self.logger.info("  - 고급 기법 변경사항:")
+                for change in advanced_changes[:3]:
+                    self.logger.info(f"    ★ {change.description}")
             
             # 검증
             validation_issues = self.reconstructor.validate_changes(new_structure)
@@ -258,8 +275,23 @@ class RecursivePromptImprovementV5:
             version = structure.version or "unknown"
             
             # evaluate_prompt_v3.py 실행
-            # 테스트 모드에서는 경주 수를 줄임
-            race_count = "5" if self.max_iterations <= 2 else "30"
+            # 사용자가 지정한 경주 수 또는 자동 설정
+            if self.race_limit:
+                if self.race_limit.lower() == "all":
+                    # 전체 경주 사용 (사실상 무제한)
+                    race_count = "999999"
+                else:
+                    # 숫자로 지정된 경우
+                    race_count = self.race_limit
+            else:
+                # 테스트 모드에서는 경주 수를 줄임
+                # 일반 모드에서는 더 많은 경주를 평가
+                if self.max_iterations <= 2:
+                    race_count = "5"  # 빠른 테스트
+                elif self.max_iterations <= 5:
+                    race_count = "50"  # 중간 규모 평가
+                else:
+                    race_count = "100"  # 대규모 평가
             
             cmd = [
                 "python3",
@@ -275,6 +307,10 @@ class RecursivePromptImprovementV5:
                 pass
             
             self.logger.info(f"평가 명령: {' '.join(cmd)}")
+            if race_count == "999999":
+                self.logger.info(f"평가할 경주 수: 전체 (제한 없음)")
+            else:
+                self.logger.info(f"평가할 경주 수: {race_count}개")
             
             # 실행
             result = subprocess.run(
@@ -374,6 +410,27 @@ class RecursivePromptImprovementV5:
         report.append("2. **인사이트 기반**: 데이터 분석에 기반한 구체적 개선")
         report.append("3. **체계적 예시 관리**: 성과 추적 및 최적 선택")
         report.append("4. **투명한 변경 추적**: 모든 변경사항 기록 및 검증")
+        report.append("5. **고급 기법 통합**: Extended Thinking, 강화된 검증, 토큰 최적화")
+        
+        # 고급 기법 사용 내역
+        report.append("\n## 고급 기법 적용 내역")
+        report.append("### 프롬프트 엔지니어링 가이드 기반 개선")
+        
+        # 각 반복에서 적용된 기법 추적
+        techniques_used = set()
+        for item in self.iteration_history:
+            perf = item['performance']
+            status = self.reconstructor.get_advanced_techniques_status(perf)
+            for tech, applied in status.items():
+                if applied:
+                    techniques_used.add(tech)
+        
+        if 'extended_thinking' in techniques_used:
+            report.append("- **Extended Thinking Mode**: 저성과 구간에서 ultrathink 키워드 적용")
+        if 'self_verification' in techniques_used:
+            report.append("- **강화된 자가 검증**: 다단계 검증 프로세스 및 오류 복구 가이드 추가")
+        if 'token_optimization' in techniques_used:
+            report.append("- **토큰 최적화**: 중복 제거, 표 형식 도입, 약어 사용으로 효율성 향상")
         
         return "\n".join(report)
 
@@ -393,6 +450,15 @@ def main():
   
   # 10회 반복, 병렬 처리 10개
   python3 recursive_prompt_improvement_v5.py -i 10 -p 10
+  
+  # 200개 경주로 평가
+  python3 recursive_prompt_improvement_v5.py -r 200
+  
+  # 전체 경주 사용
+  python3 recursive_prompt_improvement_v5.py -r all
+  
+  # 전체 옵션 사용
+  python3 recursive_prompt_improvement_v5.py -i 5 -p 15 -r 150
         """
     )
     
@@ -424,6 +490,13 @@ def main():
         help='병렬 처리 수 (기본값: 5)'
     )
     
+    parser.add_argument(
+        '-r', '--races',
+        type=str,
+        default=None,
+        help='평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, "all": 전체 경주)'
+    )
+    
     args = parser.parse_args()
     
     # 경로 검증
@@ -437,7 +510,8 @@ def main():
         initial_prompt_path=prompt_path,
         target_date=args.target_date,
         max_iterations=args.iterations,
-        parallel_count=args.parallel
+        parallel_count=args.parallel,
+        race_limit=args.races
     )
     
     try:

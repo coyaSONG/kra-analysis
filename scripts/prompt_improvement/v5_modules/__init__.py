@@ -6,6 +6,10 @@ KRA 경마 예측 시스템 - 재귀 프롬프트 개선 v5 모듈
 - insight_analyzer: 인사이트 분석 엔진
 - dynamic_reconstructor: 동적 프롬프트 재구성
 - examples_manager: 예시 관리 시스템
+- guide_loader: 프롬프트 엔지니어링 가이드 로더
+- extended_thinking: Extended Thinking Mode 구현
+- self_verification: 강화된 자가 검증 시스템
+- token_optimizer: 토큰 최적화 엔진
 - utils: 공통 유틸리티
 """
 
@@ -17,6 +21,10 @@ from .prompt_parser import PromptParser, PromptStructure, PromptSection
 from .insight_analyzer import InsightAnalyzer, InsightAnalysis
 from .dynamic_reconstructor import DynamicReconstructor
 from .examples_manager import ExamplesManager
+from .guide_loader import PromptEngineeringGuideLoader
+from .extended_thinking import ExtendedThinkingEngine
+from .self_verification import SelfVerificationEngine
+from .token_optimizer import TokenOptimizationEngine
 
 __all__ = [
     'PromptParser',
@@ -25,5 +33,9 @@ __all__ = [
     'InsightAnalyzer',
     'InsightAnalysis',
     'DynamicReconstructor',
-    'ExamplesManager'
+    'ExamplesManager',
+    'PromptEngineeringGuideLoader',
+    'ExtendedThinkingEngine',
+    'SelfVerificationEngine',
+    'TokenOptimizationEngine'
 ]

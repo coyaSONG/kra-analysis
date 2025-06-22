@@ -34,7 +34,7 @@ python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [
 python3 scripts/evaluation/predict_only_test.py [프롬프트파일] [날짜/all] [제한]
 
 # 재귀 개선 (v5 - 최신)
-python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py [프롬프트] [날짜/all] [-i 반복] [-p 병렬]
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py [프롬프트] [날짜/all] [-i 반복] [-p 병렬] [-r 경주수/all]
 
 # 데이터 패턴 분석
 python3 scripts/prompt_improvement/analyze_enriched_patterns.py
@@ -48,6 +48,11 @@ python3 scripts/prompt_improvement/analyze_enriched_patterns.py
   - 인사이트 분석 엔진 (다차원 분석)
   - 동적 재구성 시스템 (실제 프롬프트 개선)
   - 예시 관리 시스템 (성과 추적 및 최적화)
+  - **고급 기법 통합 (NEW):**
+    - Extended Thinking Mode (ultrathink) - 저성과 시 적용
+    - 강화된 자가 검증 - 다단계 검증 프로세스
+    - 토큰 최적화 - 효율적인 프롬프트 압축
+    - 프롬프트 엔지니어링 가이드 기반 개선
 
 ## 참조 문서
 - 프로젝트 상세: `docs/project-overview.md`
