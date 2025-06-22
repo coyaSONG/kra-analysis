@@ -81,6 +81,16 @@
 
 ## 📋 진행 중인 작업
 
+### 재귀 개선 시스템 v4 문제점 해결 (2025-06-22)
+- [x] v2.1 → v2.3 프롬프트 분석 (내용 동일, 성능 지표만 변경 확인)
+- [x] 현재 재귀 개선 시스템 문제점 상세 분석 및 문서화 (`docs/recursive-improvement-v4-analysis.md`)
+- [x] 실제 성능 개선 요인 분석 - Few-shot Learning 효과 확인 (`docs/performance-improvement-analysis.md`)
+- [x] 프롬프트 파싱 및 구조화 시스템 설계 (`docs/prompt-parsing-system-design.md`)
+- [x] 인사이트 분석 엔진 개선 설계 (`docs/insight-analysis-engine-design.md`)
+- [x] 동적 프롬프트 재구성 시스템 설계 (`docs/dynamic-prompt-reconstruction-design.md`)
+- [ ] 개선된 재귀 시스템 v5 구현
+- [ ] 기존 v4 시스템과 v5 시스템 성능 비교 테스트
+
 ### 문서 업데이트
 - [ ] README.md 최신 성과 반영
 - [ ] recursive-improvement-results.md v10 시리즈 추가
