@@ -88,7 +88,14 @@
 - [x] 프롬프트 파싱 및 구조화 시스템 설계 (`docs/prompt-parsing-system-design.md`)
 - [x] 인사이트 분석 엔진 개선 설계 (`docs/insight-analysis-engine-design.md`)
 - [x] 동적 프롬프트 재구성 시스템 설계 (`docs/dynamic-prompt-reconstruction-design.md`)
-- [ ] 개선된 재귀 시스템 v5 구현
+- [x] 개선된 재귀 시스템 v5 구현
+  - [x] v5 모듈 디렉토리 구조 생성
+  - [x] 프롬프트 파서 모듈 (`v5_modules/prompt_parser.py`)
+  - [x] 인사이트 분석 엔진 모듈 (`v5_modules/insight_analyzer.py`)
+  - [x] 동적 재구성 시스템 모듈 (`v5_modules/dynamic_reconstructor.py`)
+  - [x] 예시 관리 시스템 (`v5_modules/examples_manager.py`)
+  - [x] 유틸리티 모듈 (`v5_modules/utils.py`)
+  - [x] v5 메인 스크립트 (`recursive_prompt_improvement_v5.py`)
 - [ ] 기존 v4 시스템과 v5 시스템 성능 비교 테스트
 
 ### 문서 업데이트

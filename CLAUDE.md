@@ -33,8 +33,11 @@ python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [
 # 예측 전용 테스트 (결과 비교 없음)
 python3 scripts/evaluation/predict_only_test.py [프롬프트파일] [날짜/all] [제한]
 
-# 재귀 개선 (v4 - 최신)
+# 재귀 개선 (v4 - 문제 발견)
 python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py [프롬프트] [날짜/all] [반복] [병렬]
+
+# 재귀 개선 (v5 - 최신, 진정한 개선)
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py [프롬프트] [날짜/all] [-i 반복] [-p 병렬]
 
 # 데이터 패턴 분석
 python3 scripts/prompt_improvement/analyze_enriched_patterns.py
@@ -47,10 +50,12 @@ python3 scripts/prompt_improvement/analyze_enriched_patterns.py
 - v4 개선 시스템 문제점 발견 (2025-06-22)
   - 프롬프트 내용 개선 없이 examples만 변경
   - 실제 개선은 Few-shot Learning 효과
-- v5 시스템 설계 완료 (2025-06-22)
-  - 프롬프트 파싱 시스템
-  - 인사이트 분석 엔진
-  - 동적 재구성 시스템
+- v5 시스템 설계 및 구현 완료 (2025-06-22)
+  - 프롬프트 파싱 시스템 (XML 태그 기반)
+  - 인사이트 분석 엔진 (다차원 분석)
+  - 동적 재구성 시스템 (실제 프롬프트 개선)
+  - 예시 관리 시스템 (성과 추적 및 최적화)
+  - 실제로 프롬프트 내용을 개선하는 진정한 재귀 시스템
 
 ## 참조 문서
 - 프로젝트 상세: `docs/project-overview.md`
