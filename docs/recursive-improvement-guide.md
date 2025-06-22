@@ -6,27 +6,43 @@
 
 ## 시스템 구성
 
-### 1. 핵심 스크립트
+### 1. 핵심 스크립트 (2025-06-22 최신)
 
-#### evaluate_prompt.py
+#### evaluate_prompt_v3.py / evaluate_prompt_v3_base.py
 - **역할**: 단일 프롬프트 버전 평가
 - **기능**:
   - Claude CLI로 예측 실행
-  - 실제 결과와 비교
+  - 실제 결과와 비교 (top3 형태)
   - 보상함수 기반 점수 계산
-  - 실패 패턴 분석
+  - 병렬 처리 지원
 
-#### recursive_prompt_improvement.py
-- **역할**: 재귀적 개선 사이클 관리
-- **기능**:
-  - 평가 → 분석 → 개선 → 재평가 사이클
-  - 자동 가중치 조정
-  - 성능 추적 및 보고서 생성
+#### recursive_prompt_improvement_v5.py (최신)
+- **역할**: v5 재귀적 개선 사이클 관리
+- **핵심 기능**:
+  - 프롬프트 파싱 시스템 (XML 태그 기반)
+  - 인사이트 분석 엔진 (다차원 분석)
+  - 동적 재구성 시스템 (실제 프롬프트 개선)
+  - 예시 관리 시스템 (성과 추적 및 최적화)
+  - 고급 프롬프트 엔지니어링 기법 통합
 
-### 2. 프로세스 플로우
+### 2. v5 프로세스 플로우 (2025-06-22)
 
 ```
 [초기 프롬프트]
+      ↓
+[프롬프트 파싱] (XML 태그별 구조 분석)
+      ↓
+[성능 평가] (enriched 데이터로 예측)
+      ↓
+[인사이트 분석] (실패 패턴, 성공 요인 분석)
+      ↓
+[동적 재구성] (섹션별 개선)
+      ↓
+[예시 관리] (성공/실패 케이스 업데이트)
+      ↓
+[고급 기법 적용] (ultrathink, 자가검증 등)
+      ↓
+[개선된 프롬프트]
       ↓
 [1. 예측 실행] ← Claude CLI
       ↓
@@ -43,27 +59,36 @@
 [반복] ← 목표 달성까지
 ```
 
-## 사용법
+## 사용법 (2025-06-22 최신)
 
 ### 1. 단일 프롬프트 평가
 
 ```bash
-# 기본 평가 (10개 경주)
-python scripts/evaluate_prompt.py v2.0 prompts/prediction-template-v2.0.md
+# v3 평가 시스템 (최신)
+python3 scripts/evaluation/evaluate_prompt_v3.py v1.0 prompts/base-prompt-v1.0.md 10 3
 
-# 더 많은 경주로 평가
-python scripts/evaluate_prompt.py v2.0 prompts/prediction-template-v2.0.md 20
+# base-prompt용 전용 평가
+python3 scripts/evaluation/evaluate_prompt_v3_base.py v1.0 prompts/base-prompt-v1.0.md 10 3
 ```
 
-### 2. 재귀 개선 실행
+### 2. v5 재귀 개선 실행
 
 ```bash
-# 기본 실행 (10개 경주, 5회 반복)
-python scripts/recursive_prompt_improvement.py prompts/prediction-template-v2.0.md
+# v5 재귀 개선 시스템 (최신)
+python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py prompts/base-prompt-v1.0.md all -i 5 -p 3 -r 20
 
-# 커스텀 설정
-python scripts/recursive_prompt_improvement.py prompts/prediction-template-v2.0.md 20 10
-# (20개 경주로 테스트, 최대 10회 반복)
+# 파라미터 설명:
+# all: 모든 날짜 데이터 사용
+# -i 5: 최대 5회 반복
+# -p 3: 3개 병렬 처리
+# -r 20: 20개 경주로 평가
+```
+
+### 3. 경주 결과 수집
+
+```bash
+# 개별 경주 결과 수집 (평가 전 필수)
+node scripts/race_collector/get_race_result.js 20250622 서울 1
 ```
 
 ## 평가 메트릭
@@ -85,12 +110,33 @@ python scripts/recursive_prompt_improvement.py prompts/prediction-template-v2.0.
 - 데이터 부족 말 처리 성공률
 - 체중 변화 해석 정확도
 
-## 개선 메커니즘
+## v5 개선 메커니즘 (2025-06-22)
 
-### 1. 자동 가중치 조정
-```
-현재 실패 패턴 분석 → 가중치 조정 제안
-예: 인기마 놓침 多 → 시장평가 가중치 상향
+### 1. 프롬프트 파싱 시스템
+- XML 태그별 구조 분석
+- 섹션별 독립적 수정 가능
+- 원본 구조 보존
+
+### 2. 인사이트 분석 엔진
+- 다차원 실패 패턴 분석
+- 성공 요인 자동 추출
+- 데이터 기반 개선점 도출
+
+### 3. 동적 재구성 시스템
+- 실제 프롬프트 개선 수행
+- 섹션별 맞춤 전략 적용
+- 구조 일관성 유지
+
+### 4. 예시 관리 시스템
+- 성공/실패 케이스 자동 추적
+- 성과 기반 예시 선별
+- Few-shot Learning 최적화
+
+### 5. 고급 기법 통합
+- Extended Thinking Mode (ultrathink)
+- 강화된 자가 검증
+- 토큰 최적화
+- 프롬프트 엔지니어링 가이드 기반 개선
 ```
 
 ### 2. 로직 개선

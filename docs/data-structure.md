@@ -162,9 +162,35 @@ prediction_{meet}_{date}_{race_no}_{timestamp}.json
 4. **재현성**: 동일한 입력 데이터로 예측 재현 가능
 5. **보안**: .env 파일과 API 키는 절대 커밋하지 않음
 
-## 다음 단계
+## 현재 실제 구조 (2025-06-22 업데이트)
 
-1. 디렉토리 구조 생성
-2. 데이터 수집 스크립트 작성
-3. 첫 번째 테스트 경주 선정
-4. 데이터 수집 및 예측 실행
+실제 구현에서는 다음과 같은 구조를 사용하고 있습니다:
+
+```
+data/
+├── cache/
+│   ├── horses/                    # 말 상세정보 캐시 (hrNo.json)
+│   └── results/                   # 경주 결과 (top3_날짜_경마장_경주.json)
+├── races/                         # 원본 경주 데이터
+│   └── YYYY/MM/YYYYMMDD/meet/    # 연도/월/날짜/경마장별 분류
+│       ├── race_*_prerace.json   # 경주 전 데이터
+│       └── race_*_enriched.json  # 상세정보 포함 데이터
+├── prompt_evaluation/             # 프롬프트 평가 결과
+├── prediction_tests/              # 예측 테스트 결과
+└── recursive_improvement_v5/       # v5 재귀 개선 시스템 결과
+```
+
+### 핵심 파일 형태
+
+**경주 결과 (cache/results/)**:
+```json
+[6, 7, 1]  // 1위: 6번, 2위: 7번, 3위: 1번
+```
+
+**enriched 데이터**: 기존 경주 데이터 + 말/기수/조교사 상세정보 통합
+
+### 데이터 수집 도구
+
+- `get_race_result.js`: 개별 경주 결과 수집
+- `collect_and_preprocess.js`: 경주 전 데이터 수집
+- `enrich_race_data.js`: 상세정보 추가

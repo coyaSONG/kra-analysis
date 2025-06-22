@@ -27,6 +27,9 @@ Claude Code 작업 시 필수 지침입니다.
 node scripts/race_collector/collect_and_preprocess.js [날짜] [경주번호]
 node scripts/race_collector/enrich_race_data.js [날짜] [경주번호]
 
+# 경주 결과 수집 (개별)
+node scripts/race_collector/get_race_result.js [날짜] [경마장] [경주번호]
+
 # 프롬프트 평가
 python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [경주수] [병렬수]
 

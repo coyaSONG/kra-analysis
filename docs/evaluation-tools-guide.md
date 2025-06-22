@@ -81,7 +81,41 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 4. 인사이트 기반 프롬프트 개선
 5. 개선된 프롬프트로 재평가
 
-## 4. analyze_enriched_patterns.py - 데이터 패턴 분석
+## 4. get_race_result.js - 경주 결과 수집
+
+개별 경주의 실제 결과(1-2-3위 착순)를 KRA API에서 수집합니다.
+
+### 사용법
+```bash
+node scripts/race_collector/get_race_result.js [날짜] [경마장] [경주번호]
+```
+
+### 예시
+```bash
+# 6월 22일 서울 1경주 결과 수집
+node scripts/race_collector/get_race_result.js 20250622 서울 1
+
+# 6월 22일 부산경남 3경주 결과 수집
+node scripts/race_collector/get_race_result.js 20250622 부산경남 3
+```
+
+### 기능
+- KRA API214_1을 통한 실제 경주 결과 조회
+- 1-2-3위 출주번호 추출
+- `data/cache/results/top3_날짜_경마장_경주번호.json` 형태로 저장
+- 평가 시스템과 자동 연동
+
+### 출력 파일 형태
+```json
+[6, 7, 1]  // 1위: 6번, 2위: 7번, 3위: 1번
+```
+
+### 주의사항
+- 경주 완료 후에만 결과 수집 가능
+- 기권/제외마는 자동으로 필터링
+- 평가 도구들이 자동으로 호출하므로 수동 실행은 선택사항
+
+## 5. analyze_enriched_patterns.py - 데이터 패턴 분석
 
 enriched 데이터의 패턴을 분석하여 인사이트를 도출합니다.
 
@@ -117,7 +151,11 @@ python3 scripts/prompt_improvement/analyze_enriched_patterns.py
    - 성능을 높이고 싶을 때
    - 여러 버전을 빠르게 테스트할 때
 
-4. **데이터 이해**: `analyze_enriched_patterns.py`
+4. **경주 결과 수집**: `get_race_result.js`
+   - 새로운 경주 결과 데이터가 필요할 때
+   - 평가 시스템이 자동으로 호출
+
+5. **데이터 이해**: `analyze_enriched_patterns.py`
    - 데이터 특성 파악
    - 새로운 전략 아이디어 도출
 
