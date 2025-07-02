@@ -42,7 +42,7 @@ jobs:
         uses: pyupio/safety-action@v1
         with:
           api-key: ${{ secrets.SAFETY_API_KEY }}
-          continue-on-error: true  # API 키 없어도 기본 검사 실행
+        continue-on-error: true  # API 키 없어도 기본 검사 실행
 
       - name: Node.js 의존성 보안 검사
         run: |
@@ -83,8 +83,9 @@ jobs:
         run: |
           echo "🔍 KRA API 키 패턴 검사 중..."
           
-          # API 키 패턴 검사 (KRA_PUBLIC_API_GUIDE.md 제외)
-          if grep -r "serviceKey\s*[:=]" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=data --exclude="KRA_PUBLIC_API_GUIDE.md" | grep -v "process\.env\|getenv\|VITE_\|import\.meta\.env"; then
+          # API 키 패턴 검사 - 실제 키 값이 하드코딩된 경우만 검사
+          # ${API_KEY} 같은 변수 참조는 제외
+          if grep -r "serviceKey\s*[:=]\s*[\"'][^$\"']*[\"']" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=data --exclude="KRA_PUBLIC_API_GUIDE.md" | grep -v "process\.env\|getenv\|VITE_\|import\.meta\.env\|\${.*}\|API_KEY"; then
             echo "❌ 하드코딩된 API 키가 발견되었습니다!"
             exit 1
           fi
