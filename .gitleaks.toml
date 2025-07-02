@@ -1,0 +1,31 @@
+# Gitleaks 설정 파일
+# KRA 프로젝트에 맞춤 설정
+
+[allowlist]
+# 문서에서 예시로 보여주는 것은 허용
+paths = [
+  "KRA_PUBLIC_API_GUIDE.md",
+  "docs/.*\\.md"
+]
+
+# 환경변수 참조는 허용
+regexes = [
+  "process\\.env\\.",
+  "os\\.getenv",
+  "import\\.meta\\.env",
+  "VITE_.*",
+  "dotenv"
+]
+
+# 커스텀 룰 추가
+[[rules]]
+id = "kra-api-key"
+description = "KRA API serviceKey 하드코딩 감지"
+regex = '''serviceKey\s*[:=]\s*["']?[a-zA-Z0-9+/=]{20,}["']?'''
+tags = ["api", "key", "kra"]
+
+[[rules]]
+id = "env-file"
+description = ".env 파일 내용 감지"
+regex = '''(?i)(KRA_API_KEY|SERVICE_KEY|API_KEY)\s*=\s*.+'''
+tags = ["env", "config"]

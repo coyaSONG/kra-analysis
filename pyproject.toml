@@ -1,0 +1,40 @@
+# Python 프로젝트 설정 파일
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | data
+  | __pycache__
+  | \.mypy_cache
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_gitignore = true
+skip = ["data", ".venv"]
+
+[tool.flake8]
+max-line-length = 120
+exclude = [".git", "__pycache__", "data", ".venv"]
+ignore = ["E203", "W503"]  # Black과 호환성을 위해
+
+[tool.pylint.messages_control]
+max-line-length = 120
+disable = [
+    "C0111",  # missing-docstring
+    "C0103",  # invalid-name
+    "R0903",  # too-few-public-methods
+    "R0913",  # too-many-arguments
+    "W0511",  # fixme
+]
+
+[tool.pylint.reports]
+output-format = "colorized"
+reports = "no"

@@ -1,0 +1,122 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 비밀 정보 스캔
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 전체 히스토리 검사를 위해
+
+      - name: TruffleHog OSS - 비밀 정보 스캔
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Gitleaks - 추가 비밀 정보 검사
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 의존성 취약점 스캔
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Python 의존성 보안 검사
+        uses: pyupio/safety-action@v1
+        with:
+          api-key: ${{ secrets.SAFETY_API_KEY }}
+          continue-on-error: true  # API 키 없어도 기본 검사 실행
+
+      - name: Node.js 의존성 보안 검사
+        run: |
+          # package-lock.json이 없으므로 수동 설치 후 검사
+          npm install node-fetch@2 dotenv
+          npx audit-ci --low
+        continue-on-error: true  # 경고 수준에서는 실패하지 않음
+
+  # 코드 보안 스캔
+  code-security:
+    name: Code Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: CodeQL 초기화
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, python
+          queries: security-and-quality
+
+      - name: CodeQL 분석 실행
+        uses: github/codeql-action/analyze@v3
+
+  # 커스텀 보안 체크
+  custom-checks:
+    name: Custom Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: API 키 패턴 검사
+        run: |
+          echo "🔍 KRA API 키 패턴 검사 중..."
+          
+          # API 키 패턴 검사 (KRA_PUBLIC_API_GUIDE.md 제외)
+          if grep -r "serviceKey\s*[:=]" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=data --exclude="KRA_PUBLIC_API_GUIDE.md" | grep -v "process\.env\|getenv\|VITE_\|import\.meta\.env"; then
+            echo "❌ 하드코딩된 API 키가 발견되었습니다!"
+            exit 1
+          fi
+          
+          echo "✅ 하드코딩된 API 키가 발견되지 않았습니다."
+
+      - name: .env 파일 검사
+        run: |
+          echo "🔍 .env 파일 커밋 검사 중..."
+          
+          # .env 파일이 git에 추가되었는지 확인
+          if git ls-files | grep -E "^\.env$|^\.env\."; then
+            echo "❌ .env 파일이 커밋되어 있습니다!"
+            exit 1
+          fi
+          
+          echo "✅ .env 파일이 올바르게 제외되어 있습니다."
+
+      - name: 민감한 데이터 디렉터리 검사
+        run: |
+          echo "🔍 data/ 디렉터리 검사 중..."
+          
+          # data/ 디렉터리가 git에 추가되었는지 확인
+          if git ls-files | grep "^data/"; then
+            echo "❌ data/ 디렉터리의 파일이 커밋되어 있습니다!"
+            exit 1
+          fi
+          
+          echo "✅ data/ 디렉터리가 올바르게 제외되어 있습니다."
+
+      - name: 보안 검사 결과 요약
+        if: always()
+        run: |
+          echo "📊 보안 검사 완료"
+          echo "모든 검사를 통과하면 PR을 안전하게 머지할 수 있습니다."
