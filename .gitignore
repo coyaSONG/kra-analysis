@@ -59,3 +59,7 @@ logs/
 # Package files
 package-lock.json
 yarn.lock
+
+# API server logs
+api/server.log
+nodejs-collector/*.log

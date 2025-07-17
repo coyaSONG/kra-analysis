@@ -28,6 +28,8 @@
 
 ```
 kra-analysis/
+├── api/                      # Python FastAPI 서버 (비즈니스 로직, AI 예측)
+├── nodejs-collector/         # Node.js 데이터 수집 서버
 ├── scripts/
 │   ├── race_collector/        # 데이터 수집 모듈
 │   ├── evaluation/           # 평가 시스템 v3
@@ -53,10 +55,12 @@ cd kra-analysis
 # 환경 변수 설정
 echo "KRA_SERVICE_KEY=your_api_key_here" > .env
 
-# Node.js 패키지 설치
+# Node.js 데이터 수집 서버
+cd nodejs-collector
 npm install
 
-# Python 패키지 설치
+# Python API 서버
+cd ../api
 pip install -r requirements.txt
 ```
 
@@ -101,10 +105,24 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 
 ## 🛠 기술 스택
 
-- Python 3.8+
-- Node.js 18+ (API 클라이언트)
+- Python 3.8+ (FastAPI, AI 예측)
+- Node.js 18+ (데이터 수집)
 - Claude API (예측 모델)
 - KRA 공공 데이터 API
+
+## 🏗️ 아키텍처
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Client    │────▶│ Python FastAPI   │────▶│ Node.js Collector│
+└─────────────┘     │   (port 8000)    │     │   (port 3001)   │
+                    └──────────────────┘     └────────┬────────┘
+                                                      │
+                                             ┌────────▼────────┐
+                                             │  KRA Public API │
+                                             │     (HTTP)      │
+                                             └─────────────────┘
+```
 
 ## 📚 문서
 

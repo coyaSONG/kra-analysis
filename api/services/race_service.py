@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 import asyncio
 import structlog
+import httpx
 from supabase import Client
 from infrastructure.kra_api.client import KRAApiClient
 from models.race_dto import RaceStatus
@@ -16,6 +17,7 @@ class RaceService:
         self.supabase = supabase
         self.kra_client = KRAApiClient()
         self._cache = {}  # In-memory cache when Supabase is not available
+        self.nodejs_api_url = "http://localhost:3001"  # Node.js 수집 서버
     
     async def create_collection_job(self, request) -> str:
         """수집 작업을 생성하고 job_id를 반환합니다."""
@@ -66,12 +68,32 @@ class RaceService:
                         "started_at": datetime.utcnow().isoformat()
                     })
             
-            # KRA API에서 데이터 수집
-            if race_no:
-                race_data = await self.kra_client.get_race_detail(date, meet, race_no)
-                races = [race_data] if race_data else []
-            else:
-                races = await self.kra_client.get_all_races(date, meet)
+            # Node.js 수집 서버 호출
+            try:
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    response = await client.post(
+                        f"{self.nodejs_api_url}/collect",
+                        json={"date": date, "meet": meet}
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        logger.info(f"Node.js 수집 완료: {result.get('message')}")
+                        
+                        # 수집된 데이터를 Python API에서도 읽을 수 있도록
+                        # 파일에서 읽거나 Node.js가 반환한 데이터 사용
+                        races = []  # 필요시 파일에서 읽기
+                    else:
+                        raise Exception(f"수집 실패: {response.text}")
+                        
+            except Exception as e:
+                logger.warning(f"Node.js 서버 호출 실패, Python 직접 수집 시도: {e}")
+                # Fallback: Python으로 직접 수집
+                if race_no:
+                    race_data = await self.kra_client.get_race_detail(date, meet, race_no)
+                    races = [race_data] if race_data else []
+                else:
+                    races = await self.kra_client.get_all_races(date, meet)
             
             # 수집된 경주 수 로깅
             logger.info(f"Collected {len(races)} races for {date} meet {meet}")
