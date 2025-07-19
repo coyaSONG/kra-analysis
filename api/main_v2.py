@@ -3,22 +3,20 @@ KRA 통합 데이터 수집 API 서버 v2
 모든 데이터 수집 및 분석 기능을 RESTful API로 제공
 """
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import structlog
-from typing import Optional
 import time
 import uuid
 
 from config import settings
-from middleware.logging import LoggingMiddleware, RequestLoggingMiddleware
+from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
 from routers import (
     collection_v2,
     jobs_v2
 )
-from services.job_service import JobService
 from infrastructure.database import init_db, close_db
 from infrastructure.redis_client import init_redis, close_redis
 
