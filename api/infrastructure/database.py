@@ -1,13 +1,15 @@
 """
-데이터베이스 연결 및 세션 관리
-PostgreSQL with SQLAlchemy AsyncIO
+Fixed database connection for pgbouncer compatibility
+pgbouncer 호환성을 위한 수정된 데이터베이스 연결
 """
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker, AsyncEngine
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import MetaData, text
+from sqlalchemy import MetaData, text, event
+from sqlalchemy.pool import NullPool
 import structlog
 from contextlib import asynccontextmanager
+import asyncpg
 
 from config import settings
 
@@ -27,39 +29,70 @@ metadata = MetaData(
 # Base 클래스 생성
 Base = declarative_base(metadata=metadata)
 
-# 비동기 엔진 생성
+# Custom connection creator for pgbouncer
+async def create_pgbouncer_connection():
+    """Create connection with pgbouncer-specific settings"""
+    # Parse the database URL to get connection parameters
+    db_url = settings.database_url
+    # Remove the sqlalchemy prefix
+    if db_url.startswith("postgresql+asyncpg://"):
+        db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+    
+    # Remove query parameters
+    base_url = db_url.split("?")[0]
+    
+    # Create connection with statement_cache_size=0
+    conn = await asyncpg.connect(
+        base_url,
+        statement_cache_size=0,  # Disable prepared statements
+        server_settings={
+            'jit': 'off'
+        }
+    )
+    return conn
+
+# Create async engine
 database_url = settings.database_url
 
-# For Supabase/pgbouncer compatibility, we need to disable prepared statements
-connect_args = {}
-
-if "pooler.supabase.com" in database_url:
-    # Disable prepared statements for pgbouncer
-    connect_args = {
-        "server_settings": {
-            "jit": "off"
-        },
-        "command_timeout": 60,
-        "statement_cache_size": 0,
-    }
-
-# Create async engine with proper settings
-engine = create_async_engine(
-    database_url,
-    echo=settings.debug,
-    pool_size=settings.database_pool_size,
-    max_overflow=settings.database_max_overflow,
-    pool_pre_ping=True,  # 연결 상태 확인
-    pool_recycle=3600,   # 1시간마다 연결 재생성
-    connect_args=connect_args
-)
+if "sqlite" in database_url:
+    engine = create_async_engine(
+        database_url,
+        echo=settings.debug
+    )
+else:
+    # For Supabase/pgbouncer, use NullPool to avoid connection pooling issues
+    if "pooler.supabase.com" in database_url:
+        # Remove query parameters as we handle them in connect_args
+        base_url = database_url.split("?")[0]
+        
+        engine = create_async_engine(
+            base_url,
+            echo=settings.debug,
+            poolclass=NullPool,  # Use NullPool for pgbouncer
+            connect_args={
+                "statement_cache_size": 0,  # Critical for pgbouncer
+                "server_settings": {
+                    "jit": "off"
+                },
+                "command_timeout": 60,
+            }
+        )
+    else:
+        # Regular PostgreSQL connection
+        engine = create_async_engine(
+            database_url,
+            echo=settings.debug,
+            pool_size=settings.database_pool_size,
+            max_overflow=settings.database_max_overflow,
+            pool_pre_ping=True,
+            pool_recycle=3600,
+        )
 
 # 비동기 세션 팩토리
 async_session_maker = async_sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    # Disable query caching for pgbouncer compatibility
     autoflush=False
 )
 

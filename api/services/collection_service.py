@@ -13,7 +13,8 @@ import numpy as np
 from services.kra_api_service import KRAAPIService
 from infrastructure.database import get_db
 from infrastructure.redis_client import CacheService
-from models.database_models import Race
+from models.database_models import Race, DataStatus
+from utils.field_mapping import convert_api_to_internal, extract_race_horses
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
@@ -55,8 +56,8 @@ class CollectionService:
                 race_no=race_no
             )
             
-            # 기본 경주 정보 수집
-            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no)
+            # 기본 경주 정보 수집 (캐시 활성화)
+            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no, use_cache=True)
             
             # 날씨 정보 수집 (현재 API에서 제공하지 않음)
             weather_info = {}
@@ -71,14 +72,16 @@ class CollectionService:
                         horses = [horses]
                     
                     for horse in horses:
-                        horse_detail = await self._collect_horse_details(horse)
+                        # Convert API camelCase to internal snake_case
+                        horse_converted = convert_api_to_internal(horse)
+                        horse_detail = await self._collect_horse_details(horse_converted)
                         horses_data.append(horse_detail)
             
             # 데이터 통합
             collected_data = {
-                "race_date": race_date,
+                "date": race_date,
                 "meet": meet,
-                "race_no": race_no,
+                "race_number": race_no,
                 "race_info": race_info,
                 "weather": weather_info,
                 "horses": horses_data,
@@ -114,30 +117,55 @@ class CollectionService:
     ) -> Dict[str, Any]:
         """마필 상세 정보 수집"""
         try:
-            # 마필 정보
-            horse_no = horse_basic.get("hrNo")
-            horse_info = await self.kra_api.get_horse_info(horse_no) if horse_no else None
+            # 마필 정보 (캐시 비활성화)
+            horse_no = horse_basic.get("hr_no")
+            horse_info = await self.kra_api.get_horse_info(horse_no, use_cache=False) if horse_no else None
             
-            # 기수 정보
-            jockey_no = horse_basic.get("jkNo")
-            jockey_info = await self.kra_api.get_jockey_info(jockey_no) if jockey_no else None
+            # 기수 정보 (캐시 비활성화)
+            jockey_no = horse_basic.get("jk_no")
+            jockey_info = await self.kra_api.get_jockey_info(jockey_no, use_cache=False) if jockey_no else None
             
-            # 조교사 정보
-            trainer_no = horse_basic.get("trNo")
-            trainer_info = await self.kra_api.get_trainer_info(trainer_no) if trainer_no else None
+            # 조교사 정보 (캐시 비활성화)
+            trainer_no = horse_basic.get("tr_no")
+            trainer_info = await self.kra_api.get_trainer_info(trainer_no, use_cache=False) if trainer_no else None
             
-            # 통합
-            return {
-                **horse_basic,
-                "horse_detail": horse_info,
-                "jockey_detail": jockey_info,
-                "trainer_detail": trainer_info
-            }
+            # 통합 - Follow JavaScript enrichment pattern with hrDetail, jkDetail, trDetail
+            result = {**horse_basic}
+            
+            if horse_info:
+                # Extract items from API response
+                if "response" in horse_info and "body" in horse_info["response"]:
+                    items = horse_info["response"]["body"].get("items", {})
+                    if items and "item" in items:
+                        hr_data = items["item"]
+                        if isinstance(hr_data, list) and hr_data:
+                            hr_data = hr_data[0]
+                        result["hrDetail"] = convert_api_to_internal(hr_data)
+                        
+            if jockey_info:
+                if "response" in jockey_info and "body" in jockey_info["response"]:
+                    items = jockey_info["response"]["body"].get("items", {})
+                    if items and "item" in items:
+                        jk_data = items["item"]
+                        if isinstance(jk_data, list) and jk_data:
+                            jk_data = jk_data[0]
+                        result["jkDetail"] = convert_api_to_internal(jk_data)
+                        
+            if trainer_info:
+                if "response" in trainer_info and "body" in trainer_info["response"]:
+                    items = trainer_info["response"]["body"].get("items", {})
+                    if items and "item" in items:
+                        tr_data = items["item"]
+                        if isinstance(tr_data, list) and tr_data:
+                            tr_data = tr_data[0]
+                        result["trDetail"] = convert_api_to_internal(tr_data)
+            
+            return result
             
         except Exception as e:
             logger.warning(
                 "Failed to collect horse details",
-                horse_no=horse_basic.get("horse_no"),
+                horse_no=horse_basic.get("hr_no"),
                 error=str(e)
             )
             return horse_basic
@@ -149,13 +177,16 @@ class CollectionService:
     ) -> None:
         """경주 데이터 데이터베이스 저장"""
         try:
+            # Generate race_id
+            race_id = f"{data['date']}_{data['meet']}_{data['race_number']}"
+            
             # 기존 데이터 확인
             existing = await db.execute(
                 select(Race).where(
                     and_(
-                        Race.race_date == data["race_date"],
+                        Race.date == data["date"],
                         Race.meet == data["meet"],
-                        Race.race_no == data["race_no"]
+                        Race.race_number == data["race_number"]
                     )
                 )
             )
@@ -163,17 +194,20 @@ class CollectionService:
             
             if race:
                 # 업데이트
-                race.raw_data = data
+                race.basic_data = data
                 race.updated_at = datetime.utcnow()
-                race.status = "collected"
+                race.collection_status = DataStatus.COLLECTED
+                race.collected_at = datetime.utcnow()
             else:
                 # 신규 생성
                 race = Race(
-                    race_date=data["race_date"],
+                    race_id=race_id,
+                    date=data["date"],
                     meet=data["meet"],
-                    race_no=data["race_no"],
-                    raw_data=data,
-                    status="collected"
+                    race_number=data["race_number"],
+                    basic_data=data,
+                    collection_status=DataStatus.COLLECTED,
+                    collected_at=datetime.utcnow()
                 )
                 db.add(race)
             
@@ -186,7 +220,7 @@ class CollectionService:
     
     async def preprocess_race_data(
         self,
-        race_id: int,
+        race_id: str,
         db: AsyncSession
     ) -> Dict[str, Any]:
         """
@@ -202,21 +236,22 @@ class CollectionService:
         try:
             # 경주 데이터 로드
             result = await db.execute(
-                select(Race).where(Race.id == race_id)
+                select(Race).where(Race.race_id == race_id)
             )
             race = result.scalar_one_or_none()
             
             if not race:
                 raise ValueError(f"Race not found: {race_id}")
             
-            raw_data = race.raw_data
+            basic_data = race.basic_data
             
             # 전처리 수행
-            preprocessed = await self._preprocess_data(raw_data)
+            preprocessed = await self._preprocess_data(basic_data)
             
-            # 저장
-            race.preprocessed_data = preprocessed
-            race.status = "preprocessed"
+            # 저장 - basic_data는 유지하고 preprocessed는 enriched_data에 저장
+            race.enriched_data = preprocessed
+            race.enrichment_status = DataStatus.ENRICHED
+            race.enriched_at = datetime.utcnow()
             race.updated_at = datetime.utcnow()
             
             await db.commit()
@@ -294,7 +329,7 @@ class CollectionService:
     
     async def enrich_race_data(
         self,
-        race_id: int,
+        race_id: str,
         db: AsyncSession
     ) -> Dict[str, Any]:
         """
@@ -310,21 +345,23 @@ class CollectionService:
         try:
             # 경주 데이터 로드
             result = await db.execute(
-                select(Race).where(Race.id == race_id)
+                select(Race).where(Race.race_id == race_id)
             )
             race = result.scalar_one_or_none()
             
             if not race:
                 raise ValueError(f"Race not found: {race_id}")
             
-            preprocessed_data = race.preprocessed_data or race.raw_data
+            # Use enriched_data if exists, otherwise basic_data
+            base_data = race.enriched_data or race.basic_data
             
             # 강화 수행
-            enriched = await self._enrich_data(preprocessed_data, db)
+            enriched = await self._enrich_data(base_data, db)
             
             # 저장
             race.enriched_data = enriched
-            race.status = "enriched"
+            race.enrichment_status = DataStatus.ENRICHED
+            race.enriched_at = datetime.utcnow()
             race.updated_at = datetime.utcnow()
             
             await db.commit()
@@ -349,7 +386,7 @@ class CollectionService:
             
             # 각 마필에 대한 과거 성적 조회
             for horse in horses:
-                horse_no = horse.get("horse_no")
+                horse_no = horse.get("hr_no")
                 
                 # 과거 3개월 성적 조회
                 past_performances = await self._get_horse_past_performances(
@@ -365,8 +402,8 @@ class CollectionService:
                     horse["past_stats"] = self._get_default_stats()
                 
                 # 기수/조교사 통계
-                jockey_no = horse.get("jockey_no")
-                trainer_no = horse.get("trainer_no")
+                jockey_no = horse.get("jk_no")
+                trainer_no = horse.get("tr_no")
                 
                 if jockey_no:
                     horse["jockey_stats"] = await self._get_jockey_stats(
@@ -402,9 +439,50 @@ class CollectionService:
         db: AsyncSession
     ) -> List[Dict[str, Any]]:
         """마필 과거 성적 조회"""
-        # 실제 구현에서는 데이터베이스에서 조회
-        # 여기서는 간단한 예시
-        return []
+        try:
+            # Calculate date 3 months ago
+            from dateutil.relativedelta import relativedelta
+            current_date = datetime.strptime(race_date, "%Y%m%d")
+            three_months_ago = current_date - relativedelta(months=3)
+            three_months_ago_str = three_months_ago.strftime("%Y%m%d")
+            
+            # Query past races
+            result = await db.execute(
+                select(Race).where(
+                    and_(
+                        Race.date >= three_months_ago_str,
+                        Race.date < race_date,
+                        Race.result_status == DataStatus.COLLECTED
+                    )
+                ).order_by(Race.date.desc())
+            )
+            races = result.scalars().all()
+            
+            performances = []
+            for race in races:
+                # Check if this horse participated in the race
+                if race.result_data:
+                    horses = race.result_data.get("horses", [])
+                    for horse in horses:
+                        if horse.get("hr_no") == horse_no:
+                            performances.append({
+                                "date": race.date,
+                                "meet": race.meet,
+                                "race_no": race.race_number,
+                                "position": horse.get("ord", 0),
+                                "win_odds": horse.get("win_odds", 0),
+                                "rating": horse.get("rating", 0),
+                                "weight": horse.get("weight", 0),
+                                "jockey": horse.get("jk_name", ""),
+                                "trainer": horse.get("tr_name", "")
+                            })
+                            break
+            
+            return performances
+            
+        except Exception as e:
+            logger.warning(f"Failed to get past performances: {e}")
+            return []
     
     def _calculate_performance_stats(
         self,
@@ -456,12 +534,47 @@ class CollectionService:
         db: AsyncSession
     ) -> Dict[str, Any]:
         """기수 통계 조회"""
-        # 실제 구현에서는 데이터베이스에서 조회
-        return {
-            "recent_win_rate": 0.15,
-            "meet_win_rate": 0.12,
-            "total_wins": 150
-        }
+        try:
+            # Get jockey info from API (no cache)
+            jockey_info = await self.kra_api.get_jockey_info(jockey_no, use_cache=False)
+            
+            if jockey_info and "response" in jockey_info and "body" in jockey_info["response"]:
+                items = jockey_info["response"]["body"].get("items", {})
+                if items and "item" in items:
+                    jk_data = items["item"]
+                    if isinstance(jk_data, list) and jk_data:
+                        jk_data = jk_data[0]
+                    
+                    # Convert API response to internal format
+                    from utils.field_mapping import convert_api_to_internal
+                    jk_data = convert_api_to_internal(jk_data)
+                    
+                    return {
+                        "recent_win_rate": float(jk_data.get("win_rate_y", 0)) / 100,
+                        "career_win_rate": float(jk_data.get("win_rate_t", 0)) / 100,
+                        "total_wins": jk_data.get("ord1_cnt_t", 0),
+                        "total_races": jk_data.get("rc_cnt_t", 0),
+                        "recent_races": jk_data.get("rc_cnt_y", 0)
+                    }
+            
+            # Default values if API call fails
+            return {
+                "recent_win_rate": 0.15,
+                "career_win_rate": 0.12,
+                "total_wins": 0,
+                "total_races": 0,
+                "recent_races": 0
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get jockey stats: {e}")
+            return {
+                "recent_win_rate": 0.15,
+                "career_win_rate": 0.12,
+                "total_wins": 0,
+                "total_races": 0,
+                "recent_races": 0
+            }
     
     async def _get_trainer_stats(
         self,
@@ -470,12 +583,53 @@ class CollectionService:
         db: AsyncSession
     ) -> Dict[str, Any]:
         """조교사 통계 조회"""
-        # 실제 구현에서는 데이터베이스에서 조회
-        return {
-            "recent_win_rate": 0.18,
-            "meet_win_rate": 0.16,
-            "total_wins": 200
-        }
+        try:
+            # Get trainer info from API (no cache)
+            trainer_info = await self.kra_api.get_trainer_info(trainer_no, use_cache=False)
+            
+            if trainer_info and "response" in trainer_info and "body" in trainer_info["response"]:
+                items = trainer_info["response"]["body"].get("items", {})
+                if items and "item" in items:
+                    tr_data = items["item"]
+                    if isinstance(tr_data, list) and tr_data:
+                        tr_data = tr_data[0]
+                    
+                    # Convert API response to internal format
+                    from utils.field_mapping import convert_api_to_internal
+                    tr_data = convert_api_to_internal(tr_data)
+                    
+                    return {
+                        "recent_win_rate": float(tr_data.get("win_rate_y", 0)) / 100,
+                        "career_win_rate": float(tr_data.get("win_rate_t", 0)) / 100,
+                        "total_wins": tr_data.get("ord1_cnt_t", 0),
+                        "total_races": tr_data.get("rc_cnt_t", 0),
+                        "recent_races": tr_data.get("rc_cnt_y", 0),
+                        "plc_rate": float(tr_data.get("plc_rate_t", 0)) / 100,
+                        "meet": tr_data.get("meet", "")
+                    }
+            
+            # Default values if API call fails
+            return {
+                "recent_win_rate": 0.18,
+                "career_win_rate": 0.16,
+                "total_wins": 0,
+                "total_races": 0,
+                "recent_races": 0,
+                "plc_rate": 0.35,
+                "meet": ""
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to get trainer stats: {e}")
+            return {
+                "recent_win_rate": 0.18,
+                "career_win_rate": 0.16,
+                "total_wins": 0,
+                "total_races": 0,
+                "recent_races": 0,
+                "plc_rate": 0.35,
+                "meet": ""
+            }
     
     def _analyze_weather_impact(
         self,

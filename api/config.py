@@ -94,7 +94,13 @@ class Settings(BaseSettings):
         # Load API keys from environment variable - REQUIRED in production
         api_keys_env = os.getenv("VALID_API_KEYS", "")
         if api_keys_env:
-            self.valid_api_keys = [key.strip() for key in api_keys_env.split(",") if key.strip()]
+            # Try to parse as JSON array first
+            try:
+                import json
+                self.valid_api_keys = json.loads(api_keys_env)
+            except json.JSONDecodeError:
+                # Fallback to comma-separated values
+                self.valid_api_keys = [key.strip() for key in api_keys_env.split(",") if key.strip()]
         elif self.environment == "production":
             raise ValueError("VALID_API_KEYS environment variable is required in production")
         else:

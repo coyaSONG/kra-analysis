@@ -54,6 +54,8 @@ async def collect_race_data(
         race_numbers = request.race_numbers or list(range(1, 16))
         
         results = []
+        logger.info(f"Collecting races for {request.date}, meet {request.meet}, races: {race_numbers}")
+        
         for race_no in race_numbers:
             try:
                 result = await collection_service.collect_race_data(
@@ -63,8 +65,9 @@ async def collect_race_data(
                     db
                 )
                 results.append(result)
+                logger.info(f"Successfully collected race {race_no}")
             except Exception as e:
-                logger.error(f"Failed to collect race {race_no}: {e}")
+                logger.error(f"Failed to collect race {race_no}: {e}", exc_info=True)
                 
         return CollectionResponse(
             status="success",

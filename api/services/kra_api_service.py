@@ -32,10 +32,13 @@ class KRAAPIService:
     """KRA API 통신 서비스"""
     
     def __init__(self):
+        # Decode the API key if it's URL encoded
+        from urllib.parse import unquote
         self.base_url = settings.kra_api_base_url
-        self.api_key = settings.kra_api_key
+        self.api_key = unquote(settings.kra_api_key)
         self.timeout = settings.kra_api_timeout
-        self.cache_service = CacheService()
+        # Don't initialize cache service in constructor
+        self._cache_service = None
         
         # HTTP 클라이언트 설정
         self.client = httpx.AsyncClient(
@@ -45,6 +48,13 @@ class KRAAPIService:
                 "User-Agent": f"{settings.app_name}/{settings.version}"
             }
         )
+    
+    @property
+    def cache_service(self):
+        """Lazy load cache service"""
+        if self._cache_service is None:
+            self._cache_service = CacheService()
+        return self._cache_service
     
     async def __aenter__(self):
         return self
@@ -59,9 +69,7 @@ class KRAAPIService:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((httpx.HTTPError, KRAAPIError)),
-        before=before_log(logger, "INFO"),
-        after=after_log(logger, "INFO")
+        retry=retry_if_exception_type((httpx.HTTPError, KRAAPIError))
     )
     async def _make_request(
         self,
@@ -87,7 +95,7 @@ class KRAAPIService:
         # API 키 추가
         if params is None:
             params = {}
-        params["ServiceKey"] = self.api_key
+        params["serviceKey"] = self.api_key
         
         try:
             response = await self.client.request(
@@ -164,13 +172,18 @@ class KRAAPIService:
             "_type": "json"
         }
         
+        # Use correct endpoint from KRA API documentation
         result = await self._make_request(
             endpoint="API214_1/RaceDetailResult_1",
             params=params
         )
         
         # 캐시 저장 (1시간)
-        await self.cache_service.set(cache_key, result, ttl=3600)
+        if use_cache:
+            try:
+                await self.cache_service.set(cache_key, result, ttl=3600)
+            except Exception as e:
+                logger.warning(f"Failed to cache result: {e}")
         
         return result
     
@@ -197,7 +210,11 @@ class KRAAPIService:
         return await self.get_race_info(race_date, meet, race_no, use_cache)
         
         # 캐시 저장 (영구 - 결과는 변경되지 않음)
-        await self.cache_service.set(cache_key, result, ttl=None)
+        if use_cache:
+            try:
+                await self.cache_service.set(cache_key, result, ttl=None)
+            except Exception as e:
+                logger.warning(f"Failed to cache result: {e}")
         
         return result
     
@@ -239,7 +256,11 @@ class KRAAPIService:
         )
         
         # 캐시 저장 (24시간)
-        await self.cache_service.set(cache_key, result, ttl=86400)
+        if use_cache:
+            try:
+                await self.cache_service.set(cache_key, result, ttl=86400)
+            except Exception as e:
+                logger.warning(f"Failed to cache result: {e}")
         
         return result
     
@@ -281,7 +302,11 @@ class KRAAPIService:
         )
         
         # 캐시 저장 (24시간)
-        await self.cache_service.set(cache_key, result, ttl=86400)
+        if use_cache:
+            try:
+                await self.cache_service.set(cache_key, result, ttl=86400)
+            except Exception as e:
+                logger.warning(f"Failed to cache result: {e}")
         
         return result
     
@@ -323,7 +348,11 @@ class KRAAPIService:
         )
         
         # 캐시 저장 (24시간)
-        await self.cache_service.set(cache_key, result, ttl=86400)
+        if use_cache:
+            try:
+                await self.cache_service.set(cache_key, result, ttl=86400)
+            except Exception as e:
+                logger.warning(f"Failed to cache result: {e}")
         
         return result
     

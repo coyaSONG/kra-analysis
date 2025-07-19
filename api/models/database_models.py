@@ -5,7 +5,7 @@ SQLAlchemy 데이터베이스 모델
 
 from sqlalchemy import (
     Column, String, Integer, Float, Boolean, DateTime, 
-    JSON, ForeignKey, Index, Text, Enum as SQLEnum
+    JSON, ForeignKey, Index, Text, Enum as SQLEnum, TypeDecorator
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -15,7 +15,48 @@ import enum
 from infrastructure.database import Base
 
 
-class JobStatus(enum.Enum):
+class PostgresEnum(TypeDecorator):
+    """Custom enum type that handles case conversion between Python and Postgres"""
+    impl = SQLEnum
+    cache_ok = True
+
+    def __init__(self, enum_class, name=None, **kw):
+        self.enum_class = enum_class
+        # Force lowercase values for PostgreSQL
+        values = [e.value.lower() if hasattr(e.value, 'lower') else e.value for e in enum_class]
+        super().__init__(name=name or enum_class.__name__.lower(), **kw)
+        self.impl = SQLEnum(*values, name=name or enum_class.__name__.lower(), create_type=False)
+
+    def process_bind_param(self, value, dialect):
+        """Convert Python enum to database value (lowercase)"""
+        if value is None:
+            return None
+        if isinstance(value, self.enum_class):
+            return value.value.lower()
+        if isinstance(value, str):
+            # Try to get enum by value
+            for item in self.enum_class:
+                if item.value == value:
+                    return value.lower()
+            # Try to get enum by name
+            try:
+                return self.enum_class[value.upper()].value.lower()
+            except KeyError:
+                return value.lower()
+        return value
+
+    def process_result_value(self, value, dialect):
+        """Convert database value (lowercase) to Python enum"""
+        if value is None:
+            return None
+        # Find matching enum
+        for item in self.enum_class:
+            if item.value.lower() == value.lower():
+                return item
+        return value
+
+
+class JobStatus(str, enum.Enum):
     """작업 상태"""
     QUEUED = "queued"
     PROCESSING = "processing"
@@ -25,7 +66,7 @@ class JobStatus(enum.Enum):
     RETRYING = "retrying"
 
 
-class JobType(enum.Enum):
+class JobType(str, enum.Enum):
     """작업 유형"""
     COLLECTION = "collection"
     ENRICHMENT = "enrichment"
@@ -35,12 +76,26 @@ class JobType(enum.Enum):
     BATCH = "batch"
 
 
-class DataStatus(enum.Enum):
+class DataStatus(str, enum.Enum):
     """데이터 상태"""
     PENDING = "pending"
-    COLLECTED = "collected"
+    COLLECTED = "collected" 
     ENRICHED = "enriched"
     FAILED = "failed"
+    
+    @classmethod
+    def _missing_(cls, value):
+        """Handle case-insensitive enum lookup"""
+        if isinstance(value, str):
+            # Try lowercase
+            for item in cls:
+                if item.value == value.lower():
+                    return item
+            # Try uppercase
+            for item in cls:
+                if item.name == value.upper():
+                    return item
+        return None
 
 
 class Race(Base):
@@ -60,9 +115,9 @@ class Race(Base):
     weather = Column(String(50))
     
     # 상태 정보
-    collection_status = Column(SQLEnum(DataStatus), default=DataStatus.PENDING)
-    enrichment_status = Column(SQLEnum(DataStatus), default=DataStatus.PENDING)
-    result_status = Column(SQLEnum(DataStatus), default=DataStatus.PENDING)
+    collection_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
+    enrichment_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
+    result_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
     
     # 데이터
     basic_data = Column(JSON)
@@ -99,8 +154,8 @@ class Job(Base):
     job_id = Column(String(100), primary_key=True)
     
     # 작업 정보
-    type = Column(SQLEnum(JobType), nullable=False, index=True)
-    status = Column(SQLEnum(JobStatus), default=JobStatus.QUEUED, index=True)
+    type = Column(PostgresEnum(JobType, name="job_type"), nullable=False, index=True)
+    status = Column(PostgresEnum(JobStatus, name="job_status"), default=JobStatus.QUEUED, index=True)
     
     # 시간 정보
     created_at = Column(DateTime, server_default=func.now(), index=True)

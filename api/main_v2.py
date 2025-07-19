@@ -82,7 +82,13 @@ async def lifespan(app: FastAPI):
     
     # 초기화
     await init_db()
-    await init_redis()
+    
+    # Redis 초기화 (실패해도 서버는 시작)
+    try:
+        await init_redis()
+        logger.info("Redis initialized successfully")
+    except Exception as e:
+        logger.warning(f"Redis initialization failed, running without Redis: {e}")
     
     # Celery 워커 상태 확인 (선택적)
     if CELERY_AVAILABLE:

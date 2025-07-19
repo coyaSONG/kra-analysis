@@ -15,6 +15,9 @@ from services.collection_service import CollectionService
 from models.database_models import Job, JobLog
 from sqlalchemy import select
 
+# Create AsyncSessionLocal alias for backward compatibility
+AsyncSessionLocal = async_session_maker
+
 logger = structlog.get_logger()
 
 
@@ -140,7 +143,7 @@ async def _collect_race_data_async(
 )
 def preprocess_race_data_task(
     self,
-    race_id: int,
+    race_id: str,
     job_id: int = None
 ) -> Dict[str, Any]:
     """
@@ -179,7 +182,7 @@ def preprocess_race_data_task(
 
 
 async def _preprocess_race_data_async(
-    race_id: int,
+    race_id: str,
     job_id: int,
     task_id: str
 ) -> Dict[str, Any]:
@@ -239,7 +242,7 @@ async def _preprocess_race_data_async(
 )
 def enrich_race_data_task(
     self,
-    race_id: int,
+    race_id: str,
     job_id: int = None
 ) -> Dict[str, Any]:
     """
@@ -278,7 +281,7 @@ def enrich_race_data_task(
 
 
 async def _enrich_race_data_async(
-    race_id: int,
+    race_id: str,
     job_id: int,
     task_id: str
 ) -> Dict[str, Any]:

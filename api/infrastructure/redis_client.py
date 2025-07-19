@@ -3,7 +3,7 @@ Redis 클라이언트 설정 및 관리
 캐싱 및 Celery 브로커용
 """
 
-import redis.asyncio as redis
+import redis
 from typing import Optional, Any
 import json
 import structlog
@@ -22,7 +22,10 @@ async def init_redis():
     global redis_client
     
     try:
-        redis_client = redis.from_url(
+        # Redis 5.0+ uses redis.asyncio.from_url
+        from redis.asyncio import from_url
+        
+        redis_client = await from_url(
             settings.redis_url,
             encoding="utf-8",
             decode_responses=True,
@@ -31,7 +34,7 @@ async def init_redis():
         
         # 연결 테스트
         await redis_client.ping()
-        logger.info("Redis connected successfully")
+        logger.info("Redis connected successfully", redis_url=settings.redis_url.split('@')[1] if '@' in settings.redis_url else 'local')
         
     except Exception as e:
         logger.error(f"Failed to connect to Redis: {e}")
