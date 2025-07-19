@@ -25,8 +25,8 @@ async def verify_api_key(
 ) -> Optional[APIKey]:
     """API 키 검증 및 정보 반환"""
     try:
-        # API 키 형식 검증 (UUID 형식 또는 안전한 문자열)
-        if not re.match(r'^[a-zA-Z0-9\-_]{32,128}$', api_key):
+        # API 키 형식 검증 (알파벳, 숫자, 하이픈, 언더스코어)
+        if not re.match(r'^[a-zA-Z0-9\-_]{10,128}$', api_key):
             logger.warning("Invalid API key format", key_length=len(api_key))
             return None
         
@@ -56,12 +56,12 @@ async def verify_api_key(
         if api_key_obj.expires_at and api_key_obj.expires_at < datetime.now(timezone.utc):
             return None
         
-        # 마지막 사용 시간 업데이트
-        api_key_obj.last_used_at = datetime.now(timezone.utc)
+        # 마지막 사용 시간 업데이트 (timezone-naive datetime 사용)
+        api_key_obj.last_used_at = datetime.utcnow()
         api_key_obj.total_requests += 1
         
         # 일일 사용량 리셋 확인
-        today = datetime.now(timezone.utc).date()
+        today = datetime.utcnow().date()
         if api_key_obj.last_used_at and api_key_obj.last_used_at.date() < today:
             api_key_obj.today_requests = 1
         else:

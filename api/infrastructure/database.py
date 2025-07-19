@@ -32,17 +32,15 @@ database_url = settings.database_url
 
 # For Supabase/pgbouncer compatibility, we need to disable prepared statements
 connect_args = {}
-execution_options = {}
 
 if "pooler.supabase.com" in database_url:
     # Disable prepared statements for pgbouncer
     connect_args = {
+        "server_settings": {
+            "jit": "off"
+        },
+        "command_timeout": 60,
         "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0,
-    }
-    execution_options = {
-        "no_autoflush": True,
-        "synchronize_session": False
     }
 
 # Create async engine with proper settings
@@ -53,8 +51,7 @@ engine = create_async_engine(
     max_overflow=settings.database_max_overflow,
     pool_pre_ping=True,  # 연결 상태 확인
     pool_recycle=3600,   # 1시간마다 연결 재생성
-    connect_args=connect_args,
-    execution_options=execution_options
+    connect_args=connect_args
 )
 
 # 비동기 세션 팩토리

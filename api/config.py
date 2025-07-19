@@ -97,6 +97,9 @@ class Settings(BaseSettings):
             self.valid_api_keys = [key.strip() for key in api_keys_env.split(",") if key.strip()]
         elif self.environment == "production":
             raise ValueError("VALID_API_KEYS environment variable is required in production")
+        else:
+            # Development/test mode - add a default test key
+            self.valid_api_keys = ["test-api-key-123456789"]
     
     class Config:
         env_file = ".env"

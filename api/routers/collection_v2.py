@@ -58,7 +58,7 @@ async def collect_race_data(
             try:
                 result = await collection_service.collect_race_data(
                     request.date,
-                    str(request.meet),  # Convert to string as expected by service
+                    request.meet,  # Pass as integer
                     race_no,
                     db
                 )

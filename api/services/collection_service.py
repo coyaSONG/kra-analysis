@@ -31,7 +31,7 @@ class CollectionService:
     async def collect_race_data(
         self,
         race_date: str,
-        meet: str,
+        meet: int,
         race_no: int,
         db: AsyncSession
     ) -> Dict[str, Any]:
@@ -56,7 +56,7 @@ class CollectionService:
             )
             
             # 기본 경주 정보 수집
-            race_info = await self.kra_api.get_race_info(race_date, meet, race_no)
+            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no)
             
             # 날씨 정보 수집 (현재 API에서 제공하지 않음)
             weather_info = {}
@@ -237,10 +237,15 @@ class CollectionService:
             horses = raw_data.get("horses", [])
             
             # 기권마 필터링
-            active_horses = [
-                h for h in horses 
-                if h.get("win_odds", 0) > 0
-            ]
+            active_horses = []
+            for h in horses:
+                try:
+                    win_odds = float(h.get("win_odds", 0))
+                    if win_odds > 0:
+                        active_horses.append(h)
+                except (ValueError, TypeError):
+                    # Skip horses with invalid win_odds
+                    pass
             
             # 기본 통계 계산
             if active_horses:
@@ -254,11 +259,20 @@ class CollectionService:
                 # 각 마필에 대한 상대적 지표 계산
                 for horse in active_horses:
                     if avg_weight > 0:
-                        horse["weight_ratio"] = horse.get("weight", 0) / avg_weight
+                        try:
+                            horse["weight_ratio"] = float(horse.get("weight", 0)) / avg_weight
+                        except (ValueError, TypeError):
+                            horse["weight_ratio"] = 0
                     if avg_rating > 0:
-                        horse["rating_ratio"] = horse.get("rating", 0) / avg_rating
+                        try:
+                            horse["rating_ratio"] = float(horse.get("rating", 0)) / avg_rating
+                        except (ValueError, TypeError):
+                            horse["rating_ratio"] = 0
                     if avg_win_odds > 0:
-                        horse["odds_ratio"] = horse.get("win_odds", 0) / avg_win_odds
+                        try:
+                            horse["odds_ratio"] = float(horse.get("win_odds", 0)) / avg_win_odds
+                        except (ValueError, TypeError):
+                            horse["odds_ratio"] = 0
             
             preprocessed = {
                 **raw_data,
@@ -489,7 +503,7 @@ class CollectionService:
     async def collect_batch_races(
         self,
         race_date: str,
-        meet: str,
+        meet: int,
         race_numbers: List[int],
         db: AsyncSession
     ) -> Dict[int, Dict[str, Any]]:

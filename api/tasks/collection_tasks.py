@@ -27,7 +27,7 @@ logger = structlog.get_logger()
 def collect_race_data_task(
     self,
     race_date: str,
-    meet: str,
+    meet: int,
     race_no: int,
     job_id: int = None
 ) -> Dict[str, Any]:
@@ -72,7 +72,7 @@ def collect_race_data_task(
 
 async def _collect_race_data_async(
     race_date: str,
-    meet: str,
+    meet: int,
     race_no: int,
     job_id: int,
     task_id: str
@@ -338,7 +338,7 @@ async def _enrich_race_data_async(
 def batch_collect_races_task(
     self,
     race_date: str,
-    meet: str,
+    meet: int,
     race_numbers: List[int],
     job_id: int = None
 ) -> Dict[str, Any]:
@@ -392,7 +392,7 @@ def batch_collect_races_task(
 def full_pipeline_task(
     self,
     race_date: str,
-    meet: str,
+    meet: int,
     race_no: int,
     job_id: int = None
 ) -> Dict[str, Any]:
@@ -432,7 +432,7 @@ def full_pipeline_task(
 
 async def _full_pipeline_async(
     race_date: str,
-    meet: str,
+    meet: int,
     race_no: int,
     job_id: int,
     task_id: str
