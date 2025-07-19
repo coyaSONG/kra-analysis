@@ -1,41 +1,55 @@
-# Core Framework
-fastapi[standard]==0.115.5
-uvicorn[standard]==0.32.1
-python-dotenv==1.0.1
+# FastAPI 및 웹 프레임워크
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-multipart==0.0.6
 
-# Supabase
-supabase==2.11.0
+# 데이터베이스
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+psycopg2-binary==2.9.9
 
-# HTTP Client
-httpx==0.28.0
-aiofiles==24.1.0
+# Redis
+redis==5.0.1
+aioredis==2.0.1
 
-# Task Queue
-celery==5.4.0
-redis==5.2.1
+# Celery 및 메시지 큐
+celery==5.3.4
+flower==2.0.1
+amqp==5.2.0
+kombu==5.3.4
 
-# Authentication
+# HTTP 클라이언트
+httpx==0.26.0
+aiofiles==23.2.1
+
+# 인증 및 보안
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.12
+bcrypt==4.1.2
 
-# Monitoring
-prometheus-client==0.21.0
-structlog==24.4.0
+# 데이터 처리
+pandas==2.1.4
+numpy==1.26.3
 
-# Testing
-pytest==8.3.4
-pytest-asyncio==0.25.0
-pytest-cov==6.0.0
+# 로깅 및 모니터링
+structlog==24.1.0
+python-json-logger==2.0.7
 
-# Development
-black==24.10.0
-flake8==7.1.1
-mypy==1.13.0
-pre-commit==4.0.1
+# 재시도 및 회복력
+tenacity==8.2.3
 
-# Utilities
-pydantic==2.10.3
-pydantic-settings==2.6.1
-pendulum==3.0.0
-orjson==3.10.12
+# 유틸리티
+python-dotenv==1.0.0
+pytz==2023.3
+
+# 개발 도구 (프로덕션에서는 선택적)
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+black==23.12.1
+flake8==7.0.0
+mypy==1.8.0
+pre-commit==3.6.0

@@ -1,0 +1,29 @@
+# 개발 환경용 docker-compose 오버라이드
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - .:/app  # 코드 실시간 반영
+    command: uvicorn main_v2:app --host 0.0.0.0 --port 8000 --reload
+
+  celery-worker:
+    volumes:
+      - .:/app  # 코드 실시간 반영
+    command: celery -A infrastructure.celery_app worker --loglevel=debug --concurrency=2
+
+  # 개발용 추가 서비스
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: kra-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - kra-network

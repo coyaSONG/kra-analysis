@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: KRA 통합 데이터 수집 API
+  description: |
+    경마 데이터 수집, 분석, 예측을 위한 통합 RESTful API
+    
+    ## 주요 기능
+    - 경주 데이터 자동 수집
+    - 말, 기수, 조교사 상세 정보 보강
+    - AI 기반 삼복연승 예측
+    - 프롬프트 평가 및 개선
+    
+    ## 인증
+    모든 API는 `X-API-Key` 헤더를 통한 인증이 필요합니다.
+  version: 2.0.0
+  contact:
+    name: KRA Analysis Team
+    email: support@kra-analysis.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.kra-analysis.com/api/v2
+    description: Production server
+  - url: http://localhost:8000/api/v2
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /collection/races:
+    post:
+      summary: 경주 데이터 수집 시작
+      tags:
+        - collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionRequest'
+            examples:
+              basic:
+                summary: 기본 수집
+                value:
+                  date: "20250622"
+                  meet: 1
+              withOptions:
+                summary: 옵션 포함
+                value:
+                  date: "20250622"
+                  meet: 1
+                  race_numbers: [1, 2, 3]
+                  options:
+                    enrich: true
+                    get_results: false
+      responses:
+        '200':
+          description: 수집 작업 생성됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /collection/races/{race_id}:
+    get:
+      summary: 경주 상세 정보 조회
+      tags:
+        - collection
+      parameters:
+        - name: race_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: race_1_20250622_1
+        - name: include_enriched
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: 경주 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /jobs/{job_id}:
+    get:
+      summary: 작업 상태 조회
+      tags:
+        - jobs
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: col_20250622_1_abc123
+        - name: include_logs
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 작업 상세 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDetail'
+              example:
+                job_id: col_20250622_1_abc123
+                type: collection
+                status: processing
+                progress: 65
+                current_step: "Enriching race 7 of 11"
+                created_at: "2025-06-22T10:00:00Z"
+                started_at: "2025-06-22T10:00:05Z"
+
+    delete:
+      summary: 작업 취소
+      tags:
+        - jobs
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 작업 취소됨
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  status:
+                    type: string
+                  cancelled_at:
+                    type: string
+                    format: date-time
+
+  /prediction/run:
+    post:
+      summary: 삼복연승 예측 실행
+      tags:
+        - prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                race_id:
+                  type: string
+                  example: race_1_20250622_1
+                prompt_id:
+                  type: string
+                  example: base-prompt-v1.0
+                options:
+                  type: object
+                  properties:
+                    confidence_threshold:
+                      type: integer
+                      minimum: 0
+                      maximum: 100
+              required:
+                - race_id
+                - prompt_id
+      responses:
+        '200':
+          description: 예측 결과
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prediction_id:
+                    type: string
+                  predicted:
+                    type: array
+                    items:
+                      type: integer
+                    minItems: 3
+                    maxItems: 3
+                  confidence:
+                    type: integer
+                  reasoning:
+                    type: string
+              example:
+                prediction_id: pred_20250622_1_1_jkl012
+                predicted: [5, 3, 7]
+                confidence: 75
+                reasoning: "인기마 중심, 기수 능력 우수"
+
+  /monitoring/health:
+    get:
+      summary: 시스템 상태 확인
+      tags:
+        - monitoring
+      security: []  # 인증 불필요
+      responses:
+        '200':
+          description: 시스템 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    CollectionRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          pattern: '^\d{8}$'
+          description: 날짜 (YYYYMMDD)
+        meet:
+          type: integer
+          minimum: 1
+          maximum: 3
+          description: '경마장 (1: 서울, 2: 제주, 3: 부산경남)'
+        race_numbers:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+            maximum: 20
+          description: 수집할 경주 번호 리스트
+        options:
+          type: object
+          properties:
+            enrich:
+              type: boolean
+              default: true
+            get_results:
+              type: boolean
+              default: false
+            force_refresh:
+              type: boolean
+              default: false
+      required:
+        - date
+        - meet
+
+    CollectionResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        message:
+          type: string
+        estimated_time:
+          type: integer
+          description: 예상 소요 시간(초)
+        webhook_url:
+          type: string
+          format: uri
+
+    RaceData:
+      type: object
+      properties:
+        race_id:
+          type: string
+        race_info:
+          type: object
+          properties:
+            rcDate:
+              type: string
+            rcNo:
+              type: integer
+            rcName:
+              type: string
+            rcDist:
+              type: integer
+            meet:
+              type: integer
+        horses:
+          type: array
+          items:
+            $ref: '#/components/schemas/HorseData'
+        collection_status:
+          type: string
+          enum: [pending, collected, enriched, failed]
+        result:
+          type: object
+          properties:
+            1st:
+              type: integer
+            2nd:
+              type: integer
+            3rd:
+              type: integer
+
+    HorseData:
+      type: object
+      properties:
+        chulNo:
+          type: integer
+        hrNo:
+          type: string
+        hrName:
+          type: string
+        age:
+          type: integer
+        sex:
+          type: string
+        wgBudam:
+          type: integer
+        jkNo:
+          type: string
+        jkName:
+          type: string
+        winOdds:
+          type: number
+        hrDetail:
+          type: object
+          description: 말 상세 정보 (보강 시 추가)
+        jkDetail:
+          type: object
+          description: 기수 상세 정보 (보강 시 추가)
+
+    JobDetail:
+      type: object
+      properties:
+        job_id:
+          type: string
+        type:
+          type: string
+          enum: [collection, enrichment, analysis, prediction]
+        status:
+          type: string
+          enum: [queued, processing, completed, failed, cancelled]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        current_step:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        result:
+          type: object
+        error:
+          type: string
+        logs:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              level:
+                type: string
+              message:
+                type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        services:
+          type: object
+          properties:
+            api:
+              type: string
+            database:
+              type: string
+            redis:
+              type: string
+            celery:
+              type: string
+        metrics:
+          type: object
+          properties:
+            active_jobs:
+              type: integer
+            queued_jobs:
+              type: integer
+            api_response_time_ms:
+              type: number
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        error_id:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Validation Error"
+            message: "날짜 형식이 올바르지 않습니다"
+            error_id: "err_12345"
+
+    Unauthorized:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "유효하지 않은 API 키입니다"
+
+    NotFound:
+      description: 리소스를 찾을 수 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalError:
+      description: 서버 오류
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  examples:
+    CollectionJob:
+      value:
+        job_id: col_20250622_1_abc123
+        status: queued
+        message: "데이터 수집 작업이 시작되었습니다"
+        estimated_time: 180
+        webhook_url: "/api/v2/jobs/col_20250622_1_abc123"

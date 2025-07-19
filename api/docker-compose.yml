@@ -1,0 +1,177 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 데이터베이스
+  postgres:
+    image: postgres:16-alpine
+    container_name: kra-postgres
+    environment:
+      POSTGRES_USER: kra_user
+      POSTGRES_PASSWORD: kra_password
+      POSTGRES_DB: kra_analysis
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kra_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kra-network
+
+  # Redis 캐시
+  redis:
+    image: redis:7-alpine
+    container_name: kra-redis
+    command: redis-server --requirepass kra_redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kra-network
+
+  # RabbitMQ (Celery 브로커)
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: kra-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: kra_rabbit
+      RABBITMQ_DEFAULT_PASS: kra_rabbit_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kra-network
+
+  # FastAPI 애플리케이션
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kra-api
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
+      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
+      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - KRA_API_KEY=${KRA_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-supersecretkey}
+      - ENVIRONMENT=development
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - kra-network
+    restart: unless-stopped
+
+  # Celery 워커
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kra-celery-worker
+    command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
+      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
+      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - KRA_API_KEY=${KRA_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - kra-network
+    restart: unless-stopped
+
+  # Celery Beat (스케줄러)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kra-celery-beat
+    command: celery -A infrastructure.celery_app beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
+      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
+      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+    depends_on:
+      - celery-worker
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - kra-network
+    restart: unless-stopped
+
+  # Flower (Celery 모니터링)
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kra-flower
+    command: celery -A infrastructure.celery_app flower --port=5555
+    environment:
+      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery-worker
+    networks:
+      - kra-network
+    restart: unless-stopped
+
+  # pgAdmin (PostgreSQL 관리 도구 - 선택적)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: kra-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@kra.com
+      PGADMIN_DEFAULT_PASSWORD: admin_password
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - kra-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  kra-network:
+    driver: bridge
