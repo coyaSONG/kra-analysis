@@ -16,6 +16,7 @@ from infrastructure.redis_client import CacheService
 from models.database_models import Race
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 
 logger = structlog.get_logger()
 

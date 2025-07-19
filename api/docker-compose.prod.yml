@@ -25,7 +25,7 @@ services:
     environment:
       - ENVIRONMENT=production
       - LOG_LEVEL=INFO
-    command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=8
+    command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=4
     deploy:
       replicas: 2
       resources:

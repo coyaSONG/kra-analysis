@@ -8,7 +8,7 @@ from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
 
-from dependencies.auth import require_api_key
+from dependencies.auth import require_api_key, require_resource_access
 from infrastructure.database import get_db
 from services.job_service import JobService
 from models.job_dto import (
@@ -80,7 +80,7 @@ async def list_jobs(
 async def get_job(
     job_id: str,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key)
+    api_key: str = Depends(require_api_key)  # Keep for now, will implement resource access later
 ):
     """작업 상세 조회"""
     try:

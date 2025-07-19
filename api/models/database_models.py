@@ -51,7 +51,7 @@ class Race(Base):
     race_id = Column(String(50), primary_key=True)
     
     # 경주 정보
-    date = Column(String(8), nullable=False, index=True)
+    date = Column(String(8), nullable=False, index=True)  # Single column index for date queries
     meet = Column(Integer, nullable=False, index=True)
     race_number = Column(Integer, nullable=False)
     race_name = Column(String(200))
@@ -223,7 +223,7 @@ class APIKey(Base):
     today_requests = Column(Integer, default=0)
     
     # 메타데이터
-    created_by = Column(String(100))
+    created_by = Column(String(100), index=True)  # Index for filtering by creator
     key_metadata = Column(JSON, default=dict)
 
 

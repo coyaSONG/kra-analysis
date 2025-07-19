@@ -5,7 +5,7 @@ PostgreSQL with SQLAlchemy AsyncIO
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, text
 import structlog
 from contextlib import asynccontextmanager
 
@@ -28,20 +28,42 @@ metadata = MetaData(
 Base = declarative_base(metadata=metadata)
 
 # 비동기 엔진 생성
+database_url = settings.database_url
+
+# For Supabase/pgbouncer compatibility, we need to disable prepared statements
+connect_args = {}
+execution_options = {}
+
+if "pooler.supabase.com" in database_url:
+    # Disable prepared statements for pgbouncer
+    connect_args = {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    }
+    execution_options = {
+        "no_autoflush": True,
+        "synchronize_session": False
+    }
+
+# Create async engine with proper settings
 engine = create_async_engine(
-    settings.database_url,
+    database_url,
     echo=settings.debug,
     pool_size=settings.database_pool_size,
     max_overflow=settings.database_max_overflow,
     pool_pre_ping=True,  # 연결 상태 확인
     pool_recycle=3600,   # 1시간마다 연결 재생성
+    connect_args=connect_args,
+    execution_options=execution_options
 )
 
 # 비동기 세션 팩토리
 async_session_maker = async_sessionmaker(
     engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False,
+    # Disable query caching for pgbouncer compatibility
+    autoflush=False
 )
 
 
@@ -92,7 +114,7 @@ async def check_database_connection():
     """데이터베이스 연결 상태 확인"""
     try:
         async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")

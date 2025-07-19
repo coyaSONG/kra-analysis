@@ -72,30 +72,45 @@ class Job(BaseModel):
         }
 
 
+class JobLog(BaseModel):
+    """작업 로그 항목"""
+    timestamp: datetime
+    level: str  # INFO, WARNING, ERROR
+    message: str
+    metadata: Optional[Dict[str, Any]] = None
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "timestamp": "2025-06-22T10:00:05Z",
+                "level": "INFO",
+                "message": "Started collecting race 1",
+                "metadata": {
+                    "race_no": 1,
+                    "horses": 12
+                }
+            }
+        }
+
+
 class JobDetailResponse(BaseModel):
     """작업 상세 응답"""
-    job_id: str
-    type: str
-    status: JobStatus
-    created_at: Optional[datetime]
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    progress: int
-    current_step: Optional[str]
-    result: Optional[Dict[str, Any]]
-    error: Optional[str]
-    logs: Optional[List[Dict[str, Any]]] = None
+    job: Job = Field(..., description="작업 정보")
+    logs: Optional[List[JobLog]] = Field(None, description="작업 로그")
     
     # 추가 정보
-    estimated_completion: Optional[datetime] = None
-    duration_seconds: Optional[int] = None
-    resource_usage: Optional[Dict[str, Any]] = None
+    estimated_completion: Optional[datetime] = Field(None, description="예상 완료 시간")
+    duration_seconds: Optional[int] = Field(None, description="소요 시간(초)")
+    resource_usage: Optional[Dict[str, Any]] = Field(None, description="리소스 사용량")
 
 
 class JobListResponse(BaseModel):
     """작업 목록 응답"""
-    jobs: List[Dict[str, Any]]
-    pagination: Dict[str, Any]
+    jobs: List[Job] = Field(..., description="작업 목록")
+    total: int = Field(..., description="전체 작업 수")
+    limit: int = Field(..., description="페이지당 개수")
+    offset: int = Field(..., description="오프셋")
+    pagination: Optional[Dict[str, Any]] = Field(None, description="페이지네이션 정보")
     
     class Config:
         json_schema_extra = {
@@ -114,27 +129,6 @@ class JobListResponse(BaseModel):
                     "limit": 20,
                     "total": 45,
                     "pages": 3
-                }
-            }
-        }
-
-
-class JobLog(BaseModel):
-    """작업 로그 항목"""
-    timestamp: datetime
-    level: str  # INFO, WARNING, ERROR
-    message: str
-    metadata: Optional[Dict[str, Any]] = None
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "timestamp": "2025-06-22T10:00:05Z",
-                "level": "INFO",
-                "message": "Started collecting race 1",
-                "metadata": {
-                    "race_no": 1,
-                    "horses": 12
                 }
             }
         }

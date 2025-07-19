@@ -4,6 +4,7 @@
 """
 
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from functools import lru_cache
 import os
 from typing import Optional, List
@@ -47,7 +48,7 @@ class Settings(BaseSettings):
     kra_rate_limit: int = 100  # requests per minute
     
     # Security
-    secret_key: str = "your-secret-key-here-change-in-production"
+    secret_key: str = Field(default=..., env="SECRET_KEY")  # Required from environment
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     api_key_header: str = "X-API-Key"
@@ -85,11 +86,17 @@ class Settings(BaseSettings):
     collection_task_timeout: int = 300  # 5 minutes
     enrichment_task_timeout: int = 600  # 10 minutes
     
-    # API Keys (for demo/testing)
-    valid_api_keys: List[str] = [
-        "demo-key-123",
-        "test-key-456"
-    ]
+    # API Keys (loaded from environment)
+    valid_api_keys: List[str] = Field(default_factory=list)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Load API keys from environment variable - REQUIRED in production
+        api_keys_env = os.getenv("VALID_API_KEYS", "")
+        if api_keys_env:
+            self.valid_api_keys = [key.strip() for key in api_keys_env.split(",") if key.strip()]
+        elif self.environment == "production":
+            raise ValueError("VALID_API_KEYS environment variable is required in production")
     
     class Config:
         env_file = ".env"
@@ -100,7 +107,7 @@ class Settings(BaseSettings):
         fields = {
             "database_url": {"env": "DATABASE_URL"},
             "redis_url": {"env": "REDIS_URL"},
-            "kra_service_key": {"env": "KRA_SERVICE_KEY"},
+            "kra_api_key": {"env": "KRA_API_KEY"},
             "secret_key": {"env": "SECRET_KEY"},
         }
 
@@ -115,17 +122,14 @@ def get_settings() -> Settings:
 settings = get_settings()
 
 
-# 환경별 설정 오버라이드
+# 환경별 설정 검증
 if settings.environment == "production":
-    settings.debug = False
-    settings.log_level = "WARNING"
-    settings.workers = 8
-elif settings.environment == "staging":
-    settings.debug = False
-    settings.log_level = "INFO"
-    settings.workers = 4
+    # Ensure critical settings are configured
+    if not settings.secret_key or settings.secret_key == "your-secret-key-here-change-in-production":
+        raise ValueError("SECRET_KEY must be set in production environment")
+    if not settings.valid_api_keys:
+        raise ValueError("VALID_API_KEYS must be set in production environment")
 
 
-# 디렉토리 생성
-for dir_path in [settings.data_dir, settings.cache_dir, settings.prompts_dir, settings.logs_dir]:
-    os.makedirs(dir_path, exist_ok=True)
+# Note: Directory creation has been moved to application startup
+# See main_v2.py's lifespan function for directory creation

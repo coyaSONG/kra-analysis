@@ -58,8 +58,9 @@ async def collect_race_data(
             try:
                 result = await collection_service.collect_race_data(
                     request.date,
-                    request.meet,
-                    race_no
+                    str(request.meet),  # Convert to string as expected by service
+                    race_no,
+                    db
                 )
                 results.append(result)
             except Exception as e:

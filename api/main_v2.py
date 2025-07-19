@@ -5,10 +5,13 @@ KRA 통합 데이터 수집 API 서버 v2
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import structlog
 import time
 import uuid
+import os
+import asyncio
 
 from config import settings
 from middleware.logging import RequestLoggingMiddleware
@@ -46,6 +49,24 @@ structlog.configure(
 logger = structlog.get_logger()
 
 
+async def create_required_directories():
+    """필요한 디렉토리들을 생성"""
+    directories = [
+        settings.data_dir, 
+        settings.cache_dir, 
+        settings.prompts_dir, 
+        settings.logs_dir
+    ]
+    
+    for dir_path in directories:
+        try:
+            os.makedirs(dir_path, exist_ok=True)
+            logger.info(f"Directory created or verified: {dir_path}")
+        except Exception as e:
+            logger.error(f"Failed to create directory {dir_path}: {e}")
+            # Continue with other directories even if one fails
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """애플리케이션 생명주기 관리"""
@@ -55,6 +76,9 @@ async def lifespan(app: FastAPI):
         version=settings.version,
         environment=settings.environment
     )
+    
+    # 필요한 디렉토리 생성
+    await create_required_directories()
     
     # 초기화
     await init_db()
@@ -180,11 +204,14 @@ async def global_exception_handler(request, exc):
         method=request.method
     )
     
-    return {
-        "error": "Internal server error",
-        "error_id": error_id,
-        "message": "An unexpected error occurred. Please contact support with the error ID."
-    }, 500
+    return JSONResponse(
+        content={
+            "error": "Internal server error",
+            "error_id": error_id,
+            "message": "An unexpected error occurred. Please contact support with the error ID."
+        },
+        status_code=500
+    )
 
 
 if __name__ == "__main__":

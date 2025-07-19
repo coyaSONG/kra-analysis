@@ -72,12 +72,21 @@ class CacheService:
         self.client = None
         self.default_ttl = settings.cache_ttl
     
+    def _ensure_client(self):
+        """Ensure Redis client is initialized"""
+        if not self.client:
+            if redis_client:
+                self.client = redis_client
+            else:
+                raise RuntimeError("Redis client not initialized. Call initialize() first.")
+    
     async def initialize(self):
         """캐시 서비스 초기화"""
         self.client = get_redis()
     
     async def get(self, key: str) -> Optional[Any]:
         """캐시에서 값 조회"""
+        self._ensure_client()
         try:
             value = await self.client.get(key)
             if value:
@@ -94,6 +103,7 @@ class CacheService:
         ttl: Optional[int] = None
     ) -> bool:
         """캐시에 값 저장"""
+        self._ensure_client()
         try:
             ttl = ttl or self.default_ttl
             serialized = json.dumps(value, ensure_ascii=False)
@@ -105,6 +115,7 @@ class CacheService:
     
     async def delete(self, key: str) -> bool:
         """캐시에서 값 삭제"""
+        self._ensure_client()
         try:
             result = await self.client.delete(key)
             return bool(result)
@@ -114,6 +125,7 @@ class CacheService:
     
     async def exists(self, key: str) -> bool:
         """키 존재 여부 확인"""
+        self._ensure_client()
         try:
             return bool(await self.client.exists(key))
         except Exception as e:
@@ -122,20 +134,30 @@ class CacheService:
     
     async def clear_pattern(self, pattern: str) -> int:
         """패턴에 맞는 키 모두 삭제"""
+        self._ensure_client()
         try:
-            keys = []
-            async for key in self.client.scan_iter(match=pattern):
-                keys.append(key)
+            deleted_count = 0
+            batch_size = 100  # Delete keys in batches to avoid memory issues
+            batch = []
             
-            if keys:
-                return await self.client.delete(*keys)
-            return 0
+            async for key in self.client.scan_iter(match=pattern):
+                batch.append(key)
+                if len(batch) >= batch_size:
+                    deleted_count += await self.client.delete(*batch)
+                    batch = []
+            
+            # Delete remaining keys in the last batch
+            if batch:
+                deleted_count += await self.client.delete(*batch)
+            
+            return deleted_count
         except Exception as e:
             logger.warning(f"Cache clear pattern failed for {pattern}: {e}")
             return 0
     
     async def get_ttl(self, key: str) -> int:
         """키의 TTL 확인"""
+        self._ensure_client()
         try:
             return await self.client.ttl(key)
         except Exception as e:

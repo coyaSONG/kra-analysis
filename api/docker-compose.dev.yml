@@ -14,6 +14,9 @@ services:
     command: uvicorn main_v2:app --host 0.0.0.0 --port 8000 --reload
 
   celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - .:/app  # 코드 실시간 반영
     command: celery -A infrastructure.celery_app worker --loglevel=debug --concurrency=2

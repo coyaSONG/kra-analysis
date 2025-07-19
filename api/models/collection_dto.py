@@ -2,10 +2,11 @@
 데이터 수집 관련 데이터 모델
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, root_validator
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
+import re
 
 
 class CollectionOptions(BaseModel):
@@ -18,7 +19,24 @@ class CollectionOptions(BaseModel):
 
 class CollectionRequest(BaseModel):
     """데이터 수집 요청"""
-    date: str = Field(..., pattern=r"^\d{8}$", description="날짜 (YYYYMMDD)")
+    date: str = Field(..., description="날짜 (YYYYMMDD)")
+    
+    @validator("date")
+    def validate_date(cls, v):
+        if not re.match(r"^\d{8}$", v):
+            raise ValueError("날짜는 YYYYMMDD 형식이어야 합니다")
+        try:
+            # 유효한 날짜인지 확인
+            year = int(v[:4])
+            month = int(v[4:6])
+            day = int(v[6:8])
+            date(year, month, day)
+            # 미래 날짜는 허용하지 않음
+            if date(year, month, day) > date.today():
+                raise ValueError("미래 날짜는 허용되지 않습니다")
+        except ValueError as e:
+            raise ValueError(f"유효하지 않은 날짜: {e}")
+        return v
     meet: int = Field(..., ge=1, le=3, description="경마장 (1: 서울, 2: 제주, 3: 부산경남)")
     race_numbers: Optional[List[int]] = Field(
         None,
@@ -53,11 +71,12 @@ class CollectionRequest(BaseModel):
 
 class CollectionResponse(BaseModel):
     """수집 작업 응답"""
-    job_id: str = Field(..., description="작업 ID")
+    job_id: Optional[str] = Field(None, description="작업 ID")
     status: str = Field(..., description="작업 상태")
     message: str = Field(..., description="응답 메시지")
     estimated_time: Optional[int] = Field(None, description="예상 소요 시간(초)")
     webhook_url: Optional[str] = Field(None, description="상태 확인 URL")
+    data: Optional[List[Dict[str, Any]]] = Field(None, description="수집된 데이터")
 
 
 class EnrichmentRequest(BaseModel):
@@ -99,7 +118,22 @@ class EnrichmentResponse(BaseModel):
 
 class ResultCollectionRequest(BaseModel):
     """경주 결과 수집 요청"""
-    date: str = Field(..., pattern=r"^\d{8}$", description="날짜")
+    date: str = Field(..., description="날짜")
+    
+    @validator("date")
+    def validate_date(cls, v):
+        if not re.match(r"^\d{8}$", v):
+            raise ValueError("날짜는 YYYYMMDD 형식이어야 합니다")
+        try:
+            year = int(v[:4])
+            month = int(v[4:6])
+            day = int(v[6:8])
+            date(year, month, day)
+            if date(year, month, day) > date.today():
+                raise ValueError("미래 날짜는 허용되지 않습니다")
+        except ValueError as e:
+            raise ValueError(f"유효하지 않은 날짜: {e}")
+        return v
     meet: int = Field(..., ge=1, le=3, description="경마장")
     race_number: int = Field(..., ge=1, le=20, description="경주 번호")
     async_mode: bool = Field(False, description="비동기 실행 여부")
@@ -125,10 +159,16 @@ class DataStatus(str, Enum):
 
 class CollectionStatus(BaseModel):
     """수집 상태"""
-    collection_status: DataStatus
-    enrichment_status: DataStatus
-    result_status: DataStatus
-    last_updated: datetime
+    date: str = Field(..., description="날짜")
+    meet: int = Field(..., description="경마장")
+    total_races: int = Field(..., description="전체 경주 수")
+    collected_races: int = Field(..., description="수집된 경주 수")
+    enriched_races: int = Field(..., description="보강된 경주 수")
+    status: str = Field(..., description="전체 상태")
+    collection_status: Optional[DataStatus] = Field(None, description="수집 상태")
+    enrichment_status: Optional[DataStatus] = Field(None, description="보강 상태")
+    result_status: Optional[DataStatus] = Field(None, description="결과 상태")
+    last_updated: Optional[datetime] = Field(None, description="마지막 업데이트")
 
 
 class HorseData(BaseModel):
@@ -143,8 +183,8 @@ class HorseData(BaseModel):
     jkName: str = Field(..., description="기수 이름")
     trNo: str = Field(..., description="조교사 번호")
     trName: str = Field(..., description="조교사 이름")
-    winOdds: float = Field(..., description="단승 배당률")
-    plcOdds: float = Field(..., description="복승 배당률")
+    winOdds: float = Field(..., ge=0, description="단승 배당률")
+    plcOdds: float = Field(..., ge=0, description="복승 배당률")
     rating: Optional[int] = Field(None, description="레이팅")
     
     # 보강 데이터
@@ -176,7 +216,7 @@ class RaceInfo(BaseModel):
     rcDate: str = Field(..., description="경주 날짜")
     rcNo: int = Field(..., description="경주 번호")
     rcName: str = Field(..., description="경주명")
-    rcDist: int = Field(..., description="거리")
+    rcDist: int = Field(..., ge=800, le=3200, description="거리(m)")
     track: Optional[str] = Field(None, description="주로")
     weather: Optional[str] = Field(None, description="날씨")
     meet: int = Field(..., description="경마장")

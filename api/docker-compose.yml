@@ -6,9 +6,9 @@ services:
     image: postgres:16-alpine
     container_name: kra-postgres
     environment:
-      POSTGRES_USER: kra_user
-      POSTGRES_PASSWORD: kra_password
-      POSTGRES_DB: kra_analysis
+      POSTGRES_USER: ${POSTGRES_USER:-kra_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kra_password}
+      POSTGRES_DB: ${POSTGRES_DB:-kra_analysis}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -25,7 +25,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: kra-redis
-    command: redis-server --requirepass kra_redis_password
+    command: redis-server --requirepass ${REDIS_PASSWORD:-kra_redis_password}
     ports:
       - "6379:6379"
     volumes:
@@ -43,8 +43,8 @@ services:
     image: rabbitmq:3.12-management-alpine
     container_name: kra-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: kra_rabbit
-      RABBITMQ_DEFAULT_PASS: kra_rabbit_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-kra_rabbit}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-kra_rabbit_password}
     ports:
       - "5672:5672"
       - "15672:15672"  # Management UI
@@ -65,10 +65,10 @@ services:
       dockerfile: Dockerfile
     container_name: kra-api
     environment:
-      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
-      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
-      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
       - KRA_API_KEY=${KRA_API_KEY}
       - SECRET_KEY=${SECRET_KEY:-supersecretkey}
       - ENVIRONMENT=development
@@ -85,6 +85,14 @@ services:
       - ./logs:/app/logs
     networks:
       - kra-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     restart: unless-stopped
 
   # Celery 워커
@@ -95,10 +103,10 @@ services:
     container_name: kra-celery-worker
     command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=4
     environment:
-      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
-      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
-      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
       - KRA_API_KEY=${KRA_API_KEY}
     depends_on:
       postgres:
@@ -121,10 +129,10 @@ services:
     container_name: kra-celery-beat
     command: celery -A infrastructure.celery_app beat --loglevel=info
     environment:
-      - DATABASE_URL=postgresql+asyncpg://kra_user:kra_password@postgres:5432/kra_analysis
-      - REDIS_URL=redis://:kra_redis_password@redis:6379/0
-      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
     depends_on:
       - celery-worker
     volumes:
@@ -141,8 +149,8 @@ services:
     container_name: kra-flower
     command: celery -A infrastructure.celery_app flower --port=5555
     environment:
-      - CELERY_BROKER_URL=amqp://kra_rabbit:kra_rabbit_password@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:kra_redis_password@redis:6379/1
+      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
     ports:
       - "5555:5555"
     depends_on:
@@ -156,8 +164,8 @@ services:
     image: dpage/pgadmin4:latest
     container_name: kra-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@kra.com
-      PGADMIN_DEFAULT_PASSWORD: admin_password
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@kra.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin_password}
     ports:
       - "5050:80"
     depends_on:

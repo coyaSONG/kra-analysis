@@ -39,6 +39,10 @@ migrate:
 	docker-compose exec api alembic upgrade head
 
 migrate-create:
+	@if [ -z "$(msg)" ]; then \
+		echo "Error: Please provide a migration message using 'make migrate-create msg=\"your message\"'"; \
+		exit 1; \
+	fi
 	docker-compose exec api alembic revision --autogenerate -m "$(msg)"
 
 # 테스트 명령
@@ -64,7 +68,7 @@ monitor-celery:
 
 monitor-db:
 	@echo "pgAdmin: http://localhost:5050"
-	@echo "Email: admin@kra.com, Password: admin_password"
+	@echo "Use the credentials configured in your environment variables or docker-compose file"
 
 # 환경 설정
 env-setup:

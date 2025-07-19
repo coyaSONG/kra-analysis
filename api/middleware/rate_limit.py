@@ -9,7 +9,6 @@ from starlette.responses import Response
 import time
 import asyncio
 from typing import Dict, Tuple
-from collections import defaultdict
 import structlog
 
 from config import settings
@@ -25,10 +24,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.calls = calls  # 허용 요청 수
         self.period = period  # 기간 (초)
-        # 메모리 기반 임시 저장 (Redis 사용 전)
-        self.requests: Dict[str, list] = defaultdict(list)
-        self.cleanup_interval = 300  # 5분마다 정리
-        self.last_cleanup = time.time()
+        self.redis_required = settings.environment == "production"  # 프로덕션에서는 Redis 필수
     
     async def dispatch(self, request: Request, call_next):
         # 속도 제한 활성화 확인
@@ -42,7 +38,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # 클라이언트 식별 (API 키 또는 IP)
         client_id = self._get_client_id(request)
         
-        # Redis 기반 속도 제한 (가능한 경우)
+        # Redis 기반 속도 제한
         try:
             redis_client = get_redis()
             if await self._check_rate_limit_redis(client_id, redis_client):
@@ -52,15 +48,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     detail=f"Rate limit exceeded. Maximum {self.calls} requests per {self.period} seconds."
                 )
-        except RuntimeError:
-            # Redis 사용 불가 시 메모리 기반 폴백
-            if self._check_rate_limit_memory(client_id):
-                return await call_next(request)
-            else:
+        except RuntimeError as e:
+            # Redis 연결 실패
+            if self.redis_required:
+                logger.error("Redis required but not available", error=str(e))
                 raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=f"Rate limit exceeded. Maximum {self.calls} requests per {self.period} seconds."
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Rate limiting service unavailable"
                 )
+            else:
+                # 개발 환경에서만 통과 허용
+                logger.warning("Redis not available, bypassing rate limit in development")
+                return await call_next(request)
     
     def _get_client_id(self, request: Request) -> str:
         """클라이언트 식별자 추출"""
@@ -97,37 +96,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             logger.error(f"Redis rate limit check failed: {e}")
             return True  # 에러 시 통과
     
-    def _check_rate_limit_memory(self, client_id: str) -> bool:
-        """메모리 기반 속도 제한 확인"""
-        now = time.time()
-        
-        # 주기적 정리
-        if now - self.last_cleanup > self.cleanup_interval:
-            self._cleanup_old_requests()
-            self.last_cleanup = now
-        
-        # 현재 클라이언트의 요청 기록
-        requests = self.requests[client_id]
-        
-        # 오래된 요청 제거
-        requests = [req_time for req_time in requests if now - req_time < self.period]
-        
-        # 새 요청 추가
-        requests.append(now)
-        self.requests[client_id] = requests
-        
-        return len(requests) <= self.calls
-    
-    def _cleanup_old_requests(self):
-        """오래된 요청 기록 정리"""
-        now = time.time()
-        for client_id in list(self.requests.keys()):
-            self.requests[client_id] = [
-                req_time for req_time in self.requests[client_id]
-                if now - req_time < self.period
-            ]
-            if not self.requests[client_id]:
-                del self.requests[client_id]
+    # In-memory rate limiting methods removed for horizontal scaling support
 
 
 class APIKeyRateLimiter:

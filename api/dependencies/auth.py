@@ -3,12 +3,13 @@
 API 키 및 JWT 토큰 검증
 """
 
-from fastapi import Depends, HTTPException, Header, status
+from fastapi import Depends, HTTPException, Header, status, Request
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
+import re
 import structlog
 
 from config import settings
@@ -24,17 +25,22 @@ async def verify_api_key(
 ) -> Optional[APIKey]:
     """API 키 검증 및 정보 반환"""
     try:
-        # 데모/테스트 키 확인
+        # API 키 형식 검증 (UUID 형식 또는 안전한 문자열)
+        if not re.match(r'^[a-zA-Z0-9\-_]{32,128}$', api_key):
+            logger.warning("Invalid API key format", key_length=len(api_key))
+            return None
+        
+        # 환경 변수에서 로드된 키 확인
         if api_key in settings.valid_api_keys:
             return APIKey(
                 key=api_key,
-                name="Demo Key",
+                name="Environment Key",
                 is_active=True,
                 permissions=["read", "write"],
                 rate_limit=100
             )
         
-        # 데이터베이스에서 키 조회
+        # 데이터베이스에서 키 조회 - 파라미터화된 쿼리 사용
         result = await db.execute(
             select(APIKey).where(
                 APIKey.key == api_key,
@@ -47,15 +53,15 @@ async def verify_api_key(
             return None
         
         # 만료 확인
-        if api_key_obj.expires_at and api_key_obj.expires_at < datetime.utcnow():
+        if api_key_obj.expires_at and api_key_obj.expires_at < datetime.now(timezone.utc):
             return None
         
         # 마지막 사용 시간 업데이트
-        api_key_obj.last_used_at = datetime.utcnow()
+        api_key_obj.last_used_at = datetime.now(timezone.utc)
         api_key_obj.total_requests += 1
         
         # 일일 사용량 리셋 확인
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         if api_key_obj.last_used_at and api_key_obj.last_used_at.date() < today:
             api_key_obj.today_requests = 1
         else:
@@ -73,7 +79,7 @@ async def verify_api_key(
 async def require_api_key(
     x_api_key: str = Header(..., alias="X-API-Key"),
     db: AsyncSession = Depends(get_db)
-) -> str:
+) -> APIKey:
     """API 키 필수 의존성"""
     api_key_obj = await verify_api_key(x_api_key, db)
     
@@ -85,29 +91,23 @@ async def require_api_key(
     
     # 일일 한도 확인
     if (api_key_obj.daily_limit and 
-        hasattr(api_key_obj, 'today_requests') and 
+        api_key_obj.today_requests and 
         api_key_obj.today_requests > api_key_obj.daily_limit):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Daily request limit exceeded"
         )
     
-    return x_api_key
+    return api_key_obj
 
 
 async def require_permissions(
     required_permissions: List[str],
-    api_key: str = Depends(require_api_key),
+    api_key_obj: APIKey = Depends(require_api_key),
     db: AsyncSession = Depends(get_db)
 ) -> APIKey:
     """특정 권한 필요 의존성"""
-    api_key_obj = await verify_api_key(api_key, db)
-    
-    if not api_key_obj:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key"
-        )
+    # api_key_obj is already validated by require_api_key dependency
     
     # 권한 확인
     user_permissions = api_key_obj.permissions or []
@@ -125,9 +125,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """JWT 액세스 토큰 생성"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
@@ -173,11 +173,131 @@ async def get_current_user(
 
 
 # 권한 체크 데코레이터 (편의 함수)
-def require_admin(api_key_obj: APIKey = Depends(lambda: require_permissions(["admin"]))):
+async def _require_admin_permissions(
+    api_key_obj: APIKey = Depends(require_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> APIKey:
+    """관리자 권한 확인"""
+    return await require_permissions(["admin"], api_key_obj, db)
+
+
+async def _require_write_permissions(
+    api_key_obj: APIKey = Depends(require_api_key),
+    db: AsyncSession = Depends(get_db)
+) -> APIKey:
+    """쓰기 권한 확인"""
+    return await require_permissions(["write"], api_key_obj, db)
+
+
+def require_admin(api_key_obj: APIKey = Depends(_require_admin_permissions)):
     """관리자 권한 필요"""
     return api_key_obj
 
 
-def require_write(api_key_obj: APIKey = Depends(lambda: require_permissions(["write"]))):
+def require_write(api_key_obj: APIKey = Depends(_require_write_permissions)):
     """쓰기 권한 필요"""
     return api_key_obj
+
+
+async def check_resource_access(
+    resource_type: str,
+    resource_id: str,
+    api_key: APIKey,
+    db: AsyncSession
+) -> bool:
+    """
+    리소스 접근 권한 확인
+    
+    Args:
+        resource_type: 리소스 타입 (race, job, prediction 등)
+        resource_id: 리소스 ID
+        api_key: API 키 객체
+        db: 데이터베이스 세션
+        
+    Returns:
+        접근 가능 여부
+    """
+    # 관리자는 모든 리소스 접근 가능
+    if "admin" in (api_key.permissions or []):
+        return True
+    
+    # 리소스별 접근 권한 체크
+    if resource_type == "race":
+        # 경주 데이터는 읽기 권한만 있으면 접근 가능
+        return "read" in (api_key.permissions or [])
+    
+    elif resource_type == "job":
+        # 작업은 생성자만 접근 가능
+        from models.database_models import Job
+        result = await db.execute(
+            select(Job).where(
+                Job.job_id == resource_id,
+                Job.created_by == api_key.name
+            )
+        )
+        job = result.scalar_one_or_none()
+        return job is not None
+    
+    elif resource_type == "prediction":
+        # 예측은 API 키로 생성된 것만 접근 가능
+        from models.database_models import Prediction
+        result = await db.execute(
+            select(Prediction).where(
+                Prediction.prediction_id == resource_id
+            )
+        )
+        prediction = result.scalar_one_or_none()
+        # TODO: prediction에 created_by 필드 추가 필요
+        return prediction is not None
+    
+    # 기본적으로 접근 거부
+    return False
+
+
+def require_resource_access(
+    resource_type: str,
+    resource_id_param: str = "resource_id"
+):
+    """
+    리소스 접근 권한 데코레이터
+    
+    Usage:
+        @router.get("/jobs/{job_id}")
+        async def get_job(
+            job_id: str,
+            auth: Depends(require_resource_access("job", "job_id"))
+        ):
+            ...
+    """
+    async def dependency(
+        request: Request,
+        api_key: APIKey = Depends(require_api_key),
+        db: AsyncSession = Depends(get_db)
+    ):
+        # Get api_key_obj from require_api_key
+        api_key_obj = await require_api_key(request.headers.get("X-API-Key", ""), db)
+        
+        resource_id = request.path_params.get(resource_id_param)
+        
+        if not resource_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Resource ID '{resource_id_param}' not found in path"
+            )
+        
+        has_access = await check_resource_access(
+            resource_type,
+            resource_id,
+            api_key_obj,
+            db
+        )
+        
+        if not has_access:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied to {resource_type} resource"
+            )
+        
+        return api_key_obj
+    
+    return dependency
