@@ -63,3 +63,6 @@ yarn.lock
 # API server logs
 api/server.log
 nodejs-collector/*.log
+
+# Serena local configuration
+.serena/
