@@ -66,3 +66,10 @@ nodejs-collector/*.log
 
 # Serena local configuration
 .serena/
+
+# Turborepo
+.turbo/
+turbo-*.log
+
+# pnpm
+pnpm-lock.yaml

@@ -14,7 +14,9 @@
       "Bash(python3 scripts/evaluate_prompt.py:*)",
       "Bash(python3 scripts/evaluate_all_races.py:*)",
       "Bash(python3 scripts/evaluate_sample_races.py:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "mcp__serena__think_about_collected_information",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,16 @@
+{
+  "name": "@repo/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "경마 데이터 처리 및 분석 스크립트",
+  "scripts": {
+    "collect": "node race_collector/collect_and_preprocess.js",
+    "enrich": "node race_collector/enrich_race_data.js",
+    "evaluate": "python3 evaluation/evaluate_prompt_v3.py",
+    "improve": "python3 prompt_improvement/recursive_prompt_improvement_v5.py"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "node-fetch": "^3.3.0"
+  }
+}

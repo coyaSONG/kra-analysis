@@ -1,0 +1,12 @@
+{
+  "name": "@apps/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd ../../apps/api && PORT=8001 uv run uvicorn main_v2:app --reload --port 8001",
+    "build": "echo 'Python project - no build step'",
+    "test": "cd ../../apps/api && uv run pytest",
+    "lint": "cd ../../apps/api && uv run ruff check .",
+    "typecheck": "cd ../../apps/api && uv run mypy ."
+  }
+}

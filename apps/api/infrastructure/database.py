@@ -107,7 +107,7 @@ async def init_db():
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
-        raise
+        logger.warning("API will run without database connection")
 
 
 async def close_db():

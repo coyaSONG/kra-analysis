@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // 프로젝트 루트 경로 (scripts 폴더가 있는 곳)
-const PROJECT_ROOT = path.resolve(__dirname, '..');
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
 
 // 헬스체크
 app.get('/health', (req, res) => {
@@ -33,7 +33,7 @@ app.post('/collect', async (req, res) => {
         console.log(`수집 시작: ${date} / 경마장 ${meet}`);
         
         // 기존 Node.js 스크립트 실행
-        const scriptPath = path.join(PROJECT_ROOT, 'scripts/race_collector/collect_and_preprocess.js');
+        const scriptPath = path.join(PROJECT_ROOT, 'packages/scripts/race_collector/collect_and_preprocess.js');
         const { stdout, stderr } = await execPromise(
             `node "${scriptPath}" ${date} ${meet}`,
             { cwd: PROJECT_ROOT }
@@ -71,7 +71,7 @@ app.post('/enrich', async (req, res) => {
     try {
         console.log(`보강 시작: ${date} / 경마장 ${meet}`);
         
-        const scriptPath = path.join(PROJECT_ROOT, 'scripts/race_collector/enrich_race_data.js');
+        const scriptPath = path.join(PROJECT_ROOT, 'packages/scripts/race_collector/enrich_race_data.js');
         const { stdout, stderr } = await execPromise(
             `node "${scriptPath}" ${date} ${meet}`,
             { cwd: PROJECT_ROOT }
@@ -112,7 +112,7 @@ app.post('/result', async (req, res) => {
         
         console.log(`결과 조회: ${date} / ${meetName} / ${raceNo}R`);
         
-        const scriptPath = path.join(PROJECT_ROOT, 'scripts/race_collector/get_race_result.js');
+        const scriptPath = path.join(PROJECT_ROOT, 'packages/scripts/race_collector/get_race_result.js');
         const { stdout, stderr } = await execPromise(
             `node "${scriptPath}" ${date} ${meetName} ${raceNo}`,
             { cwd: PROJECT_ROOT }

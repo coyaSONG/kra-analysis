@@ -1,0 +1,17 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "dev": {
+      "env": ["PYTHONPATH=.", "KRA_API_KEY", "SUPABASE_URL", "SUPABASE_ANON_KEY", "REDIS_URL"],
+      "outputs": []
+    },
+    "test": {
+      "outputs": ["coverage/**", "htmlcov/**", ".coverage"],
+      "inputs": ["**/*.py", "tests/**", "!**/__pycache__/**"]
+    },
+    "build": {
+      "outputs": ["dist/**"],
+      "inputs": ["**/*.py", "!tests/**", "!**/__pycache__/**"]
+    }
+  }
+}

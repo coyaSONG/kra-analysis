@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     database_pool_size: int = 20
     database_max_overflow: int = 40
     
+    # Supabase
+    supabase_url: str = Field(default="your_supabase_url", env="SUPABASE_URL")
+    supabase_key: str = Field(default="your_supabase_anon_key", env="SUPABASE_ANON_KEY")
+    supabase_service_role_key: Optional[str] = Field(default=None, env="SUPABASE_SERVICE_ROLE_KEY")
+    
     # Redis
     redis_url: str = "redis://localhost:6379/0"
     cache_ttl: int = 3600  # 1 hour
@@ -41,14 +46,14 @@ class Settings(BaseSettings):
     celery_worker_prefetch_multiplier: int = 1
     
     # KRA API
-    kra_api_base_url: str = "https://apis.data.go.kr/B551015"
+    kra_api_base_url: str = "http://apis.data.go.kr/B551015"
     kra_api_key: Optional[str] = None  # 환경변수: KRA_API_KEY
     kra_api_timeout: int = 30
     kra_api_max_retries: int = 3
     kra_rate_limit: int = 100  # requests per minute
     
     # Security
-    secret_key: str = Field(default=..., env="SECRET_KEY")  # Required from environment
+    secret_key: str = Field(default="dev-secret-key-change-in-production", env="SECRET_KEY")  # Required from environment
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     api_key_header: str = "X-API-Key"
@@ -111,11 +116,14 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # 추가 필드 무시
         
         # 환경 변수 매핑
         fields = {
             "database_url": {"env": "DATABASE_URL"},
             "redis_url": {"env": "REDIS_URL"},
+            "celery_broker_url": {"env": "CELERY_BROKER_URL"},
+            "celery_result_backend": {"env": "CELERY_RESULT_BACKEND"},
             "kra_api_key": {"env": "KRA_API_KEY"},
             "secret_key": {"env": "SECRET_KEY"},
         }
