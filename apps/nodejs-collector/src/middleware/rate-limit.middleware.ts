@@ -10,27 +10,39 @@ import logger from '../utils/logger.js';
  * Falls back to memory store if Redis is unavailable
  */
 let redisClient: any = null;
+let redisErrorLogged = false;
 
 // Try to initialize Redis client if available
 try {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-  if (process.env.REDIS_URL || process.env.REDIS_HOST) {
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl) {
     redisClient = createRedisClient({
       url: redisUrl,
       socket: {
         connectTimeout: 5000,
+        reconnectStrategy: false, // Disable reconnection to prevent continuous errors
       },
     });
     
     redisClient.on('error', (err: Error) => {
-      logger.warn('Redis client error for rate limiting:', err.message);
+      if (!redisErrorLogged) {
+        logger.warn('Redis client error for rate limiting:', err.message);
+        logger.info('Falling back to memory store for rate limiting');
+        redisErrorLogged = true;
+      }
       redisClient = null; // Fall back to memory store
     });
     
     redisClient.connect().catch((err: Error) => {
-      logger.warn('Redis connection failed for rate limiting:', err.message);
+      if (!redisErrorLogged) {
+        logger.warn('Redis connection failed for rate limiting:', err.message);
+        logger.info('Using memory store for rate limiting');
+        redisErrorLogged = true;
+      }
       redisClient = null;
     });
+  } else {
+    logger.info('Redis not configured for rate limiting, using memory store');
   }
 } catch (error) {
   logger.info('Redis not configured for rate limiting, using memory store');
