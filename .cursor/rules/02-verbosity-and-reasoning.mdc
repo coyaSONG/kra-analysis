@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+description: 전역 장황함(verbosity), 코드 도구 내 장황함, reasoning_effort 정책
+---
+
+## Verbosity & Reasoning Effort
+
+```xml
+<verbosity_spec>
+- 전역 텍스트 출력: low
+- 코드/편집 도구 내 출력: high (가독성 우선, 명확한 이름, 직선적 제어 흐름)
+- reasoning_effort: 기본 medium, 다단계·복잡 작업은 high 권장
+</verbosity_spec>
+```
+

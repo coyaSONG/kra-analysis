@@ -1,0 +1,16 @@
+---
+globs: apps/nodejs-collector/**/*.ts,packages/**/*.ts
+description: TypeScript(Node) 편집 가이드(서비스/컨트롤러/라우트 분리, ESLint 규칙 준수)
+---
+
+## TypeScript (Node) Rules
+
+```xml
+<ts_rules>
+- pnpm 워크스페이스·공유 ESLint를 준수(루트 `package.json`, `packages/eslint-config`).
+- 명시적 타입 사용, any/강제 캐스팅은 협의 없이 금지.
+- 서비스/컨트롤러/라우트 레이어 분리를 유지(`apps/nodejs-collector/src`).
+- 로거/에러 핸들러/미들웨어는 기존 유틸 재사용.
+</ts_rules>
+```
+

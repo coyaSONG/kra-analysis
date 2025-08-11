@@ -1,0 +1,16 @@
+---
+globs: apps/api/**/*.py
+description: Python(FASTAPI) 코드 편집 가이드
+---
+
+## Python (FASTAPI) Rules
+
+```xml
+<python_rules>
+- 타입 힌트를 사용하고, 가드 클로즈를 우선 적용. 2~3단계 초과 중첩 회피.
+- 외부 I/O(DB/HTTP)는 서비스/클라이언트 계층에 유지. 라우터는 얇게.
+- 설정·의존성은 `apps/api/pyproject.toml`, `apps/api/requirements.txt`를 준수.
+- 불필요한 전역 변경/마이그레이션 파일 수정 금지(요청 시에만 수행).
+</python_rules>
+```
+

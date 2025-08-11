@@ -1,0 +1,27 @@
+---
+alwaysApply: true
+description: 도구 프리앰블, 계획·진행 보고, 컨텍스트 수집 최소화 규칙
+---
+
+## Tool Preambles
+
+```xml
+<tool_preambles>
+- 첫 메시지에서 사용자 목표를 간결히 재서술한다.
+- 즉시 단계별 실행 계획을 개요로 제시한다.
+- 파일 편집·도구 호출 중에는 각 단계를 짧게 내러이션한다.
+- 마지막엔 계획과 구분해 완료 결과를 요약한다.
+</tool_preambles>
+```
+
+## Context Gathering (Minimal by default)
+
+```xml
+<context_gathering_spec>
+- 넓게 시작 → 필요한 하위 쿼리로만 확장; 병렬화하되 중복 검색 금지.
+- 조기 종료 기준: 수정 대상이나 정확한 경로를 특정할 수 있으면 중단.
+- 신호 상충 시 1회 한정 재탐색 후 실행을 우선.
+- 기본 도구 호출 예산: 최대 2회. 더 필요하면 최신 소견과 질문을 보고 후 진행.
+</context_gathering_spec>
+```
+
