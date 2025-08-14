@@ -5,7 +5,6 @@
  * Handles batch processing, error recovery, and progress tracking
  */
 
-import type { Api214Item } from '../types/kra-api.types.js';
 import type {
   CollectionRequest,
   CollectedRaceData,
@@ -137,16 +136,13 @@ export class CollectionService {
         startTime,
       });
 
-      // eslint-disable-next-line prefer-const
-      let raceData: Api214Item[];
-
       if (raceNo === undefined || raceNo === null) {
         throw new ValidationError('Race number is required for single race collection');
       }
 
       // Collect specific race - convert meet to API parameter format (numeric code)
       const apiMeet = meet ? meetToApiParam(meet) : '';
-      raceData = await this.kraApiService.getRaceResult(date, apiMeet, raceNo, { timeout, retryAttempts });
+      const raceData = await this.kraApiService.getRaceResult(date, apiMeet, raceNo, { timeout, retryAttempts });
 
       if (raceData.length === 0) {
         throw new AppError(`No race data found for ${date} race ${raceNo}`, 404);
@@ -594,12 +590,12 @@ export class CollectionService {
     const month = parseInt(request.startDate.substring(4, 6), 10) - 1;
     const day = parseInt(request.startDate.substring(6, 8), 10);
     const startDate = new Date(year, month, day);
-    
+
     const endYear = parseInt(request.endDate.substring(0, 4), 10);
     const endMonth = parseInt(request.endDate.substring(4, 6), 10) - 1;
     const endDay = parseInt(request.endDate.substring(6, 8), 10);
     const endDate = new Date(endYear, endMonth, endDay);
-    
+
     const meets: string[] = (request.meets ?? ['서울', '부산경남', '제주']).filter(
       (m): m is string => typeof m === 'string' && m.length > 0
     );

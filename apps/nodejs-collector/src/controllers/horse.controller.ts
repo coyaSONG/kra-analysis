@@ -10,7 +10,6 @@ import { services } from '../services/index.js';
 import type { ApiResponse, HorseQueryParams } from '../types/api.types.js';
 import type { Api8_2Item } from '../types/kra-api.types.js';
 import { ValidationError, AppError } from '../types/index.js';
-import { meetToApiParam } from '../utils/meet-converter.js';
 import logger from '../utils/logger.js';
 
 /**

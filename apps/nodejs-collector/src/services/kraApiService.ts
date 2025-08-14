@@ -452,7 +452,7 @@ export class KraApiService {
     // The endpoint now includes both API_ID and endpoint_name (e.g., "API214_1/RaceDetailResult_1")
     // Split the endpoint to get API_ID and endpoint_name
     const [apiId, endpointName] = endpoint.split('/');
-    
+
     // Build URL as: baseUrl/API_ID/endpoint_name
     const url = new URL(`${this.baseUrl}/${apiId}/${endpointName}`);
 

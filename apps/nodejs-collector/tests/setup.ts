@@ -224,34 +224,15 @@ afterEach(async () => {
   
   // Reset environment variables that might have been modified
   process.env.NODE_ENV = 'test';
-  
-  // Clean up any test data if using database
-  if (process.env.CLEANUP_AFTER_TESTS !== 'false') {
-    await cleanupDatabase();
-  }
 });
 
-// Global setup
-beforeAll(async () => {
-  // Suppress console output during tests
-  if (process.env.SUPPRESS_TEST_LOGS !== 'false') {
-    suppressConsole();
-  }
-  
-  // Seed initial test data if needed
-  if (process.env.SEED_TEST_DATA === 'true') {
-    await seedTestData();
-  }
-});
-
-// Global cleanup
-afterAll(async () => {
-  // Restore console
-  restoreConsole();
-  
-  // Final cleanup
-  await cleanupDatabase();
-});
+// Disable console logs during tests
+if (process.env.NODE_ENV === 'test' && process.env.DEBUG !== 'true') {
+  global.console.log = jest.fn();
+  global.console.info = jest.fn();
+  global.console.warn = jest.fn();
+  global.console.debug = jest.fn();
+}
 
 // Export commonly used testing utilities
 export {

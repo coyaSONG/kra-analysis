@@ -1,6 +1,6 @@
 /**
  * Meet/Track name converter utility
- * 
+ *
  * Converts between Korean meet names and numeric codes required by KRA API
  */
 
@@ -10,10 +10,10 @@ import { Meet } from '../types/index.js';
  * Mapping of Korean meet names to numeric codes
  */
 const MEET_NAME_TO_CODE: Record<string, Meet> = {
-  '서울': Meet.SEOUL,
-  '제주': Meet.JEJU,
-  '부산': Meet.BUSAN,
-  '부산경남': Meet.BUSAN,
+  서울: Meet.SEOUL,
+  제주: Meet.JEJU,
+  부산: Meet.BUSAN,
+  부산경남: Meet.BUSAN,
 };
 
 /**
@@ -44,7 +44,7 @@ export function meetNameToCode(meetName: string): Meet {
   if (code === undefined) {
     throw new Error(`Invalid meet name: ${meetName}. Must be one of ${Object.keys(MEET_NAME_TO_CODE).join(', ')}`);
   }
-  
+
   return code;
 }
 
@@ -58,7 +58,7 @@ export function meetCodeToName(meetCode: Meet | number): string {
   if (!name) {
     throw new Error(`Invalid meet code: ${meetCode}. Must be 1 (Seoul), 2 (Jeju), or 3 (Busan)`);
   }
-  
+
   return name;
 }
 
@@ -71,7 +71,7 @@ export function meetToApiParam(meet: string | number | Meet): string {
   if (typeof meet === 'number') {
     return meet.toString();
   }
-  
+
   if (typeof meet === 'string') {
     // If it's already a number string, return it
     if (/^\d+$/.test(meet)) {
@@ -80,12 +80,12 @@ export function meetToApiParam(meet: string | number | Meet): string {
         return meet;
       }
     }
-    
+
     // Convert Korean name to code
     const code = meetNameToCode(meet);
     return code.toString();
   }
-  
+
   throw new Error(`Invalid meet parameter: ${meet}`);
 }
 
@@ -111,5 +111,5 @@ export function getValidMeetNames(): string[] {
  * @returns Array of valid meet codes
  */
 export function getValidMeetCodes(): Meet[] {
-  return Object.values(Meet);
+  return Object.values(Meet) as Meet[];
 }
