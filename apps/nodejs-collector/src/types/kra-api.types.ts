@@ -1,6 +1,6 @@
 /**
  * KRA API Type Definitions
- * 
+ *
  * Comprehensive type definitions for Korea Racing Authority (KRA) Public APIs
  * Based on actual API responses from API214_1, API8_2, API12_1, and API19_1
  */
@@ -467,7 +467,7 @@ export interface EnrichedHorseEntry extends Api214Item {
   jockeyDetail?: Api12_1Item;
   /** Detailed trainer information from API19_1 */
   trainerDetail?: Api19_1Item;
-  
+
   /** Computed performance metrics */
   performanceMetrics?: {
     /** Horse win rate percentage */
@@ -488,20 +488,12 @@ export interface EnrichedHorseEntry extends Api214Item {
 /**
  * Union type for all KRA API response types
  */
-export type KraApiResponseUnion = 
-  | Api214Response 
-  | Api8_2Response 
-  | Api12_1Response 
-  | Api19_1Response;
+export type KraApiResponseUnion = Api214Response | Api8_2Response | Api12_1Response | Api19_1Response;
 
 /**
  * Union type for all KRA API item types
  */
-export type KraApiItemUnion = 
-  | Api214Item 
-  | Api8_2Item 
-  | Api12_1Item 
-  | Api19_1Item;
+export type KraApiItemUnion = Api214Item | Api8_2Item | Api12_1Item | Api19_1Item;
 
 /**
  * Enum for KRA API endpoints
@@ -510,7 +502,7 @@ export enum KraApiEndpoint {
   RACE_RESULT = 'API214_1',
   HORSE_INFO = 'API8_2',
   JOCKEY_INFO = 'API12_1',
-  TRAINER_INFO = 'API19_1'
+  TRAINER_INFO = 'API19_1',
 }
 
 /**
@@ -519,14 +511,14 @@ export enum KraApiEndpoint {
 export enum KraMeet {
   SEOUL = '서울',
   BUSAN = '부산경남',
-  JEJU = '제주'
+  JEJU = '제주',
 }
 
 /**
  * Type guard to check if response is API214 (Race Result)
  */
 export function isApi214Response(response: KraApiResponseUnion): response is Api214Response {
-  const firstItem = Array.isArray(response.response.body.items.item) 
+  const firstItem = Array.isArray(response.response.body.items.item)
     ? response.response.body.items.item[0]
     : response.response.body.items.item;
   return Boolean(firstItem && 'ord' in firstItem && 'hrName' in firstItem && 'rcTime' in firstItem);

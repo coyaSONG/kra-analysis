@@ -1,6 +1,6 @@
 /**
  * Services Export
- * 
+ *
  * Central export point for all service classes with dependency injection setup
  */
 
@@ -21,17 +21,25 @@ export { CollectionService } from './collection.service.js';
  */
 export class ServiceContainer {
   private static instance: ServiceContainer;
-  
+
   public readonly kraApiService: KraApiService;
   public readonly cacheService: CacheService;
   public readonly enrichmentService: EnrichmentService;
   public readonly collectionService: CollectionService;
-  
+
   // Alias for backwards compatibility
-  public get kra() { return this.kraApiService; }
-  public get cache() { return this.cacheService; }
-  public get enrichment() { return this.enrichmentService; }
-  public get collection() { return this.collectionService; }
+  public get kra() {
+    return this.kraApiService;
+  }
+  public get cache() {
+    return this.cacheService;
+  }
+  public get enrichment() {
+    return this.enrichmentService;
+  }
+  public get collection() {
+    return this.collectionService;
+  }
 
   private constructor() {
     logger.info('Initializing service container');
@@ -39,15 +47,8 @@ export class ServiceContainer {
     // Initialize services with dependency injection
     this.kraApiService = new KraApiService();
     this.cacheService = new CacheService();
-    this.enrichmentService = new EnrichmentService(
-      this.kraApiService,
-      this.cacheService
-    );
-    this.collectionService = new CollectionService(
-      this.kraApiService,
-      this.cacheService,
-      this.enrichmentService
-    );
+    this.enrichmentService = new EnrichmentService(this.kraApiService, this.cacheService);
+    this.collectionService = new CollectionService(this.kraApiService, this.cacheService, this.enrichmentService);
 
     logger.info('Service container initialized successfully');
   }
@@ -97,10 +98,8 @@ export class ServiceContainer {
    */
   async clearAllCaches(): Promise<void> {
     const cacheTypes = ['race_result', 'horse_detail', 'jockey_detail', 'trainer_detail', 'enriched_race'] as const;
-    
-    await Promise.all(
-      cacheTypes.map(type => this.cacheService.clear(type))
-    );
+
+    await Promise.all(cacheTypes.map((type) => this.cacheService.clear(type)));
 
     logger.info('All caches cleared');
   }

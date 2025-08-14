@@ -6,40 +6,32 @@ import logger from '../utils/logger.js';
 /**
  * Handle validation results and throw ValidationError if validation fails
  */
-export const handleValidationErrors = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const handleValidationErrors = (req: Request, res: Response, next: NextFunction): void => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
-    const validationErrors = errors.array().map(error => ({
+    const validationErrors = errors.array().map((error) => ({
       field: error.type === 'field' ? error.path : 'unknown',
       message: error.msg,
-      value: error.type === 'field' ? error.value : undefined
+      value: error.type === 'field' ? error.value : undefined,
     }));
 
     logger.warn('Validation failed:', {
       url: req.url,
       method: req.method,
       ip: req.ip,
-      errors: validationErrors
+      errors: validationErrors,
     });
 
-    const validationError = new ValidationError(
-      'Request validation failed',
-      validationErrors,
-      {
-        url: req.url,
-        method: req.method,
-        ip: req.ip
-      }
-    );
+    const validationError = new ValidationError('Request validation failed', validationErrors, {
+      url: req.url,
+      method: req.method,
+      ip: req.ip,
+    });
 
     throw validationError;
   }
-  
+
   next();
 };
 
@@ -48,7 +40,7 @@ export const handleValidationErrors = (
  */
 export const validateDate = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'date'): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
@@ -62,30 +54,28 @@ export const validateDate = (field: 'body' | 'param' | 'query' = 'param', fieldN
         const year = parseInt(value.substring(0, 4), 10);
         const month = parseInt(value.substring(4, 6), 10);
         const day = parseInt(value.substring(6, 8), 10);
-        
+
         // Basic date validation
         if (year < 2020 || year > 2030) {
           throw new Error(`Year must be between 2020 and 2030`);
         }
-        
+
         if (month < 1 || month > 12) {
           throw new Error('Month must be between 01 and 12');
         }
-        
+
         if (day < 1 || day > 31) {
           throw new Error('Day must be between 01 and 31');
         }
-        
+
         // More precise validation using Date object
         const dateObj = new Date(year, month - 1, day);
-        if (dateObj.getFullYear() !== year || 
-            dateObj.getMonth() !== month - 1 || 
-            dateObj.getDate() !== day) {
+        if (dateObj.getFullYear() !== year || dateObj.getMonth() !== month - 1 || dateObj.getDate() !== day) {
           throw new Error('Invalid date');
         }
-        
+
         return true;
-      })
+      }),
   ];
 };
 
@@ -94,51 +84,73 @@ export const validateDate = (field: 'body' | 'param' | 'query' = 'param', fieldN
  */
 export const validateMeet = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'meet'): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
+  const allowedNames = ['서울', '부산', '부산경남', '제주'];
+
   return [
     validator(fieldName)
       .notEmpty()
       .withMessage(`${fieldName} is required`)
-      .isInt({ min: 1, max: 3 })
-      .withMessage(`${fieldName} must be 1 (Seoul), 2 (Jeju), or 3 (Busan)`)
-      .toInt()
-      .custom((value: number) => {
-        if (!Object.values(Meet).includes(value)) {
-          throw new Error(`Invalid meet value: ${value}. Must be 1 (Seoul), 2 (Jeju), or 3 (Busan)`);
+      .custom((value: any) => {
+        // Accept either numeric codes 1-3 or valid Korean names
+        if (typeof value === 'number') {
+          if (!Object.values(Meet).includes(value)) {
+            throw new Error(`Invalid meet value: ${value}. Must be 1 (Seoul), 2 (Jeju), or 3 (Busan)`);
+          }
+          return true;
+        }
+
+        const str = String(value);
+        if (/^\d+$/.test(str)) {
+          const num = parseInt(str, 10);
+          if (!Object.values(Meet).includes(num)) {
+            throw new Error(`Invalid meet value: ${str}. Must be 1 (Seoul), 2 (Jeju), or 3 (Busan)`);
+          }
+          return true;
+        }
+
+        if (!allowedNames.includes(str)) {
+          throw new Error(`Invalid meet value: ${str}. Must be one of ${allowedNames.join(', ')} or 1/2/3`);
         }
         return true;
-      })
+      }),
   ];
 };
 
 /**
  * Race number validation chain - validates 1-20
  */
-export const validateRaceNo = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'raceNo'): ValidationChain[] => {
+export const validateRaceNo = (
+  field: 'body' | 'param' | 'query' = 'param',
+  fieldName = 'raceNo'
+): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
       .withMessage(`${fieldName} is required`)
       .isInt({ min: 1, max: 20 })
       .withMessage(`${fieldName} must be between 1 and 20`)
-      .toInt()
+      .toInt(),
   ];
 };
 
 /**
  * Optional race number validation - allows empty values
  */
-export const validateOptionalRaceNo = (field: 'body' | 'param' | 'query' = 'query', fieldName = 'raceNo'): ValidationChain[] => {
+export const validateOptionalRaceNo = (
+  field: 'body' | 'param' | 'query' = 'query',
+  fieldName = 'raceNo'
+): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .optional()
       .isInt({ min: 1, max: 20 })
       .withMessage(`${fieldName} must be between 1 and 20 if provided`)
-      .toInt()
+      .toInt(),
   ];
 };
 
@@ -147,7 +159,7 @@ export const validateOptionalRaceNo = (field: 'body' | 'param' | 'query' = 'quer
  */
 export const validateHorseId = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'hrNo'): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
@@ -155,16 +167,19 @@ export const validateHorseId = (field: 'body' | 'param' | 'query' = 'param', fie
       .isString()
       .withMessage(`${fieldName} must be a string`)
       .matches(/^[0-9]{7}$/)
-      .withMessage(`${fieldName} must be a 7-digit number string (e.g., "0012345")`)
+      .withMessage(`${fieldName} must be a 7-digit number string (e.g., "0012345")`),
   ];
 };
 
 /**
  * Jockey ID validation chain - validates format like "01234"
  */
-export const validateJockeyId = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'jkNo'): ValidationChain[] => {
+export const validateJockeyId = (
+  field: 'body' | 'param' | 'query' = 'param',
+  fieldName = 'jkNo'
+): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
@@ -172,16 +187,19 @@ export const validateJockeyId = (field: 'body' | 'param' | 'query' = 'param', fi
       .isString()
       .withMessage(`${fieldName} must be a string`)
       .matches(/^[0-9]{5}$/)
-      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`)
+      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`),
   ];
 };
 
 /**
  * Trainer ID validation chain - validates format like "01234"
  */
-export const validateTrainerId = (field: 'body' | 'param' | 'query' = 'param', fieldName = 'trNo'): ValidationChain[] => {
+export const validateTrainerId = (
+  field: 'body' | 'param' | 'query' = 'param',
+  fieldName = 'trNo'
+): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
@@ -189,25 +207,17 @@ export const validateTrainerId = (field: 'body' | 'param' | 'query' = 'param', f
       .isString()
       .withMessage(`${fieldName} must be a string`)
       .matches(/^[0-9]{5}$/)
-      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`)
+      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`),
   ];
 };
 
 /**
  * Pagination validation chains
  */
-export const validatePagination = (field: 'query' = 'query'): ValidationChain[] => {
+export const validatePagination = (_field: 'query' = 'query'): ValidationChain[] => {
   return [
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('page must be a positive integer')
-      .toInt(),
-    query('limit')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('limit must be between 1 and 100')
-      .toInt()
+    query('page').optional().isInt({ min: 1 }).withMessage('page must be a positive integer').toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100').toInt(),
   ];
 };
 
@@ -220,10 +230,7 @@ export const validateSort = (allowedFields: string[]): ValidationChain[] => {
       .optional()
       .isIn(allowedFields)
       .withMessage(`sortBy must be one of: ${allowedFields.join(', ')}`),
-    query('sortOrder')
-      .optional()
-      .isIn(['asc', 'desc'])
-      .withMessage('sortOrder must be either "asc" or "desc"')
+    query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('sortOrder must be either "asc" or "desc"'),
   ];
 };
 
@@ -232,27 +239,21 @@ export const validateSort = (allowedFields: string[]): ValidationChain[] => {
  */
 export const validateBoolean = (field: 'body' | 'param' | 'query' = 'query', fieldName: string): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
-  return [
-    validator(fieldName)
-      .optional()
-      .isBoolean()
-      .withMessage(`${fieldName} must be a boolean value`)
-      .toBoolean()
-  ];
+
+  return [validator(fieldName).optional().isBoolean().withMessage(`${fieldName} must be a boolean value`).toBoolean()];
 };
 
 /**
  * Array validation chain
  */
 export const validateArray = (
-  field: 'body' | 'param' | 'query' = 'body', 
-  fieldName: string, 
+  field: 'body' | 'param' | 'query' = 'body',
+  fieldName: string,
   itemValidator?: (value: any) => boolean,
   options: { min?: number; max?: number } = {}
 ): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return [
     validator(fieldName)
       .notEmpty()
@@ -261,13 +262,13 @@ export const validateArray = (
       .withMessage(`${fieldName} must be an array`)
       .custom((value: any[]) => {
         if (itemValidator) {
-          const isValid = value.every(item => itemValidator(item));
+          const isValid = value.every((item) => itemValidator(item));
           if (!isValid) {
             throw new Error(`All items in ${fieldName} must be valid`);
           }
         }
         return true;
-      })
+      }),
   ];
 };
 
@@ -278,7 +279,7 @@ export const validateCollectionRequest = [
   ...validateDate('body', 'date'),
   ...validateOptionalRaceNo('body', 'raceNo'),
   ...validateMeet('body', 'meet'),
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 /**
@@ -288,32 +289,23 @@ export const validateRaceParams = [
   ...validateDate('param', 'date'),
   ...validateMeet('param', 'meet'),
   ...validateRaceNo('param', 'raceNo'),
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 /**
  * Common validation chains for horse endpoints
  */
-export const validateHorseParams = [
-  ...validateHorseId('param', 'hrNo'),
-  handleValidationErrors
-];
+export const validateHorseParams = [...validateHorseId('param', 'hrNo'), handleValidationErrors];
 
 /**
  * Common validation chains for jockey endpoints
  */
-export const validateJockeyParams = [
-  ...validateJockeyId('param', 'jkNo'),
-  handleValidationErrors
-];
+export const validateJockeyParams = [...validateJockeyId('param', 'jkNo'), handleValidationErrors];
 
 /**
  * Common validation chains for trainer endpoints
  */
-export const validateTrainerParams = [
-  ...validateTrainerId('param', 'trNo'),
-  handleValidationErrors
-];
+export const validateTrainerParams = [...validateTrainerId('param', 'trNo'), handleValidationErrors];
 
 /**
  * Validation for enriched data request
@@ -323,7 +315,7 @@ export const validateEnrichmentRequest = [
   ...validateMeet('body', 'meet'),
   ...validateRaceNo('body', 'raceNo'),
   ...validateBoolean('body', 'forceRefresh'),
-  handleValidationErrors
+  handleValidationErrors,
 ];
 
 /**
@@ -336,7 +328,7 @@ export const createCustomValidator = (
   field: 'body' | 'param' | 'query' = 'body'
 ): ValidationChain => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
+
   return validator(fieldName).custom(async (value, { req }) => {
     const isValid = await validatorFn(value, req as Request);
     if (!isValid) {
@@ -351,12 +343,8 @@ export const createCustomValidator = (
  */
 export const sanitizeInput = (field: 'body' | 'param' | 'query' = 'body', fieldName: string): ValidationChain[] => {
   const validator = field === 'body' ? body : field === 'query' ? query : param;
-  
-  return [
-    validator(fieldName)
-      .trim()
-      .escape()
-  ];
+
+  return [validator(fieldName).trim().escape()];
 };
 
 /**

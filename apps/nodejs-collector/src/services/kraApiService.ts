@@ -1,11 +1,11 @@
 /**
  * KRA API Service
- * 
+ *
  * Core service for interacting with Korea Racing Authority (KRA) Public APIs
  * Implements retry logic, rate limiting, and comprehensive error handling
  */
 
-import type { 
+import type {
   Api214Response,
   Api8_2Response,
   Api12_1Response,
@@ -13,10 +13,10 @@ import type {
   Api214Item,
   Api8_2Item,
   Api12_1Item,
-  Api19_1Item
+  Api19_1Item,
 } from '../types/kra-api.types.js';
 import { KraApiEndpoint, KraMeet } from '../types/kra-api.types.js';
-import { AppError, ExternalApiError, RateLimitError } from '../types/index.js';
+import { ExternalApiError, RateLimitError } from '../types/index.js';
 import { appConfig } from '../config/index.js';
 import logger from '../utils/logger.js';
 
@@ -68,18 +68,18 @@ export class KraApiService {
     this.baseUrl = appConfig.kra.baseUrl;
     this.apiKey = appConfig.kra.apiKey;
     this.defaultTimeout = appConfig.kra.timeout || 30000; // 30 seconds default
-    
+
     this.retryConfig = {
       attempts: appConfig.kra.retry?.attempts || 3,
       delay: appConfig.kra.retry?.delay || 1000,
-      backoffFactor: appConfig.kra.retry?.backoffFactor || 2
+      backoffFactor: appConfig.kra.retry?.backoffFactor || 2,
     };
 
     this.rateLimitConfig = {
       maxRequests: appConfig.kra.rateLimit?.maxRequests || 60,
       windowMs: appConfig.kra.rateLimit?.windowMs || 60000, // 1 minute
       currentRequests: 0,
-      windowStart: Date.now()
+      windowStart: Date.now(),
     };
 
     logger.info('KRA API Service initialized', {
@@ -88,8 +88,8 @@ export class KraApiService {
       timeout: this.defaultTimeout,
       rateLimit: {
         maxRequests: this.rateLimitConfig.maxRequests,
-        windowMs: this.rateLimitConfig.windowMs
-      }
+        windowMs: this.rateLimitConfig.windowMs,
+      },
     });
   }
 
@@ -110,14 +110,14 @@ export class KraApiService {
     const params = {
       rc_date: date,
       meet: meet,
-      rc_no: raceNo.toString()
+      rc_no: raceNo.toString(),
     };
 
     logger.info('Fetching race result', { date, meet, raceNo, endpoint });
 
     try {
       const response = await this.fetchWithRetry<Api214Response>(endpoint, params, options);
-      
+
       if (!response.response || response.response.header.resultCode !== '00') {
         throw new ExternalApiError(
           `KRA API returned error: ${response.response?.header?.resultMsg || 'Unknown error'}`,
@@ -131,22 +131,22 @@ export class KraApiService {
 
       const items = response.response.body.items.item;
       const raceData = Array.isArray(items) ? items : [items];
-      
-      logger.info('Race result fetched successfully', { 
-        date, 
-        meet, 
-        raceNo, 
-        horseCount: raceData.length 
+
+      logger.info('Race result fetched successfully', {
+        date,
+        meet,
+        raceNo,
+        horseCount: raceData.length,
       });
 
       return raceData;
     } catch (error) {
       logger.error('Failed to fetch race result', { error, date, meet, raceNo });
-      
+
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
-      
+
       throw new ExternalApiError(
         `Failed to fetch race result: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'KRA_API',
@@ -161,10 +161,7 @@ export class KraApiService {
    * @param hrNo Horse number
    * @param options Request options
    */
-  async getHorseDetail(
-    hrNo: string,
-    options: KraApiRequestOptions = {}
-  ): Promise<Api8_2Item | null> {
+  async getHorseDetail(hrNo: string, options: KraApiRequestOptions = {}): Promise<Api8_2Item | null> {
     const endpoint = KraApiEndpoint.HORSE_INFO;
     const params = { hr_no: hrNo };
 
@@ -172,14 +169,14 @@ export class KraApiService {
 
     try {
       const response = await this.fetchWithRetry<Api8_2Response>(endpoint, params, options);
-      
+
       if (!response.response || response.response.header.resultCode !== '00') {
         // For horse details, return null if not found rather than throwing
         if (response.response?.header?.resultCode === '03') {
           logger.debug('Horse not found', { hrNo });
           return null;
         }
-        
+
         throw new ExternalApiError(
           `KRA API returned error: ${response.response?.header?.resultMsg || 'Unknown error'}`,
           'KRA_API',
@@ -192,17 +189,17 @@ export class KraApiService {
 
       const items = response.response.body.items.item;
       const horseData = Array.isArray(items) ? items[0] : items;
-      
+
       logger.debug('Horse detail fetched successfully', { hrNo, horseName: horseData?.hrName });
 
       return horseData || null;
     } catch (error) {
       logger.error('Failed to fetch horse detail', { error, hrNo });
-      
+
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
-      
+
       throw new ExternalApiError(
         `Failed to fetch horse detail: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'KRA_API',
@@ -217,10 +214,7 @@ export class KraApiService {
    * @param jkNo Jockey number
    * @param options Request options
    */
-  async getJockeyDetail(
-    jkNo: string,
-    options: KraApiRequestOptions = {}
-  ): Promise<Api12_1Item | null> {
+  async getJockeyDetail(jkNo: string, options: KraApiRequestOptions = {}): Promise<Api12_1Item | null> {
     const endpoint = KraApiEndpoint.JOCKEY_INFO;
     const params = { jk_no: jkNo };
 
@@ -228,14 +222,14 @@ export class KraApiService {
 
     try {
       const response = await this.fetchWithRetry<Api12_1Response>(endpoint, params, options);
-      
+
       if (!response.response || response.response.header.resultCode !== '00') {
         // For jockey details, return null if not found rather than throwing
         if (response.response?.header?.resultCode === '03') {
           logger.debug('Jockey not found', { jkNo });
           return null;
         }
-        
+
         throw new ExternalApiError(
           `KRA API returned error: ${response.response?.header?.resultMsg || 'Unknown error'}`,
           'KRA_API',
@@ -248,17 +242,17 @@ export class KraApiService {
 
       const items = response.response.body.items.item;
       const jockeyData = Array.isArray(items) ? items[0] : items;
-      
+
       logger.debug('Jockey detail fetched successfully', { jkNo, jockeyName: jockeyData?.jkName });
 
       return jockeyData || null;
     } catch (error) {
       logger.error('Failed to fetch jockey detail', { error, jkNo });
-      
+
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
-      
+
       throw new ExternalApiError(
         `Failed to fetch jockey detail: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'KRA_API',
@@ -273,10 +267,7 @@ export class KraApiService {
    * @param trNo Trainer number
    * @param options Request options
    */
-  async getTrainerDetail(
-    trNo: string,
-    options: KraApiRequestOptions = {}
-  ): Promise<Api19_1Item | null> {
+  async getTrainerDetail(trNo: string, options: KraApiRequestOptions = {}): Promise<Api19_1Item | null> {
     const endpoint = KraApiEndpoint.TRAINER_INFO;
     const params = { tr_no: trNo };
 
@@ -284,14 +275,14 @@ export class KraApiService {
 
     try {
       const response = await this.fetchWithRetry<Api19_1Response>(endpoint, params, options);
-      
+
       if (!response.response || response.response.header.resultCode !== '00') {
         // For trainer details, return null if not found rather than throwing
         if (response.response?.header?.resultCode === '03') {
           logger.debug('Trainer not found', { trNo });
           return null;
         }
-        
+
         throw new ExternalApiError(
           `KRA API returned error: ${response.response?.header?.resultMsg || 'Unknown error'}`,
           'KRA_API',
@@ -304,17 +295,17 @@ export class KraApiService {
 
       const items = response.response.body.items.item;
       const trainerData = Array.isArray(items) ? items[0] : items;
-      
+
       logger.debug('Trainer detail fetched successfully', { trNo, trainerName: trainerData?.trName });
 
       return trainerData || null;
     } catch (error) {
       logger.error('Failed to fetch trainer detail', { error, trNo });
-      
+
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
-      
+
       throw new ExternalApiError(
         `Failed to fetch trainer detail: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'KRA_API',
@@ -337,7 +328,7 @@ export class KraApiService {
       timeout = this.defaultTimeout,
       retryAttempts = this.retryConfig.attempts,
       retryDelay = this.retryConfig.delay,
-      headers = {}
+      headers = {},
     } = options;
 
     let lastError: Error;
@@ -351,17 +342,17 @@ export class KraApiService {
         const requestOptions: RequestInit = {
           method: 'GET',
           headers: {
-            'Accept': 'application/json',
+            Accept: 'application/json',
             'User-Agent': 'nodejs-collector/1.0',
-            ...headers
+            ...headers,
           },
-          signal: AbortSignal.timeout(timeout)
+          signal: AbortSignal.timeout(timeout),
         };
 
-        logger.debug('Making API request', { 
-          url, 
-          attempt, 
-          maxAttempts: retryAttempts 
+        logger.debug('Making API request', {
+          url,
+          attempt,
+          maxAttempts: retryAttempts,
         });
 
         const response = await fetch(url, requestOptions);
@@ -381,19 +372,17 @@ export class KraApiService {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json() as T;
-        
+        const data = (await response.json()) as T;
+
         // Increment rate limit counter
         this.incrementRateLimitCounter();
-        
-        return data;
 
+        return data;
       } catch (error) {
         lastError = error as Error;
-        
+
         // Don't retry certain errors
-        if (error instanceof RateLimitError || 
-            (error instanceof Error && error.name === 'AbortError')) {
+        if (error instanceof RateLimitError || (error instanceof Error && error.name === 'AbortError')) {
           throw error;
         }
 
@@ -403,13 +392,13 @@ export class KraApiService {
 
         // Calculate exponential backoff delay
         const delay = retryDelay * Math.pow(this.retryConfig.backoffFactor, attempt - 1);
-        
+
         logger.warn('API request failed, retrying', {
           endpoint,
           attempt,
           maxAttempts: retryAttempts,
           error: error instanceof Error ? error.message : 'Unknown error',
-          retryDelay: delay
+          retryDelay: delay,
         });
 
         await this.delay(delay);
@@ -425,7 +414,7 @@ export class KraApiService {
    */
   private async checkRateLimit(): Promise<void> {
     const now = Date.now();
-    
+
     // Reset window if expired
     if (now - this.rateLimitConfig.windowStart >= this.rateLimitConfig.windowMs) {
       this.rateLimitConfig.currentRequests = 0;
@@ -435,11 +424,11 @@ export class KraApiService {
     // Check if rate limit exceeded
     if (this.rateLimitConfig.currentRequests >= this.rateLimitConfig.maxRequests) {
       const waitTime = this.rateLimitConfig.windowMs - (now - this.rateLimitConfig.windowStart);
-      
+
       if (waitTime > 0) {
         logger.warn('Rate limit reached, waiting', { waitTimeMs: waitTime });
         await this.delay(waitTime);
-        
+
         // Reset counters after waiting
         this.rateLimitConfig.currentRequests = 0;
         this.rateLimitConfig.windowStart = Date.now();
@@ -461,7 +450,7 @@ export class KraApiService {
    */
   private buildUrl(endpoint: string, params: Record<string, string>): string {
     const url = new URL(`/api/openapi/${endpoint}.json`, this.baseUrl);
-    
+
     // Add service key if available
     if (this.apiKey) {
       url.searchParams.set('serviceKey', this.apiKey);
@@ -482,7 +471,7 @@ export class KraApiService {
    * @private
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -492,12 +481,12 @@ export class KraApiService {
     try {
       // Test with a simple API call (get Seoul race 1 for today)
       const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const response = await this.fetchWithRetry(
+      await this.fetchWithRetry(
         KraApiEndpoint.RACE_RESULT,
         {
           rc_date: today,
           meet: KraMeet.SEOUL,
-          rc_no: '1'
+          rc_no: '1',
         },
         { timeout: 5000, retryAttempts: 1 }
       );

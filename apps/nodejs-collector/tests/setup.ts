@@ -6,6 +6,7 @@
  */
 
 import { config } from 'dotenv';
+import { expect } from '@jest/globals';
 import { join } from 'path';
 
 // Load test environment variables
@@ -33,19 +34,11 @@ process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'sqlite::memory:';
 jest.setTimeout(30000);
 
 // Global test utilities
-declare global {
-  namespace jest {
-    interface Matchers<R> {
-      toBeValidDate(): R;
-      toBeValidUUID(): R;
-      toMatchKraApiResponse(): R;
-    }
-  }
-}
+export {}; // Ensure this file is treated as a module for TS/Jest
 
 // Custom Jest matchers
 expect.extend({
-  toBeValidDate(received: any) {
+  toBeValidDate(received) {
     const pass = received instanceof Date && !isNaN(received.getTime());
     return {
       message: () => `expected ${received} to be a valid Date object`,
@@ -53,7 +46,7 @@ expect.extend({
     };
   },
 
-  toBeValidUUID(received: any) {
+  toBeValidUUID(received) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const pass = typeof received === 'string' && uuidRegex.test(received);
     return {
@@ -62,7 +55,7 @@ expect.extend({
     };
   },
 
-  toMatchKraApiResponse(received: any) {
+  toMatchKraApiResponse(received) {
     const hasRequiredFields = 
       received &&
       typeof received === 'object' &&

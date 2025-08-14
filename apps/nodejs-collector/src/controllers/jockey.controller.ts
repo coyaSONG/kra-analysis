@@ -1,16 +1,13 @@
 /**
  * Jockey Controller
- * 
+ *
  * Handles jockey-related API endpoints including jockey details and statistics
  */
 
 import type { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { services } from '../services/index.js';
-import type { 
-  ApiResponse, 
-  JockeyQueryParams 
-} from '../types/api.types.js';
+import type { ApiResponse, JockeyQueryParams } from '../types/api.types.js';
 import type { Api12_1Item } from '../types/kra-api.types.js';
 import { ValidationError, AppError } from '../types/index.js';
 import logger from '../utils/logger.js';
@@ -34,22 +31,22 @@ interface JockeyStats {
   /** Basic information */
   jkNo: string;
   jkName: string;
-  
+
   /** Performance metrics */
   totalRaces: number;
   wins: number;
   places: number;
   shows: number;
-  
+
   /** Calculated rates */
   winRate: number;
   placeRate: number;
   showRate: number;
-  
+
   /** Financial metrics */
   totalPrizeMoney: number;
   avgPrizeMoney: number;
-  
+
   /** Recent form (last 10 races) */
   recentForm: {
     races: number;
@@ -58,7 +55,7 @@ interface JockeyStats {
     shows: number;
     winRate: number;
   };
-  
+
   /** Track-specific performance */
   trackStats?: {
     meet: string;
@@ -66,14 +63,14 @@ interface JockeyStats {
     wins: number;
     winRate: number;
   }[];
-  
+
   /** Period information */
   period: {
     startDate: string;
     endDate: string;
     totalDays: number;
   };
-  
+
   /** Last updated timestamp */
   lastUpdated: string;
 }
@@ -84,7 +81,7 @@ export class JockeyController {
    * GET /api/jockeys/:jkNo
    */
   getJockeyDetails = async (
-    req: Request<{ jkNo: string }, ApiResponse<JockeyDetails>, {}, JockeyQueryParams>,
+    req: Request<{ jkNo: string }, ApiResponse<JockeyDetails>, Record<string, never>, JockeyQueryParams>,
     res: Response<ApiResponse<JockeyDetails>>,
     next: NextFunction
   ): Promise<void> => {
@@ -92,7 +89,12 @@ export class JockeyController {
       // Validate request parameters
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const { jkNo } = req.params;
@@ -107,23 +109,22 @@ export class JockeyController {
       if (!jockeyData) {
         // Fetch from KRA API if not in cache
         logger.info('Jockey data not in cache, fetching from API', { jkNo, meet });
-        
+
         try {
           jockeyData = await services.kraApiService.getJockeyDetail(jkNo);
-          
+
           if (!jockeyData) {
             throw new AppError('Jockey not found', 404, true, { jkNo, meet });
           }
 
           // Cache the result for 6 hours (jockey data doesn't change frequently)
           await services.cacheService.set('jockey_detail', cacheKeyParams, jockeyData, { ttl: 21600 });
-          
+
           // Add metadata
           (jockeyData as JockeyDetails).metadata = {
             lastUpdated: new Date().toISOString(),
-            dataSource: 'api'
+            dataSource: 'api',
           };
-
         } catch (error) {
           logger.error('Failed to fetch jockey data from API', { jkNo, meet, error });
           throw error;
@@ -133,7 +134,7 @@ export class JockeyController {
         (jockeyData as JockeyDetails).metadata = {
           lastUpdated: new Date().toISOString(),
           dataSource: 'cache',
-          cacheExpiresAt: new Date(Date.now() + 21600 * 1000).toISOString()
+          cacheExpiresAt: new Date(Date.now() + 21600 * 1000).toISOString(),
         };
       }
 
@@ -143,10 +144,9 @@ export class JockeyController {
         message: 'Jockey details retrieved successfully',
         meta: {
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -157,32 +157,37 @@ export class JockeyController {
    * GET /api/jockeys/:jkNo/stats
    */
   getJockeyStats = async (
-    req: Request<{ jkNo: string }, ApiResponse<JockeyStats>, {}, JockeyQueryParams>,
+    req: Request<{ jkNo: string }, ApiResponse<JockeyStats>, Record<string, never>, JockeyQueryParams>,
     res: Response<ApiResponse<JockeyStats>>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const { jkNo } = req.params;
       const { meet, sortBy = 'winRate', sortOrder = 'desc' } = req.query;
 
-      logger.info('Getting jockey statistics', { 
-        jkNo, 
-        meet, 
-        sortBy, 
-        sortOrder 
+      logger.info('Getting jockey statistics', {
+        jkNo,
+        meet,
+        sortBy,
+        sortOrder,
       });
 
       // Check cache first
-      const statsCacheParams = { 
+      const statsCacheParams = {
         type: 'stats',
-        jkNo, 
-        meet: meet || 'all', 
-        sort: `${sortBy}_${sortOrder}` 
+        jkNo,
+        meet: meet || 'all',
+        sort: `${sortBy}_${sortOrder}`,
       };
       let statsData = await services.cacheService.get('jockey_detail', statsCacheParams);
 
@@ -213,20 +218,24 @@ export class JockeyController {
             wins: 0,
             places: 0,
             shows: 0,
-            winRate: 0
+            winRate: 0,
           },
-          trackStats: meet ? [{
-            meet,
-            races: 0,
-            wins: 0,
-            winRate: 0
-          }] : undefined,
+          trackStats: meet
+            ? [
+                {
+                  meet,
+                  races: 0,
+                  wins: 0,
+                  winRate: 0,
+                },
+              ]
+            : undefined,
           period: {
             startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] as string,
             endDate: new Date().toISOString().split('T')[0] as string,
-            totalDays: 365
+            totalDays: 365,
           },
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
         };
 
         statsData = mockStats;
@@ -241,10 +250,9 @@ export class JockeyController {
         message: 'Jockey statistics retrieved successfully',
         meta: {
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -255,45 +263,42 @@ export class JockeyController {
    * GET /api/jockeys (with query parameters)
    */
   searchJockeys = async (
-    req: Request<{}, ApiResponse<JockeyDetails[]>, {}, JockeyQueryParams>,
+    req: Request<Record<string, never>, ApiResponse<JockeyDetails[]>, Record<string, never>, JockeyQueryParams>,
     res: Response<ApiResponse<JockeyDetails[]>>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
-      const { 
-        jkName, 
-        meet, 
-        part,
-        page = 1, 
-        pageSize = 20,
-        sortBy = 'jkName',
-        sortOrder = 'asc'
-      } = req.query;
+      const { jkName, meet, part, page = 1, pageSize = 20, sortBy = 'jkName', sortOrder = 'asc' } = req.query;
 
-      logger.info('Searching jockeys', { 
-        jkName, 
-        meet, 
-        part, 
-        page, 
-        pageSize, 
-        sortBy, 
-        sortOrder 
+      logger.info('Searching jockeys', {
+        jkName,
+        meet,
+        part,
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
       });
 
       // Check cache first
-      const searchCacheParams = { 
+      const searchCacheParams = {
         type: 'search',
         jkName: jkName || 'all',
         meet: meet || 'all',
         part: part || 'all',
         page: page?.toString() || '1',
         pageSize: pageSize?.toString() || '20',
-        sort: `${sortBy}_${sortOrder}`
+        sort: `${sortBy}_${sortOrder}`,
       };
       let searchResults = await services.cacheService.get('jockey_detail', searchCacheParams);
 
@@ -305,7 +310,7 @@ export class JockeyController {
         // 4. Include performance statistics if requested
 
         logger.info('Jockey search results not in cache and database integration pending');
-        
+
         searchResults = [];
 
         // Cache search results for 1 hour
@@ -325,10 +330,9 @@ export class JockeyController {
           pageSize: pageSize || 20,
           totalPages,
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -339,39 +343,43 @@ export class JockeyController {
    * GET /api/jockeys/top (with query parameters for criteria)
    */
   getTopJockeys = async (
-    req: Request<{}, ApiResponse<(JockeyDetails & { stats: Partial<JockeyStats> })[]>, {}, JockeyQueryParams>,
+    req: Request<
+      Record<string, never>,
+      ApiResponse<(JockeyDetails & { stats: Partial<JockeyStats> })[]>,
+      Record<string, never>,
+      JockeyQueryParams
+    >,
     res: Response<ApiResponse<(JockeyDetails & { stats: Partial<JockeyStats> })[]>>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
-      const { 
-        meet, 
-        page = 1, 
-        pageSize = 10,
-        sortBy = 'winRate',
-        sortOrder = 'desc'
-      } = req.query;
+      const { meet, page = 1, pageSize = 10, sortBy = 'winRate', sortOrder = 'desc' } = req.query;
 
-      logger.info('Getting top jockeys', { 
-        meet, 
-        page, 
-        pageSize, 
-        sortBy, 
-        sortOrder 
+      logger.info('Getting top jockeys', {
+        meet,
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
       });
 
       // Check cache first
-      const topCacheParams = { 
+      const topCacheParams = {
         type: 'top',
         meet: meet || 'all',
         page: page?.toString() || '1',
         pageSize: pageSize?.toString() || '10',
-        sort: `${sortBy}_${sortOrder}`
+        sort: `${sortBy}_${sortOrder}`,
       };
       let topJockeys = await services.cacheService.get('jockey_detail', topCacheParams);
 
@@ -383,7 +391,7 @@ export class JockeyController {
         // 4. Apply pagination
 
         logger.info('Top jockeys data not in cache and database integration pending');
-        
+
         topJockeys = [];
 
         // Cache for 4 hours (rankings don't change very frequently)
@@ -403,42 +411,15 @@ export class JockeyController {
           pageSize: pageSize || 10,
           totalPages,
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
-      });
-
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Get jockey statistics
-   * GET /api/jockeys/:jkNo/stats
-   */
-  getJockeyStats = async (
-    req: Request<{ jkNo: string }, ApiResponse<any>>,
-    res: Response<ApiResponse<any>>,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { jkNo } = req.params;
-      
-      logger.info('Getting jockey statistics', { jkNo });
-
-      // TODO: Implement actual jockey statistics
-      res.json({
-        success: true,
-        data: {
-          jkNo,
-          message: 'Jockey statistics endpoint - to be implemented'
+          processingTime: Date.now() - (req.startTime || Date.now()),
         },
-        message: 'Jockey statistics retrieved successfully'
       });
     } catch (error) {
       next(error);
     }
   };
+
+  // (removed duplicate lighter stub of getJockeyStats)
 
   /**
    * Get jockey performance
@@ -451,7 +432,7 @@ export class JockeyController {
   ): Promise<void> => {
     try {
       const { jkNo } = req.params;
-      
+
       logger.info('Getting jockey performance', { jkNo });
 
       // TODO: Implement actual jockey performance
@@ -459,9 +440,9 @@ export class JockeyController {
         success: true,
         data: {
           jkNo,
-          message: 'Jockey performance endpoint - to be implemented'
+          message: 'Jockey performance endpoint - to be implemented',
         },
-        message: 'Jockey performance retrieved successfully'
+        message: 'Jockey performance retrieved successfully',
       });
     } catch (error) {
       next(error);
@@ -479,7 +460,7 @@ export class JockeyController {
   ): Promise<void> => {
     try {
       const { jkNo } = req.params;
-      
+
       logger.info('Getting jockey races', { jkNo });
 
       // TODO: Implement actual jockey races
@@ -487,71 +468,25 @@ export class JockeyController {
         success: true,
         data: {
           jkNo,
-          message: 'Jockey races endpoint - to be implemented'
+          message: 'Jockey races endpoint - to be implemented',
         },
-        message: 'Jockey races retrieved successfully'
+        message: 'Jockey races retrieved successfully',
       });
     } catch (error) {
       next(error);
     }
   };
 
-  /**
-   * Search jockeys
-   * GET /api/jockeys
-   */
-  searchJockeys = async (
-    req: Request<{}, ApiResponse<any>>,
-    res: Response<ApiResponse<any>>,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      logger.info('Searching jockeys');
+  // (removed duplicate lighter stub of searchJockeys)
 
-      // TODO: Implement actual jockey search
-      res.json({
-        success: true,
-        data: {
-          message: 'Jockey search endpoint - to be implemented'
-        },
-        message: 'Jockeys searched successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  /**
-   * Get top jockeys
-   * GET /api/jockeys/top/performers
-   */
-  getTopJockeys = async (
-    req: Request<{}, ApiResponse<any>>,
-    res: Response<ApiResponse<any>>,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      logger.info('Getting top jockeys');
-
-      // TODO: Implement actual top jockeys
-      res.json({
-        success: true,
-        data: {
-          message: 'Top jockeys endpoint - to be implemented'
-        },
-        message: 'Top jockeys retrieved successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
+  // (removed duplicate lighter stub of getTopJockeys)
 
   /**
    * Get jockey rankings
    * GET /api/jockeys/rankings
    */
   getJockeyRankings = async (
-    req: Request<{}, ApiResponse<any>>,
+    req: Request<Record<string, never>, ApiResponse<any>>,
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
@@ -562,9 +497,9 @@ export class JockeyController {
       res.json({
         success: true,
         data: {
-          message: 'Jockey rankings endpoint - to be implemented'
+          message: 'Jockey rankings endpoint - to be implemented',
         },
-        message: 'Jockey rankings retrieved successfully'
+        message: 'Jockey rankings retrieved successfully',
       });
     } catch (error) {
       next(error);
@@ -576,7 +511,7 @@ export class JockeyController {
    * GET /api/jockeys/stats/summary
    */
   getJockeyStatsSummary = async (
-    req: Request<{}, ApiResponse<any>>,
+    req: Request<Record<string, never>, ApiResponse<any>>,
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
@@ -587,9 +522,9 @@ export class JockeyController {
       res.json({
         success: true,
         data: {
-          message: 'Jockey stats summary endpoint - to be implemented'
+          message: 'Jockey stats summary endpoint - to be implemented',
         },
-        message: 'Jockey stats summary retrieved successfully'
+        message: 'Jockey stats summary retrieved successfully',
       });
     } catch (error) {
       next(error);

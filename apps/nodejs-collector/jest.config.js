@@ -1,19 +1,14 @@
 /** @type {import('jest').Config} */
-module.exports = {
+export default {
   // Test environment
-  preset: 'ts-jest',
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
 
   // TypeScript configuration
   extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
 
   // Module resolution
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
@@ -57,33 +52,28 @@ module.exports = {
   },
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
 
   // Test timeout (30 seconds)
   testTimeout: 30000,
 
   // Reporter configuration
   reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        outputDirectory: 'test-results',
-        outputName: 'junit.xml',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-        ancestorSeparator: ' › ',
-        usePathForSuiteName: true,
-      },
-    ],
+    'default'
   ],
 
   // Transform configuration
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.(ts|tsx)$': [
       'ts-jest',
       {
         useESM: true,
+        tsconfig: {
+          module: 'esnext',
+          moduleResolution: 'node',
+          allowSyntheticDefaultImports: true,
+          esModuleInterop: true,
+        },
       },
     ],
   },
@@ -121,11 +111,6 @@ module.exports = {
   globals: {
     'ts-jest': {
       useESM: true,
-      tsconfig: {
-        moduleResolution: 'node',
-        allowSyntheticDefaultImports: true,
-        esModuleInterop: true,
-      },
     },
     // Test environment variables
     TEST_ENV: true,
@@ -151,21 +136,19 @@ module.exports = {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/unit/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     // Integration tests
     {
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-      testTimeout: 60000, // Longer timeout for integration tests
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     // Service tests
     {
       displayName: 'services',
       testMatch: ['<rootDir>/tests/services/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-      testTimeout: 45000,
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
     },
     // Middleware tests
     {

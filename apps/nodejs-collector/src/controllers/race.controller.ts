@@ -1,19 +1,18 @@
 /**
  * Race Controller
- * 
+ *
  * Handles race-related API endpoints including data retrieval, collection, and enrichment
  */
 
 import type { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 import { services } from '../services/index.js';
-import type { 
-  ApiResponse, 
-  CollectionRequest, 
+import type {
+  ApiResponse,
+  CollectionRequest,
   EnrichmentRequest,
   RaceQueryParams,
-  PaginatedResponse,
-  CollectedRaceData
+  CollectedRaceData,
 } from '../types/api.types.js';
 import type { EnrichedRaceData } from '../types/kra-api.types.js';
 import { ValidationError } from '../types/index.js';
@@ -25,7 +24,7 @@ export class RaceController {
    * GET /api/races/:date
    */
   getRacesByDate = async (
-    req: Request<{ date: string }, ApiResponse<CollectedRaceData[]>, {}, RaceQueryParams>,
+    req: Request<{ date: string }, ApiResponse<CollectedRaceData[]>, Record<string, never>, RaceQueryParams>,
     res: Response<ApiResponse<CollectedRaceData[]>>,
     next: NextFunction
   ): Promise<void> => {
@@ -33,23 +32,28 @@ export class RaceController {
       // Validate request parameters
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const { date } = req.params;
       const { meet, includeEnriched = false } = req.query;
 
-      logger.info('Getting races by date', { 
-        date, 
-        meet, 
-        includeEnriched 
+      logger.info('Getting races by date', {
+        date,
+        meet,
+        includeEnriched,
       });
 
       // Use cache service to check for existing data first
-      const cacheKeyParams = { 
+      const cacheKeyParams = {
         type: 'races',
-        date, 
-        meet: meet || 'all' 
+        date,
+        meet: meet || 'all',
       };
       const cachedData = await services.cacheService.get('race_result', cacheKeyParams);
 
@@ -58,14 +62,14 @@ export class RaceController {
         res.json({
           success: true,
           data: Array.isArray(cachedData) ? cachedData : [],
-          message: 'Races retrieved successfully (cached)'
+          message: 'Races retrieved successfully (cached)',
         });
         return;
       }
 
       // If no cached data or enriched data requested, collect from API
       const races: CollectedRaceData[] = [];
-      
+
       // For now, we'll simulate getting all races for a date
       // In a real implementation, you'd query your database or call the collection service
       logger.info('No cached data found or enriched data requested', { date, meet });
@@ -77,10 +81,9 @@ export class RaceController {
         meta: {
           totalCount: races.length,
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -98,28 +101,33 @@ export class RaceController {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const { date, meet, raceNo } = req.params;
       const raceNumber = parseInt(raceNo, 10);
       const { includeEnriched = false } = req.query;
 
-      logger.info('Getting race details', { 
-        date, 
-        meet, 
+      logger.info('Getting race details', {
+        date,
+        meet,
         raceNo: raceNumber,
-        includeEnriched 
+        includeEnriched,
       });
 
       // Check cache first
-      const raceCacheParams = { 
-        date, 
-        meet, 
-        raceNo: raceNumber.toString() 
+      const raceCacheParams = {
+        date,
+        meet,
+        raceNo: raceNumber.toString(),
       };
       let raceData = await services.cacheService.get(
-        includeEnriched ? 'enriched_race' : 'race_result', 
+        includeEnriched ? 'enriched_race' : 'race_result',
         raceCacheParams
       );
 
@@ -129,7 +137,7 @@ export class RaceController {
           date,
           meet,
           raceNo: raceNumber,
-          enrichData: !!includeEnriched
+          enrichData: !!includeEnriched,
         };
 
         logger.info('Collecting race data from API', collectionRequest);
@@ -151,10 +159,9 @@ export class RaceController {
         message: 'Race details retrieved successfully',
         meta: {
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -165,14 +172,19 @@ export class RaceController {
    * POST /api/races/collect
    */
   collectRaceData = async (
-    req: Request<{}, ApiResponse<CollectedRaceData>, CollectionRequest>,
+    req: Request<Record<string, never>, ApiResponse<CollectedRaceData>, CollectionRequest>,
     res: Response<ApiResponse<CollectedRaceData>>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const collectionRequest: CollectionRequest = {
@@ -180,7 +192,7 @@ export class RaceController {
         raceNo: req.body.raceNo,
         meet: req.body.meet,
         enrichData: req.body.enrichData || false,
-        forceRefresh: req.body.forceRefresh || false
+        forceRefresh: req.body.forceRefresh || false,
       };
 
       logger.info('Processing race data collection request', collectionRequest);
@@ -193,10 +205,9 @@ export class RaceController {
         message: 'Race data collected successfully',
         meta: {
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -207,14 +218,19 @@ export class RaceController {
    * POST /api/races/enrich
    */
   enrichRaceData = async (
-    req: Request<{}, ApiResponse<EnrichedRaceData>, EnrichmentRequest>,
+    req: Request<Record<string, never>, ApiResponse<EnrichedRaceData>, EnrichmentRequest>,
     res: Response<ApiResponse<EnrichedRaceData>>,
     next: NextFunction
   ): Promise<void> => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        throw new ValidationError(`Validation failed: ${errors.array().map(err => err.msg).join(', ')}`);
+        throw new ValidationError(
+          `Validation failed: ${errors
+            .array()
+            .map((err) => err.msg)
+            .join(', ')}`
+        );
       }
 
       const enrichmentRequest: EnrichmentRequest = {
@@ -222,7 +238,7 @@ export class RaceController {
         raceNo: req.body.raceNo,
         meet: req.body.meet,
         enrichmentTypes: req.body.enrichmentTypes || ['horse_info', 'jockey_info', 'trainer_info'],
-        forceRefresh: req.body.forceRefresh || false
+        forceRefresh: req.body.forceRefresh || false,
       };
 
       logger.info('Processing race data enrichment request', enrichmentRequest);
@@ -238,9 +254,9 @@ export class RaceController {
           rcName: '',
           rcDist: 0,
           track: '',
-          weather: ''
+          weather: '',
         },
-        horses: []
+        horses: [],
       };
 
       res.json({
@@ -249,10 +265,9 @@ export class RaceController {
         message: 'Race data enriched successfully',
         meta: {
           timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now())
-        }
+          processingTime: Date.now() - (req.startTime || Date.now()),
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -269,7 +284,7 @@ export class RaceController {
   ): Promise<void> => {
     try {
       const { date, meet, raceNo } = req.params;
-      
+
       logger.info('Getting race result', { date, meet, raceNo });
 
       // TODO: Implement actual race result retrieval
@@ -279,9 +294,9 @@ export class RaceController {
           date,
           meet,
           raceNo,
-          message: 'Race result endpoint - to be implemented'
+          message: 'Race result endpoint - to be implemented',
         },
-        message: 'Race result retrieved successfully'
+        message: 'Race result retrieved successfully',
       });
     } catch (error) {
       next(error);
@@ -293,7 +308,7 @@ export class RaceController {
    * GET /api/races/stats
    */
   getRaceStats = async (
-    req: Request<{}, ApiResponse<any>>,
+    _req: Request<Record<string, never>, ApiResponse<any>>,
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
@@ -305,9 +320,9 @@ export class RaceController {
         success: true,
         data: {
           totalRaces: 0,
-          message: 'Race statistics endpoint - to be implemented'
+          message: 'Race statistics endpoint - to be implemented',
         },
-        message: 'Race statistics retrieved successfully'
+        message: 'Race statistics retrieved successfully',
       });
     } catch (error) {
       next(error);

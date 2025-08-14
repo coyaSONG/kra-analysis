@@ -1,4 +1,4 @@
-import type { Application, Request, Response, NextFunction } from 'express';
+import type { Application } from 'express';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -15,7 +15,9 @@ import {
   gradualSlowDown,
   optionalAuth,
   requireAuth,
-  configureEndpointAccess
+  requirePermission,
+  requireAnyPermission,
+  configureEndpointAccess,
 } from './index.js';
 import logger from '../utils/logger.js';
 
@@ -91,7 +93,7 @@ const DEFAULT_CONFIG: MiddlewareConfig = {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           scriptSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "https:"],
+          imgSrc: ["'self'", 'data:', 'https:'],
         },
       },
     },
@@ -102,12 +104,9 @@ const DEFAULT_CONFIG: MiddlewareConfig = {
 /**
  * Register global middleware
  */
-export const registerGlobalMiddleware = (
-  app: Application,
-  config: Partial<MiddlewareConfig> = {}
-): void => {
+export const registerGlobalMiddleware = (app: Application, config: Partial<MiddlewareConfig> = {}): void => {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
-  
+
   logger.info('Registering middleware with configuration:', mergedConfig);
 
   // Trust proxy (for rate limiting and IP detection)
@@ -123,12 +122,14 @@ export const registerGlobalMiddleware = (
 
   // CORS
   if (mergedConfig.cors?.enabled) {
-    app.use(cors({
-      origin: mergedConfig.cors.origin,
-      credentials: mergedConfig.cors.credentials,
-      methods: mergedConfig.cors.methods,
-      allowedHeaders: mergedConfig.cors.allowedHeaders,
-    }));
+    app.use(
+      cors({
+        origin: mergedConfig.cors.origin,
+        credentials: mergedConfig.cors.credentials,
+        methods: mergedConfig.cors.methods,
+        allowedHeaders: mergedConfig.cors.allowedHeaders,
+      })
+    );
     logger.info('CORS middleware registered');
   }
 
@@ -138,7 +139,7 @@ export const registerGlobalMiddleware = (
 
   // Health check logging (minimal)
   if (mergedConfig.healthPaths && mergedConfig.healthPaths.length > 0) {
-    mergedConfig.healthPaths.forEach(path => {
+    mergedConfig.healthPaths.forEach((path) => {
       app.use(path, healthCheckLogger);
     });
     logger.info(`Health check logging registered for paths: ${mergedConfig.healthPaths.join(', ')}`);
@@ -187,10 +188,7 @@ export const registerGlobalMiddleware = (
 /**
  * Register API-specific middleware for specific routes
  */
-export const registerApiMiddleware = (
-  app: Application,
-  config: Partial<MiddlewareConfig> = {}
-): void => {
+export const registerApiMiddleware = (app: Application, config: Partial<MiddlewareConfig> = {}): void => {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
   // API Collection specific rate limiting
@@ -221,10 +219,10 @@ export const registerApiMiddleware = (
 export const registerErrorHandling = (app: Application): void => {
   // 404 handler
   app.use(notFoundHandler);
-  
+
   // Global error handler
   app.use(errorHandler);
-  
+
   logger.info('Error handling middleware registered');
 };
 
@@ -233,14 +231,11 @@ export const registerErrorHandling = (app: Application): void => {
  * NOTE: This does NOT register error handlers - those must be registered
  * AFTER all routes are registered
  */
-export const registerAllMiddleware = (
-  app: Application,
-  config: Partial<MiddlewareConfig> = {}
-): void => {
+export const registerAllMiddleware = (app: Application, config: Partial<MiddlewareConfig> = {}): void => {
   registerGlobalMiddleware(app, config);
   registerApiMiddleware(app, config);
   // NOTE: Error handling is NOT registered here - it must be done after routes
-  
+
   logger.info('All middleware registered successfully');
 };
 
@@ -286,10 +281,11 @@ export const createRouteMiddleware = (options: {
     }
     // Add permission middleware based on requirements
     if (options.permissions.length === 1) {
-      const { requirePermission } = require('./auth.middleware.js');
-      middleware.push(requirePermission(options.permissions[0]));
+      const firstPermission = options.permissions[0];
+      if (firstPermission) {
+        middleware.push(requirePermission(firstPermission));
+      }
     } else {
-      const { requireAnyPermission } = require('./auth.middleware.js');
       middleware.push(requireAnyPermission(options.permissions));
     }
   }
@@ -302,45 +298,51 @@ export const createRouteMiddleware = (options: {
  */
 export const middlewarePresets = {
   // Public API endpoints
-  public: () => createRouteMiddleware({
-    auth: 'public',
-    rateLimit: 'general'
-  }),
+  public: () =>
+    createRouteMiddleware({
+      auth: 'public',
+      rateLimit: 'general',
+    }),
 
   // Private API endpoints requiring authentication
-  private: () => createRouteMiddleware({
-    auth: 'private',
-    rateLimit: 'general'
-  }),
+  private: () =>
+    createRouteMiddleware({
+      auth: 'private',
+      rateLimit: 'general',
+    }),
 
   // Admin endpoints with strict rate limiting
-  admin: () => createRouteMiddleware({
-    auth: 'private',
-    rateLimit: 'strict',
-    permissions: ['admin']
-  }),
+  admin: () =>
+    createRouteMiddleware({
+      auth: 'private',
+      rateLimit: 'strict',
+      permissions: ['admin'],
+    }),
 
   // Data collection endpoints
-  collection: (validation?: any[]) => createRouteMiddleware({
-    auth: 'optional',
-    rateLimit: 'api-collection',
-    validation
-  }),
+  collection: (validation?: any[]) =>
+    createRouteMiddleware({
+      auth: 'optional',
+      rateLimit: 'api-collection',
+      validation,
+    }),
 
   // Write operations with stricter controls
-  write: (validation?: any[]) => createRouteMiddleware({
-    auth: 'private',
-    rateLimit: 'strict',
-    validation,
-    permissions: ['write']
-  }),
+  write: (validation?: any[]) =>
+    createRouteMiddleware({
+      auth: 'private',
+      rateLimit: 'strict',
+      validation,
+      permissions: ['write'],
+    }),
 
   // Read-only operations
-  read: (validation?: any[]) => createRouteMiddleware({
-    auth: 'optional',
-    rateLimit: 'general',
-    validation,
-  }),
+  read: (validation?: any[]) =>
+    createRouteMiddleware({
+      auth: 'optional',
+      rateLimit: 'general',
+      validation,
+    }),
 };
 
 export default registerAllMiddleware;

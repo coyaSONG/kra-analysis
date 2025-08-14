@@ -1,6 +1,6 @@
 /**
  * Horse Routes
- * 
+ *
  * Handles all horse-related API endpoints with comprehensive middleware
  */
 
@@ -9,20 +9,19 @@ import { horseController } from '../controllers/index.js';
 import {
   // Rate limiting
   generalRateLimit,
-  
+
   // Validation
   validateHorseId,
   validateHorseParams,
   validatePagination,
   validateSort,
   handleValidationErrors,
-  
+
   // Auth
   optionalAuth,
-  
+
   // Logging
   performanceLogger,
-  
 } from '../middleware/index.js';
 
 const router: ExpressRouter = Router();
@@ -40,7 +39,7 @@ router.get(
   validateHorseParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   horseController.getHorseDetails
 );
@@ -60,7 +59,7 @@ router.get(
   ...validateSort(['rcDate', 'ord', 'rcTime']),
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   horseController.getHorseHistory
 );
@@ -78,7 +77,7 @@ router.get(
   validateHorseParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   horseController.getHorsePerformance
 );
@@ -97,7 +96,7 @@ router.get(
   validateHorseParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   horseController.searchHorses
 );
@@ -115,7 +114,7 @@ router.get(
   validateHorseParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   horseController.getTopPerformers
 );
@@ -130,7 +129,7 @@ router.get(
   generalRateLimit,
   optionalAuth,
   performanceLogger,
-  
+
   // Controller
   horseController.getHorseStats
 );

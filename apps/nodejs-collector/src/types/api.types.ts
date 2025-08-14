@@ -1,18 +1,11 @@
 /**
  * REST API Type Definitions
- * 
+ *
  * Type definitions for our internal REST API endpoints and responses
  * Used for request/response validation and client-server communication
  */
 
-import { 
-  Api214Item, 
-  Api8_2Item, 
-  Api12_1Item, 
-  Api19_1Item, 
-  EnrichedRaceData,
-  EnrichedHorseEntry 
-} from './kra-api.types.js';
+import { Api214Item, EnrichedRaceData } from './kra-api.types.js';
 
 // ============================================================================
 // Generic API Response Wrapper
@@ -354,12 +347,12 @@ export interface AnalyticsRequest {
 /**
  * Available analytics metrics
  */
-export type AnalyticsMetric = 
-  | 'win_rate' 
-  | 'place_rate' 
-  | 'show_rate' 
-  | 'avg_odds' 
-  | 'total_earnings' 
+export type AnalyticsMetric =
+  | 'win_rate'
+  | 'place_rate'
+  | 'show_rate'
+  | 'avg_odds'
+  | 'total_earnings'
   | 'consistency_score'
   | 'improvement_trend'
   | 'comparative_ranking';
@@ -466,9 +459,9 @@ export interface ServiceStatus {
 /**
  * WebSocket message types
  */
-export type WebSocketMessageType = 
+export type WebSocketMessageType =
   | 'collection_started'
-  | 'collection_progress' 
+  | 'collection_progress'
   | 'collection_completed'
   | 'collection_error'
   | 'enrichment_progress'
@@ -515,7 +508,7 @@ export interface CollectionProgressPayload {
 /**
  * Union type of all possible API response types
  */
-export type AnyApiResponse = 
+export type AnyApiResponse =
   | ApiResponse
   | ErrorResponse
   | ValidationErrorResponse

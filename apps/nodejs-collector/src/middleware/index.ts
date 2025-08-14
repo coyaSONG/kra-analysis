@@ -9,7 +9,7 @@ export {
   apiCollectionRateLimit,
   gradualSlowDown,
   createRateLimit,
-  cleanup as rateLimitCleanup
+  cleanup as rateLimitCleanup,
 } from './rate-limit.middleware.js';
 
 // Validation middleware
@@ -34,7 +34,7 @@ export {
   validateEnrichmentRequest,
   createCustomValidator,
   sanitizeInput,
-  createValidationMiddleware
+  createValidationMiddleware,
 } from './validation.middleware.js';
 
 // Authentication middleware
@@ -48,7 +48,7 @@ export {
   addApiKey,
   removeApiKey,
   listApiKeys,
-  cleanup as authCleanup
+  cleanup as authCleanup,
 } from './auth.middleware.js';
 
 // Logging middleware
@@ -57,7 +57,7 @@ export {
   errorLogger,
   performanceLogger,
   healthCheckLogger,
-  securityLogger
+  securityLogger,
 } from './logging.middleware.js';
 
 // Middleware registry and helpers
@@ -68,7 +68,7 @@ export {
   registerAllMiddleware,
   createRouteMiddleware,
   middlewarePresets,
-  default as registerMiddleware
+  default as registerMiddleware,
 } from './middleware-registry.js';
 
 // Type exports for TypeScript support

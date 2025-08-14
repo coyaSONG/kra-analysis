@@ -1,6 +1,6 @@
 /**
  * Controllers Export
- * 
+ *
  * Central export point for all controller classes with registration utilities
  */
 
@@ -25,12 +25,12 @@ import { trainerController } from './trainer.controller.js';
  */
 export class ControllerRegistry {
   private static instance: ControllerRegistry;
-  
+
   public readonly controllers = {
     race: raceController,
     horse: horseController,
     jockey: jockeyController,
-    trainer: trainerController
+    trainer: trainerController,
   };
 
   private constructor() {
@@ -58,13 +58,13 @@ export class ControllerRegistry {
     try {
       // Race controller health
       results.race = typeof this.controllers.race.getRacesByDate === 'function';
-      
+
       // Horse controller health
       results.horse = typeof this.controllers.horse.getHorseDetails === 'function';
-      
+
       // Jockey controller health
       results.jockey = typeof this.controllers.jockey.getJockeyDetails === 'function';
-      
+
       // Trainer controller health
       results.trainer = typeof this.controllers.trainer.getTrainerDetails === 'function';
 
@@ -72,7 +72,7 @@ export class ControllerRegistry {
     } catch (error) {
       logger.error('Controller health check failed', { error });
       // Mark all as unhealthy if there's a systemic issue
-      Object.keys(this.controllers).forEach(key => {
+      Object.keys(this.controllers).forEach((key) => {
         results[key] = false;
       });
     }
@@ -88,7 +88,7 @@ export class ControllerRegistry {
       totalControllers: Object.keys(this.controllers).length,
       controllerNames: Object.keys(this.controllers),
       initialized: true,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -112,7 +112,7 @@ export const requestTimer = (req: Request, res: Response, next: NextFunction): v
 export const registerCommonMiddleware = (app: Express): void => {
   // Add request timing
   app.use(requestTimer);
-  
+
   logger.info('Common controller middleware registered');
 };
 
@@ -125,7 +125,7 @@ export const createControllers = async () => {
     race: new (await import('./race.controller.js')).RaceController(),
     horse: new (await import('./horse.controller.js')).HorseController(),
     jockey: new (await import('./jockey.controller.js')).JockeyController(),
-    trainer: new (await import('./trainer.controller.js')).TrainerController()
+    trainer: new (await import('./trainer.controller.js')).TrainerController(),
   };
 };
 
@@ -168,8 +168,8 @@ export const getControllerInfo = (): Record<string, ControllerInfo> => {
         { method: 'GET', path: '/api/races/:date', handler: 'getRacesByDate' },
         { method: 'GET', path: '/api/races/:date/:meet/:raceNo', handler: 'getRaceDetails' },
         { method: 'POST', path: '/api/races/collect', handler: 'collectRaceData' },
-        { method: 'POST', path: '/api/races/enrich', handler: 'enrichRaceData' }
-      ]
+        { method: 'POST', path: '/api/races/enrich', handler: 'enrichRaceData' },
+      ],
     },
     horse: {
       name: 'HorseController',
@@ -177,8 +177,8 @@ export const getControllerInfo = (): Record<string, ControllerInfo> => {
       routes: [
         { method: 'GET', path: '/api/horses/:hrNo', handler: 'getHorseDetails' },
         { method: 'GET', path: '/api/horses/:hrNo/history', handler: 'getHorseHistory' },
-        { method: 'GET', path: '/api/horses', handler: 'searchHorses' }
-      ]
+        { method: 'GET', path: '/api/horses', handler: 'searchHorses' },
+      ],
     },
     jockey: {
       name: 'JockeyController',
@@ -187,8 +187,8 @@ export const getControllerInfo = (): Record<string, ControllerInfo> => {
         { method: 'GET', path: '/api/jockeys/:jkNo', handler: 'getJockeyDetails' },
         { method: 'GET', path: '/api/jockeys/:jkNo/stats', handler: 'getJockeyStats' },
         { method: 'GET', path: '/api/jockeys', handler: 'searchJockeys' },
-        { method: 'GET', path: '/api/jockeys/top', handler: 'getTopJockeys' }
-      ]
+        { method: 'GET', path: '/api/jockeys/top', handler: 'getTopJockeys' },
+      ],
     },
     trainer: {
       name: 'TrainerController',
@@ -198,14 +198,15 @@ export const getControllerInfo = (): Record<string, ControllerInfo> => {
         { method: 'GET', path: '/api/trainers/:trNo/stats', handler: 'getTrainerStats' },
         { method: 'GET', path: '/api/trainers', handler: 'searchTrainers' },
         { method: 'GET', path: '/api/trainers/top', handler: 'getTopTrainers' },
-        { method: 'GET', path: '/api/trainers/:trNo/specialization', handler: 'getTrainerSpecialization' }
-      ]
-    }
+        { method: 'GET', path: '/api/trainers/:trNo/specialization', handler: 'getTrainerSpecialization' },
+      ],
+    },
   };
 };
 
 // Extend Express Request interface to include startTime
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       startTime?: number;

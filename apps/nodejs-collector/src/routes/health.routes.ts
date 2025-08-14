@@ -1,6 +1,6 @@
 /**
  * Health Routes
- * 
+ *
  * System health, readiness, and monitoring endpoints
  */
 
@@ -9,19 +9,16 @@ import * as os from 'os';
 import {
   // Rate limiting
   generalRateLimit,
-  
-  // Validation
-  handleValidationErrors,
-  
+
   // Logging
   healthCheckLogger,
-  
 } from '../middleware/index.js';
 import { controllerRegistry } from '../controllers/index.js';
 import { getRedisClient } from '../utils/redis.js';
 import { services } from '../services/index.js';
 import logger from '../utils/logger.js';
 import { appConfig } from '../config/index.js';
+import type { LoggingRequest } from '../middleware/logging.middleware.js';
 
 const router: ExpressRouter = Router();
 
@@ -73,7 +70,9 @@ router.get(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const startTime = Date.now();
-      
+      // Security/CX headers expected by tests
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+
       // Basic health indicators
       const response: HealthCheckResponse = {
         status: 'healthy',
@@ -87,9 +86,9 @@ router.get(
           services: {
             collection: false,
             enrichment: false,
-            cache: false
-          }
-        }
+            cache: false,
+          },
+        },
       };
 
       // Check Redis connection
@@ -100,7 +99,7 @@ router.get(
           await redisClient.ping();
           response.components.redis = {
             status: 'up',
-            latency: Date.now() - redisStart
+            latency: Date.now() - redisStart,
           };
         }
       } catch (error) {
@@ -119,9 +118,9 @@ router.get(
       // Check service availability
       try {
         response.components.services = {
-          collection: typeof services.collection?.collectRaceData === 'function',
+          collection: typeof services.collection?.collectRace === 'function',
           enrichment: typeof services.enrichment?.enrichRaceData === 'function',
-          cache: typeof services.cache?.get === 'function'
+          cache: typeof services.cache?.get === 'function',
         };
       } catch (error) {
         logger.warn('Service health check failed', { error });
@@ -129,27 +128,30 @@ router.get(
       }
 
       // Determine overall status
-      const hasFailures = 
+      const hasFailures =
         response.components.redis.status === 'down' ||
-        Object.values(response.components.controllers).some(status => !status) ||
-        Object.values(response.components.services).some(status => !status);
+        Object.values(response.components.controllers).some((status) => !status) ||
+        Object.values(response.components.services).some((status) => !status);
 
       if (hasFailures && response.status === 'healthy') {
         response.status = 'degraded';
       }
 
       // Set appropriate HTTP status
-      const httpStatus = response.status === 'healthy' ? 200 : 
-                        response.status === 'degraded' ? 200 : 503;
+      const httpStatus = response.status === 'healthy' ? 200 : response.status === 'degraded' ? 200 : 503;
+
+      // Response time header
+      const responseTime = Date.now() - startTime;
+      res.setHeader('X-Response-Time', `${responseTime}ms`);
 
       res.status(httpStatus).json({
         success: response.status !== 'unhealthy',
         data: response,
+        requestId: (req as LoggingRequest).requestId,
         meta: {
-          responseTime: Date.now() - startTime
-        }
+          responseTime,
+        },
       });
-
     } catch (error) {
       next(error);
     }
@@ -196,28 +198,98 @@ router.get(
       }
 
       // Service readiness
-      checks.services = Object.values(services).every(service => service != null);
+      checks.services = Object.values(services).every((service) => service != null);
 
       // Controller readiness
       const controllerHealth = await controllerRegistry.healthCheck();
-      checks.controllers = Object.values(controllerHealth).every(status => status);
+      checks.controllers = Object.values(controllerHealth).every((status) => status);
 
       // Overall readiness
-      const isReady = Object.values(checks).every(check => check);
+      const isReady = Object.values(checks).every((check) => check);
 
       const response = {
         ready: isReady,
+        status: isReady ? ('ready' as const) : ('not_ready' as const),
         timestamp: new Date().toISOString(),
         checks,
         environment: appConfig.nodeEnv,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
 
       res.status(isReady ? 200 : 503).json({
         success: isReady,
-        data: response
+        data: response,
+        requestId: (req as LoggingRequest).requestId,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
+/**
+ * GET /health/detailed
+ * Detailed health information including metrics
+ */
+router.get(
+  '/detailed',
+  generalRateLimit,
+  healthCheckLogger,
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const startTime = Date.now();
+
+      // Build on basic health
+      const controllers = await controllerRegistry.healthCheck();
+      const redisClient = getRedisClient();
+      let redisStatus: 'up' | 'down' = 'down';
+      if (redisClient) {
+        try {
+          await redisClient.ping();
+          redisStatus = 'up';
+        } catch {
+          redisStatus = 'down';
+        }
+      }
+
+      const response: HealthCheckResponse = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        uptime: process.uptime(),
+        components: {
+          redis: { status: redisStatus },
+          controllers,
+          kraApi: { status: 'unknown' },
+          services: {
+            collection: typeof services.collection?.collectRace === 'function',
+            enrichment: typeof services.enrichment?.enrichRaceData === 'function',
+            cache: typeof services.cache?.get === 'function',
+          },
+        },
+        metrics: {
+          memory: {
+            used: process.memoryUsage().heapUsed,
+            total: process.memoryUsage().heapTotal,
+            percentage: Math.round((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 10000) / 100,
+          },
+          process: {
+            pid: process.pid,
+            uptime: process.uptime(),
+          },
+        },
+      };
+
+      // Response time header
+      const responseTime = Date.now() - startTime;
+      res.setHeader('X-Response-Time', `${responseTime}ms`);
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+
+      res.status(200).json({
+        success: true,
+        data: response,
+        requestId: (req as LoggingRequest).requestId,
+      });
     } catch (error) {
       next(error);
     }
@@ -238,8 +310,8 @@ router.get(
         status: 'alive',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        pid: process.pid
-      }
+        pid: process.pid,
+      },
     });
   }
 );
@@ -255,7 +327,7 @@ router.get(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const memoryUsage = process.memoryUsage();
-      
+
       const metrics = {
         timestamp: new Date().toISOString(),
         process: {
@@ -263,32 +335,31 @@ router.get(
           uptime: process.uptime(),
           version: process.version,
           platform: process.platform,
-          arch: process.arch
+          arch: process.arch,
         },
         memory: {
           rss: memoryUsage.rss,
           heapUsed: memoryUsage.heapUsed,
           heapTotal: memoryUsage.heapTotal,
           external: memoryUsage.external,
-          arrayBuffers: memoryUsage.arrayBuffers
+          arrayBuffers: memoryUsage.arrayBuffers,
         },
         system: {
           loadavg: os.loadavg(),
-          cpuUsage: process.cpuUsage()
+          cpuUsage: process.cpuUsage(),
         },
         controllers: controllerRegistry.getStats(),
         environment: {
           nodeEnv: appConfig.nodeEnv,
           nodeVersion: process.version,
-          port: appConfig.port
-        }
+          port: appConfig.port,
+        },
       };
 
       res.json({
         success: true,
-        data: metrics
+        data: metrics,
       });
-
     } catch (error) {
       next(error);
     }
@@ -299,26 +370,22 @@ router.get(
  * GET /health/version
  * Version and build information
  */
-router.get(
-  '/version',
-  generalRateLimit,
-  async (req: Request, res: Response): Promise<void> => {
-    const versionInfo = {
-      version: process.env.npm_package_version || '1.0.0',
-      name: process.env.npm_package_name || 'kra-nodejs-collector',
-      description: process.env.npm_package_description || 'KRA Horse Racing Data Collector',
-      environment: appConfig.nodeEnv,
-      nodeVersion: process.version,
-      buildDate: process.env.BUILD_DATE || new Date().toISOString(),
-      gitCommit: process.env.GIT_COMMIT || 'unknown',
-      gitBranch: process.env.GIT_BRANCH || 'unknown'
-    };
+router.get('/version', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
+  const versionInfo = {
+    version: process.env.npm_package_version || '1.0.0',
+    name: process.env.npm_package_name || 'kra-nodejs-collector',
+    description: process.env.npm_package_description || 'KRA Horse Racing Data Collector',
+    environment: appConfig.nodeEnv,
+    nodeVersion: process.version,
+    buildDate: process.env.BUILD_DATE || new Date().toISOString(),
+    gitCommit: process.env.GIT_COMMIT || 'unknown',
+    gitBranch: process.env.GIT_BRANCH || 'unknown',
+  };
 
-    res.json({
-      success: true,
-      data: versionInfo
-    });
-  }
-);
+  res.json({
+    success: true,
+    data: versionInfo,
+  });
+});
 
 export default router;

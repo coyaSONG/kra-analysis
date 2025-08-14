@@ -2,7 +2,6 @@ import rateLimit, { type RateLimitRequestHandler } from 'express-rate-limit';
 import slowDown from 'express-slow-down';
 import type { Request, Response } from 'express';
 import { createClient as createRedisClient } from 'redis';
-import { RateLimitError } from '../types/index.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -23,7 +22,7 @@ try {
         reconnectStrategy: false, // Disable reconnection to prevent continuous errors
       },
     });
-    
+
     redisClient.on('error', (err: Error) => {
       if (!redisErrorLogged) {
         logger.warn('Redis client error for rate limiting:', err.message);
@@ -32,7 +31,7 @@ try {
       }
       redisClient = null; // Fall back to memory store
     });
-    
+
     redisClient.connect().catch((err: Error) => {
       if (!redisErrorLogged) {
         logger.warn('Redis connection failed for rate limiting:', err.message);
@@ -61,11 +60,11 @@ class RateLimitStore {
         multi.incr(key);
         multi.expire(key, Math.ceil(windowMs / 1000));
         const results = await multi.exec();
-        
+
         const totalHits = results[0] as number;
         const ttl = await redisClient.ttl(key);
         const timeToExpiry = ttl > 0 ? ttl * 1000 : windowMs;
-        
+
         return { totalHits, timeToExpiry };
       } catch (error) {
         logger.warn('Redis operation failed, falling back to memory store:', error);
@@ -77,7 +76,7 @@ class RateLimitStore {
     const now = Date.now();
     const resetTime = now + windowMs;
     const existing = this.memoryStore.get(key);
-    
+
     if (!existing || existing.resetTime <= now) {
       this.memoryStore.set(key, { count: 1, resetTime });
       return { totalHits: 1, timeToExpiry: windowMs };
@@ -139,17 +138,13 @@ rateLimitStore.startCleanup();
  */
 const rateLimitHandler = (req: Request, res: Response): void => {
   logger.warn(`Rate limit exceeded for IP: ${req.ip}, Path: ${req.path}`);
-  
-  const error = new RateLimitError(
-    'You have exceeded the request rate limit. Please try again later.',
-    60 // Retry after 60 seconds
-  );
-  
-  res.status(429).json({
+
+  const retryAfterSeconds = 60;
+
+  res.set('Retry-After', retryAfterSeconds.toString()).status(429).json({
     success: false,
-    error: error.message,
-    code: error.code,
-    retryAfter: error.retryAfter
+    error: 'You have exceeded the request rate limit. Please try again later.',
+    retryAfter: retryAfterSeconds,
   });
 };
 
@@ -162,18 +157,18 @@ export const generalRateLimit: RateLimitRequestHandler = rateLimit({
   message: {
     success: false,
     error: 'Too many requests from this IP, please try again later.',
-    retryAfter: 60
+    retryAfter: 60,
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   // Custom store
   store: {
     async increment(key: string): Promise<{ totalHits: number; timeToExpiry: number; resetTime: Date }> {
       const result = await rateLimitStore.increment(key, 60000);
       return {
         ...result,
-        resetTime: new Date(Date.now() + result.timeToExpiry)
+        resetTime: new Date(Date.now() + result.timeToExpiry),
       };
     },
     async decrement(key: string): Promise<void> {
@@ -181,7 +176,7 @@ export const generalRateLimit: RateLimitRequestHandler = rateLimit({
     },
     async resetKey(key: string): Promise<void> {
       return rateLimitStore.resetKey(key);
-    }
+    },
   },
 
   // Custom handler
@@ -191,7 +186,7 @@ export const generalRateLimit: RateLimitRequestHandler = rateLimit({
   skip: (req: Request): boolean => {
     // Skip rate limiting for health checks
     return req.path === '/health' || req.path === '/status';
-  }
+  },
 });
 
 /**
@@ -203,17 +198,17 @@ export const strictRateLimit: RateLimitRequestHandler = rateLimit({
   message: {
     success: false,
     error: 'Too many write requests from this IP, please try again later.',
-    retryAfter: 60
+    retryAfter: 60,
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   store: {
     async increment(key: string): Promise<{ totalHits: number; timeToExpiry: number; resetTime: Date }> {
       const result = await rateLimitStore.increment(key, 60000);
       return {
         ...result,
-        resetTime: new Date(Date.now() + result.timeToExpiry)
+        resetTime: new Date(Date.now() + result.timeToExpiry),
       };
     },
     async decrement(key: string): Promise<void> {
@@ -221,10 +216,10 @@ export const strictRateLimit: RateLimitRequestHandler = rateLimit({
     },
     async resetKey(key: string): Promise<void> {
       return rateLimitStore.resetKey(key);
-    }
+    },
   },
 
-  handler: rateLimitHandler
+  handler: rateLimitHandler,
 });
 
 /**
@@ -236,17 +231,17 @@ export const apiCollectionRateLimit: RateLimitRequestHandler = rateLimit({
   message: {
     success: false,
     error: 'Too many API collection requests, please try again later.',
-    retryAfter: 60
+    retryAfter: 60,
   },
   standardHeaders: true,
   legacyHeaders: false,
-  
+
   store: {
     async increment(key: string): Promise<{ totalHits: number; timeToExpiry: number; resetTime: Date }> {
       const result = await rateLimitStore.increment(key, 60000);
       return {
         ...result,
-        resetTime: new Date(Date.now() + result.timeToExpiry)
+        resetTime: new Date(Date.now() + result.timeToExpiry),
       };
     },
     async decrement(key: string): Promise<void> {
@@ -254,10 +249,10 @@ export const apiCollectionRateLimit: RateLimitRequestHandler = rateLimit({
     },
     async resetKey(key: string): Promise<void> {
       return rateLimitStore.resetKey(key);
-    }
+    },
   },
 
-  handler: rateLimitHandler
+  handler: rateLimitHandler,
 });
 
 /**
@@ -267,11 +262,11 @@ export const apiCollectionRateLimit: RateLimitRequestHandler = rateLimit({
 export const gradualSlowDown = slowDown({
   windowMs: 1 * 60 * 1000, // 1 minute
   delayAfter: 50, // Allow 50 requests at full speed
-  delayMs: (used: number, req: Request) => {
+  delayMs: (used: number, _req: Request) => {
     const delayAfter = 50; // Default delay after value
     const maxDelay = 5000; // Maximum 5 second delay
     const delayIncrement = 100; // Start with 100ms delay
-    
+
     // Exponentially increase delay
     const multiplier = Math.pow(2, Math.max(0, used - delayAfter - 1));
     return Math.min(maxDelay, delayIncrement * multiplier);
@@ -280,7 +275,7 @@ export const gradualSlowDown = slowDown({
   // Skip certain paths
   skip: (req: Request): boolean => {
     return req.path === '/health' || req.path === '/status';
-  }
+  },
 });
 
 /**
@@ -299,17 +294,17 @@ export const createRateLimit = (options: {
     message: {
       success: false,
       error: options.message || 'Rate limit exceeded',
-      retryAfter: Math.ceil(options.windowMs / 1000)
+      retryAfter: Math.ceil(options.windowMs / 1000),
     },
     standardHeaders: true,
     legacyHeaders: false,
-    
+
     store: {
       async increment(key: string): Promise<{ totalHits: number; timeToExpiry: number; resetTime: Date }> {
         const result = await rateLimitStore.increment(key, options.windowMs);
         return {
           ...result,
-          resetTime: new Date(Date.now() + result.timeToExpiry)
+          resetTime: new Date(Date.now() + result.timeToExpiry),
         };
       },
       async decrement(key: string): Promise<void> {
@@ -317,14 +312,14 @@ export const createRateLimit = (options: {
       },
       async resetKey(key: string): Promise<void> {
         return rateLimitStore.resetKey(key);
-      }
+      },
     },
 
     handler: rateLimitHandler,
-    
+
     skip: (req: Request): boolean => {
       return options.skipPaths?.includes(req.path) || false;
-    }
+    },
   });
 };
 

@@ -1,20 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { 
-  AppError, 
-  ValidationError, 
-  RateLimitError, 
-  ExternalApiError, 
-  NotFoundError 
-} from '../types/index.js';
+import { AppError, ValidationError, RateLimitError, ExternalApiError, NotFoundError } from '../types/index.js';
 import logger from '../utils/logger.js';
 
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction): void => {
   // Log the error with appropriate level
   const logData = {
     message: err.message,
@@ -39,17 +28,17 @@ export const errorHandler = (
   // Handle ValidationError from express-validator
   const validationErrors = validationResult(req);
   if (!validationErrors.isEmpty() && !(err instanceof ValidationError)) {
-    const errors = validationErrors.array().map(error => ({
+    const errors = validationErrors.array().map((error) => ({
       field: error.type === 'field' ? error.path : 'unknown',
       message: error.msg,
-      value: error.type === 'field' ? error.value : undefined
+      value: error.type === 'field' ? error.value : undefined,
     }));
 
     res.status(400).json({
       success: false,
       error: 'Request validation failed',
       details: errors,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     return;
   }
@@ -61,9 +50,9 @@ export const errorHandler = (
       error: err.message,
       details: err.validationErrors,
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && { 
+      ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
-        context: err.context 
+        context: err.context,
       }),
     });
     return;
@@ -71,7 +60,8 @@ export const errorHandler = (
 
   // Handle RateLimitError
   if (err instanceof RateLimitError) {
-    res.status(err.statusCode)
+    res
+      .status(err.statusCode)
       .set({
         'Retry-After': err.retryAfter.toString(),
         'X-RateLimit-Limit': err.limit.toString(),
@@ -85,9 +75,9 @@ export const errorHandler = (
         limit: err.limit,
         current: err.current,
         timestamp: new Date().toISOString(),
-        ...(process.env.NODE_ENV === 'development' && { 
+        ...(process.env.NODE_ENV === 'development' && {
           stack: err.stack,
-          context: err.context 
+          context: err.context,
         }),
       });
     return;
@@ -103,9 +93,9 @@ export const errorHandler = (
       timestamp: new Date().toISOString(),
       ...(err.apiResponseCode && { apiResponseCode: err.apiResponseCode }),
       ...(err.apiResponseMessage && { apiResponseMessage: err.apiResponseMessage }),
-      ...(process.env.NODE_ENV === 'development' && { 
+      ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
-        context: err.context 
+        context: err.context,
       }),
     });
     return;
@@ -119,9 +109,9 @@ export const errorHandler = (
       resourceType: err.resourceType,
       resourceId: err.resourceId,
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && { 
+      ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
-        context: err.context 
+        context: err.context,
       }),
     });
     return;
@@ -133,9 +123,9 @@ export const errorHandler = (
       success: false,
       error: err.message,
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && { 
+      ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
-        context: err.context 
+        context: err.context,
       }),
     });
     return;
@@ -159,8 +149,8 @@ export const errorHandler = (
       error: 'Database error',
       message: 'Invalid data format or database operation failed',
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && { 
-        originalError: err.message 
+      ...(process.env.NODE_ENV === 'development' && {
+        originalError: err.message,
       }),
     });
     return;
@@ -194,18 +184,14 @@ export const errorHandler = (
     error: 'Internal server error',
     message: 'An unexpected error occurred',
     timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && { 
+    ...(process.env.NODE_ENV === 'development' && {
       originalMessage: err.message,
-      stack: err.stack 
+      stack: err.stack,
     }),
   });
 };
 
-export const notFoundHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+export const notFoundHandler = (req: Request, res: Response, _next: NextFunction): void => {
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',

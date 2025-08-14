@@ -1,20 +1,16 @@
 /**
  * Collection Service
- * 
+ *
  * Main orchestrator for data collection operations
  * Handles batch processing, error recovery, and progress tracking
  */
 
-import type {
-  Api214Item,
-  EnrichedRaceData,
-  KraMeet
-} from '../types/kra-api.types.js';
+import type { Api214Item } from '../types/kra-api.types.js';
 import type {
   CollectionRequest,
   CollectedRaceData,
   BatchCollectionRequest,
-  BatchCollectionResult
+  BatchCollectionResult,
 } from '../types/api.types.js';
 import { KraApiService } from './kraApiService.js';
 import { CacheService } from './cache.service.js';
@@ -63,30 +59,12 @@ interface CollectionProgress {
  */
 type ProgressCallback = (progress: CollectionProgress) => void;
 
-/**
- * Race collection result
- */
-interface RaceCollectionResult {
-  /** Success indicator */
-  success: boolean;
-  /** Collected data (if successful) */
-  data?: CollectedRaceData;
-  /** Error message (if failed) */
-  error?: string;
-  /** Processing duration in milliseconds */
-  duration: number;
-}
-
 export class CollectionService {
   private readonly kraApiService: KraApiService;
   private readonly cacheService: CacheService;
   private readonly enrichmentService: EnrichmentService;
 
-  constructor(
-    kraApiService: KraApiService,
-    cacheService: CacheService,
-    enrichmentService: EnrichmentService
-  ) {
+  constructor(kraApiService: KraApiService, cacheService: CacheService, enrichmentService: EnrichmentService) {
     this.kraApiService = kraApiService;
     this.cacheService = cacheService;
     this.enrichmentService = enrichmentService;
@@ -106,12 +84,7 @@ export class CollectionService {
     onProgress?: ProgressCallback
   ): Promise<CollectedRaceData> {
     const startTime = Date.now();
-    const {
-      useCache = true,
-      forceRefresh = false,
-      timeout = 30000,
-      retryAttempts = 3
-    } = options;
+    const { useCache = true, forceRefresh = false, timeout = 30000, retryAttempts = 3 } = options;
 
     // Validate request
     this.validateCollectionRequest(request);
@@ -125,7 +98,7 @@ export class CollectionService {
       meet,
       enrichData,
       useCache,
-      forceRefresh
+      forceRefresh,
     });
 
     try {
@@ -134,14 +107,15 @@ export class CollectionService {
         operation: 'Checking cache',
         progress: 5,
         currentRace: { date, raceNo: raceNo || 0, meet: meet || '' },
-        startTime
+        startTime,
       });
 
       if (useCache && !forceRefresh && raceNo !== undefined) {
-        const cachedData = await this.cacheService.get<CollectedRaceData>(
-          'race_result',
-          { date: apiDate, meet: meet || '', raceNo: raceNo.toString() }
-        );
+        const cachedData = await this.cacheService.get<CollectedRaceData>('race_result', {
+          date: apiDate,
+          meet: meet || '',
+          raceNo: raceNo.toString(),
+        });
 
         if (cachedData) {
           logger.info('Race data found in cache', { date, raceNo, meet });
@@ -149,7 +123,7 @@ export class CollectionService {
             operation: 'Completed (from cache)',
             progress: 100,
             currentRace: { date, raceNo, meet: meet || '' },
-            startTime
+            startTime,
           });
           return cachedData;
         }
@@ -160,22 +134,18 @@ export class CollectionService {
         operation: 'Fetching race data',
         progress: 20,
         currentRace: { date, raceNo: raceNo || 0, meet: meet || '' },
-        startTime
+        startTime,
       });
 
+      // eslint-disable-next-line prefer-const
       let raceData: Api214Item[];
-      
+
       if (raceNo === undefined || raceNo === null) {
         throw new ValidationError('Race number is required for single race collection');
       }
 
       // Collect specific race
-      raceData = await this.kraApiService.getRaceResult(
-        apiDate,
-        meet || '',
-        raceNo,
-        { timeout, retryAttempts }
-      );
+      raceData = await this.kraApiService.getRaceResult(apiDate, meet || '', raceNo, { timeout, retryAttempts });
 
       if (raceData.length === 0) {
         throw new AppError(`No race data found for ${date} race ${raceNo}`, 404);
@@ -186,7 +156,7 @@ export class CollectionService {
       if (!firstRace) {
         throw new AppError(`No race data found for ${date} race ${raceNo}`, 404);
       }
-      
+
       const collectedData: CollectedRaceData = {
         raceInfo: {
           date,
@@ -196,14 +166,14 @@ export class CollectionService {
           rcDist: firstRace.rcDist,
           track: firstRace.track,
           weather: firstRace.weather,
-          totalHorses: raceData.length
+          totalHorses: raceData.length,
         },
         raceResult: raceData,
         collectionMeta: {
           collectedAt: new Date().toISOString(),
           isEnriched: false,
-          dataSource: 'kra_api'
-        }
+          dataSource: 'kra_api',
+        },
       };
 
       // Step 4: Enrich data if requested
@@ -212,7 +182,7 @@ export class CollectionService {
           operation: 'Enriching data',
           progress: 60,
           currentRace: { date, raceNo, meet: meet || '' },
-          startTime
+          startTime,
         });
 
         const enrichedData = await this.enrichmentService.enrichRaceData(
@@ -222,7 +192,7 @@ export class CollectionService {
           raceNo,
           {
             useCache,
-            forceRefresh
+            forceRefresh,
           },
           (current, total) => {
             const enrichProgress = 60 + (current / total) * 30; // 60-90%
@@ -230,7 +200,7 @@ export class CollectionService {
               operation: `Enriching (${current}/${total})`,
               progress: enrichProgress,
               currentRace: { date, raceNo, meet: meet || '' },
-              startTime
+              startTime,
             });
           }
         );
@@ -245,7 +215,7 @@ export class CollectionService {
           operation: 'Caching result',
           progress: 95,
           currentRace: { date, raceNo, meet: meet || '' },
-          startTime
+          startTime,
         });
 
         await this.cacheService.set(
@@ -262,18 +232,17 @@ export class CollectionService {
         meet: collectedData.raceInfo.meet,
         horseCount: raceData.length,
         enriched: enrichData,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       onProgress?.({
         operation: 'Completed',
         progress: 100,
         currentRace: { date, raceNo, meet: collectedData.raceInfo.meet },
-        startTime
+        startTime,
       });
 
       return collectedData;
-
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error('Race collection failed', {
@@ -281,7 +250,7 @@ export class CollectionService {
         date,
         raceNo,
         meet,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       if (error instanceof AppError || error instanceof ValidationError) {
@@ -309,11 +278,7 @@ export class CollectionService {
     onProgress?: ProgressCallback
   ): Promise<BatchCollectionResult> {
     const startTime = Date.now();
-    const {
-      concurrency = 3,
-      useCache = true,
-      forceRefresh = false
-    } = options;
+    const { concurrency = 3, useCache = true, forceRefresh = false } = options;
 
     // Validate request
     this.validateBatchCollectionRequest(request);
@@ -323,7 +288,7 @@ export class CollectionService {
       endDate: request.endDate,
       meets: request.meets,
       concurrency,
-      enrichData: request.enrichData
+      enrichData: request.enrichData,
     });
 
     try {
@@ -331,7 +296,7 @@ export class CollectionService {
       onProgress?.({
         operation: 'Generating race list',
         progress: 2,
-        startTime
+        startTime,
       });
 
       const raceList = await this.generateRaceList(request);
@@ -353,7 +318,7 @@ export class CollectionService {
       // Process races with concurrency control
       for (let i = 0; i < raceList.length; i += concurrency) {
         const batch = raceList.slice(i, i + concurrency);
-        
+
         const batchPromises = batch.map(async (race) => {
           try {
             const collectionRequest: CollectionRequest = {
@@ -361,28 +326,24 @@ export class CollectionService {
               raceNo: race.raceNo,
               meet: race.meet,
               enrichData: request.enrichData,
-              forceRefresh: request.forceRefresh || forceRefresh
+              forceRefresh: Boolean(request.forceRefresh || forceRefresh),
             };
 
             const result = await this.collectRace(collectionRequest, {
               ...options,
               useCache,
-              forceRefresh: request.forceRefresh || forceRefresh
+              forceRefresh: request.forceRefresh || forceRefresh,
             });
 
             completed++;
             const progress = Math.min(5 + (completed / raceList.length) * 90, 95);
-            
+
             onProgress?.({
               operation: `Collecting races (${completed}/${raceList.length})`,
               progress,
               currentRace: race,
-              estimatedTimeRemaining: this.estimateTimeRemaining(
-                startTime,
-                completed,
-                raceList.length
-              ),
-              startTime
+              estimatedTimeRemaining: this.estimateTimeRemaining(startTime, completed, raceList.length),
+              startTime,
             });
 
             return {
@@ -390,16 +351,15 @@ export class CollectionService {
               raceNo: race.raceNo,
               meet: race.meet,
               status: 'success' as const,
-              dataSize: JSON.stringify(result).length
+              dataSize: JSON.stringify(result).length,
             };
-
           } catch (error) {
             completed++;
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            
+
             logger.error('Failed to collect race in batch', {
               race,
-              error: errorMessage
+              error: errorMessage,
             });
 
             errors.push(`${race.date} R${race.raceNo} ${race.meet}: ${errorMessage}`);
@@ -409,13 +369,13 @@ export class CollectionService {
               raceNo: race.raceNo,
               meet: race.meet,
               status: 'failed' as const,
-              error: errorMessage
+              error: errorMessage,
             };
           }
         });
 
         const batchResults = await Promise.allSettled(batchPromises);
-        batchResults.forEach(result => {
+        batchResults.forEach((result) => {
           if (result.status === 'fulfilled') {
             results.push(result.value);
           }
@@ -426,10 +386,10 @@ export class CollectionService {
       const duration = Date.now() - startTime;
       const summary = {
         totalRequested: raceList.length,
-        totalCollected: results.filter(r => r.status === 'success').length,
-        totalFailed: results.filter(r => r.status === 'failed').length,
-        totalSkipped: results.filter(r => r.status === 'skipped').length,
-        duration
+        totalCollected: results.filter((r) => r.status === 'success').length,
+        totalFailed: results.filter((r) => r.status === 'failed').length,
+        totalSkipped: results.filter((r) => r.status === 'skipped').length,
+        duration,
       };
 
       logger.info('Batch collection completed', summary);
@@ -437,21 +397,20 @@ export class CollectionService {
       onProgress?.({
         operation: 'Completed',
         progress: 100,
-        startTime
+        startTime,
       });
 
       return {
         summary,
         results,
-        errors
+        errors,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error('Batch collection failed', {
         error,
         request,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       throw new AppError(
@@ -485,35 +444,38 @@ export class CollectionService {
       // Determine race count for the day (typically 1-12 races)
       const raceNumbers = await this.getRaceNumbersForDay(date, meet);
       const results: CollectedRaceData[] = [];
-      
+
       for (let i = 0; i < raceNumbers.length; i++) {
         const raceNo = raceNumbers[i];
         if (raceNo === undefined) continue;
-        
+
         const progress = (i / raceNumbers.length) * 100;
-        
+
         onProgress?.({
           operation: `Collecting race ${i + 1} of ${raceNumbers.length}`,
           progress,
           currentRace: { date, raceNo, meet: meet || '' },
-          startTime
+          startTime,
         });
 
         try {
-          const raceData = await this.collectRace({
-            date,
-            raceNo,
-            meet,
-            enrichData
-          }, options);
-          
+          const raceData = await this.collectRace(
+            {
+              date,
+              raceNo,
+              meet,
+              enrichData,
+            },
+            options
+          );
+
           results.push(raceData);
         } catch (error) {
           logger.warn('Failed to collect race in day collection', {
             date,
             raceNo,
             meet,
-            error
+            error,
           });
         }
       }
@@ -522,11 +484,10 @@ export class CollectionService {
         date,
         meet,
         totalRaces: results.length,
-        requestedRaces: raceNumbers.length
+        requestedRaces: raceNumbers.length,
       });
 
       return results;
-
     } catch (error) {
       logger.error('Day collection failed', { error, date, meet });
       throw new AppError(
@@ -548,18 +509,18 @@ export class CollectionService {
     if (!request.date) {
       errors.push({ field: 'date', message: 'Date is required' });
     } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.date)) {
-      errors.push({ 
-        field: 'date', 
+      errors.push({
+        field: 'date',
         message: 'Date must be in YYYY-MM-DD format',
-        value: request.date 
+        value: request.date,
       });
     }
 
     if (request.raceNo !== undefined && (request.raceNo < 1 || request.raceNo > 12)) {
-      errors.push({ 
-        field: 'raceNo', 
+      errors.push({
+        field: 'raceNo',
         message: 'Race number must be between 1 and 12',
-        value: request.raceNo 
+        value: request.raceNo,
       });
     }
 
@@ -578,35 +539,35 @@ export class CollectionService {
     if (!request.startDate) {
       errors.push({ field: 'startDate', message: 'Start date is required' });
     } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.startDate)) {
-      errors.push({ 
-        field: 'startDate', 
+      errors.push({
+        field: 'startDate',
         message: 'Start date must be in YYYY-MM-DD format',
-        value: request.startDate 
+        value: request.startDate,
       });
     }
 
     if (!request.endDate) {
       errors.push({ field: 'endDate', message: 'End date is required' });
     } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.endDate)) {
-      errors.push({ 
-        field: 'endDate', 
+      errors.push({
+        field: 'endDate',
         message: 'End date must be in YYYY-MM-DD format',
-        value: request.endDate 
+        value: request.endDate,
       });
     }
 
     if (request.startDate && request.endDate && request.startDate > request.endDate) {
-      errors.push({ 
-        field: 'dateRange', 
-        message: 'Start date must be before or equal to end date' 
+      errors.push({
+        field: 'dateRange',
+        message: 'Start date must be before or equal to end date',
       });
     }
 
     if (request.concurrency && (request.concurrency < 1 || request.concurrency > 10)) {
-      errors.push({ 
-        field: 'concurrency', 
+      errors.push({
+        field: 'concurrency',
         message: 'Concurrency must be between 1 and 10',
-        value: request.concurrency 
+        value: request.concurrency,
       });
     }
 
@@ -619,30 +580,34 @@ export class CollectionService {
    * Generate list of races to collect for batch operation
    * @private
    */
-  private async generateRaceList(request: BatchCollectionRequest): Promise<Array<{
-    date: string;
-    raceNo: number;
-    meet: string;
-  }>> {
+  private async generateRaceList(request: BatchCollectionRequest): Promise<
+    Array<{
+      date: string;
+      raceNo: number;
+      meet: string;
+    }>
+  > {
     const races: Array<{ date: string; raceNo: number; meet: string }> = [];
     const startDate = new Date(request.startDate);
     const endDate = new Date(request.endDate);
-    const meets = request.meets?.filter(m => m) || ['서울', '부산경남', '제주'];
+    const meets: string[] = (request.meets ?? ['서울', '부산경남', '제주']).filter(
+      (m): m is string => typeof m === 'string' && m.length > 0
+    );
 
     // Generate date range
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const dateStr = date.toISOString().split('T')[0];
-      
+      const dateStr: string = date.toISOString().split('T')[0] as string;
+
       for (let i = 0; i < meets.length; i++) {
         const meetName = meets[i];
         if (!meetName) continue;
-        
-        // Get race numbers for this day and meet  
-        const raceNumbers = await this.getRaceNumbersForDay(dateStr, meetName);
-        
+
+        // Get race numbers for this day and meet
+        const raceNumbers = await this.getRaceNumbersForDay(dateStr, meetName as string);
+
         for (const raceNo of raceNumbers) {
           if (raceNo !== undefined) {
-            races.push({ date: dateStr, raceNo, meet: meetName });
+            races.push({ date: dateStr, raceNo, meet: meetName as string });
           }
         }
       }
@@ -655,7 +620,7 @@ export class CollectionService {
    * Get available race numbers for a specific day and meet
    * @private
    */
-  private async getRaceNumbersForDay(date: string, meet?: string): Promise<number[]> {
+  private async getRaceNumbersForDay(_date: string, _meet?: string): Promise<number[]> {
     // For now, return typical race numbers (1-12)
     // In a real implementation, this could call an API to get actual race schedule
     return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -665,17 +630,13 @@ export class CollectionService {
    * Estimate time remaining for batch operation
    * @private
    */
-  private estimateTimeRemaining(
-    startTime: number,
-    completed: number,
-    total: number
-  ): number {
+  private estimateTimeRemaining(startTime: number, completed: number, total: number): number {
     if (completed === 0) return 0;
-    
+
     const elapsed = Date.now() - startTime;
     const averageTimePerItem = elapsed / completed;
     const remaining = total - completed;
-    
+
     return Math.round(remaining * averageTimePerItem);
   }
 }

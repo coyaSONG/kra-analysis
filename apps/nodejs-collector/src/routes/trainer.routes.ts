@@ -1,6 +1,6 @@
 /**
  * Trainer Routes
- * 
+ *
  * Handles all trainer-related API endpoints with comprehensive middleware
  */
 
@@ -9,21 +9,19 @@ import { trainerController } from '../controllers/index.js';
 import {
   // Rate limiting
   generalRateLimit,
-  
+
   // Validation
   validateTrainerId,
   validateTrainerParams,
   validatePagination,
   validateSort,
-  validateDate,
   handleValidationErrors,
-  
+
   // Auth
   optionalAuth,
-  
+
   // Logging
   performanceLogger,
-  
 } from '../middleware/index.js';
 
 const router: ExpressRouter = Router();
@@ -41,7 +39,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerDetails
 );
@@ -59,7 +57,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerStats
 );
@@ -77,7 +75,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerSpecialization
 );
@@ -95,7 +93,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerPerformance
 );
@@ -115,7 +113,7 @@ router.get(
   ...validateSort(['trName', 'winRate', 'rcCntT', 'ord1CntT']),
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerHorses
 );
@@ -134,7 +132,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.searchTrainers
 );
@@ -152,7 +150,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTopTrainers
 );
@@ -170,7 +168,7 @@ router.get(
   validateTrainerParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerRankings
 );
@@ -185,7 +183,7 @@ router.get(
   generalRateLimit,
   optionalAuth,
   performanceLogger,
-  
+
   // Controller
   trainerController.getTrainerStatsSummary
 );
@@ -202,7 +200,7 @@ router.get(
   validatePagination,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   trainerController.getSpecializations
 );

@@ -1,6 +1,6 @@
 /**
  * Jockey Routes
- * 
+ *
  * Handles all jockey-related API endpoints with comprehensive middleware
  */
 
@@ -9,21 +9,19 @@ import { jockeyController } from '../controllers/index.js';
 import {
   // Rate limiting
   generalRateLimit,
-  
+
   // Validation
   validateJockeyId,
   validateJockeyParams,
   validatePagination,
   validateSort,
-  validateDate,
   handleValidationErrors,
-  
+
   // Auth
   optionalAuth,
-  
+
   // Logging
   performanceLogger,
-  
 } from '../middleware/index.js';
 
 const router: ExpressRouter = Router();
@@ -41,7 +39,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyDetails
 );
@@ -59,7 +57,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyStats
 );
@@ -77,7 +75,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyPerformance
 );
@@ -97,7 +95,7 @@ router.get(
   ...validateSort(['jkName', 'winRate', 'total', 'average']),
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyRaces
 );
@@ -116,7 +114,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.searchJockeys
 );
@@ -134,7 +132,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getTopJockeys
 );
@@ -152,7 +150,7 @@ router.get(
   validateJockeyParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyRankings
 );
@@ -167,7 +165,7 @@ router.get(
   generalRateLimit,
   optionalAuth,
   performanceLogger,
-  
+
   // Controller
   jockeyController.getJockeyStatsSummary
 );

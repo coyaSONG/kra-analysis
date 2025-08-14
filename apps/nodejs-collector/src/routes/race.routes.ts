@@ -1,6 +1,6 @@
 /**
  * Race Routes
- * 
+ *
  * Handles all race-related API endpoints with comprehensive middleware
  */
 
@@ -10,24 +10,22 @@ import {
   // Rate limiting
   generalRateLimit,
   apiCollectionRateLimit,
-  
+
   // Validation
   validateDate,
   validateMeet,
   validateRaceNo,
-  validateOptionalRaceNo,
   validateRaceParams,
   validateCollectionRequest,
   validateEnrichmentRequest,
   handleValidationErrors,
-  
+
   // Auth
   optionalAuth,
   requireAuth,
-  
+
   // Logging
   performanceLogger,
-  
 } from '../middleware/index.js';
 
 const router: ExpressRouter = Router();
@@ -45,7 +43,7 @@ router.get(
   validateRaceParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   raceController.getRacesByDate
 );
@@ -65,7 +63,7 @@ router.get(
   validateRaceParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   raceController.getRaceDetails
 );
@@ -83,7 +81,7 @@ router.post(
   validateCollectionRequest,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   raceController.collectRaceData
 );
@@ -101,7 +99,7 @@ router.post(
   validateEnrichmentRequest,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   raceController.enrichRaceData
 );
@@ -121,7 +119,7 @@ router.get(
   validateRaceParams,
   handleValidationErrors,
   performanceLogger,
-  
+
   // Controller
   raceController.getRaceResult
 );
@@ -136,7 +134,7 @@ router.get(
   generalRateLimit,
   optionalAuth,
   performanceLogger,
-  
+
   // Controller
   raceController.getRaceStats
 );

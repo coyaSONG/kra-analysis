@@ -1,6 +1,6 @@
 /**
  * Main Router
- * 
+ *
  * Combines all route modules with proper prefixing and organization
  */
 
@@ -30,10 +30,10 @@ export const createRoutes = (): ExpressRouter => {
   router.use('/api/v1/horses', horseRoutes);
   router.use('/api/v1/jockeys', jockeyRoutes);
   router.use('/api/v1/trainers', trainerRoutes);
-  
+
   // Health and monitoring routes (no versioning)
   router.use('/health', healthRoutes);
-  
+
   // Legacy collection routes (maintain backward compatibility)
   router.use('/api/collection', collectionRoutes);
 
@@ -51,27 +51,27 @@ export const createRoutes = (): ExpressRouter => {
         horses: '/api/v1/horses',
         jockeys: '/api/v1/jockeys',
         trainers: '/api/v1/trainers',
-        
+
         // Health endpoints
         health: '/health',
         ready: '/health/ready',
         live: '/health/live',
         metrics: '/health/metrics',
         version: '/health/version',
-        
+
         // Legacy endpoints
-        collection: '/api/collection'
+        collection: '/api/collection',
       },
       documentation: {
         swagger: '/docs',
         postman: '/api/postman-collection',
-        openapi: '/api/openapi.json'
+        openapi: '/api/openapi.json',
       },
       support: {
         contact: 'dev@example.com',
         issues: 'https://github.com/example/kra-analysis/issues',
-        docs: 'https://docs.example.com/kra-api'
-      }
+        docs: 'https://docs.example.com/kra-api',
+      },
     });
   });
 
@@ -91,8 +91,8 @@ export const createRoutes = (): ExpressRouter => {
             'POST /collect': 'Trigger race data collection',
             'POST /enrich': 'Trigger race data enrichment',
             'GET /:date/:meet/:raceNo/result': 'Get race result',
-            'GET /stats': 'Get race statistics'
-          }
+            'GET /stats': 'Get race statistics',
+          },
         },
         horses: {
           base: '/horses',
@@ -102,8 +102,8 @@ export const createRoutes = (): ExpressRouter => {
             'GET /:hrNo/history': 'Get horse racing history',
             'GET /:hrNo/performance': 'Get horse performance analytics',
             'GET /top/performers': 'Get top performing horses',
-            'GET /stats': 'Get horse statistics'
-          }
+            'GET /stats': 'Get horse statistics',
+          },
         },
         jockeys: {
           base: '/jockeys',
@@ -114,8 +114,8 @@ export const createRoutes = (): ExpressRouter => {
             'GET /:jkNo/performance': 'Get jockey performance',
             'GET /:jkNo/races': 'Get jockey races',
             'GET /top/performers': 'Get top jockeys',
-            'GET /rankings': 'Get jockey rankings'
-          }
+            'GET /rankings': 'Get jockey rankings',
+          },
         },
         trainers: {
           base: '/trainers',
@@ -127,16 +127,16 @@ export const createRoutes = (): ExpressRouter => {
             'GET /:trNo/performance': 'Get trainer performance',
             'GET /:trNo/horses': 'Get trainer horses',
             'GET /top/performers': 'Get top trainers',
-            'GET /rankings': 'Get trainer rankings'
-          }
-        }
-      }
+            'GET /rankings': 'Get trainer rankings',
+          },
+        },
+      },
     });
   });
 
   logger.info('All routes configured successfully', {
     routes: ['races', 'horses', 'jockeys', 'trainers', 'health', 'collection'],
-    version: 'v1'
+    version: 'v1',
   });
 
   return router;
@@ -148,16 +148,16 @@ export const createRoutes = (): ExpressRouter => {
 export const registerRoutes = (app: Application): void => {
   // Health and monitoring routes (no versioning)
   app.use('/health', healthRoutes);
-  
+
   // API v1 routes with proper prefixing
   app.use('/api/v1/races', raceRoutes);
   app.use('/api/v1/horses', horseRoutes);
   app.use('/api/v1/jockeys', jockeyRoutes);
   app.use('/api/v1/trainers', trainerRoutes);
-  
+
   // Legacy collection routes (maintain backward compatibility)
   app.use('/api/collection', collectionRoutes);
-  
+
   // Root endpoint
   app.get('/', (req, res) => {
     res.json({
@@ -172,21 +172,21 @@ export const registerRoutes = (app: Application): void => {
         jockeys: '/api/v1/jockeys',
         trainers: '/api/v1/trainers',
         health: '/health',
-        collection: '/api/collection'
-      }
+        collection: '/api/collection',
+      },
     });
   });
-  
+
   // API documentation endpoint
   app.get('/api', (req, res) => {
     res.json({
       success: true,
       message: 'KRA Data Collector API Documentation',
       version: 'v1',
-      baseUrl: `${req.protocol}://${req.get('host')}/api/v1`
+      baseUrl: `${req.protocol}://${req.get('host')}/api/v1`,
     });
   });
-  
+
   logger.info('Routes registered directly on application');
 };
 

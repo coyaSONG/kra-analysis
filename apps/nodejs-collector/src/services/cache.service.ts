@@ -1,6 +1,6 @@
 /**
  * Cache Service
- * 
+ *
  * Generic caching service with Redis as primary storage and file system as fallback
  * Provides type-safe operations with TTL management and cache invalidation
  */
@@ -52,7 +52,7 @@ interface CacheEntry<T> {
 /**
  * Cache statistics
  */
-interface CacheStats {
+export interface CacheStats {
   /** Number of cache hits */
   hits: number;
   /** Number of cache misses */
@@ -87,14 +87,14 @@ export class CacheService {
       hits: 0,
       misses: 0,
       hitRate: 0,
-      totalOperations: 0
+      totalOperations: 0,
     };
 
     this.initializeFileCache();
     logger.info('Cache Service initialized', {
       redisAvailable: Boolean(this.redisClient),
       fileCacheEnabled: this.fileCache,
-      fileCacheDir: this.fileCacheDir
+      fileCacheDir: this.fileCacheDir,
     });
   }
 
@@ -110,7 +110,7 @@ export class CacheService {
     options: CacheOptions = {}
   ): Promise<T | null> {
     const key = this.buildKey(keyType, keyParams);
-    
+
     try {
       // Try Redis first if available
       if (this.redisClient) {
@@ -164,8 +164,8 @@ export class CacheService {
   ): Promise<void> {
     const key = this.buildKey(keyType, keyParams);
     const config = this.keyConfigs[keyType];
-    const ttl = options.ttl || (config?.ttl || 3600);
-    
+    const ttl = options.ttl || config?.ttl || 3600;
+
     try {
       const promises: Promise<void>[] = [];
 
@@ -180,7 +180,7 @@ export class CacheService {
       }
 
       await Promise.allSettled(promises);
-      
+
       logger.debug('Cache set', { key, keyType, ttl });
     } catch (error) {
       logger.error('Cache set error', { error, key, keyType });
@@ -193,12 +193,9 @@ export class CacheService {
    * @param keyType Cache key type configuration
    * @param keyParams Parameters to build the cache key
    */
-  async delete(
-    keyType: keyof typeof this.keyConfigs,
-    keyParams: Record<string, string | number>
-  ): Promise<void> {
+  async delete(keyType: keyof typeof this.keyConfigs, keyParams: Record<string, string | number>): Promise<void> {
     const key = this.buildKey(keyType, keyParams);
-    
+
     try {
       const promises: Promise<void>[] = [];
 
@@ -213,7 +210,7 @@ export class CacheService {
       }
 
       await Promise.allSettled(promises);
-      
+
       logger.debug('Cache delete', { key, keyType });
     } catch (error) {
       logger.error('Cache delete error', { error, key, keyType });
@@ -227,9 +224,9 @@ export class CacheService {
   async clear(keyType: keyof typeof this.keyConfigs): Promise<void> {
     const config = this.keyConfigs[keyType];
     if (!config) return;
-    
+
     const pattern = `${config.prefix}:*`;
-    
+
     try {
       const promises: Promise<void>[] = [];
 
@@ -244,7 +241,7 @@ export class CacheService {
       }
 
       await Promise.allSettled(promises);
-      
+
       logger.info('Cache cleared', { keyType, pattern });
     } catch (error) {
       logger.error('Cache clear error', { error, keyType });
@@ -264,12 +261,9 @@ export class CacheService {
    * @param keyType Cache key type configuration
    * @param keyParams Parameters to build the cache key
    */
-  async exists(
-    keyType: keyof typeof this.keyConfigs,
-    keyParams: Record<string, string | number>
-  ): Promise<boolean> {
+  async exists(keyType: keyof typeof this.keyConfigs, keyParams: Record<string, string | number>): Promise<boolean> {
     const key = this.buildKey(keyType, keyParams);
-    
+
     try {
       // Check Redis first if available
       if (this.redisClient) {
@@ -310,10 +304,10 @@ export class CacheService {
 
     // Compute the data
     const data = await computeFn();
-    
+
     // Cache the computed data
     await this.set(keyType, keyParams, data, options);
-    
+
     return data;
   }
 
@@ -321,20 +315,17 @@ export class CacheService {
    * Build cache key from type and parameters
    * @private
    */
-  private buildKey(
-    keyType: keyof typeof this.keyConfigs,
-    keyParams: Record<string, string | number>
-  ): string {
+  private buildKey(keyType: keyof typeof this.keyConfigs, keyParams: Record<string, string | number>): string {
     const config = this.keyConfigs[keyType];
     if (!config) {
       throw new Error(`Unknown cache key type: ${keyType}`);
     }
-    
+
     const paramString = Object.entries(keyParams)
       .sort(([a], [b]) => a.localeCompare(b)) // Sort for consistent keys
       .map(([key, value]) => `${key}:${value}`)
       .join(':');
-    
+
     return `${config.prefix}:${paramString}`;
   }
 
@@ -350,7 +341,7 @@ export class CacheService {
       if (!data) return null;
 
       const entry: CacheEntry<T> = JSON.parse(data);
-      
+
       // Check expiration
       if (entry.expiresAt < Date.now()) {
         await this.redisClient.del(key);
@@ -375,7 +366,7 @@ export class CacheService {
       const entry: CacheEntry<T> = {
         data,
         createdAt: Date.now(),
-        expiresAt: Date.now() + (ttl * 1000)
+        expiresAt: Date.now() + ttl * 1000,
       };
 
       await this.redisClient.setex(key, ttl, JSON.stringify(entry));
@@ -424,7 +415,7 @@ export class CacheService {
       const filePath = this.getFilePath(key);
       const data = await fs.readFile(filePath, 'utf-8');
       const entry: CacheEntry<T> = JSON.parse(data);
-      
+
       // Check expiration
       if (entry.expiresAt < Date.now()) {
         await this.deleteFromFile(key);
@@ -448,12 +439,12 @@ export class CacheService {
       const entry: CacheEntry<T> = {
         data,
         createdAt: Date.now(),
-        expiresAt: Date.now() + (ttl * 1000)
+        expiresAt: Date.now() + ttl * 1000,
       };
 
       // Ensure directory exists
       await fs.mkdir(path.dirname(filePath), { recursive: true });
-      
+
       await fs.writeFile(filePath, JSON.stringify(entry), 'utf-8');
     } catch (error) {
       logger.error('File cache set error', { error, key });
@@ -484,18 +475,20 @@ export class CacheService {
     try {
       const prefix = pattern.replace(':*', '');
       const files = await fs.readdir(this.fileCacheDir, { recursive: true });
-      
-      const filesToDelete = files
-        .filter(file => typeof file === 'string' && file.includes(this.hashKey(prefix)))
-        .map(file => path.join(this.fileCacheDir, file as string));
 
-      await Promise.all(filesToDelete.map(file => 
-        fs.unlink(file).catch(err => {
-          if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-            logger.error('File cache clear error', { error: err, file });
-          }
-        })
-      ));
+      const filesToDelete = files
+        .filter((file) => typeof file === 'string' && file.includes(this.hashKey(prefix)))
+        .map((file) => path.join(this.fileCacheDir, file as string));
+
+      await Promise.all(
+        filesToDelete.map((file) =>
+          fs.unlink(file).catch((err) => {
+            if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+              logger.error('File cache clear error', { error: err, file });
+            }
+          })
+        )
+      );
     } catch (error) {
       logger.error('File cache clear error', { error, pattern });
     }
@@ -571,8 +564,6 @@ export class CacheService {
    * @private
    */
   private updateHitRate(): void {
-    this.stats.hitRate = this.stats.totalOperations > 0 
-      ? (this.stats.hits / this.stats.totalOperations) * 100 
-      : 0;
+    this.stats.hitRate = this.stats.totalOperations > 0 ? (this.stats.hits / this.stats.totalOperations) * 100 : 0;
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Enrichment Service
- * 
+ *
  * Service for enriching race data with additional information from multiple APIs
  * Combines race results with horse, jockey, and trainer details and calculates performance metrics
  */
@@ -11,7 +11,7 @@ import type {
   Api12_1Item,
   Api19_1Item,
   EnrichedRaceData,
-  EnrichedHorseEntry
+  EnrichedHorseEntry,
 } from '../types/kra-api.types.js';
 import { KraApiService } from './kraApiService.js';
 import { CacheService } from './cache.service.js';
@@ -64,10 +64,7 @@ export class EnrichmentService {
   private readonly kraApiService: KraApiService;
   private readonly cacheService: CacheService;
 
-  constructor(
-    kraApiService: KraApiService,
-    cacheService: CacheService
-  ) {
+  constructor(kraApiService: KraApiService, cacheService: CacheService) {
     this.kraApiService = kraApiService;
     this.cacheService = cacheService;
 
@@ -99,7 +96,7 @@ export class EnrichmentService {
       calculateMetrics = true,
       concurrency = 5,
       useCache = true,
-      forceRefresh = false
+      forceRefresh = false,
     } = options;
 
     logger.info('Starting race data enrichment', {
@@ -107,13 +104,13 @@ export class EnrichmentService {
       meet,
       raceNo,
       horseCount: raceData.length,
-      options
+      options,
     });
 
     try {
       // Step 1: Enrich horse entries with details
       onProgress?.(0, raceData.length, 'Enriching horse entries');
-      
+
       const enrichedHorses = await this.enrichHorseEntries(
         raceData,
         {
@@ -122,7 +119,7 @@ export class EnrichmentService {
           includeTrainerDetails,
           concurrency,
           useCache,
-          forceRefresh
+          forceRefresh,
         },
         (current, total) => onProgress?.(current, total, 'Fetching details')
       );
@@ -142,9 +139,9 @@ export class EnrichmentService {
           rcName: raceData[0]?.rcName || '',
           rcDist: raceData[0]?.rcDist || 0,
           track: raceData[0]?.track || '',
-          weather: raceData[0]?.weather || ''
+          weather: raceData[0]?.weather || '',
         },
-        horses: enrichedHorses
+        horses: enrichedHorses,
       };
 
       const duration = Date.now() - startTime;
@@ -157,21 +154,16 @@ export class EnrichmentService {
         includeHorseDetails,
         includeJockeyDetails,
         includeTrainerDetails,
-        calculateMetrics
+        calculateMetrics,
       });
 
       // Cache the enriched data
       if (useCache && !forceRefresh) {
-        await this.cacheService.set(
-          'enriched_race', 
-          { date, meet, raceNo: raceNo.toString() }, 
-          enrichedRaceData
-        );
+        await this.cacheService.set('enriched_race', { date, meet, raceNo: raceNo.toString() }, enrichedRaceData);
       }
 
       onProgress?.(raceData.length + 1, raceData.length + 1, 'Completed');
       return enrichedRaceData;
-
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error('Race data enrichment failed', {
@@ -179,7 +171,7 @@ export class EnrichmentService {
         date,
         meet,
         raceNo,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       throw new AppError(
@@ -197,22 +189,15 @@ export class EnrichmentService {
    * @param meet Meet identifier
    * @param raceNo Race number
    */
-  async getCachedEnrichedRaceData(
-    date: string,
-    meet: string,
-    raceNo: number
-  ): Promise<EnrichedRaceData | null> {
+  async getCachedEnrichedRaceData(date: string, meet: string, raceNo: number): Promise<EnrichedRaceData | null> {
     try {
-      return await this.cacheService.get<EnrichedRaceData>(
-        'enriched_race',
-        { date, meet, raceNo: raceNo.toString() }
-      );
+      return await this.cacheService.get<EnrichedRaceData>('enriched_race', { date, meet, raceNo: raceNo.toString() });
     } catch (error) {
       logger.error('Failed to get cached enriched race data', {
         error,
         date,
         meet,
-        raceNo
+        raceNo,
       });
       return null;
     }
@@ -233,7 +218,7 @@ export class EnrichmentService {
       includeTrainerDetails = true,
       concurrency = 5,
       useCache = true,
-      forceRefresh = false
+      forceRefresh = false,
     } = options;
 
     const enrichedHorses: EnrichedHorseEntry[] = [];
@@ -252,13 +237,13 @@ export class EnrichmentService {
           if (includeHorseDetails && horseEntry.hrNo) {
             detailPromises.push(
               this.fetchHorseDetail(horseEntry.hrNo, useCache, forceRefresh)
-                .then(detail => {
+                .then((detail) => {
                   enrichedEntry.horseDetail = detail || undefined;
                 })
-                .catch(error => {
+                .catch((error) => {
                   logger.warn('Failed to fetch horse detail', {
                     hrNo: horseEntry.hrNo,
-                    error: error.message
+                    error: error.message,
                   });
                 })
             );
@@ -268,13 +253,13 @@ export class EnrichmentService {
           if (includeJockeyDetails && horseEntry.jkNo) {
             detailPromises.push(
               this.fetchJockeyDetail(horseEntry.jkNo, useCache, forceRefresh)
-                .then(detail => {
+                .then((detail) => {
                   enrichedEntry.jockeyDetail = detail || undefined;
                 })
-                .catch(error => {
+                .catch((error) => {
                   logger.warn('Failed to fetch jockey detail', {
                     jkNo: horseEntry.jkNo,
-                    error: error.message
+                    error: error.message,
                   });
                 })
             );
@@ -284,13 +269,13 @@ export class EnrichmentService {
           if (includeTrainerDetails && horseEntry.trNo) {
             detailPromises.push(
               this.fetchTrainerDetail(horseEntry.trNo, useCache, forceRefresh)
-                .then(detail => {
+                .then((detail) => {
                   enrichedEntry.trainerDetail = detail || undefined;
                 })
-                .catch(error => {
+                .catch((error) => {
                   logger.warn('Failed to fetch trainer detail', {
                     trNo: horseEntry.trNo,
-                    error: error.message
+                    error: error.message,
                   });
                 })
             );
@@ -307,7 +292,7 @@ export class EnrichmentService {
           logger.error('Failed to enrich horse entry', {
             hrNo: horseEntry.hrNo,
             hrName: horseEntry.hrName,
-            error
+            error,
           });
 
           completed++;
@@ -320,10 +305,8 @@ export class EnrichmentService {
 
       const batchResults = await Promise.allSettled(batchPromises);
       const batchEnriched = batchResults
-        .filter((result): result is PromiseFulfilledResult<EnrichedHorseEntry> => 
-          result.status === 'fulfilled'
-        )
-        .map(result => result.value);
+        .filter((result): result is PromiseFulfilledResult<EnrichedHorseEntry> => result.status === 'fulfilled')
+        .map((result) => result.value);
 
       enrichedHorses.push(...batchEnriched);
     }
@@ -344,11 +327,7 @@ export class EnrichmentService {
       return await this.kraApiService.getHorseDetail(hrNo);
     }
 
-    return await this.cacheService.getOrSet(
-      'horse_detail',
-      { hrNo },
-      () => this.kraApiService.getHorseDetail(hrNo)
-    );
+    return await this.cacheService.getOrSet('horse_detail', { hrNo }, () => this.kraApiService.getHorseDetail(hrNo));
   }
 
   /**
@@ -364,11 +343,7 @@ export class EnrichmentService {
       return await this.kraApiService.getJockeyDetail(jkNo);
     }
 
-    return await this.cacheService.getOrSet(
-      'jockey_detail',
-      { jkNo },
-      () => this.kraApiService.getJockeyDetail(jkNo)
-    );
+    return await this.cacheService.getOrSet('jockey_detail', { jkNo }, () => this.kraApiService.getJockeyDetail(jkNo));
   }
 
   /**
@@ -384,10 +359,8 @@ export class EnrichmentService {
       return await this.kraApiService.getTrainerDetail(trNo);
     }
 
-    return await this.cacheService.getOrSet(
-      'trainer_detail',
-      { trNo },
-      () => this.kraApiService.getTrainerDetail(trNo)
+    return await this.cacheService.getOrSet('trainer_detail', { trNo }, () =>
+      this.kraApiService.getTrainerDetail(trNo)
     );
   }
 
@@ -399,16 +372,10 @@ export class EnrichmentService {
     for (const horse of enrichedHorses) {
       try {
         const metrics = {
-          horseWinRate: this.calculateWinRate(
-            horse.horseDetail?.ord1CntT || 0,
-            horse.horseDetail?.rcCntT || 0
-          ),
-          jockeyWinRate: this.calculateWinRate(
-            horse.jockeyDetail?.ord1CntT || 0,
-            horse.jockeyDetail?.rcCntT || 0
-          ),
+          horseWinRate: this.calculateWinRate(horse.horseDetail?.ord1CntT || 0, horse.horseDetail?.rcCntT || 0),
+          jockeyWinRate: this.calculateWinRate(horse.jockeyDetail?.ord1CntT || 0, horse.jockeyDetail?.rcCntT || 0),
           trainerWinRate: horse.trainerDetail?.winRateT || 0,
-          combinedScore: 0
+          combinedScore: 0,
         };
 
         // Calculate combined performance score
@@ -425,13 +392,13 @@ export class EnrichmentService {
         logger.debug('Performance metrics calculated', {
           hrNo: horse.hrNo,
           hrName: horse.hrName,
-          metrics
+          metrics,
         });
       } catch (error) {
         logger.warn('Failed to calculate performance metrics', {
           hrNo: horse.hrNo,
           hrName: horse.hrName,
-          error
+          error,
         });
       }
     }
@@ -468,14 +435,14 @@ export class EnrichmentService {
     const normalizedRating = Math.min(rating / 120, 1) * 100;
 
     // Inverse odds factor (lower odds = higher score)
-    const oddsScore = odds > 0 ? Math.max(0, 100 - (odds * 5)) : 0;
+    const oddsScore = odds > 0 ? Math.max(0, 100 - odds * 5) : 0;
 
-    const combinedScore = 
-      (horseWinRate * horseWeight) +
-      (jockeyWinRate * jockeyWeight) +
-      (trainerWinRate * trainerWeight) +
-      (normalizedRating * ratingWeight) +
-      (oddsScore * oddsWeight);
+    const combinedScore =
+      horseWinRate * horseWeight +
+      jockeyWinRate * jockeyWeight +
+      trainerWinRate * trainerWeight +
+      normalizedRating * ratingWeight +
+      oddsScore * oddsWeight;
 
     return Math.round(combinedScore * 100) / 100; // Round to 2 decimal places
   }
@@ -489,46 +456,36 @@ export class EnrichmentService {
   async batchEnrichRaces(
     races: Array<{ date: string; meet: string; raceNo: number }>,
     options: EnrichmentOptions = {},
-    onProgress?: (current: number, total: number, currentRace?: typeof races[0]) => void
+    onProgress?: (current: number, total: number, currentRace?: (typeof races)[0]) => void
   ): Promise<BatchResult<EnrichedRaceData>> {
     const startTime = Date.now();
     const results: EnrichedRaceData[] = [];
-    const failed: Array<{ item: typeof races[0]; error: string }> = [];
+    const failed: Array<{ item: (typeof races)[0]; error: string }> = [];
 
     logger.info('Starting batch race enrichment', {
       raceCount: races.length,
-      options
+      options,
     });
 
     for (let i = 0; i < races.length; i++) {
       const race = races[i];
       if (!race) continue;
-      
+
       onProgress?.(i, races.length, race);
 
       try {
         // First get the race data
-        const raceData = await this.kraApiService.getRaceResult(
-          race.date.replace(/-/g, ''),
-          race.meet,
-          race.raceNo
-        );
+        const raceData = await this.kraApiService.getRaceResult(race.date.replace(/-/g, ''), race.meet, race.raceNo);
 
         // Then enrich it
-        const enrichedData = await this.enrichRaceData(
-          raceData,
-          race.date,
-          race.meet,
-          race.raceNo,
-          options
-        );
+        const enrichedData = await this.enrichRaceData(raceData, race.date, race.meet, race.raceNo, options);
 
         results.push(enrichedData);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Failed to enrich race in batch', {
           race,
-          error: errorMessage
+          error: errorMessage,
         });
         failed.push({ item: race, error: errorMessage });
       }
@@ -541,7 +498,7 @@ export class EnrichmentService {
       total: races.length,
       successful: results.length,
       failed: failed.length,
-      duration
+      duration,
     };
 
     logger.info('Batch race enrichment completed', stats);

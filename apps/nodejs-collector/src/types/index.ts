@@ -1,6 +1,6 @@
 /**
  * Central type definitions for nodejs-collector
- * 
+ *
  * This file serves as the main entry point for all type definitions
  * used throughout the nodejs-collector application. It imports and
  * re-exports types from various modules and integrates with shared types.
@@ -22,7 +22,7 @@ export * from './api.types.js';
 export enum Meet {
   SEOUL = 1,
   JEJU = 2,
-  BUSAN = 3
+  BUSAN = 3,
 }
 
 /**
@@ -252,19 +252,14 @@ export class AppError extends Error {
   /** Error timestamp */
   public readonly timestamp: Date;
 
-  constructor(
-    message: string,
-    statusCode: number = 500,
-    isOperational: boolean = true,
-    context?: Record<string, any>
-  ) {
+  constructor(message: string, statusCode: number = 500, isOperational: boolean = true, context?: Record<string, any>) {
     super(message);
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.context = context;
     this.timestamp = new Date();
-    
+
     // Ensure the stack trace points to where the error was thrown
     Error.captureStackTrace(this, this.constructor);
   }
@@ -280,7 +275,7 @@ export class AppError extends Error {
       isOperational: this.isOperational,
       context: this.context,
       timestamp: this.timestamp.toISOString(),
-      stack: this.stack
+      stack: this.stack,
     };
   }
 }
@@ -319,7 +314,7 @@ export class ValidationError extends AppError {
   toJSON() {
     return {
       ...super.toJSON(),
-      validationErrors: this.validationErrors
+      validationErrors: this.validationErrors,
     };
   }
 }
@@ -351,7 +346,7 @@ export class NotFoundError extends AppError {
     return {
       ...super.toJSON(),
       resourceType: this.resourceType,
-      resourceId: this.resourceId
+      resourceId: this.resourceId,
     };
   }
 }
@@ -388,7 +383,7 @@ export class RateLimitError extends AppError {
       ...super.toJSON(),
       retryAfter: this.retryAfter,
       limit: this.limit,
-      current: this.current
+      current: this.current,
     };
   }
 }
@@ -431,7 +426,7 @@ export class ExternalApiError extends AppError {
       apiName: this.apiName,
       endpoint: this.endpoint,
       apiResponseCode: this.apiResponseCode,
-      apiResponseMessage: this.apiResponseMessage
+      apiResponseMessage: this.apiResponseMessage,
     };
   }
 }
