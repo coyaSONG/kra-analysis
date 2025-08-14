@@ -18,8 +18,18 @@ const getConfig = (): Config => {
         }
       : undefined,
     kra: {
-      baseUrl: process.env.KRA_API_BASE_URL || 'http://data.kra.co.kr',
-      apiKey: process.env.KRA_API_KEY,
+      baseUrl: process.env.KRA_API_BASE_URL || 'https://apis.data.go.kr/B551015',
+      apiKey: process.env.KRA_SERVICE_KEY || process.env.KRA_API_KEY,
+      timeout: parseInt(process.env.KRA_API_TIMEOUT || '30000', 10),
+      retry: {
+        attempts: parseInt(process.env.KRA_RETRY_ATTEMPTS || '3', 10),
+        delay: parseInt(process.env.KRA_RETRY_DELAY || '1000', 10),
+        backoffFactor: parseFloat(process.env.KRA_RETRY_BACKOFF || '2'),
+      },
+      rateLimit: {
+        maxRequests: parseInt(process.env.KRA_RATE_LIMIT_MAX || '60', 10),
+        windowMs: parseInt(process.env.KRA_RATE_LIMIT_WINDOW || '60000', 10),
+      },
     },
   };
 };

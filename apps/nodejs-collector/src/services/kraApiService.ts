@@ -449,7 +449,12 @@ export class KraApiService {
    * @private
    */
   private buildUrl(endpoint: string, params: Record<string, string>): string {
-    const url = new URL(`/api/openapi/${endpoint}.json`, this.baseUrl);
+    // The endpoint now includes both API_ID and endpoint_name (e.g., "API214_1/RaceDetailResult_1")
+    // Split the endpoint to get API_ID and endpoint_name
+    const [apiId, endpointName] = endpoint.split('/');
+    
+    // Build URL as: baseUrl/API_ID/endpoint_name
+    const url = new URL(`${this.baseUrl}/${apiId}/${endpointName}`);
 
     // Add service key if available
     if (this.apiKey) {

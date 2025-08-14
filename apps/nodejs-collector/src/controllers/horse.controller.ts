@@ -10,6 +10,7 @@ import { services } from '../services/index.js';
 import type { ApiResponse, HorseQueryParams } from '../types/api.types.js';
 import type { Api8_2Item } from '../types/kra-api.types.js';
 import { ValidationError, AppError } from '../types/index.js';
+import { meetToApiParam } from '../utils/meet-converter.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -94,6 +95,7 @@ export class HorseController {
         logger.info('Horse data not in cache, fetching from API', { hrNo, meet });
 
         try {
+          // Get horse detail from KRA API
           horseData = await services.kraApiService.getHorseDetail(hrNo);
 
           if (!horseData) {

@@ -497,12 +497,13 @@ export type KraApiItemUnion = Api214Item | Api8_2Item | Api12_1Item | Api19_1Ite
 
 /**
  * Enum for KRA API endpoints
+ * Format: API_ID/endpoint_name
  */
 export enum KraApiEndpoint {
-  RACE_RESULT = 'API214_1',
-  HORSE_INFO = 'API8_2',
-  JOCKEY_INFO = 'API12_1',
-  TRAINER_INFO = 'API19_1',
+  RACE_RESULT = 'API214_1/RaceDetailResult_1',
+  HORSE_INFO = 'API8_2/raceHorseInfo_2',
+  JOCKEY_INFO = 'API12_1/jockeyInfo_1',
+  TRAINER_INFO = 'API19_1/trainerInfo_1',
 }
 
 /**

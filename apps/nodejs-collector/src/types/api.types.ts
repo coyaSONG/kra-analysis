@@ -129,7 +129,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
  * Request to collect race data from KRA API
  */
 export interface CollectionRequest {
-  /** Race date in YYYY-MM-DD format */
+  /** Race date in YYYYMMDD format */
   date: string;
   /** Race number (optional, if not provided collects all races for the date) */
   raceNo?: number;
@@ -176,9 +176,9 @@ export interface CollectedRaceData {
  * Batch collection request for multiple races
  */
 export interface BatchCollectionRequest {
-  /** Start date in YYYY-MM-DD format */
+  /** Start date in YYYYMMDD format */
   startDate: string;
-  /** End date in YYYY-MM-DD format */
+  /** End date in YYYYMMDD format */
   endDate: string;
   /** Specific meets to collect (optional, default: all) */
   meets?: string[];

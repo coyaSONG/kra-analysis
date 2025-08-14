@@ -16,6 +16,7 @@ import { KraApiService } from './kraApiService.js';
 import { CacheService } from './cache.service.js';
 import { EnrichmentService } from './enrichment.service.js';
 import { AppError, ValidationError } from '../types/index.js';
+import { meetToApiParam } from '../utils/meet-converter.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -90,7 +91,6 @@ export class CollectionService {
     this.validateCollectionRequest(request);
 
     const { date, raceNo, meet, enrichData = false } = request;
-    const apiDate = date.replace(/-/g, ''); // Convert to YYYYMMDD format
 
     logger.info('Starting race collection', {
       date,
@@ -112,7 +112,7 @@ export class CollectionService {
 
       if (useCache && !forceRefresh && raceNo !== undefined) {
         const cachedData = await this.cacheService.get<CollectedRaceData>('race_result', {
-          date: apiDate,
+          date: date,
           meet: meet || '',
           raceNo: raceNo.toString(),
         });
@@ -144,8 +144,9 @@ export class CollectionService {
         throw new ValidationError('Race number is required for single race collection');
       }
 
-      // Collect specific race
-      raceData = await this.kraApiService.getRaceResult(apiDate, meet || '', raceNo, { timeout, retryAttempts });
+      // Collect specific race - convert meet to API parameter format (numeric code)
+      const apiMeet = meet ? meetToApiParam(meet) : '';
+      raceData = await this.kraApiService.getRaceResult(date, apiMeet, raceNo, { timeout, retryAttempts });
 
       if (raceData.length === 0) {
         throw new AppError(`No race data found for ${date} race ${raceNo}`, 404);
@@ -220,7 +221,7 @@ export class CollectionService {
 
         await this.cacheService.set(
           'race_result',
-          { date: apiDate, meet: collectedData.raceInfo.meet, raceNo: raceNo.toString() },
+          { date: date, meet: collectedData.raceInfo.meet, raceNo: raceNo.toString() },
           collectedData
         );
       }
@@ -508,10 +509,10 @@ export class CollectionService {
 
     if (!request.date) {
       errors.push({ field: 'date', message: 'Date is required' });
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.date)) {
+    } else if (!/^\d{8}$/.test(request.date)) {
       errors.push({
         field: 'date',
-        message: 'Date must be in YYYY-MM-DD format',
+        message: 'Date must be in YYYYMMDD format',
         value: request.date,
       });
     }
@@ -538,20 +539,20 @@ export class CollectionService {
 
     if (!request.startDate) {
       errors.push({ field: 'startDate', message: 'Start date is required' });
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.startDate)) {
+    } else if (!/^\d{8}$/.test(request.startDate)) {
       errors.push({
         field: 'startDate',
-        message: 'Start date must be in YYYY-MM-DD format',
+        message: 'Start date must be in YYYYMMDD format',
         value: request.startDate,
       });
     }
 
     if (!request.endDate) {
       errors.push({ field: 'endDate', message: 'End date is required' });
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(request.endDate)) {
+    } else if (!/^\d{8}$/.test(request.endDate)) {
       errors.push({
         field: 'endDate',
-        message: 'End date must be in YYYY-MM-DD format',
+        message: 'End date must be in YYYYMMDD format',
         value: request.endDate,
       });
     }
@@ -588,15 +589,28 @@ export class CollectionService {
     }>
   > {
     const races: Array<{ date: string; raceNo: number; meet: string }> = [];
-    const startDate = new Date(request.startDate);
-    const endDate = new Date(request.endDate);
+    // Parse YYYYMMDD format dates
+    const year = parseInt(request.startDate.substring(0, 4), 10);
+    const month = parseInt(request.startDate.substring(4, 6), 10) - 1;
+    const day = parseInt(request.startDate.substring(6, 8), 10);
+    const startDate = new Date(year, month, day);
+    
+    const endYear = parseInt(request.endDate.substring(0, 4), 10);
+    const endMonth = parseInt(request.endDate.substring(4, 6), 10) - 1;
+    const endDay = parseInt(request.endDate.substring(6, 8), 10);
+    const endDate = new Date(endYear, endMonth, endDay);
+    
     const meets: string[] = (request.meets ?? ['서울', '부산경남', '제주']).filter(
       (m): m is string => typeof m === 'string' && m.length > 0
     );
 
     // Generate date range
     for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const dateStr: string = date.toISOString().split('T')[0] as string;
+      // Format as YYYYMMDD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr: string = `${year}${month}${day}`;
 
       for (let i = 0; i < meets.length; i++) {
         const meetName = meets[i];

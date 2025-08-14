@@ -19,6 +19,7 @@ export default {
     '<rootDir>/tests/**/*.spec.ts',
     '<rootDir>/src/**/__tests__/**/*.test.ts',
     '<rootDir>/src/**/__tests__/**/*.spec.ts',
+    '<rootDir>/tests/*.test.ts',
   ],
 
   // Test categories
@@ -52,7 +53,7 @@ export default {
   },
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
 
   // Test timeout (30 seconds)
   testTimeout: 30000,
@@ -136,24 +137,30 @@ export default {
     {
       displayName: 'unit',
       testMatch: ['<rootDir>/tests/unit/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
     },
     // Integration tests
     {
       displayName: 'integration',
       testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
     },
     // Service tests
     {
       displayName: 'services',
       testMatch: ['<rootDir>/tests/services/**/*.test.ts'],
-      setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
     },
     // Middleware tests
     {
       displayName: 'middleware',
       testMatch: ['<rootDir>/tests/middleware/**/*.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+    },
+    // API validation tests
+    {
+      displayName: 'api-validation',
+      testMatch: ['<rootDir>/tests/api-validation.test.ts'],
       setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
     },
   ],

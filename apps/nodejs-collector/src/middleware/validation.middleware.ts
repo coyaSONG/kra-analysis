@@ -172,7 +172,7 @@ export const validateHorseId = (field: 'body' | 'param' | 'query' = 'param', fie
 };
 
 /**
- * Jockey ID validation chain - validates format like "01234"
+ * Jockey ID validation chain - validates format like "080476"
  */
 export const validateJockeyId = (
   field: 'body' | 'param' | 'query' = 'param',
@@ -186,13 +186,13 @@ export const validateJockeyId = (
       .withMessage(`${fieldName} is required`)
       .isString()
       .withMessage(`${fieldName} must be a string`)
-      .matches(/^[0-9]{5}$/)
-      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`),
+      .matches(/^[0-9]{6}$/)
+      .withMessage(`${fieldName} must be a 6-digit number string (e.g., "080476")`),
   ];
 };
 
 /**
- * Trainer ID validation chain - validates format like "01234"
+ * Trainer ID validation chain - validates format like "070165"
  */
 export const validateTrainerId = (
   field: 'body' | 'param' | 'query' = 'param',
@@ -206,8 +206,8 @@ export const validateTrainerId = (
       .withMessage(`${fieldName} is required`)
       .isString()
       .withMessage(`${fieldName} must be a string`)
-      .matches(/^[0-9]{5}$/)
-      .withMessage(`${fieldName} must be a 5-digit number string (e.g., "01234")`),
+      .matches(/^[0-9]{6}$/)
+      .withMessage(`${fieldName} must be a 6-digit number string (e.g., "070165")`),
   ];
 };
 

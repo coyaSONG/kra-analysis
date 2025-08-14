@@ -121,7 +121,7 @@ export const createTestTrainerData = () => ({
 });
 
 // Mock data for KRA API responses
-export const mockKraApiResponse = <T>(data: T) => ({
+export const mockKraApiResponse = (data: any) => ({
   response: {
     header: {
       resultCode: '00',
