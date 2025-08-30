@@ -1,6 +1,6 @@
 # TypeScript Type Definitions for KRA APIs
 
-This document describes the comprehensive TypeScript type definitions created for the Korea Racing Authority (KRA) public APIs in the nodejs-collector application.
+This document describes the comprehensive TypeScript type definitions created for the Korea Racing Authority (KRA) public APIs in the collector application.
 
 ## Overview
 

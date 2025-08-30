@@ -1,5 +1,5 @@
 {
-  "name": "@apps/nodejs-collector",
+  "name": "@apps/collector",
   "version": "1.0.0",
   "main": "dist/server.js",
   "type": "module",

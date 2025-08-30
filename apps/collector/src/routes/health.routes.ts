@@ -373,7 +373,7 @@ router.get(
 router.get('/version', generalRateLimit, async (req: Request, res: Response): Promise<void> => {
   const versionInfo = {
     version: process.env.npm_package_version || '1.0.0',
-    name: process.env.npm_package_name || 'kra-nodejs-collector',
+    name: process.env.npm_package_name || 'kra-collector',
     description: process.env.npm_package_description || 'KRA Horse Racing Data Collector',
     environment: appConfig.nodeEnv,
     nodeVersion: process.version,

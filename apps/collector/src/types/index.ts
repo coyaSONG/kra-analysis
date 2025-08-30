@@ -1,8 +1,8 @@
 /**
- * Central type definitions for nodejs-collector
+ * Central type definitions for collector
  *
  * This file serves as the main entry point for all type definitions
- * used throughout the nodejs-collector application. It imports and
+ * used throughout the collector application. It imports and
  * re-exports types from various modules and integrates with shared types.
  */
 

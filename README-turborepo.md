@@ -8,7 +8,7 @@ Turborepo를 사용한 모노레포 구조로 재구성된 한국마사회(KRA) 
 kra-analysis/
 ├── apps/
 │   ├── api/                 # Python FastAPI 서버
-│   └── nodejs-collector/    # Node.js 데이터 수집 서버
+│   └── collector/           # Node.js 데이터 수집 서버
 ├── packages/
 │   ├── shared-types/        # 공유 TypeScript 타입 정의
 │   ├── scripts/             # 데이터 처리 및 분석 스크립트
@@ -47,10 +47,10 @@ pnpm dev
 
 # 특정 앱만 실행
 pnpm dev --filter=@apps/api
-pnpm dev --filter=@apps/nodejs-collector
+pnpm dev --filter=@apps/collector
 
 # API와 수집기 동시 실행
-pnpm dev --filter=@apps/api --filter=@apps/nodejs-collector
+pnpm dev --filter=@apps/api --filter=@apps/collector
 ```
 
 ## 📦 앱 및 패키지
@@ -65,7 +65,7 @@ pnpm dev --filter=@apps/api --filter=@apps/nodejs-collector
   - 데이터베이스 연동
   - Redis 캐싱
 
-#### `@apps/nodejs-collector` (Node.js Express)
+#### `@apps/collector` (Node.js Express)
 - **포트**: 3001
 - **설명**: KRA 공공데이터 수집
 - **주요 기능**:
@@ -117,7 +117,7 @@ pnpm test --filter=@apps/api
 pnpm lint
 
 # 특정 프로젝트만 린트
-pnpm lint --filter=@apps/nodejs-collector
+pnpm lint --filter=@apps/collector
 ```
 
 ### 클린
@@ -194,7 +194,7 @@ pnpm turbo run build --graph
 docker build -f apps/api/Dockerfile -t kra-api .
 
 # 수집기 이미지 빌드
-docker build -f apps/nodejs-collector/Dockerfile -t kra-collector .
+docker build -f apps/collector/Dockerfile -t kra-collector .
 ```
 
 ## 📝 추가 정보

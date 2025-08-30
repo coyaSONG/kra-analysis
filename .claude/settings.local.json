@@ -16,7 +16,10 @@
       "Bash(python3 scripts/evaluate_sample_races.py:*)",
       "Bash(python3:*)",
       "mcp__serena__think_about_collected_information",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm type-check:*)"
     ],
     "deny": []
   }

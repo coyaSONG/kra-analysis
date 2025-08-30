@@ -29,7 +29,7 @@
 ```
 kra-analysis/
 ├── api/                      # Python FastAPI 서버 (비즈니스 로직, AI 예측)
-├── nodejs-collector/         # Node.js 데이터 수집 서버
+├── collector/                # Node.js 데이터 수집 서버
 ├── scripts/
 │   ├── race_collector/        # 데이터 수집 모듈
 │   ├── evaluation/           # 평가 시스템 v3
@@ -56,7 +56,7 @@ cd kra-analysis
 echo "KRA_SERVICE_KEY=your_api_key_here" > .env
 
 # Node.js 데이터 수집 서버
-cd nodejs-collector
+cd collector
 npm install
 
 # Python API 서버

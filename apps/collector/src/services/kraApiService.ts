@@ -343,7 +343,7 @@ export class KraApiService {
           method: 'GET',
           headers: {
             Accept: 'application/json',
-            'User-Agent': 'nodejs-collector/1.0',
+            'User-Agent': 'collector/1.0',
             ...headers,
           },
           signal: AbortSignal.timeout(timeout),
