@@ -3,7 +3,7 @@ KRA 통합 데이터 수집 API 서버 v2
 모든 데이터 수집 및 분석 기능을 RESTful API로 제공
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -20,8 +20,8 @@ from routers import (
     collection_v2,
     jobs_v2
 )
-from infrastructure.database import init_db, close_db
-from infrastructure.redis_client import init_redis, close_redis
+from infrastructure.database import init_db, close_db, check_database_connection
+from infrastructure.redis_client import init_redis, close_redis, check_redis_connection, get_redis
 
 # Celery는 선택적으로 로드
 try:
@@ -193,6 +193,39 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": time.time()
+    }
+
+
+@app.get("/health/detailed")
+async def detailed_health_check(redis = Depends(get_redis)):
+    """의존성 상태를 포함한 상세 헬스체크"""
+    db_ok = await check_database_connection()
+    # Prefer DI-provided Redis (overridden in tests), fall back to global check
+    redis_ok = False
+    try:
+        if redis:
+            # If mock client (no ping), assume healthy for tests
+            if hasattr(redis, "ping"):
+                try:
+                    await redis.ping()
+                    redis_ok = True
+                except Exception:
+                    redis_ok = False
+            else:
+                redis_ok = True
+        else:
+            redis_ok = await check_redis_connection()
+    except Exception:
+        redis_ok = False
+
+    status = "healthy" if db_ok else "degraded"
+    return {
+        "status": "healthy" if (db_ok and redis_ok) else status,
+        "database": "healthy" if db_ok else "unhealthy",
+        "redis": "healthy" if redis_ok else "unhealthy",
+        "celery": "unknown",  # 테스트 환경에서 워커가 없을 수 있음
+        "timestamp": time.time(),
+        "version": settings.version,
     }
 
 

@@ -57,7 +57,7 @@ class CollectionService:
             )
             
             # 기본 경주 정보 수집 (캐시 활성화)
-            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no, use_cache=True)
+            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no)
             
             # 날씨 정보 수집 (현재 API에서 제공하지 않음)
             weather_info = {}
@@ -79,6 +79,10 @@ class CollectionService:
             
             # 데이터 통합
             collected_data = {
+                # compatibility fields expected by tests
+                "race_date": race_date,
+                "race_no": race_no,
+                # internal canonical fields
                 "date": race_date,
                 "meet": meet,
                 "race_number": race_no,
@@ -198,14 +202,21 @@ class CollectionService:
                 race.updated_at = datetime.utcnow()
                 race.collection_status = DataStatus.COLLECTED
                 race.collected_at = datetime.utcnow()
+                race.status = DataStatus.COLLECTED
+                # keep compatibility columns in sync
+                race.race_date = data["date"]
+                race.race_no = data["race_number"]
             else:
                 # 신규 생성
                 race = Race(
                     race_id=race_id,
                     date=data["date"],
+                    race_date=data["date"],
                     meet=data["meet"],
                     race_number=data["race_number"],
+                    race_no=data["race_number"],
                     basic_data=data,
+                    status=DataStatus.COLLECTED,
                     collection_status=DataStatus.COLLECTED,
                     collected_at=datetime.utcnow()
                 )
@@ -285,6 +296,10 @@ class CollectionService:
             # 기본 통계 계산
             if active_horses:
                 df = pd.DataFrame(active_horses)
+                # Ensure numeric types
+                for col in ["weight", "rating", "win_odds"]:
+                    if col in df:
+                        df[col] = pd.to_numeric(df[col], errors="coerce")
                 
                 # 평균 계산
                 avg_weight = df["weight"].mean() if "weight" in df else 0
@@ -352,8 +367,8 @@ class CollectionService:
             if not race:
                 raise ValueError(f"Race not found: {race_id}")
             
-            # Use enriched_data if exists, otherwise basic_data
-            base_data = race.enriched_data or race.basic_data
+            # Use enriched_data if exists, otherwise basic_data, then raw_data (for tests)
+            base_data = race.enriched_data or race.basic_data or race.raw_data
             
             # 강화 수행
             enriched = await self._enrich_data(base_data, db)
@@ -386,7 +401,7 @@ class CollectionService:
             
             # 각 마필에 대한 과거 성적 조회
             for horse in horses:
-                horse_no = horse.get("hr_no")
+                horse_no = horse.get("hr_no") or horse.get("horse_no")
                 
                 # 과거 3개월 성적 조회
                 past_performances = await self._get_horse_past_performances(
@@ -402,8 +417,8 @@ class CollectionService:
                     horse["past_stats"] = self._get_default_stats()
                 
                 # 기수/조교사 통계
-                jockey_no = horse.get("jk_no")
-                trainer_no = horse.get("tr_no")
+                jockey_no = horse.get("jk_no") or horse.get("jockey_no")
+                trainer_no = horse.get("tr_no") or horse.get("trainer_no")
                 
                 if jockey_no:
                     horse["jockey_stats"] = await self._get_jockey_stats(

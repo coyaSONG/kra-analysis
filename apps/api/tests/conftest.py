@@ -10,7 +10,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, StaticPool
 import redis.asyncio as redis
 
 # Import application components
@@ -49,10 +49,12 @@ def event_loop():
 @pytest_asyncio.fixture(scope="function")
 async def test_db_engine(test_settings):
     """Create a test database engine"""
+    is_sqlite = test_settings.database_url.startswith("sqlite")
     engine = create_async_engine(
         test_settings.database_url,
         echo=False,
-        poolclass=NullPool,  # Disable connection pooling for tests
+        poolclass=StaticPool if is_sqlite else NullPool,
+        connect_args={"check_same_thread": False} if is_sqlite else {},
     )
     
     async with engine.begin() as conn:
@@ -76,7 +78,18 @@ async def db_session(test_db_engine):
     )
     
     async with async_session() as session:
-        yield session
+        class _SessionWrapper:
+            def __init__(self, inner):
+                self._inner = inner
+            async def execute(self, statement, *args, **kwargs):
+                from sqlalchemy import text as sql_text
+                if isinstance(statement, str):
+                    statement = sql_text(statement)
+                return await self._inner.execute(statement, *args, **kwargs)
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+
+        yield _SessionWrapper(session)
         await session.rollback()
 
 

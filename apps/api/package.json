@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cd ../../apps/api && PORT=8001 uv run uvicorn main_v2:app --reload --port 8001"
+    "dev": "cd ../../apps/api && PORT=8001 uv run uvicorn main_v2:app --reload --port 8001",
+    "test": "uv run pytest -q || python -m pytest -q"
   }
 }

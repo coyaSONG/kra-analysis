@@ -156,3 +156,7 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다.
 
+## 참고: 기여자 가이드
+
+프로젝트 구조, 빌드/테스트 명령, 코드 스타일, 보안/설정 팁은 저장소 루트의 AGENTS.md(Repository Guidelines)를 참고하세요.
+

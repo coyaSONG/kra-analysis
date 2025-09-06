@@ -24,7 +24,7 @@ class CollectionRequest(BaseModel):
     @validator("date")
     def validate_date(cls, v):
         if not re.match(r"^\d{8}$", v):
-            raise ValueError("날짜는 YYYYMMDD 형식이어야 합니다")
+            raise ValueError("validation error: 날짜는 YYYYMMDD 형식이어야 합니다")
         try:
             # 유효한 날짜인지 확인
             year = int(v[:4])
@@ -33,9 +33,9 @@ class CollectionRequest(BaseModel):
             date(year, month, day)
             # 미래 날짜는 허용하지 않음
             if date(year, month, day) > date.today():
-                raise ValueError("미래 날짜는 허용되지 않습니다")
+                raise ValueError("validation error: 미래 날짜는 허용되지 않습니다")
         except ValueError as e:
-            raise ValueError(f"유효하지 않은 날짜: {e}")
+            raise ValueError(f"validation error: 유효하지 않은 날짜: {e}")
         return v
     meet: int = Field(..., ge=1, le=3, description="경마장 (1: 서울, 2: 제주, 3: 부산경남)")
     race_numbers: Optional[List[int]] = Field(
@@ -123,16 +123,16 @@ class ResultCollectionRequest(BaseModel):
     @validator("date")
     def validate_date(cls, v):
         if not re.match(r"^\d{8}$", v):
-            raise ValueError("날짜는 YYYYMMDD 형식이어야 합니다")
+            raise ValueError("validation error: 날짜는 YYYYMMDD 형식이어야 합니다")
         try:
             year = int(v[:4])
             month = int(v[4:6])
             day = int(v[6:8])
             date(year, month, day)
             if date(year, month, day) > date.today():
-                raise ValueError("미래 날짜는 허용되지 않습니다")
+                raise ValueError("validation error: 미래 날짜는 허용되지 않습니다")
         except ValueError as e:
-            raise ValueError(f"유효하지 않은 날짜: {e}")
+            raise ValueError(f"validation error: 유효하지 않은 날짜: {e}")
         return v
     meet: int = Field(..., ge=1, le=3, description="경마장")
     race_number: int = Field(..., ge=1, le=20, description="경주 번호")

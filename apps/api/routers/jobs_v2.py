@@ -6,11 +6,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_, func
 import structlog
 
 from dependencies.auth import require_api_key, require_resource_access
 from infrastructure.database import get_db
 from services.job_service import JobService
+from models.database_models import Job as SAJob
+from datetime import datetime
 from models.job_dto import (
     Job,
     JobDetailResponse,
@@ -57,9 +60,43 @@ async def list_jobs(
             offset=offset
         )
         
+        # Convert SQLAlchemy models to DTOs
+        dto_jobs = [
+            Job(
+                job_id=j.job_id,
+                type=JobType((j.type.value if hasattr(j.type, "value") else str(j.type))),
+                status=JobStatus((j.status.value if hasattr(j.status, "value") else str(j.status))),
+                created_at=j.created_at or datetime.utcnow(),
+                started_at=j.started_at,
+                completed_at=j.completed_at,
+                progress=j.progress or 0,
+                current_step=j.current_step,
+                total_steps=j.total_steps,
+                result=j.result,
+                error_message=j.error_message,
+                retry_count=j.retry_count or 0,
+                parameters=j.parameters,
+                created_by=j.created_by,
+                tags=j.tags or [],
+            ) for j in jobs
+        ]
+
+        # Total count without pagination
+        filters = []
+        if status:
+            filters.append(SAJob.status == str(status.value))
+        if job_type:
+            filters.append(SAJob.type == str(job_type.value))
+
+        total_query = select(func.count()).select_from(SAJob)
+        if filters:
+            total_query = total_query.where(and_(*filters))
+        total_result = await db.execute(total_query)
+        total_count = total_result.scalar_one()
+
         return JobListResponse(
-            jobs=jobs,
-            total=len(jobs),
+            jobs=dto_jobs,
+            total=total_count,
             limit=limit,
             offset=offset
         )
@@ -93,8 +130,26 @@ async def get_job(
             
         logs = await job_service.get_job_logs(job_id, db)
         
+        dto_job = Job(
+            job_id=job.job_id,
+            type=JobType((job.type.value if hasattr(job.type, "value") else str(job.type))),
+            status=JobStatus((job.status.value if hasattr(job.status, "value") else str(job.status))),
+            created_at=job.created_at or datetime.utcnow(),
+            started_at=job.started_at,
+            completed_at=job.completed_at,
+            progress=job.progress or 0,
+            current_step=job.current_step,
+            total_steps=job.total_steps,
+            result=job.result,
+            error_message=job.error_message,
+            retry_count=job.retry_count or 0,
+            parameters=job.parameters,
+            created_by=job.created_by,
+            tags=job.tags or [],
+        )
+
         return JobDetailResponse(
-            job=job,
+            job=dto_job,
             logs=logs
         )
     except HTTPException:
@@ -109,7 +164,6 @@ async def get_job(
 
 @router.post(
     "/{job_id}/cancel",
-    response_model=Job,
     summary="작업 취소",
     description="진행 중인 작업을 취소합니다."
 )
@@ -120,13 +174,13 @@ async def cancel_job(
 ):
     """작업 취소"""
     try:
-        job = await job_service.cancel_job(job_id, db)
-        if not job:
+        success = await job_service.cancel_job(job_id, db)
+        if not success:
             raise HTTPException(
                 status_code=404,
                 detail="Job not found"
             )
-        return job
+        return {"message": "Job cancelled successfully"}
     except HTTPException:
         raise
     except Exception as e:

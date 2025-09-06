@@ -77,16 +77,25 @@ async def verify_api_key(
 
 
 async def require_api_key(
-    x_api_key: str = Header(..., alias="X-API-Key"),
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    api_key: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
-) -> APIKey:
+) -> str:
     """API 키 필수 의존성"""
-    api_key_obj = await verify_api_key(x_api_key, db)
+    # Missing header -> 401 with clear message
+    provided_key = x_api_key if isinstance(x_api_key, str) else (api_key if isinstance(api_key, str) else None)
+    if not provided_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API key required"
+        )
+
+    api_key_obj = await verify_api_key(provided_key, db)
     
     if not api_key_obj:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired API key"
+            detail="Invalid API key"
         )
     
     # 일일 한도 확인
@@ -98,7 +107,7 @@ async def require_api_key(
             detail="Daily request limit exceeded"
         )
     
-    return api_key_obj
+    return provided_key
 
 
 async def require_permissions(

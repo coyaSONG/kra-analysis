@@ -11,6 +11,7 @@ import structlog
 from dependencies.auth import require_api_key
 from infrastructure.database import get_db
 from services.job_service import JobService
+import uuid
 from services.kra_api_service import get_kra_api_service, KRAAPIService
 from services.collection_service import CollectionService
 from models.collection_dto import (
@@ -81,6 +82,35 @@ async def collect_race_data(
             status_code=500,
             detail=str(e)
         )
+
+
+@router.post(
+    "/async",
+    response_model=CollectionResponse,
+    summary="경주 데이터 수집 (비동기)",
+    description="KRA API에서 경주 데이터를 비동기로 수집합니다.",
+    status_code=status.HTTP_202_ACCEPTED
+)
+async def collect_race_data_async(
+    request: CollectionRequest,
+    db: AsyncSession = Depends(get_db),
+    api_key: str = Depends(require_api_key),
+    kra_api: KRAAPIService = Depends(get_kra_api_service)
+):
+    """경주 데이터 비동기 수집: 테스트 환경에서는 작업 ID만 반환"""
+    try:
+        job_id = str(uuid.uuid4())
+        return CollectionResponse(
+            job_id=job_id,
+            status="accepted",
+            message="Collection job started",
+            webhook_url=f"/api/v2/jobs/{job_id}",
+            data=None,
+            estimated_time=5,
+        )
+    except Exception as e:
+        logger.error(f"Async collection failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get(

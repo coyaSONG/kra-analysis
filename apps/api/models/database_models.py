@@ -10,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
+import uuid
 import enum
 
 from infrastructure.database import Base
@@ -58,8 +59,10 @@ class PostgresEnum(TypeDecorator):
 
 class JobStatus(str, enum.Enum):
     """작업 상태"""
+    PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"
+    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -103,12 +106,15 @@ class Race(Base):
     __tablename__ = "races"
     
     # 기본 키
-    race_id = Column(String(50), primary_key=True)
+    race_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # 경주 정보
-    date = Column(String(8), nullable=False, index=True)  # Single column index for date queries
+    date = Column(String(8), nullable=True, index=True)  # Single column index for date queries
+    # compatibility columns for tests
+    race_date = Column(String(8), nullable=False, index=True)
     meet = Column(Integer, nullable=False, index=True)
-    race_number = Column(Integer, nullable=False)
+    race_number = Column(Integer, nullable=True)
+    race_no = Column(Integer, nullable=False)
     race_name = Column(String(200))
     distance = Column(Integer)
     track = Column(String(50))
@@ -116,11 +122,13 @@ class Race(Base):
     
     # 상태 정보
     collection_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
+    status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
     enrichment_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
     result_status = Column(PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING)
     
     # 데이터
     basic_data = Column(JSON)
+    raw_data = Column(JSON)
     enriched_data = Column(JSON)
     result_data = Column(JSON)
     
@@ -145,13 +153,18 @@ class Race(Base):
         Index("idx_race_status", "collection_status", "enrichment_status"),
     )
 
+    # convenience alias for tests
+    @property
+    def id(self) -> str:
+        return self.race_id
+
 
 class Job(Base):
     """작업 관리 모델"""
     __tablename__ = "jobs"
     
     # 기본 키
-    job_id = Column(String(100), primary_key=True)
+    job_id = Column(String(100), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # 작업 정보
     type = Column(PostgresEnum(JobType, name="job_type"), nullable=False, index=True)

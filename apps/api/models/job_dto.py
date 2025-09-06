@@ -20,8 +20,10 @@ class JobType(str, Enum):
 
 class JobStatus(str, Enum):
     """작업 상태"""
+    PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"
+    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"

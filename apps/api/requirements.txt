@@ -10,13 +10,14 @@ sqlalchemy==2.0.25
 asyncpg==0.29.0
 alembic==1.13.1
 psycopg2-binary==2.9.9
+aiosqlite==0.20.0
 
 # Redis
 redis==5.0.1
 aioredis==2.0.1
 
 # Celery 및 메시지 큐
-celery==5.3.4
+celery==5.4.0
 flower==2.0.1
 amqp==5.2.0
 kombu==5.3.4
@@ -53,3 +54,4 @@ black==23.12.1
 flake8==7.0.0
 mypy==1.8.0
 pre-commit==3.6.0
+requests==2.31.0

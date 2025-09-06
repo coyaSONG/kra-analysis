@@ -61,7 +61,7 @@ class JobService:
             
             logger.info(
                 "Job created",
-                job_id=job.id,
+                job_id=job.job_id,
                 job_type=job_type,
                 user_id=user_id
             )
@@ -75,7 +75,7 @@ class JobService:
     
     async def start_job(
         self,
-        job_id: int,
+        job_id: str,
         db: AsyncSession
     ) -> str:
         """
@@ -91,7 +91,7 @@ class JobService:
         try:
             # 작업 조회
             result = await db.execute(
-                select(Job).where(Job.id == job_id)
+                select(Job).where(Job.job_id == job_id)
             )
             job = result.scalar_one_or_none()
             
@@ -138,19 +138,19 @@ class JobService:
                 params["race_date"],
                 params["meet"],
                 params["race_no"],
-                job.id
+                job.job_id
             )
         
         elif job.type == "preprocess_race":
             return preprocess_race_data_task.delay(
                 params["race_id"],
-                job.id
+                job.job_id
             )
         
         elif job.type == "enrich_race":
             return enrich_race_data_task.delay(
                 params["race_id"],
-                job.id
+                job.job_id
             )
         
         elif job.type == "batch_collect":
@@ -158,7 +158,7 @@ class JobService:
                 params["race_date"],
                 params["meet"],
                 params["race_numbers"],
-                job.id
+                job.job_id
             )
         
         elif job.type == "full_pipeline":
@@ -166,7 +166,7 @@ class JobService:
                 params["race_date"],
                 params["meet"],
                 params["race_no"],
-                job.id
+                job.job_id
             )
         
         else:
@@ -174,18 +174,18 @@ class JobService:
     
     async def get_job(
         self,
-        job_id: int,
+        job_id: str,
         db: AsyncSession
     ) -> Optional[Job]:
         """작업 조회"""
         result = await db.execute(
-            select(Job).where(Job.id == job_id)
+            select(Job).where(Job.job_id == job_id)
         )
         return result.scalar_one_or_none()
     
     async def get_job_status(
         self,
-        job_id: int,
+        job_id: str,
         db: AsyncSession
     ) -> Dict[str, Any]:
         """
@@ -221,7 +221,7 @@ class JobService:
         progress = self._calculate_progress(job, celery_status)
         
         return {
-            "id": job.id,
+            "job_id": job.job_id,
             "type": job.type,
             "status": job.status,
             "progress": progress,
@@ -262,7 +262,7 @@ class JobService:
     
     async def get_job_logs(
         self,
-        job_id: int,
+        job_id: str,
         db: AsyncSession,
         limit: int = 100,
         offset: int = 0
@@ -271,7 +271,7 @@ class JobService:
         result = await db.execute(
             select(JobLog)
             .where(JobLog.job_id == job_id)
-            .order_by(desc(JobLog.created_at))
+            .order_by(desc(JobLog.timestamp))
             .limit(limit)
             .offset(offset)
         )
@@ -279,7 +279,7 @@ class JobService:
     
     async def add_job_log(
         self,
-        job_id: int,
+        job_id: str,
         level: str,
         message: str,
         data: Dict[str, Any],
@@ -291,7 +291,7 @@ class JobService:
                 job_id=job_id,
                 level=level,
                 message=message,
-                data=data
+                log_metadata=data
             )
             
             db.add(log)
@@ -350,7 +350,7 @@ class JobService:
     
     async def cancel_job(
         self,
-        job_id: int,
+        job_id: str,
         db: AsyncSession
     ) -> bool:
         """
@@ -369,13 +369,16 @@ class JobService:
             if not job:
                 return False
             
-            if job.status in ["completed", "failed", "cancelled"]:
+            if str(job.status) in ["completed", "failed", "cancelled"] or (
+                hasattr(job.status, "value") and job.status.value in ["completed", "failed", "cancelled"]
+            ):
                 return False
             
             # Celery 태스크 취소
-            if job.task_id:
+            task_id = getattr(job, "task_id", None)
+            if task_id:
                 try:
-                    celery_app.control.revoke(job.task_id, terminate=True)
+                    celery_app.control.revoke(task_id, terminate=True)
                 except Exception as e:
                     logger.warning(f"Failed to revoke Celery task: {e}")
             
