@@ -95,7 +95,7 @@ export default {
   errorOnDeprecated: true,
 
   // Watch mode configuration
-  watchman: true,
+  watchman: false,
   watchPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
