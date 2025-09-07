@@ -18,8 +18,8 @@ regexes = [
   "import\\.meta\\.env",
   "VITE_.*",
   "dotenv",
-  # 테스트 인자명(x_api_key=...) 허용
-  "^\s*x_api_key\s*=.*"
+  # 테스트 인자명(x_api_key=...) 허용 (공백/탭만 처리하여 TOML 이스케이프 회피)
+  "^[ \t]*x_api_key[ \t]*=.*"
 ]
 
 # 커스텀 룰 추가
