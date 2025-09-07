@@ -36,6 +36,9 @@ ENV/
 .coverage
 .pytest_cache/
 htmlcov/
+coverage/
+coverage.xml
+**/coverage.xml
 
 # Build
 dist/

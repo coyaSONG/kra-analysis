@@ -1,20 +1,25 @@
 # Gitleaks 설정 파일
 # KRA 프로젝트에 맞춤 설정
 
+# 전역 허용 목록 (false positive 완화)
 [allowlist]
-# 문서에서 예시로 보여주는 것은 허용
 paths = [
   "KRA_PUBLIC_API_GUIDE.md",
-  "docs/.*\\.md"
+  "docs/.*\\.md",
+  "apps/api/tests/.*",
+  "apps/collector/src/middleware/README\\.md",
+  "apps/collector/.env\\.example",
+  "apps/collector/.env\\.test"
 ]
-
-# 환경변수 참조는 허용
 regexes = [
+  # 일반적인 환경변수 접근 패턴 허용
   "process\\.env\\.",
   "os\\.getenv",
   "import\\.meta\\.env",
   "VITE_.*",
-  "dotenv"
+  "dotenv",
+  # 테스트 인자명(x_api_key=...) 허용
+  "^\s*x_api_key\s*=.*"
 ]
 
 # 커스텀 룰 추가
@@ -27,5 +32,6 @@ tags = ["api", "key", "kra"]
 [[rules]]
 id = "env-file"
 description = ".env 파일 내용 감지"
-regex = '''(?i)(KRA_API_KEY|SERVICE_KEY|API_KEY)\s*=\s*.+'''
+# 단어 경계와 라인 시작을 고려하여 코드 인자(x_api_key=...)는 제외
+regex = '''(?im)^\s*\b(KRA_API_KEY|SERVICE_KEY|API_KEY)\s*=\s*.+$'''
 tags = ["env", "config"]

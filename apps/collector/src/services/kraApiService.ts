@@ -217,11 +217,7 @@ export class KraApiService {
    * @param meet Meet code or name (e.g., '1' or '서울')
    * @param options Request options
    */
-  async getRaceTotals(
-    date: string,
-    meet?: string,
-    options: KraApiRequestOptions = {}
-  ): Promise<Api299Item[]> {
+  async getRaceTotals(date: string, meet?: string, options: KraApiRequestOptions = {}): Promise<Api299Item[]> {
     const endpoint = KraApiEndpoint.RACE_TOTALS;
     const params: Record<string, string> = {
       rc_date: date,
