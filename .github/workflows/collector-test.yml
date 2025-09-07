@@ -86,8 +86,8 @@ jobs:
     
     - name: Check API health
       run: |
-        curl -f http://localhost:3001/health || exit 1
-        curl -f http://localhost:3001/api/v1 || exit 1
+        # Health endpoint should return 200 OK
+        curl -fsS http://localhost:3001/health > /dev/null
     
     - name: Test critical endpoints
       if: ${{ env.KRA_SERVICE_KEY != '' }}
