@@ -228,7 +228,7 @@ class JobService:
             "created_at": job.created_at.isoformat(),
             "started_at": job.started_at.isoformat() if job.started_at else None,
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
-            "error": job.error,
+            "error": getattr(job, "error_message", None),
             "celery_status": celery_status,
             "parameters": job.parameters
         }
