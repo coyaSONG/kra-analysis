@@ -78,7 +78,7 @@ jobs:
         ENVIRONMENT: test
         PYTHONPATH: .
       run: |
-        pytest -v -m unit --tb=short -p no:cov
+        pytest -v -m unit --tb=short -o addopts=""
     
     - name: Run integration tests
       working-directory: ./apps/api
