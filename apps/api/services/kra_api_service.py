@@ -208,15 +208,6 @@ class KRAAPIService:
         """
         # get_race_info와 동일한 API 사용
         return await self.get_race_info(race_date, meet, race_no, use_cache)
-        
-        # 캐시 저장 (영구 - 결과는 변경되지 않음)
-        if use_cache:
-            try:
-                await self.cache_service.set(cache_key, result, ttl=None)
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
-        
-        return result
     
     async def get_horse_info(
         self,
