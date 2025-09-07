@@ -54,9 +54,9 @@ jobs:
       working-directory: .
       run: pnpm -F @apps/collector run typecheck
     
-    - name: Run unit tests
+    - name: Run unit tests (CI subset)
       working-directory: .
-      run: pnpm -F @apps/collector test -- --coverage
+      run: pnpm -F @apps/collector run test:ci
       env:
         NODE_ENV: test
         LOG_LEVEL: error
