@@ -37,3 +37,12 @@
 
 ## Agent-Specific Instructions
 - When interacting with this repository's owner or contributors, respond in Korean (한국어로 답변). Keep replies concise and professional.
+
+## API Guide
+- 주요 API URL 및 사용법: [KRA_PUBLIC_API_GUIDE.md](apps/collector/KRA_PUBLIC_API_GUIDE.md)을(를) 참조하세요.
+
+## Context7 Usage Triggers (short)
+- Action/library options unclear (e.g., `actions/setup-node`, `codecov`, `pnpm/action-setup`, `codeql`, `gitleaks`).
+- Framework specifics needed: FastAPI, pytest (asyncio/timeout/coverage), python-jose (JWT), httpx, redis-py.
+- Version/deprecation checks: Actions v3→v4, runner image changes, major lib upgrades.
+- Node CI strategy validation: ESM/ts-jest, pnpm workspaces, cache keys, lockfile behavior.
