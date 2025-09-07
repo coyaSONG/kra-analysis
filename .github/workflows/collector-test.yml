@@ -10,6 +10,7 @@ on:
     branches: [ main ]
     paths:
       - 'apps/collector/**'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -32,8 +33,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: apps/collector/package-lock.json
     
     - name: Install dependencies
       run: npm ci
@@ -68,8 +67,10 @@ jobs:
         LOG_LEVEL: error
     
     - name: Run E2E API tests
-      run: node test-api-final.js
-      continue-on-error: false
+      if: ${{ secrets.KRA_SERVICE_KEY != '' }}
+      env:
+        KRA_SERVICE_KEY: ${{ secrets.KRA_SERVICE_KEY }}
+      run: npm run test:kra
     
     - name: Check API health
       run: |
@@ -77,6 +78,9 @@ jobs:
         curl -f http://localhost:3001/api/v1 || exit 1
     
     - name: Test critical endpoints
+      if: ${{ secrets.KRA_SERVICE_KEY != '' }}
+      env:
+        KRA_SERVICE_KEY: ${{ secrets.KRA_SERVICE_KEY }}
       run: |
         # Test Race API
         curl -f "http://localhost:3001/api/v1/races/20240106/서울/1" || exit 1
