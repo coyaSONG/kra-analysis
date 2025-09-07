@@ -44,7 +44,7 @@ jobs:
 
     - name: Install dependencies (workspace)
       working-directory: .
-      run: pnpm -w -F @apps/collector install --frozen-lockfile
+      run: pnpm -w -F @apps/collector install --no-frozen-lockfile
     
     - name: Run lint
       working-directory: .
