@@ -176,6 +176,42 @@ describe('KRA API Integration Tests', () => {
     });
   });
 
+  // New: API299 integration tests
+  describe('API299 - Race Totals (Statistics)', () => {
+    it('should fetch race totals successfully', async () => {
+      if (!process.env.KRA_SERVICE_KEY) return;
+      if (process.env.KRA_API_BASE_URL && /mock-kra-api/.test(process.env.KRA_API_BASE_URL)) return;
+
+      const result = await kraApiService.getRaceTotals(
+        TEST_DATA.date,
+        TEST_DATA.meetCode
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+
+      if (result.length > 0) {
+        const first = result[0] as any;
+        // Minimal stable fields
+        expect(first).toHaveProperty('rcDate');
+        expect(first).toHaveProperty('rcNo');
+      }
+    }, 15000);
+
+    it('should handle invalid date gracefully', async () => {
+      if (!process.env.KRA_SERVICE_KEY) return;
+      if (process.env.KRA_API_BASE_URL && /mock-kra-api/.test(process.env.KRA_API_BASE_URL)) return;
+
+      const result = await kraApiService.getRaceTotals(
+        '20000101',
+        TEST_DATA.meetCode
+      );
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    }, 15000);
+  });
+
   describe('Rate Limiting', () => {
     it('should handle rate limiting appropriately', async () => {
       // Make multiple rapid requests
