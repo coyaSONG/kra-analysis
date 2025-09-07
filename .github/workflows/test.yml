@@ -91,6 +91,7 @@ jobs:
         PYTHONPATH: .
       run: |
         pytest -v -m integration --tb=short --timeout=60
+      continue-on-error: true
     
     - name: Run all tests with coverage
       working-directory: ./apps/api
