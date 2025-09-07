@@ -488,12 +488,12 @@ export interface EnrichedHorseEntry extends Api214Item {
 /**
  * Union type for all KRA API response types
  */
-export type KraApiResponseUnion = Api214Response | Api8_2Response | Api12_1Response | Api19_1Response;
+export type KraApiResponseUnion = Api214Response | Api8_2Response | Api12_1Response | Api19_1Response | Api299Response;
 
 /**
  * Union type for all KRA API item types
  */
-export type KraApiItemUnion = Api214Item | Api8_2Item | Api12_1Item | Api19_1Item;
+export type KraApiItemUnion = Api214Item | Api8_2Item | Api12_1Item | Api19_1Item | Api299Item;
 
 /**
  * Enum for KRA API endpoints
@@ -504,6 +504,7 @@ export enum KraApiEndpoint {
   HORSE_INFO = 'API8_2/raceHorseInfo_2',
   JOCKEY_INFO = 'API12_1/jockeyInfo_1',
   TRAINER_INFO = 'API19_1/trainerInfo_1',
+  RACE_TOTALS = 'API299/Race_Result_total',
 }
 
 /**
@@ -550,4 +551,42 @@ export function isApi19_1Response(response: KraApiResponseUnion): response is Ap
   const item = response.response.body.items.item;
   const firstItem = Array.isArray(item) ? item[0] : item;
   return Boolean(firstItem && 'stDate' in firstItem && 'plcRateT' in firstItem);
+}
+
+// ============================================================================
+// API299 - Race Result Totals (경주결과 종합)
+// ============================================================================
+
+/**
+ * API299 Race Totals Response Type
+ */
+export type Api299Response = KraApiResponse<Api299Item>;
+
+/**
+ * Simplified item type for API299 responses
+ * Note: API299 returns many statistical fields; we capture a stable subset
+ */
+export interface Api299Item {
+  /** 말 이름 */
+  hrName?: string;
+  /** 말 번호 */
+  hrNo?: string;
+  /** 기수 이름 */
+  jkName?: string;
+  /** 기수 번호 */
+  jkNo?: string;
+  /** 조교사 이름 */
+  trName?: string;
+  /** 조교사 번호 */
+  trNo?: string;
+  /** 경주일자 */
+  rcDate?: string | number;
+  /** 경주번호 */
+  rcNo?: string | number;
+  /** 경마장 코드/이름 */
+  meet?: string;
+  /** 최종 착순 */
+  ord?: string | number;
+  /** 경주 기록(초) */
+  rcTime?: string | number;
 }

@@ -24,47 +24,65 @@
 - 완전 적중률 3.7% → 20% 달성 (5.4배)
 - JSON 오류 20% → 0% 완전 해결
 
-## 📁 프로젝트 구조
+## 📁 프로젝트 구조 (Monorepo)
 
 ```
 kra-analysis/
-├── api/                      # Python FastAPI 서버 (비즈니스 로직, AI 예측)
-├── collector/                # Node.js 데이터 수집 서버
-├── scripts/
-│   ├── race_collector/        # 데이터 수집 모듈
-│   ├── evaluation/           # 평가 시스템 v3
-│   └── prompt_improvement/    # 프롬프트 개선 도구
-├── data/
-│   ├── races/                # 경주 데이터
-│   ├── cache/                # API 캐시
-│   └── prompt_evaluation/     # 평가 결과
-├── prompts/                  # AI 프롬프트 템플릿
-├── docs/                     # 프로젝트 문서
-└── examples/                 # API 응답 예시
+├─ apps/
+│  ├─ api/                     # FastAPI 서버 (v2, Python 3.11+)
+│  │  ├─ routers/ services/ models/ middleware/ infrastructure/ tasks/
+│  │  └─ tests/                # unit / integration / utils
+│  └─ collector/               # 데이터 수집 서버 (TypeScript Node ESM)
+│     ├─ src/                  # routes / controllers / services / middleware / utils
+│     └─ tests/                # unit / integration / e2e
+├─ packages/
+│  ├─ scripts/                 # 수집·전처리·평가·프롬프트 개선 스크립트
+│  ├─ shared-types/            # 공용 TS 타입
+│  ├─ typescript-config/       # TS 공통 설정
+│  └─ eslint-config/           # ESLint 공통 설정
+├─ docs/                       # 설계·아키텍처·가이드 문서
+├─ examples/                   # KRA API 응답 샘플
+├─ .github/workflows/          # CI 워크플로우
+└─ turbo.json, pnpm-workspace.yaml, package.json
 ```
 
-## 🛠️ 설치 및 실행
+참고: API 서버 실행 시 `./data`, `./logs`, `./prompts` 등 런타임 디렉터리는 애플리케이션 시작 시 자동 생성됩니다.
 
-### 환경 설정
+## 🛠️ 설치 및 실행 (Monorepo)
+
+### 1) 의존성 설치
 
 ```bash
-# 저장소 클론
-git clone https://github.com/coyaSONG/kra-analysis.git
-cd kra-analysis
-
-# 환경 변수 설정
-echo "KRA_SERVICE_KEY=your_api_key_here" > .env
-
-# Node.js 데이터 수집 서버
-cd collector
-npm install
-
-# Python API 서버
-cd ../api
-pip install -r requirements.txt
+pnpm i
 ```
 
-### 데이터 수집
+### 2) 개발 서버 실행
+
+```bash
+# 전체 앱 동시 실행 (Turbo)
+pnpm dev
+
+# Collector만 실행
+pnpm -w -F @apps/collector dev
+
+# API만 실행 (uv 기반)
+pnpm -w -F @apps/api dev
+```
+
+### 3) 테스트
+
+```bash
+# 전체 워크스페이스 테스트
+pnpm test
+
+# Collector만
+pnpm -w -F @apps/collector test
+
+# API만 (직접 실행)
+cd apps/api && uv run pytest -q
+```
+
+### 4) 데이터 수집
 
 ```bash
 # 기본 데이터 수집 (API214_1)
@@ -74,7 +92,7 @@ node scripts/race_collector/collect_and_preprocess.js 20250608 1
 node scripts/race_collector/enrich_race_data.js 20250608 1
 ```
 
-### 예측 실행
+### 5) 예측 실행
 
 ```bash
 # 프롬프트 평가 (최신 v3 시스템)
@@ -105,10 +123,9 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 
 ## 🛠 기술 스택
 
-- Python 3.8+ (FastAPI, AI 예측)
-- Node.js 18+ (데이터 수집)
-- Claude API (예측 모델)
-- KRA 공공 데이터 API
+- Python 3.11+ (FastAPI, AI 예측)
+- Node.js 18+ (데이터 수집, ESM)
+- Claude API/CLI, KRA 공공 데이터 API
 
 ## 🏗️ 아키텍처
 
@@ -126,19 +143,30 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 
 ## 📚 문서
 
-### 핵심 문서
+- KRA 공공 API 가이드: `apps/collector/KRA_PUBLIC_API_GUIDE.md`
+- 통합 문서 인덱스: `docs/README.md`
+  - 1) 시스템 개요/아키텍처: `docs/01-overview-architecture.md`
+  - 2) API v2 가이드: `docs/02-api-v2-guide.md`
+  - 3) 데이터 모델/구조: `docs/03-data-models.md`
+  - 4) 프롬프트/평가: `docs/04-prompt-and-evaluation.md`
+  - 5) 로드맵/개발 표준: `docs/05-roadmap-and-standards.md`
 
-- [KRA API 가이드](KRA_PUBLIC_API_GUIDE.md) - KRA 공공 API 상세 사용법
-- [프로젝트 개요](docs/project-overview.md)
-- [데이터 보강 시스템](docs/data-enrichment-system.md)
-- [보강된 데이터 구조](docs/enriched-data-structure.md)
+## ✅ CI / 품질 체크
 
-### 분석 및 전략
+- GitHub Actions 워크플로우
+  - Python(API v2) 테스트: `.github/workflows/test.yml` — Postgres/Redis 컨테이너로 유닛/통합/커버리지 실행, Codecov 업로드
+  - Collector(Node) 테스트: `.github/workflows/collector-test.yml` — ESM/ts-jest, 린트/타입체크/CI 서브셋 테스트, 필요 시 E2E
+  - 코드 품질: `.github/workflows/code-quality.yml` — Black/isort/Flake8/Pylint, ESLint/Prettier 체크
+  - 보안 스캔: `.github/workflows/security-scan.yml` — Gitleaks, Safety, npm audit-ci, CodeQL, 커스텀 시크릿/`.env`/`data/` 검사
 
-- [API 분석](docs/api-analysis.md)
-- [데이터 구조](docs/data-structure.md)
-- [프롬프트 개발 전략](docs/prompt-development-strategy.md)
-- [재귀 개선 결과](docs/recursive-improvement-results.md)
+## 🔒 보안 / 환경설정
+
+- 비밀 관리: `.env`는 커밋 금지. 예시는 `apps/api/.env.example`, `apps/collector/.env.example` 참고
+- 시크릿 스캔: 루트 `.gitleaks.toml` 구성 + Gitleaks 액션으로 PR 차단
+- 환경 변수 요약
+  - API: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `PORT(기본 8001)`, `VALID_API_KEYS`, `KRA_API_KEY`
+  - Collector: `PORT(기본 3001)`, `KRA_SERVICE_KEY` 등
+- 레이트리밋: API 기본 100req/분(`RateLimitMiddleware`), 필요 시 env로 비활성화/조정 가능
 
 ## 🔑 핵심 발견사항
 
@@ -159,4 +187,3 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 ## 참고: 기여자 가이드
 
 프로젝트 구조, 빌드/테스트 명령, 코드 스타일, 보안/설정 팁은 저장소 루트의 AGENTS.md(Repository Guidelines)를 참고하세요.
-

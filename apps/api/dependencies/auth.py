@@ -285,7 +285,11 @@ def require_resource_access(
         db: AsyncSession = Depends(get_db)
     ):
         # Get api_key_obj from require_api_key
-        api_key_obj = await require_api_key(request.headers.get("X-API-Key", ""), db)
+        # Resolve API key object for permission checks
+        api_key_value = request.headers.get("X-API-Key", "")
+        api_key_obj = await verify_api_key(api_key_value, db)
+        if not api_key_obj:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
         
         resource_id = request.path_params.get(resource_id_param)
         

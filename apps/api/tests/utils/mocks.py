@@ -204,6 +204,12 @@ class MockRedisClient:
         """Mock flush database operation"""
         self._data.clear()
 
+    # Additional methods used by APIKeyRateLimiter
+    async def ttl(self, key: str) -> int:
+        """Return remaining TTL; mock as full window when not tracked"""
+        # Not tracking real TTL; return a positive number to simulate active key
+        return 60
+
 
 class MockCeleryTask:
     """Mock Celery task for testing"""

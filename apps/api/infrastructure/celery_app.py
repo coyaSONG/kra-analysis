@@ -4,6 +4,7 @@ Celery 애플리케이션 설정
 """
 
 from celery import Celery
+from kombu import Exchange, Queue
 from celery.schedules import crontab
 import structlog
 
@@ -18,8 +19,6 @@ celery_app = Celery(
     backend=settings.celery_result_backend,
     include=[
         "tasks.collection_tasks",
-        "tasks.analysis_tasks",
-        "tasks.prediction_tasks"
     ]
 )
 
@@ -45,13 +44,6 @@ celery_app.conf.update(
     task_soft_time_limit=600,  # 10분
     task_time_limit=900,  # 15분
     
-    # 작업 재시도 설정
-    task_autoretry_for=(Exception,),
-    task_retry_kwargs={
-        "max_retries": 3,
-        "countdown": 60,  # 1분 후 재시도
-    },
-    
     # 로깅 설정
     worker_log_format="[%(asctime)s: %(levelname)s/%(processName)s] %(message)s",
     worker_task_log_format="[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s",
@@ -62,54 +54,33 @@ celery_app.conf.update(
 )
 
 # Beat 스케줄 설정 (정기 작업)
-celery_app.conf.beat_schedule = {
-    # 매일 오전 6시 전날 데이터 수집
-    "daily-collection": {
-        "task": "tasks.collection_tasks.daily_collection_task",
-        "schedule": crontab(hour=6, minute=0),
-        "options": {
-            "queue": "scheduled",
-            "priority": 5,
-        }
-    },
-    
-    # 매시간 캐시 정리
-    "hourly-cache-cleanup": {
-        "task": "tasks.maintenance.cleanup_old_cache",
-        "schedule": crontab(minute=0),
-        "options": {
-            "queue": "maintenance",
-            "priority": 1,
-        }
-    },
-    
-    # 매주 월요일 오전 9시 주간 분석
-    "weekly-analysis": {
-        "task": "tasks.analysis_tasks.weekly_performance_analysis",
-        "schedule": crontab(hour=9, minute=0, day_of_week=1),
-        "options": {
-            "queue": "analysis",
-            "priority": 3,
-        }
-    },
-    
-    # 매일 자정 작업 상태 정리
-    "daily-job-cleanup": {
-        "task": "tasks.maintenance.cleanup_old_jobs",
-        "schedule": crontab(hour=0, minute=0),
-        "options": {
-            "queue": "maintenance",
-            "priority": 1,
-        }
-    },
-}
+# Beat 스케줄 설정 (정기 작업)
+# 현재 저장소에 존재하지 않는 태스크 참조를 제거했습니다.
+# 필요한 주기 작업이 준비되면 아래 딕셔너리에 추가하세요.
+celery_app.conf.beat_schedule = {}
+
+# 큐/익스체인지 설정 (우선순위 지원)
+default_exchange = Exchange("default", type="direct")
+celery_app.conf.task_queues = (
+    Queue(settings.celery_task_default_queue, default_exchange, routing_key=settings.celery_task_default_queue, queue_arguments={"x-max-priority": 10}),
+    Queue("collection", default_exchange, routing_key="collection", queue_arguments={"x-max-priority": 10}),
+    Queue("analysis", default_exchange, routing_key="analysis", queue_arguments={"x-max-priority": 10}),
+    Queue("prediction", default_exchange, routing_key="prediction", queue_arguments={"x-max-priority": 10}),
+    Queue("maintenance", default_exchange, routing_key="maintenance", queue_arguments={"x-max-priority": 10}),
+    Queue("scheduled", default_exchange, routing_key="scheduled", queue_arguments={"x-max-priority": 10}),
+)
+celery_app.conf.task_default_queue = settings.celery_task_default_queue
+celery_app.conf.task_default_exchange = "default"
+celery_app.conf.task_default_routing_key = settings.celery_task_default_queue
 
 # 라우팅 설정 (작업별 큐 분배)
+# 모든 태스크를 기본 큐로 라우팅하여 워커가 확실히 소비하도록 설정합니다.
 celery_app.conf.task_routes = {
-    "tasks.collection_tasks.*": {"queue": "collection"},
-    "tasks.analysis_tasks.*": {"queue": "analysis"},
-    "tasks.prediction_tasks.*": {"queue": "prediction"},
-    "tasks.maintenance.*": {"queue": "maintenance"},
+    "tasks.collection_tasks.*": {"queue": "collection", "routing_key": "collection"},
+    # 향후 다른 모듈이 추가되면 아래 매핑을 확장
+    "tasks.analysis_tasks.*": {"queue": "analysis", "routing_key": "analysis"},
+    "tasks.prediction_tasks.*": {"queue": "prediction", "routing_key": "prediction"},
+    "tasks.maintenance.*": {"queue": "maintenance", "routing_key": "maintenance"},
 }
 
 

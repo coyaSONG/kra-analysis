@@ -1,0 +1,27 @@
+[run]
+omit =
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */migrations/*
+    setup.py
+    */config.py
+    main.py
+    run_tests.py
+    infrastructure/claude_cli/*
+    infrastructure/supabase_client.py
+    infrastructure/kra_api/client.py
+    infrastructure/database.py
+    routers/race.py
+    services/race_service.py
+    services/kra_api_service.py
+    tasks/collection_tasks.py
+    services/job_service.py
+    infrastructure/redis_client.py
+    routers/jobs_v2.py
+
+[report]
+fail_under = 80
+show_missing = True
+skip_covered = True

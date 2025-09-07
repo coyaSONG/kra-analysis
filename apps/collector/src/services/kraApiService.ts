@@ -14,6 +14,8 @@ import type {
   Api8_2Item,
   Api12_1Item,
   Api19_1Item,
+  Api299Response,
+  Api299Item,
 } from '../types/kra-api.types.js';
 import { KraApiEndpoint, KraMeet } from '../types/kra-api.types.js';
 import { ExternalApiError, RateLimitError } from '../types/index.js';
@@ -202,6 +204,61 @@ export class KraApiService {
 
       throw new ExternalApiError(
         `Failed to fetch horse detail: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'KRA_API',
+        502,
+        endpoint
+      );
+    }
+  }
+
+  /**
+   * Fetch race totals/statistics from API299
+   * @param date Race date (YYYYMMDD)
+   * @param meet Meet code or name (e.g., '1' or '서울')
+   * @param options Request options
+   */
+  async getRaceTotals(date: string, meet?: string, options: KraApiRequestOptions = {}): Promise<Api299Item[]> {
+    const endpoint = KraApiEndpoint.RACE_TOTALS;
+    const params: Record<string, string> = {
+      rc_date: date,
+      pageNo: '1',
+      numOfRows: '100',
+    };
+    if (meet) params.meet = meet;
+
+    logger.info('Fetching race totals (API299)', { date, meet, endpoint });
+
+    try {
+      const response = await this.fetchWithRetry<Api299Response>(endpoint, params, options);
+
+      if (!response.response || response.response.header.resultCode !== '00') {
+        throw new ExternalApiError(
+          `KRA API returned error: ${response.response?.header?.resultMsg || 'Unknown error'}`,
+          'KRA_API',
+          502,
+          endpoint,
+          response.response?.header?.resultCode,
+          response.response?.header?.resultMsg
+        );
+      }
+
+      const items = response.response.body.items.item;
+      const data = Array.isArray(items) ? items : items ? [items] : [];
+
+      logger.info('Race totals fetched successfully', {
+        date,
+        meet,
+        count: data.length,
+      });
+
+      return data as Api299Item[];
+    } catch (error) {
+      logger.error('Failed to fetch race totals', { error, date, meet });
+      if (error instanceof ExternalApiError || error instanceof RateLimitError) {
+        throw error;
+      }
+      throw new ExternalApiError(
+        `Failed to fetch race totals: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'KRA_API',
         502,
         endpoint
