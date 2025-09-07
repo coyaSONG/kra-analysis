@@ -19,6 +19,11 @@
 export KRA_SERVICE_KEY="your_service_key_here"
 ```
 
+### 3. 표기/인코딩 주의
+- 엔드포인트별 서비스키 파라미터 명칭이 상이합니다. 일부는 `serviceKey`, 일부는 `ServiceKey`를 사용합니다. 본 문서의 각 API 섹션 표에 명시된 실제 명칭을 그대로 사용하세요.
+- 한글 파라미터(예: `jk_name`, `hr_name`, `tr_name`)는 URL 인코딩이 필요합니다.
+  - 예: `const q = encodeURIComponent('김용근'); const url = \`...&jk_name=${q}\``
+
 ---
 
 ## 🌐 API 목록
@@ -35,6 +40,7 @@ export KRA_SERVICE_KEY="your_service_key_here"
 **API 이름**: 한국마사회 경마시행당일 경주결과 상세  
 **Base URL**: `https://apis.data.go.kr/B551015/API214_1`  
 **엔드포인트**: `/RaceDetailResult_1`
+**HTTP 메서드**: GET
 
 #### 📋 요청 파라미터
 | 파라미터명 | 필수여부 | 타입 | 설명 | 예시 |
@@ -188,6 +194,7 @@ const xmlText = await xmlResponse.text();
 **API 이름**: 한국마사회 경마시행당일 경주결과 종합  
 **Base URL**: `https://apis.data.go.kr/B551015/API299`  
 **엔드포인트**: `/Race_Result_total`
+**HTTP 메서드**: GET
 
 #### 📋 요청 파라미터
 | 파라미터명 | 필수여부 | 타입 | 설명 | 예시 |
@@ -294,6 +301,7 @@ const careerYears = 2025 - parseInt('20050504'.slice(0, 4)); // 20년 경력
 **API 이름**: 한국마사회 기수정보 조회  
 **Base URL**: `https://apis.data.go.kr/B551015/API12_1`  
 **엔드포인트**: `/jockeyInfo_1`
+**HTTP 메서드**: GET
 
 #### 📋 요청 파라미터
 | 파라미터명 | 필수여부 | 타입 | 설명 | 예시 |
@@ -353,6 +361,7 @@ https://apis.data.go.kr/B551015/API12_1/jockeyInfo_1?serviceKey={KEY}&numOfRows=
 **API 이름**: 한국마사회 경주마 상세정보  
 **Base URL**: `https://apis.data.go.kr/B551015/API8_2`  
 **엔드포인트**: `/raceHorseInfo_2`
+**HTTP 메서드**: GET
 
 #### 📋 요청 파라미터
 | 파라미터명 | 필수여부 | 타입 | 설명 | 예시 |
@@ -500,6 +509,7 @@ if (jsonData.response.body.items) {
 **API 이름**: 한국마사회 조교사 상세정보  
 **Base URL**: `https://apis.data.go.kr/B551015/API19_1`  
 **엔드포인트**: `/trainerInfo_1`
+**HTTP 메서드**: GET
 
 #### 📋 요청 파라미터
 | 파라미터명 | 필수여부 | 타입 | 설명 | 예시 |
@@ -675,14 +685,13 @@ const jsonData = await response.json(); // 바로 JSON 사용 가능
 #### XML 응답 처리 (기본값)
 ```javascript
 // _type 파라미터 생략 시 XML 응답
-import { parseString } from 'xml2js';
+import { parseStringPromise } from 'xml2js';
 
 const xmlText = await response.text();
-const jsonResult = await new Promise((resolve, reject) => {
-  parseString(xmlText, (err, result) => {
-    if (err) reject(err);
-    else resolve(result);
-  });
+const jsonResult = await parseStringPromise(xmlText, {
+  explicitArray: false,
+  ignoreAttrs: true,
+  trim: true,
 });
 ```
 
@@ -714,6 +723,63 @@ const jsonResult = await new Promise((resolve, reject) => {
 </response>
 ```
 
+```json
+{
+  "response": {
+    "header": {
+      "resultCode": "00",
+      "resultMsg": "NORMAL SERVICE."
+    },
+    "body": {
+      "items": {
+        "item": {
+          "...": "실제 데이터"
+        }
+      },
+      "numOfRows": 10,
+      "pageNo": 1,
+      "totalCount": 100
+    }
+  }
+}
+```
+
+### 4. 파라미터 인코딩 가이드
+- 한글 및 특수문자를 포함한 파라미터는 `encodeURIComponent`로 인코딩하세요.
+```javascript
+const name = encodeURIComponent('김용근');
+const url = `https://apis.data.go.kr/B551015/API12_1/jockeyInfo_1?serviceKey=${key}&numOfRows=100&pageNo=1&jk_name=${name}&_type=json`;
+```
+
+### 5. cURL 호출 예시
+```bash
+# JSON 응답 예시 (한글 파라미터는 --data-urlencode 사용)
+curl -G 'https://apis.data.go.kr/B551015/API12_1/jockeyInfo_1' \
+  --data-urlencode "serviceKey=$KRA_SERVICE_KEY" \
+  --data-urlencode "numOfRows=100" \
+  --data-urlencode "pageNo=1" \
+  --data-urlencode "jk_name=김용근" \
+  --data-urlencode "_type=json"
+
+# XML 응답 예시
+curl -G 'https://apis.data.go.kr/B551015/API214_1/RaceDetailResult_1' \
+  --data-urlencode "serviceKey=$KRA_SERVICE_KEY" \
+  --data-urlencode "numOfRows=50" \
+  --data-urlencode "pageNo=1" \
+  --data-urlencode "meet=1" \
+  --data-urlencode "rc_date=20250606" \
+  --data-urlencode "rc_no=1"
+```
+
+### 6. 데이터 타입 주의
+- KRA JSON 응답은 숫자 필드가 문자열로 반환되는 경우가 있습니다. 파싱 시 숫자 변환을 고려하세요.
+- 본 문서의 타입 표기는 “권장 사용 타입”으로 이해하시고, 실제 응답 타입은 샘플/실응답을 기준으로 처리하세요.
+
+### 7. 페이지네이션 팁
+- `pageNo`, `numOfRows`, `totalCount`를 활용하여 페이지 종료 조건을 판단하세요.
+  - 예: `pageNo * numOfRows >= totalCount`이면 다음 페이지 요청 생략.
+  - 또는 현재 페이지 `items`가 비어 있으면 종료.
+
 ### 3. 오류 처리
 - `resultCode`: "00"이면 정상, 그 외는 오류
 - `resultMsg`: 오류 메시지
@@ -732,8 +798,9 @@ const jsonResult = await new Promise((resolve, reject) => {
 - 실시간 데이터가 아님 (배치 처리)
 
 ### 3. 응답 형식
-- 모든 응답은 XML 형태
-- JSON 변환 처리 필요
+- 기본값은 XML
+- `_type=json`으로 JSON 직접 수신 가능(권장)
+- 본 문서의 예시는 JSON 사용 기준으로 작성되었습니다.
 
 ### 4. 경마장 코드
 - 1: 서울
@@ -803,7 +870,7 @@ const recentFormBonus = jockeyWinRateThisYear > jockeyWinRate ? 10 : 0;
 ### 완전한 Node.js 예시
 ```javascript
 import fetch from 'node-fetch';
-import { parseString } from 'xml2js';
+import { parseStringPromise } from 'xml2js';
 
 async function getRaceData(apiKey, raceDate, raceNumber) {
   try {
@@ -816,15 +883,10 @@ async function getRaceData(apiKey, raceDate, raceNumber) {
     
     const xmlText = await response.text();
     
-    return new Promise((resolve, reject) => {
-      parseString(xmlText, {
-        explicitArray: false,
-        ignoreAttrs: true,
-        trim: true
-      }, (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
+    return await parseStringPromise(xmlText, {
+      explicitArray: false,
+      ignoreAttrs: true,
+      trim: true,
     });
   } catch (error) {
     console.error('API 호출 실패:', error.message);
@@ -917,7 +979,7 @@ class BettingStrategy {
 
 ## 📝 버전 정보
 
-- **문서 버전**: 2.2
-- **최종 업데이트**: 2025.06.08
+- **문서 버전**: 2.3
+- **최종 업데이트**: 2025.09.06
 - **검증된 API**: API214_1, API299, API12_1, API8_2, API19_1
-- **새로운 기능**: API8_2 (경주마 상세정보), API19_1 (조교사 상세정보) 추가 및 실제 응답 검증
+- **변경 사항**: 응답 형식 안내 정정(JSON 권장 명시), 서비스키 표기/한글 인코딩 주의 추가, 각 API에 HTTP 메서드 표기, XML 파싱 예시(ESM) 업데이트, 공통 JSON 구조·cURL 예시·타입/페이지네이션 팁 추가

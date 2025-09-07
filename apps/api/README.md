@@ -1,6 +1,6 @@
-# KRA Race Prediction REST API
+# KRA Race Prediction REST API (v2)
 
-FastAPI 기반 경마 예측 시스템 REST API 서버입니다.
+FastAPI 기반 경마 데이터 수집·작업 관리 REST API 서버(v2)입니다. v2는 `/api/v2/collection` 및 `/api/v2/jobs` 네임스페이스를 제공합니다.
 
 ## 기술 스택
 
@@ -12,7 +12,7 @@ FastAPI 기반 경마 예측 시스템 REST API 서버입니다.
 
 ## 설치 및 설정
 
-### uv 사용 (권장) 🚀
+### 실행 (uv 권장) 🚀
 
 [uv](https://github.com/astral-sh/uv)는 Rust로 작성된 초고속 Python 패키지 매니저입니다.
 
@@ -20,20 +20,24 @@ FastAPI 기반 경마 예측 시스템 REST API 서버입니다.
 # uv 설치
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 의존성 설치 (가상환경 자동 생성)
-cd api
-uv sync
+# 의존성 설치 (프로젝트 루트 → 앱 디렉토리)
+cd apps/api
+uv sync && uv sync --dev
 
-# 개발 환경 설정
-uv sync --dev
+# 개발 서버 (기본 8001)
+uv run uvicorn main_v2:app --reload --port 8001
+```
 
-# 서버 실행
-uv run uvicorn api.main:app --reload
+모노레포 스크립트로도 실행할 수 있습니다:
+
+```bash
+# 저장소 루트에서 실행
+pnpm -w -F @apps/api dev   # uvicorn main_v2:app --port 8001
 ```
 
 자세한 uv 사용법은 [README-uv.md](./README-uv.md)를 참조하세요.
 
-### 기존 pip 사용
+### pip 사용 (대안)
 
 ```bash
 # 가상환경 생성 및 활성화
@@ -44,34 +48,24 @@ source venv/bin/activate  # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 3. 환경 변수 설정
+### 환경 변수 설정
 
 `.env` 파일을 생성하고 다음 내용을 추가합니다:
 
-```env
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # Optional
+`.env.example`를 참고하여 `.env`를 생성하세요. 필수/주요 항목:
 
-# KRA API
-KRA_API_KEY=your_kra_api_key
+- `SECRET_KEY` (필수)
+- `DATABASE_URL` (예: `postgresql+asyncpg://user:pass@localhost:5432/kra`)
+- `REDIS_URL` (예: `redis://localhost:6379/0`)
+- `PORT` (개발 기본 8001)
+- `VALID_API_KEYS` (선택: JSON 배열 또는 콤마 구분, 미설정 시 개발 모드에서 `test-api-key-123456789` 기본값 사용)
+- `KRA_API_KEY` (선택: 공공데이터 API 키)
 
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# Security
-SECRET_KEY=your-secret-key-here-change-in-production
-
-# Claude Code CLI
-CLAUDE_CODE_PATH=/usr/local/bin/claude-code  # Claude Code CLI 경로
-```
-
-### 4. Supabase 데이터베이스 설정
+### 데이터베이스 설정 (선택)
 
 Supabase 대시보드에서 SQL 에디터를 열고 `migrations/001_initial_schema.sql` 파일의 내용을 실행합니다.
 
-### 5. 서버 실행
+### 서버 실행
 
 ```bash
 # 개발 모드
@@ -81,62 +75,97 @@ python -m uvicorn api.main:app --reload
 python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-## API 엔드포인트
+## API 엔드포인트 (v2)
 
 ### 기본 정보
 
-- Base URL: `http://localhost:8000`
-- API Docs: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
+- Base URL(개발): `http://localhost:8001`
+- Docs: `http://localhost:8001/docs`, ReDoc: `http://localhost:8001/redoc`
+- 인증: 모든 보호 엔드포인트는 헤더 `X-API-Key` 필요
 
-### 주요 엔드포인트
+### Collection
 
-#### 1. 경주 데이터 수집
+1) 경주 데이터 수집 (동기)
 
-```bash
-# 특정 날짜의 경주 수집
-POST /api/v1/races/collect
+```
+POST /api/v2/collection/
+Headers: X-API-Key: test-api-key-123456789
+Body:
 {
-  "date": "20250608",
+  "date": "20250622",
   "meet": 1,
-  "race_no": null  # null이면 전체 경주
+  "race_numbers": [1,2,3],
+  "options": { "enrich": true, "get_results": false }
 }
 ```
 
-#### 2. 경주 예측
+예시(curl)
 
 ```bash
-# 예측 생성
-POST /api/v1/predictions
+curl -X POST http://localhost:8001/api/v2/collection/ \
+  -H 'Content-Type: application/json' \
+  -H 'X-API-Key: test-api-key-123456789' \
+  -d '{"date":"20250622","meet":1,"race_numbers":[1,2,3]}'
+```
+
+2) 경주 데이터 수집 (비동기)
+
+```
+POST /api/v2/collection/async
+Headers: X-API-Key: ...
+```
+
+응답 예시
+
+```json
 {
-  "race_id": "123e4567-e89b-12d3-a456-426614174000",
-  "prompt_version": "base-prompt-v1.0"
+  "job_id": "06c2...",
+  "status": "accepted",
+  "message": "Collection job started",
+  "webhook_url": "/api/v2/jobs/06c2...",
+  "estimated_time": 5
 }
 ```
 
-#### 3. 패턴 분석
+3) 수집 상태 조회
 
-```bash
-# 패턴 분석
-GET /api/v1/analysis/patterns?start_date=20250601&end_date=20250630
+```
+GET /api/v2/collection/status?date=20250622&meet=1
+Headers: X-API-Key: ...
 ```
 
-#### 4. 프롬프트 개선
+### Jobs
 
-```bash
-# 프롬프트 개선 작업 시작
-POST /api/v1/improvement/improve
-{
-  "base_prompt_version": "base-prompt-v1.0",
-  "target_date": "20250608",
-  "max_iterations": 5,
-  "race_limit": 20
-}
+- 목록 조회
 ```
+GET /api/v2/jobs/?status=processing&job_type=collection&limit=20&offset=0
+Headers: X-API-Key: ...
+```
+
+- 상세 조회
+```
+GET /api/v2/jobs/{job_id}
+Headers: X-API-Key: ...
+```
+
+- 취소
+```
+POST /api/v2/jobs/{job_id}/cancel
+Headers: X-API-Key: ...
+```
+
+### Health
+
+- `GET /` 기본 정보, `GET /health` 헬스체크, `GET /health/detailed`(DB/Redis 상태 포함)
+
+## 인증 가이드
+
+- 요청 헤더 `X-API-Key` 필요. 개발/테스트 환경에서는 기본 키 `test-api-key-123456789`가 자동 허용됩니다.
+- 운영 환경에서는 환경변수 `VALID_API_KEYS`에 JSON 배열 또는 콤마 구분 문자열로 키 목록을 설정하세요.
 
 ## 개발 가이드
 
-### 프로젝트 구조
+### 프로젝트 구조 (요약)
 
 ```
 api/
@@ -155,7 +184,7 @@ api/
 └── main.py          # 애플리케이션 진입점
 ```
 
-### 새로운 엔드포인트 추가
+### 새로운 엔드포인트 추가 (가이드)
 
 1. DTO 정의 (`application/dto/`)
 2. 서비스 로직 구현 (`application/services/`)
