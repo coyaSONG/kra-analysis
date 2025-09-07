@@ -113,6 +113,13 @@ class TestCollectionEndpoints:
         )
         
         assert response.status_code == 422
+
+    @pytest.mark.integration
+    async def test_get_collection_status_endpoint(self, authenticated_client: AsyncClient):
+        r = await authenticated_client.get('/api/v2/collection/status?date=20240719&meet=1')
+        assert r.status_code == 200
+        data = r.json()
+        assert data['status'] in ('pending', 'running', 'completed')
     
     @pytest.mark.integration
     async def test_collect_races_unauthenticated(self, client: AsyncClient):

@@ -22,10 +22,11 @@ logger = structlog.get_logger()
 
 
 @celery_app.task(
-    name="collect_race_data",
     bind=True,
-    max_retries=3,
-    default_retry_delay=60
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 60},
+    retry_backoff=True,
+    retry_jitter=True
 )
 def collect_race_data_task(
     self,
@@ -61,12 +62,7 @@ def collect_race_data_task(
             task_id=self.request.id,
             error=str(e)
         )
-        
-        # 재시도
-        if self.request.retries < self.max_retries:
-            raise self.retry(exc=e)
-        
-        # 최종 실패
+        # 최종 실패 기록 (autoretry 후에도 실패 시)
         if job_id:
             asyncio.run(_update_job_status(job_id, "failed", str(e)))
         
@@ -137,9 +133,11 @@ async def _collect_race_data_async(
 
 
 @celery_app.task(
-    name="preprocess_race_data",
     bind=True,
-    max_retries=3
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 60},
+    retry_backoff=True,
+    retry_jitter=True
 )
 def preprocess_race_data_task(
     self,
@@ -171,9 +169,6 @@ def preprocess_race_data_task(
             race_id=race_id,
             error=str(e)
         )
-        
-        if self.request.retries < self.max_retries:
-            raise self.retry(exc=e)
         
         if job_id:
             asyncio.run(_update_job_status(job_id, "failed", str(e)))
@@ -236,9 +231,11 @@ async def _preprocess_race_data_async(
 
 
 @celery_app.task(
-    name="enrich_race_data",
     bind=True,
-    max_retries=3
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 60},
+    retry_backoff=True,
+    retry_jitter=True
 )
 def enrich_race_data_task(
     self,
@@ -270,9 +267,6 @@ def enrich_race_data_task(
             race_id=race_id,
             error=str(e)
         )
-        
-        if self.request.retries < self.max_retries:
-            raise self.retry(exc=e)
         
         if job_id:
             asyncio.run(_update_job_status(job_id, "failed", str(e)))
@@ -335,8 +329,11 @@ async def _enrich_race_data_async(
 
 
 @celery_app.task(
-    name="batch_collect_races",
-    bind=True
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 60},
+    retry_backoff=True,
+    retry_jitter=True
 )
 def batch_collect_races_task(
     self,
@@ -389,8 +386,11 @@ def batch_collect_races_task(
 
 
 @celery_app.task(
-    name="full_pipeline",
-    bind=True
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 60},
+    retry_backoff=True,
+    retry_jitter=True
 )
 def full_pipeline_task(
     self,
