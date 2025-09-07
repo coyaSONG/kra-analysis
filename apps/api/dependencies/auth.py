@@ -8,7 +8,8 @@ from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timedelta, timezone
-import jwt
+from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 import re
 import structlog
 
@@ -156,10 +157,10 @@ def verify_token(token: str) -> Optional[dict]:
             algorithms=[settings.algorithm]
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         logger.warning("Token has expired")
         return None
-    except jwt.JWTError as e:
+    except JWTError as e:
         logger.warning(f"Token verification failed: {e}")
         return None
 

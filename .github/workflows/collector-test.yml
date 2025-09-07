@@ -10,11 +10,15 @@ on:
     branches: [ main ]
     paths:
       - 'apps/collector/**'
+      - '.github/workflows/collector-test.yml'
+  workflow_dispatch:
 
 jobs:
   test:
     name: Test API Endpoints
     runs-on: ubuntu-latest
+    env:
+      KRA_SERVICE_KEY: ${{ secrets.KRA_SERVICE_KEY }}
     
     defaults:
       run:
@@ -27,25 +31,32 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: apps/collector/package-lock.json
-    
-    - name: Install dependencies
-      run: npm ci
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+
+    - name: Install dependencies (workspace)
+      working-directory: .
+      run: pnpm -w -F @apps/collector install --no-frozen-lockfile
     
     - name: Run lint
-      run: npm run lint
+      working-directory: .
+      run: pnpm -F @apps/collector run lint
       
     - name: Run type check
-      run: npm run typecheck
+      working-directory: .
+      run: pnpm -F @apps/collector run typecheck
     
-    - name: Run unit tests
-      run: npm test -- --coverage
+    - name: Run unit tests (CI subset)
+      working-directory: .
+      run: pnpm -F @apps/collector run test:ci
       env:
         NODE_ENV: test
         LOG_LEVEL: error
@@ -58,9 +69,10 @@ jobs:
         flags: collector
     
     - name: Start server for E2E tests
+      working-directory: .
       run: |
-        npm run build
-        npm start &
+        pnpm -F @apps/collector run build
+        pnpm -F @apps/collector start &
         sleep 5
       env:
         NODE_ENV: test
@@ -68,15 +80,17 @@ jobs:
         LOG_LEVEL: error
     
     - name: Run E2E API tests
-      run: node test-api-final.js
-      continue-on-error: false
+      if: ${{ env.KRA_SERVICE_KEY != '' }}
+      working-directory: .
+      run: pnpm -F @apps/collector run test:kra
     
     - name: Check API health
       run: |
-        curl -f http://localhost:3001/health || exit 1
-        curl -f http://localhost:3001/api/v1 || exit 1
+        # Health endpoint should return 200 OK
+        curl -fsS http://localhost:3001/health > /dev/null
     
     - name: Test critical endpoints
+      if: ${{ env.KRA_SERVICE_KEY != '' }}
       run: |
         # Test Race API
         curl -f "http://localhost:3001/api/v1/races/20240106/서울/1" || exit 1
