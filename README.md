@@ -164,7 +164,7 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
 - 비밀 관리: `.env`는 커밋 금지. 예시는 `apps/api/.env.example`, `apps/collector/.env.example` 참고
 - 시크릿 스캔: 루트 `.gitleaks.toml` 구성 + Gitleaks 액션으로 PR 차단
 - 환경 변수 요약
-  - API: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `PORT(기본 8001)`, `VALID_API_KEYS`, `KRA_API_KEY`
+  - API: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `PORT(기본 8000)`, `VALID_API_KEYS`, `KRA_API_KEY`
   - Collector: `PORT(기본 3001)`, `KRA_SERVICE_KEY` 등
 - 레이트리밋: API 기본 100req/분(`RateLimitMiddleware`), 필요 시 env로 비활성화/조정 가능
 

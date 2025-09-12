@@ -24,15 +24,15 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 cd apps/api
 uv sync && uv sync --dev
 
-# 개발 서버 (기본 8001)
-uv run uvicorn main_v2:app --reload --port 8001
+# 개발 서버 (기본 8000)
+uv run uvicorn main_v2:app --reload --port 8000
 ```
 
 모노레포 스크립트로도 실행할 수 있습니다:
 
 ```bash
 # 저장소 루트에서 실행
-pnpm -w -F @apps/api dev   # uvicorn main_v2:app --port 8001
+pnpm -w -F @apps/api dev   # uvicorn main_v2:app --port 8000
 ```
 
 자세한 uv 사용법은 [README-uv.md](./README-uv.md)를 참조하세요.
@@ -57,7 +57,7 @@ pip install -r requirements.txt
 - `SECRET_KEY` (필수)
 - `DATABASE_URL` (예: `postgresql+asyncpg://user:pass@localhost:5432/kra`)
 - `REDIS_URL` (예: `redis://localhost:6379/0`)
-- `PORT` (개발 기본 8001)
+- `PORT` (개발 기본 8000)
 - `VALID_API_KEYS` (선택: JSON 배열 또는 콤마 구분, 미설정 시 개발 모드에서 `test-api-key-123456789` 기본값 사용)
 - `KRA_API_KEY` (선택: 공공데이터 API 키)
 
@@ -79,8 +79,8 @@ python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ### 기본 정보
 
-- Base URL(개발): `http://localhost:8001`
-- Docs: `http://localhost:8001/docs`, ReDoc: `http://localhost:8001/redoc`
+- Base URL(개발): `http://localhost:8000`
+- Docs: `http://localhost:8000/docs`, ReDoc: `http://localhost:8000/redoc`
 - 인증: 모든 보호 엔드포인트는 헤더 `X-API-Key` 필요
 
 ### Collection
@@ -102,7 +102,7 @@ Body:
 예시(curl)
 
 ```bash
-curl -X POST http://localhost:8001/api/v2/collection/ \
+curl -X POST http://localhost:8000/api/v2/collection/ \
   -H 'Content-Type: application/json' \
   -H 'X-API-Key: test-api-key-123456789' \
   -d '{"date":"20250622","meet":1,"race_numbers":[1,2,3]}'

@@ -128,7 +128,6 @@ export default {
 
   // Debugging configuration
   detectLeaks: false,
-  forceExit: true,  // Force exit after tests complete
   logHeapUsage: false,
 
   // Disable projects for now - causing issues with setup file
