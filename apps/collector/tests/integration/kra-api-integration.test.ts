@@ -184,7 +184,7 @@ describe('KRA API Integration Tests', () => {
 
       const result = await kraApiService.getRaceTotals(
         TEST_DATA.date,
-        TEST_DATA.meetCode
+        TEST_DATA.meet
       );
 
       expect(result).toBeDefined();
@@ -204,7 +204,7 @@ describe('KRA API Integration Tests', () => {
 
       const result = await kraApiService.getRaceTotals(
         '20000101',
-        TEST_DATA.meetCode
+        TEST_DATA.meet
       );
 
       expect(result).toBeDefined();

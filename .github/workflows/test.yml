@@ -95,7 +95,7 @@ jobs:
         pytest -v -m integration --tb=short --timeout=60
       continue-on-error: true
     
-    - name: Run all tests with coverage
+    - name: Run unit tests with coverage
       working-directory: ./apps/api
       env:
         DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
@@ -104,7 +104,7 @@ jobs:
         ENVIRONMENT: test
         PYTHONPATH: .
       run: |
-        pytest -v -m unit --cov=. --cov-report=xml --cov-report=term-missing --cov-fail-under=30
+        pytest -v -m unit --cov=. --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5

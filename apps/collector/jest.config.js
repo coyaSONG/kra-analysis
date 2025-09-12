@@ -31,7 +31,7 @@ export default {
   ],
 
   // Coverage configuration
-  collectCoverage: false,
+  collectCoverage: process.env.CI === 'true',
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
   collectCoverageFrom: [

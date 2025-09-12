@@ -17,7 +17,7 @@
     "test:e2e": "jest --testPathPattern=e2e --watchman=false",
     "test:unit": "jest --testPathPattern=unit --watchman=false",
     "test:simple": "jest --watchman=false tests/api-simple.test.ts tests/middleware/validation.test.ts",
-    "test:kra": "jest --testPathPattern='kra-api-integration|api-e2e'",
+    "test:kra": "jest --watchman=false --runTestsByPath tests/integration/kra-api-integration.test.ts tests/e2e/api-e2e.test.ts",
     "test:ci": "npm run lint && npm run typecheck && npm run test:simple",
     "test:all": "npm run test:ci && npm run test:kra",
     "clean": "rm -rf dist .tsbuildinfo"

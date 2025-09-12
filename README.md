@@ -86,10 +86,10 @@ cd apps/api && uv run pytest -q
 
 ```bash
 # 기본 데이터 수집 (API214_1)
-node scripts/race_collector/collect_and_preprocess.js 20250608 1
+node packages/scripts/race_collector/collect_and_preprocess.js 20250608 1
 
 # 데이터 보강 (API8_2, API12_1, API19_1)
-node scripts/race_collector/enrich_race_data.js 20250608 1
+node packages/scripts/race_collector/enrich_race_data.js 20250608 1
 ```
 
 ### 5) 예측 실행
@@ -150,6 +150,16 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/ba
   - 3) 데이터 모델/구조: `docs/03-data-models.md`
   - 4) 프롬프트/평가: `docs/04-prompt-and-evaluation.md`
   - 5) 로드맵/개발 표준: `docs/05-roadmap-and-standards.md`
+
+### API v2 엔드포인트 예시
+
+```bash
+# 수집 작업 트리거(예: 특정 날짜/경마장)
+POST http://localhost:8000/api/v2/collection/collect
+
+# 작업 상태 조회
+GET  http://localhost:8000/api/v2/jobs/{job_id}
+```
 
 ## ✅ CI / 품질 체크
 

@@ -3,11 +3,11 @@
 아래 체크리스트는 현재 레포 상태 점검 결과를 바탕으로 정리된 우선순위 작업 항목입니다. 각 항목 완료 시 체크해주세요.
 
 ## P0 — 즉시 수정 필요 (Failing/Flaky 방지)
-- [ ] Collector 테스트 버그 수정: `TEST_DATA.meetCode` → `TEST_DATA.meet` (파일: `apps/collector/tests/integration/kra-api-integration.test.ts`).
-- [ ] Collector 커버리지 활성화: CI에서 `jest --coverage` 실행 또는 `pnpm -F @apps/collector run test:coverage` 사용. `jest.config.js`의 `collectCoverage`를 CI에서만 활성화하도록 조정.
-- [ ] Python 커버리지 임계치 정렬: `.github/workflows/test.yml`의 `--cov-fail-under=30` 제거 및 `.coveragerc` 기준(제안: 70% 또는 팀 합의치)으로 통일.
-- [ ] 문서/안내 최신화: 루트 `README.md`와 관련 문서의 경로·명령을 모노레포(`apps/*`)와 v2 엔드포인트(`/api/v2`) 기준으로 업데이트.
-- [ ] 루트 `pyproject.toml` 스타일 설정 정리: Black line length 88 및 Ruff 채택으로 일원화(중복 flake8/isort/pylint 제거 또는 `apps/api` 기준으로 맞춤).
+- [x] Collector 테스트 버그 수정: `TEST_DATA.meetCode` → `TEST_DATA.meet` (파일: `apps/collector/tests/integration/kra-api-integration.test.ts`).
+- [x] Collector 커버리지 활성화: CI에서 `jest --coverage` 실행 또는 `pnpm -F @apps/collector run test:coverage` 사용. `jest.config.js`의 `collectCoverage`를 CI에서만 활성화하도록 조정.
+- [x] Python 커버리지 임계치 정렬: `.github/workflows/test.yml`의 `--cov-fail-under=30` 제거 및 `.coveragerc` 기준(제안: 70% 또는 팀 합의치)으로 통일.
+- [x] 문서/안내 최신화: 루트 `README.md`와 관련 문서의 경로·명령을 모노레포(`apps/*`)와 v2 엔드포인트(`/api/v2`) 기준으로 업데이트.
+- [x] 루트 `pyproject.toml` 스타일 설정 정리: Black line length 88 및 Ruff 채택으로 일원화(중복 flake8/isort/pylint 제거 또는 `apps/api` 기준으로 맞춤).
 
 ## P1 — CI/빌드 최적화
 - [ ] Node 워크플로 캐시 적용: `actions/setup-node@v4`에 `cache: 'pnpm'` 추가 및 일관된 워크스페이스 설치 전략 적용.
@@ -41,4 +41,3 @@
 
 ---
 본 목록은 레포 점검 결과를 반영한 실행 계획 초안입니다. 우선 P0 항목부터 PR로 분리하여 진행하는 것을 권장합니다.
-
