@@ -95,7 +95,7 @@ export default {
   errorOnDeprecated: true,
 
   // Watch mode configuration
-  watchman: true,
+  watchman: false,
   watchPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
@@ -128,7 +128,6 @@ export default {
 
   // Debugging configuration
   detectLeaks: false,
-  forceExit: true,  // Force exit after tests complete
   logHeapUsage: false,
 
   // Disable projects for now - causing issues with setup file
