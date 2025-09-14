@@ -38,6 +38,8 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+        cache-dependency-path: pnpm-lock.yaml
 
     - name: Setup pnpm
       uses: pnpm/action-setup@v4
@@ -46,7 +48,7 @@ jobs:
 
     - name: Install dependencies (workspace)
       working-directory: .
-      run: pnpm -w -F @apps/collector install --no-frozen-lockfile
+      run: pnpm -w -F @apps/collector install --frozen-lockfile
     
     - name: Run lint
       working-directory: .

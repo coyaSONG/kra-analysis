@@ -46,30 +46,27 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Set up uv (Python + cache)
+      uses: astral-sh/setup-uv@v3
       with:
         python-version: '3.11'
-        cache: 'pip'
+        enable-cache: true
     
-    - name: Install dependencies
+    - name: Install dependencies with uv
       working-directory: ./apps/api
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest-timeout
+        uv sync --all-extras --dev
     
-    - name: Run linting
+    - name: Run linting (ruff/black)
       working-directory: ./apps/api
       run: |
-        # Run flake8 for code style
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        uv run ruff check .
+        uv run black --check .
     
-    - name: Run type checking
+    - name: Run type checking (mypy)
       working-directory: ./apps/api
       run: |
-        mypy . --ignore-missing-imports --no-strict-optional || true
+        uv run mypy . --ignore-missing-imports --no-strict-optional || true
     
     - name: Run unit tests
       working-directory: ./apps/api
@@ -80,7 +77,7 @@ jobs:
         ENVIRONMENT: test
         PYTHONPATH: .
       run: |
-        pytest -v -m unit --tb=short -o addopts=""
+        uv run pytest -v -m unit --tb=short -o addopts=""
     
     - name: Run integration tests
       working-directory: ./apps/api
@@ -92,7 +89,7 @@ jobs:
         RATE_LIMIT_ENABLED: "false"
         PYTHONPATH: .
       run: |
-        pytest -v -m integration --tb=short --timeout=60
+        uv run pytest -v -m integration --tb=short --timeout=60
       continue-on-error: true
     
     - name: Run unit tests with coverage
@@ -104,7 +101,7 @@ jobs:
         ENVIRONMENT: test
         PYTHONPATH: .
       run: |
-        pytest -v -m unit --cov=. --cov-report=xml --cov-report=term-missing
+        uv run pytest -v -m unit --cov=. --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5

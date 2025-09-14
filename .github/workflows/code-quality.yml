@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # Python 코드 품질 검사
+  # Python 코드 품질 검사 (Ruff/Black)
   python-quality:
     name: Python Code Quality
     runs-on: ubuntu-latest
@@ -20,37 +20,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Python quality tools
+      - name: Install quality tools (ruff/black)
         run: |
           python -m pip install --upgrade pip
-          pip install black flake8 isort pylint
+          pip install ruff black
+
+      - name: Ruff - 린트 검사
+        run: |
+          echo "🔍 Ruff 검사 중..."
+          ruff check packages/scripts
+        continue-on-error: true
 
       - name: Black - 코드 포맷 검사
         run: |
           echo "🎨 Black 코드 포맷 검사 중..."
-          black --check --diff scripts/
+          black --check --diff packages/scripts
         continue-on-error: true
 
-      - name: isort - import 정렬 검사
-        run: |
-          echo "📦 Import 정렬 검사 중..."
-          isort --check-only --diff scripts/
-        continue-on-error: true
-
-      - name: Flake8 - 린트 검사
-        run: |
-          echo "🔍 Flake8 린트 검사 중..."
-          flake8 scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 scripts/ --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
-        continue-on-error: true
-
-      - name: Pylint - 고급 린트 검사
-        run: |
-          echo "🔬 Pylint 검사 중..."
-          pylint scripts/**/*.py --exit-zero --reports=y
-        continue-on-error: true
-
-  # JavaScript 코드 품질 검사
+  # JavaScript 코드 품질 검사 (pnpm 워크스페이스)
   javascript-quality:
     name: JavaScript Code Quality
     runs-on: ubuntu-latest
@@ -61,24 +48,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # 23.6은 GitHub Actions에서 미지원, LTS 버전 사용
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install JavaScript quality tools
-        run: |
-          npm install -g eslint prettier eslint-config-standard eslint-plugin-import eslint-plugin-n eslint-plugin-promise
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
-      - name: ESLint - 린트 검사
-        run: |
-          echo "🔍 ESLint 검사 중..."
-          # .eslintrc가 없으므로 기본 설정으로 실행
-          eslint scripts/**/*.js --no-eslintrc --env node --env es6 || true
-        continue-on-error: true
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Prettier - 코드 포맷 검사
-        run: |
-          echo "🎨 Prettier 포맷 검사 중..."
-          npx prettier --check "scripts/**/*.js" || true
-        continue-on-error: true
+      - name: Run workspace lint
+        run: pnpm -w run lint || true
 
   # 코드 품질 요약 리포트
   quality-summary:
@@ -94,9 +77,7 @@ jobs:
           echo "다음 단계:"
           echo "1. 위의 검사 결과를 확인하세요"
           echo "2. 코드 스타일 자동 수정을 원하면 로컬에서 다음 명령어를 실행하세요:"
-          echo "   - Python: black scripts/ && isort scripts/"
-          echo "   - JavaScript: prettier --write scripts/**/*.js"
+          echo "   - Python: black packages/scripts && ruff check --fix packages/scripts"
+          echo "   - Node: pnpm -w run lint"
           echo ""
-          echo "💡 팁: 설정 파일을 추가하여 프로젝트 스타일을 커스터마이징할 수 있습니다:"
-          echo "   - Python: .flake8, .pylintrc, pyproject.toml"
-          echo "   - JavaScript: .eslintrc.json, .prettierrc"
+          echo "💡 설정은 pyproject.toml 및 각 패키지의 ESLint 설정을 참고하세요."
