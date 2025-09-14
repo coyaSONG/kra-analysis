@@ -169,7 +169,7 @@ GET  http://localhost:8000/api/v2/jobs/{job_id}
 - GitHub Actions 워크플로우
   - Python(API v2) 테스트: `.github/workflows/test.yml` — Postgres/Redis 컨테이너로 유닛/통합/커버리지 실행, Codecov 업로드
   - Collector(Node) 테스트: `.github/workflows/collector-test.yml` — ESM/ts-jest, 린트/타입체크/CI 서브셋 테스트, 필요 시 E2E
-  - 코드 품질: `.github/workflows/code-quality.yml` — Black/isort/Flake8/Pylint, ESLint/Prettier 체크
+- 코드 품질: `.github/workflows/code-quality.yml` — Ruff/Black, ESLint/Prettier 체크
   - 보안 스캔: `.github/workflows/security-scan.yml` — Gitleaks, Safety, npm audit-ci, CodeQL, 커스텀 시크릿/`.env`/`data/` 검사
 
 ## 🔒 보안 / 환경설정
@@ -200,3 +200,10 @@ GET  http://localhost:8000/api/v2/jobs/{job_id}
 ## 참고: 기여자 가이드
 
 프로젝트 구조, 빌드/테스트 명령, 코드 스타일, 보안/설정 팁은 저장소 루트의 AGENTS.md(Repository Guidelines)를 참고하세요.
+### Pre-commit 훅 (Ruff/Black)
+
+- 설정 파일: `.pre-commit-config.yaml`
+- 설치/적용
+  - 설치: `uv run pre-commit install`
+  - 수동 실행: `uv run pre-commit run -a`
+  - 도구 버전: `ruff==0.13.0`, `black==24.10.0` (uvx로 자동 관리)

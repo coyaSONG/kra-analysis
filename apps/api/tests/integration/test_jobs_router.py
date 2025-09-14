@@ -10,4 +10,3 @@ async def test_list_jobs_empty(authenticated_client: AsyncClient):
     data = resp.json()
     assert "jobs" in data and isinstance(data["jobs"], list)
     assert "total" in data and isinstance(data["total"], int)
-

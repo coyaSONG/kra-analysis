@@ -5,7 +5,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -14,6 +13,6 @@ class Change:
     change_type: str  # 'modify', 'add', 'remove'
     target_section: str
     description: str
-    old_value: Optional[str] = None
-    new_value: Optional[str] = None
+    old_value: str | None = None
+    new_value: str | None = None
     timestamp: datetime = field(default_factory=datetime.now)

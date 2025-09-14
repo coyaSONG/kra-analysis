@@ -60,6 +60,9 @@ jobs:
     - name: Run linting (ruff/black)
       working-directory: ./apps/api
       run: |
+        # Show diff for auto-fixable issues and fail if any would be fixed
+        uv run ruff check --diff --exit-non-zero-on-fix .
+        # Gate on any remaining non-fixable issues
         uv run ruff check .
         uv run black --check .
     

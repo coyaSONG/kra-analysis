@@ -1,8 +1,7 @@
-import pytest
 import httpx
-import asyncio
+import pytest
 
-from services.kra_api_service import KRAAPIService, KRAAPIError
+from services.kra_api_service import KRAAPIError, KRAAPIService
 
 
 class DummyResponse:
@@ -17,7 +16,9 @@ class DummyResponse:
 
     def raise_for_status(self):
         if self.status_code >= 400:
-            raise httpx.HTTPStatusError("error", request=self.request, response=self._resp)
+            raise httpx.HTTPStatusError(
+                "error", request=self.request, response=self._resp
+            )
 
 
 @pytest.mark.asyncio
@@ -29,7 +30,7 @@ async def test_get_race_info_success(monkeypatch):
         payload = {
             "response": {
                 "header": {"resultCode": "00", "resultMsg": "OK"},
-                "body": {"items": {"item": [{"rcDate": "20240719", "rcNo": 1}]}}
+                "body": {"items": {"item": [{"rcDate": "20240719", "rcNo": 1}]}},
             }
         }
         return DummyResponse(payload)
@@ -51,6 +52,7 @@ async def test_get_race_info_http_error(monkeypatch):
 
     # Tenacity wraps repeated failures into RetryError
     import tenacity
+
     with pytest.raises(tenacity.RetryError):
         await svc.get_race_info("20240719", "1", 1, use_cache=False)
 
@@ -65,6 +67,7 @@ async def test_get_race_info_connection_error(monkeypatch):
     monkeypatch.setattr(svc.client, "request", fake_request)
 
     import tenacity
+
     with pytest.raises(tenacity.RetryError):
         await svc.get_race_info("20240719", "1", 1, use_cache=False)
 
@@ -78,14 +81,14 @@ async def test_get_jockey_and_trainer_success(monkeypatch):
             payload = {
                 "response": {
                     "header": {"resultCode": "00", "resultMsg": "OK"},
-                    "body": {"items": {"item": {"jkName": "홍길동", "jkNo": "080405"}}}
+                    "body": {"items": {"item": {"jkName": "홍길동", "jkNo": "080405"}}},
                 }
             }
         else:
             payload = {
                 "response": {
                     "header": {"resultCode": "00", "resultMsg": "OK"},
-                    "body": {"items": {"item": {"trName": "안우성", "trNo": "070180"}}}
+                    "body": {"items": {"item": {"trName": "안우성", "trNo": "070180"}}},
                 }
             }
         return DummyResponse(payload)

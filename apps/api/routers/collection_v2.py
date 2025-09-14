@@ -3,22 +3,22 @@
 경주 데이터 수집, 전처리, 강화 엔드포인트
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Any, List
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
+
 import structlog
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies.auth import require_api_key
 from infrastructure.database import get_db
-from services.job_service import JobService
-import uuid
-from services.kra_api_service import get_kra_api_service, KRAAPIService
-from services.collection_service import CollectionService
 from models.collection_dto import (
     CollectionRequest,
     CollectionResponse,
-    CollectionStatus
+    CollectionStatus,
 )
+from services.collection_service import CollectionService
+from services.job_service import JobService
+from services.kra_api_service import KRAAPIService, get_kra_api_service
 
 logger = structlog.get_logger()
 
@@ -26,7 +26,7 @@ router = APIRouter(
     responses={
         404: {"description": "Not found"},
         401: {"description": "Unauthorized"},
-        500: {"description": "Internal server error"}
+        500: {"description": "Internal server error"},
     }
 )
 
@@ -38,50 +38,44 @@ job_service = JobService()
     "/",
     response_model=CollectionResponse,
     summary="경주 데이터 수집",
-    description="KRA API에서 경주 데이터를 수집합니다."
+    description="KRA API에서 경주 데이터를 수집합니다.",
 )
 async def collect_race_data(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
     api_key: str = Depends(require_api_key),
-    kra_api: KRAAPIService = Depends(get_kra_api_service)
+    kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 데이터 수집"""
     try:
         # CollectionService 사용
         collection_service = CollectionService(kra_api)
-        
+
         # 경주 번호가 지정되지 않았으면 1-15 전체
         race_numbers = request.race_numbers or list(range(1, 16))
-        
+
         results = []
-        logger.info(f"Collecting races for {request.date}, meet {request.meet}, races: {race_numbers}")
-        
+        logger.info(
+            f"Collecting races for {request.date}, meet {request.meet}, races: {race_numbers}"
+        )
+
         for race_no in race_numbers:
             try:
                 result = await collection_service.collect_race_data(
-                    request.date,
-                    request.meet,  # Pass as integer
-                    race_no,
-                    db
+                    request.date, request.meet, race_no, db  # Pass as integer
                 )
                 results.append(result)
                 logger.info(f"Successfully collected race {race_no}")
             except Exception as e:
                 logger.error(f"Failed to collect race {race_no}: {e}", exc_info=True)
-                
+
         return CollectionResponse(
-            status="success",
-            message=f"Collected {len(results)} races",
-            data=results
+            status="success", message=f"Collected {len(results)} races", data=results
         )
-        
+
     except Exception as e:
         logger.error(f"Collection failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -89,13 +83,13 @@ async def collect_race_data(
     response_model=CollectionResponse,
     summary="경주 데이터 수집 (비동기)",
     description="KRA API에서 경주 데이터를 비동기로 수집합니다.",
-    status_code=status.HTTP_202_ACCEPTED
+    status_code=status.HTTP_202_ACCEPTED,
 )
 async def collect_race_data_async(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
     api_key: str = Depends(require_api_key),
-    kra_api: KRAAPIService = Depends(get_kra_api_service)
+    kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 데이터 비동기 수집: 테스트 환경에서는 작업 ID만 반환"""
     try:
@@ -110,20 +104,20 @@ async def collect_race_data_async(
         )
     except Exception as e:
         logger.error(f"Async collection failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
     "/status",
     response_model=CollectionStatus,
     summary="수집 상태 조회",
-    description="데이터 수집 상태를 조회합니다."
+    description="데이터 수집 상태를 조회합니다.",
 )
 async def get_collection_status(
     date: str,
     meet: int,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key)
+    api_key: str = Depends(require_api_key),
 ):
     """수집 상태 조회"""
     try:
@@ -134,11 +128,8 @@ async def get_collection_status(
             total_races=15,
             collected_races=0,
             enriched_races=0,
-            status="pending"
+            status="pending",
         )
     except Exception as e:
         logger.error(f"Status check failed: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e)) from e

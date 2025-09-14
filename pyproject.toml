@@ -17,21 +17,28 @@ exclude = '''
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+# 기본 제외 목록에 추가로 내부 가상환경을 무시
+extend-exclude = [
+    "apps/api/.venv",
+]
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
-    "I",   # isort
+    "I",   # isort (import sorting)
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long
-    "B008",  # function calls in defaults
-    "C901",  # too complex
+    "E501",  # line too long handled by Black
+    "B008",  # function calls in defaults (allow)
+    "C901",  # function is too complex (informational only)
     "W191",  # tabs
 ]
+fixable = ["ALL"]
  
 
  

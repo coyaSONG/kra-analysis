@@ -1,7 +1,5 @@
 import pytest
-from typing import Dict
 
-from main_v2 import app
 from config import settings
 
 
@@ -13,7 +11,7 @@ async def test_rate_limit_bypass_in_test_env(authenticated_client):
 
 
 class FakePipeline:
-    def __init__(self, store: Dict[str, int]):
+    def __init__(self, store: dict[str, int]):
         self.ops = []
         self.store = store
 
@@ -48,7 +46,7 @@ class FakePipeline:
 
 class FakeRedis:
     def __init__(self):
-        self.store: Dict[str, int] = {}
+        self.store: dict[str, int] = {}
 
     def pipeline(self):
         return FakePipeline(self.store)
@@ -88,6 +86,7 @@ async def test_rate_limit_enforced_in_production(monkeypatch, authenticated_clie
 async def test_rate_limit_no_pipeline_bypass(monkeypatch, authenticated_client):
     # Force production but return redis-like object without pipeline
     from config import settings
+
     old_env = settings.environment
     old_flag = settings.rate_limit_enabled
     settings.environment = "production"
@@ -97,6 +96,7 @@ async def test_rate_limit_no_pipeline_bypass(monkeypatch, authenticated_client):
         pass
 
     from middleware import rate_limit as rl
+
     monkeypatch.setattr(rl, "get_redis", lambda: NoPipe())
 
     # Should bypass and return 200
@@ -110,22 +110,25 @@ async def test_rate_limit_no_pipeline_bypass(monkeypatch, authenticated_client):
 @pytest.mark.asyncio
 async def test_rate_limit_redis_required_unavailable(monkeypatch, authenticated_client):
     from config import settings
+
     old_env = settings.environment
     old_flag = settings.rate_limit_enabled
     settings.environment = "production"
     settings.rate_limit_enabled = True
 
     from middleware import rate_limit as rl
+
     def boom():
-        raise RuntimeError('no redis')
+        raise RuntimeError("no redis")
+
     monkeypatch.setattr(rl, "get_redis", boom)
 
     # Should yield 503; depending on stack it may raise
     try:
-        r = await authenticated_client.get('/api/v2/jobs/')
+        r = await authenticated_client.get("/api/v2/jobs/")
         assert r.status_code == 503
     except Exception as e:
-        assert '503' in str(e) or 'service unavailable' in str(e).lower()
+        assert "503" in str(e) or "service unavailable" in str(e).lower()
 
     settings.environment = old_env
     settings.rate_limit_enabled = old_flag

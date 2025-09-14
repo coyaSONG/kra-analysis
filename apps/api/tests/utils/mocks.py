@@ -2,24 +2,23 @@
 Mock utilities for testing
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock
-from datetime import datetime
-from typing import Dict, Any, Optional
 
 
 class MockKRAAPIService:
     """Mock KRA API service for testing"""
-    
+
     def __init__(self):
         self.get_race_info = AsyncMock()
         self.get_horse_info = AsyncMock()
         self.get_jockey_info = AsyncMock()
         self.get_trainer_info = AsyncMock()
         self.get_race_result = AsyncMock()
-        
+
         # Set default responses
         self.set_default_responses()
-    
+
     def set_default_responses(self):
         """Set default mock responses"""
         self.get_race_info.return_value = self._default_race_info()
@@ -27,15 +26,12 @@ class MockKRAAPIService:
         self.get_jockey_info.return_value = self._default_jockey_info()
         self.get_trainer_info.return_value = self._default_trainer_info()
         self.get_race_result.return_value = self._default_race_result()
-    
-    def _default_race_info(self) -> Dict[str, Any]:
+
+    def _default_race_info(self) -> dict[str, Any]:
         """Default race info response"""
         return {
             "response": {
-                "header": {
-                    "resultCode": "00",
-                    "resultMsg": "NORMAL SERVICE"
-                },
+                "header": {"resultCode": "00", "resultMsg": "NORMAL SERVICE"},
                 "body": {
                     "items": {
                         "item": [
@@ -54,7 +50,7 @@ class MockKRAAPIService:
                                 "rating": "85",
                                 "age": "3",
                                 "sex": "M",
-                                "burden": "53"
+                                "burden": "53",
                             },
                             {
                                 "rcDate": "20240719",
@@ -71,18 +67,18 @@ class MockKRAAPIService:
                                 "rating": "82",
                                 "age": "4",
                                 "sex": "F",
-                                "burden": "51"
-                            }
+                                "burden": "51",
+                            },
                         ]
                     },
                     "numOfRows": 2,
                     "pageNo": 1,
-                    "totalCount": 2
-                }
+                    "totalCount": 2,
+                },
             }
         }
-    
-    def _default_horse_info(self) -> Dict[str, Any]:
+
+    def _default_horse_info(self) -> dict[str, Any]:
         """Default horse info response"""
         return {
             "response": {
@@ -100,13 +96,13 @@ class MockKRAAPIService:
                         "totalRaces": 20,
                         "totalWins": 5,
                         "totalSeconds": 3,
-                        "totalThirds": 2
+                        "totalThirds": 2,
                     }
                 }
             }
         }
-    
-    def _default_jockey_info(self) -> Dict[str, Any]:
+
+    def _default_jockey_info(self) -> dict[str, Any]:
         """Default jockey info response"""
         return {
             "response": {
@@ -119,13 +115,13 @@ class MockKRAAPIService:
                         "totalRaces": 1000,
                         "totalWins": 150,
                         "winRate": 0.15,
-                        "placeRate": 0.35
+                        "placeRate": 0.35,
                     }
                 }
             }
         }
-    
-    def _default_trainer_info(self) -> Dict[str, Any]:
+
+    def _default_trainer_info(self) -> dict[str, Any]:
         """Default trainer info response"""
         return {
             "response": {
@@ -137,13 +133,13 @@ class MockKRAAPIService:
                         "totalRaces": 2000,
                         "totalWins": 300,
                         "winRate": 0.15,
-                        "placeRate": 0.40
+                        "placeRate": 0.40,
                     }
                 }
             }
         }
-    
-    def _default_race_result(self) -> Dict[str, Any]:
+
+    def _default_race_result(self) -> dict[str, Any]:
         """Default race result response"""
         return {
             "response": {
@@ -152,7 +148,7 @@ class MockKRAAPIService:
                         "item": [
                             {"hrNo": "005", "ord": "1", "time": "1:23.5"},
                             {"hrNo": "002", "ord": "2", "time": "1:23.7"},
-                            {"hrNo": "008", "ord": "3", "time": "1:23.9"}
+                            {"hrNo": "008", "ord": "3", "time": "1:23.9"},
                         ]
                     }
                 }
@@ -162,7 +158,7 @@ class MockKRAAPIService:
 
 class MockRedisClient:
     """Mock Redis client for testing"""
-    
+
     def __init__(self):
         self._data = {}
         self.get = AsyncMock(side_effect=self._get)
@@ -173,33 +169,33 @@ class MockRedisClient:
         self.expire = AsyncMock(side_effect=self._expire)
         self.flushdb = AsyncMock(side_effect=self._flushdb)
         self.close = AsyncMock()
-    
-    async def _get(self, key: str) -> Optional[str]:
+
+    async def _get(self, key: str) -> str | None:
         """Mock get operation"""
         return self._data.get(key)
-    
-    async def _set(self, key: str, value: str, ex: Optional[int] = None) -> None:
+
+    async def _set(self, key: str, value: str, ex: int | None = None) -> None:
         """Mock set operation"""
         self._data[key] = value
-    
+
     async def _delete(self, key: str) -> None:
         """Mock delete operation"""
         self._data.pop(key, None)
-    
+
     async def _exists(self, key: str) -> bool:
         """Mock exists operation"""
         return key in self._data
-    
+
     async def _incr(self, key: str) -> int:
         """Mock increment operation"""
         current = int(self._data.get(key, 0))
         self._data[key] = str(current + 1)
         return current + 1
-    
+
     async def _expire(self, key: str, seconds: int) -> None:
         """Mock expire operation (no-op for testing)"""
         pass
-    
+
     async def _flushdb(self) -> None:
         """Mock flush database operation"""
         self._data.clear()
@@ -213,21 +209,21 @@ class MockRedisClient:
 
 class MockCeleryTask:
     """Mock Celery task for testing"""
-    
+
     def __init__(self, task_id: str = "test-task-id"):
         self.id = task_id
         self.status = "PENDING"
         self.result = None
         self.info = {}
-    
-    def get(self, timeout: Optional[int] = None):
+
+    def get(self, timeout: int | None = None):
         """Mock get result"""
         if self.status == "SUCCESS":
             return self.result
         elif self.status == "FAILURE":
             raise Exception("Task failed")
         return None
-    
+
     @property
     def state(self):
         """Get task state"""

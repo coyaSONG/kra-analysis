@@ -25,11 +25,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff black
 
-      - name: Ruff - 린트 검사
+      - name: Ruff - 린트 검사 (게이트)
         run: |
-          echo "🔍 Ruff 검사 중..."
-          ruff check packages/scripts
-        continue-on-error: true
+          echo "🔍 Ruff 검사(게이트) 중..."
+          # 자동수정이 필요한 변경점을 diff로 출력하고, 발견 시 실패 처리
+          ruff check . --diff --exit-non-zero-on-fix
+          # 비수정 가능 위반까지 게이트
+          ruff check .
 
       - name: Black - 코드 포맷 검사
         run: |

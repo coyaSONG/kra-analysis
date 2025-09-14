@@ -1,7 +1,8 @@
-import pytest
 from datetime import timedelta
 
-from dependencies.auth import get_current_user, create_access_token, verify_token
+import pytest
+
+from dependencies.auth import create_access_token, get_current_user, verify_token
 
 
 @pytest.mark.asyncio
@@ -11,6 +12,5 @@ async def test_get_current_user_no_header(db_session):
 
 
 def test_verify_token_expired():
-    token = create_access_token({'sub': 'u'}, expires_delta=timedelta(seconds=-1))
+    token = create_access_token({"sub": "u"}, expires_delta=timedelta(seconds=-1))
     assert verify_token(token) is None
-

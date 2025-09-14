@@ -1,39 +1,51 @@
-from supabase import create_client, Client
 from functools import lru_cache
-from typing import Optional
-from config import settings
-import structlog
 
+import structlog
+from supabase import Client, create_client
+
+from config import settings
 
 logger = structlog.get_logger()
 
 
-@lru_cache()
-def get_supabase_client() -> Optional[Client]:
+@lru_cache
+def get_supabase_client() -> Client | None:
     """
     Supabase 클라이언트 싱글톤 인스턴스를 반환합니다.
     Supabase가 설정되지 않은 경우 None을 반환합니다.
     """
     try:
         if not settings.supabase_url or settings.supabase_url == "your_supabase_url":
-            logger.warning("Supabase is not configured. Running without database persistence.")
+            logger.warning(
+                "Supabase is not configured. Running without database persistence."
+            )
             return None
-        
-        if not settings.supabase_key or settings.supabase_key == "your_supabase_anon_key":
-            logger.warning("Supabase key is not configured. Running without database persistence.")
+
+        if (
+            not settings.supabase_key
+            or settings.supabase_key == "your_supabase_anon_key"
+        ):
+            logger.warning(
+                "Supabase key is not configured. Running without database persistence."
+            )
             return None
-        
+
         # 서비스 롤 키가 있으면 사용, 없으면 일반 키 사용
-        key = settings.supabase_service_role_key if settings.supabase_service_role_key and settings.supabase_service_role_key != "your_service_role_key" else settings.supabase_key
-        
+        key = (
+            settings.supabase_service_role_key
+            if settings.supabase_service_role_key
+            and settings.supabase_service_role_key != "your_service_role_key"
+            else settings.supabase_key
+        )
+
         client = create_client(
             supabase_url=settings.supabase_url,
             supabase_key=key,
         )
-        
+
         logger.info("Supabase client initialized successfully")
         return client
-        
+
     except Exception as e:
         logger.error("Failed to initialize Supabase client", error=str(e))
         return None

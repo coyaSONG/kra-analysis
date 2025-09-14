@@ -3,23 +3,22 @@ pytest configuration and fixtures for KRA API v2 tests
 """
 
 import asyncio
-import os
-from typing import AsyncGenerator, Generator
 from datetime import datetime
+
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool, StaticPool
 import redis.asyncio as redis
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool, StaticPool
+
+from config import Settings
+from infrastructure.database import Base, get_db
+from infrastructure.redis_client import get_redis
 
 # Import application components
 from main_v2 import app
-from infrastructure.database import Base, get_db
-from infrastructure.redis_client import get_redis, init_redis, close_redis
-from config import Settings
-from models.database_models import APIKey, Job, Race
-from dependencies.auth import require_api_key
+from models.database_models import APIKey
 
 
 # Test configuration
@@ -32,7 +31,7 @@ def test_settings():
         redis_url="redis://localhost:6379/15",  # Use test DB
         secret_key="test-secret-key-for-testing-only",
         valid_api_keys=["test-api-key-123", "test-api-key-456"],
-        debug=True
+        debug=True,
     )
 
 
@@ -56,15 +55,15 @@ async def test_db_engine(test_settings):
         poolclass=StaticPool if is_sqlite else NullPool,
         connect_args={"check_same_thread": False} if is_sqlite else {},
     )
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
+
     await engine.dispose()
 
 
@@ -72,20 +71,22 @@ async def test_db_engine(test_settings):
 async def db_session(test_db_engine):
     """Create a test database session"""
     async_session = async_sessionmaker(
-        test_db_engine, 
-        class_=AsyncSession, 
-        expire_on_commit=False
+        test_db_engine, class_=AsyncSession, expire_on_commit=False
     )
-    
+
     async with async_session() as session:
+
         class _SessionWrapper:
             def __init__(self, inner):
                 self._inner = inner
+
             async def execute(self, statement, *args, **kwargs):
                 from sqlalchemy import text as sql_text
+
                 if isinstance(statement, str):
                     statement = sql_text(statement)
                 return await self._inner.execute(statement, *args, **kwargs)
+
             def __getattr__(self, name):
                 return getattr(self._inner, name)
 
@@ -104,20 +105,21 @@ async def redis_client(test_settings):
             encoding="utf-8",
             decode_responses=True,
             socket_connect_timeout=1,
-            socket_timeout=1
+            socket_timeout=1,
         )
         # Test connection
         await client.ping()
         # Clear test database
         await client.flushdb()
-        
+
         yield client
-        
+
         await client.flushdb()
         await client.close()
     except (redis.ConnectionError, redis.TimeoutError, ConnectionRefusedError):
         # Fall back to mock Redis
         from tests.utils.mocks import MockRedisClient
+
         mock_client = MockRedisClient()
         yield mock_client
 
@@ -126,24 +128,25 @@ async def redis_client(test_settings):
 @pytest_asyncio.fixture(scope="function")
 async def client(db_session, redis_client):
     """Create a test API client with dependency overrides"""
-    
+
     # Override dependencies
     async def override_get_db():
         yield db_session
-    
+
     async def override_get_redis():
         yield redis_client
-    
+
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_redis] = override_get_redis
-    
+
     # Use ASGI transport for async testing
     from httpx import ASGITransport
+
     transport = ASGITransport(app=app)
-    
+
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-    
+
     # Clear overrides
     app.dependency_overrides.clear()
 
@@ -156,14 +159,14 @@ async def authenticated_client(client, db_session):
         key="test-api-key-123",
         name="Test API Key",
         is_active=True,
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )
     db_session.add(api_key)
     await db_session.commit()
-    
+
     # Add authentication header
     client.headers["X-API-Key"] = "test-api-key-123"
-    
+
     yield client
 
 
@@ -171,11 +174,7 @@ async def authenticated_client(client, db_session):
 @pytest.fixture
 def sample_race_request():
     """Sample race collection request data"""
-    return {
-        "date": "20240719",
-        "meet": 1,
-        "race_numbers": [1, 2, 3]
-    }
+    return {"date": "20240719", "meet": 1, "race_numbers": [1, 2, 3]}
 
 
 @pytest.fixture
@@ -184,12 +183,8 @@ def sample_job_data():
     return {
         "type": "collection",
         "status": "pending",
-        "parameters": {
-            "date": "20240719",
-            "meet": 1,
-            "race_numbers": [1]
-        },
-        "created_by": "test-api-key-123"
+        "parameters": {"date": "20240719", "meet": 1, "race_numbers": [1]},
+        "created_by": "test-api-key-123",
     }
 
 
@@ -213,16 +208,16 @@ def sample_race_data():
                                     "trNo": "T001",
                                     "win_odds": "5.5",
                                     "weight": "500",
-                                    "rating": "85"
+                                    "rating": "85",
                                 }
                             ]
                         }
                     }
                 }
             },
-            "horses": []
+            "horses": [],
         },
-        "status": "collected"
+        "status": "collected",
     }
 
 
@@ -232,10 +227,7 @@ def mock_kra_api_response():
     """Mock KRA API response"""
     return {
         "response": {
-            "header": {
-                "resultCode": "00",
-                "resultMsg": "NORMAL SERVICE"
-            },
+            "header": {"resultCode": "00", "resultMsg": "NORMAL SERVICE"},
             "body": {
                 "items": {
                     "item": [
@@ -245,14 +237,14 @@ def mock_kra_api_response():
                             "rcNo": "1",
                             "hrNo": "001",
                             "hrName": "Test Horse 1",
-                            "win_odds": "5.5"
+                            "win_odds": "5.5",
                         }
                     ]
                 },
                 "numOfRows": 1,
                 "pageNo": 1,
-                "totalCount": 1
-            }
+                "totalCount": 1,
+            },
         }
     }
 

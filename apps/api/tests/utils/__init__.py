@@ -3,15 +3,15 @@ Test utilities
 """
 
 from .mocks import (
+    MockCeleryTask,
     MockKRAAPIService,
     MockRedisClient,
-    MockCeleryTask,
-    create_mock_celery_app
+    create_mock_celery_app,
 )
 
 __all__ = [
     "MockKRAAPIService",
-    "MockRedisClient", 
+    "MockRedisClient",
     "MockCeleryTask",
-    "create_mock_celery_app"
+    "create_mock_celery_app",
 ]

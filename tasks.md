@@ -33,7 +33,7 @@
 
 ## 결정 필요(팀 합의 후 일괄 반영)
 - [x] 커버리지 임계치 최종 확정: Node/Python 모두 80%로 통일 → 설정 및 워크플로 반영 완료.
-- [ ] Python 린트 도구 정책: flake8 유지 여부 또는 Ruff 단일화 결정(워크플로와 설정 파일 동기화).
+- [x] Python 린트 도구 정책: Ruff 단일화로 확정. flake8 제거 및 설정/문서/의존성 반영 완료.
 
 ## 선택(미래 개선)
 - [ ] pnpm workspace constraints 도입(Typescript/ESLint 버전 상한·하한 고정).

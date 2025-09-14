@@ -10,9 +10,9 @@ Usage:
     python run_tests.py specific test_auth # Run specific test file
 """
 
-import sys
-import subprocess
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -30,20 +30,22 @@ def run_command(cmd: list) -> int:
 def main():
     """Main test runner"""
     args = sys.argv[1:] if len(sys.argv) > 1 else []
-    
+
     # Base pytest command
     pytest_cmd = ["python3", "-m", "pytest"]
-    
+
     # Handle different test modes
     if not args:
         # Run all tests with coverage
-        pytest_cmd.extend([
-            "-v",
-            "--cov=.",
-            "--cov-report=term-missing",
-            "--cov-report=html",
-            "--cov-report=xml"
-        ])
+        pytest_cmd.extend(
+            [
+                "-v",
+                "--cov=.",
+                "--cov-report=term-missing",
+                "--cov-report=html",
+                "--cov-report=xml",
+            ]
+        )
     elif "unit" in args:
         # Run only unit tests
         pytest_cmd.extend(["-v", "-m", "unit"])
@@ -55,14 +57,16 @@ def main():
         pytest_cmd.extend(["-v", "-m", "e2e"])
     elif "coverage" in args:
         # Run with detailed coverage
-        pytest_cmd.extend([
-            "-v",
-            "--cov=.",
-            "--cov-report=term-missing:skip-covered",
-            "--cov-report=html",
-            "--cov-report=xml",
-            "--cov-fail-under=80"
-        ])
+        pytest_cmd.extend(
+            [
+                "-v",
+                "--cov=.",
+                "--cov-report=term-missing:skip-covered",
+                "--cov-report=html",
+                "--cov-report=xml",
+                "--cov-fail-under=80",
+            ]
+        )
     elif "smoke" in args:
         # Run smoke tests
         pytest_cmd.extend(["-v", "-m", "smoke"])
@@ -73,26 +77,26 @@ def main():
     else:
         # Pass through any other arguments
         pytest_cmd.extend(args)
-    
+
     # Add color output if terminal supports it
     if sys.stdout.isatty():
         pytest_cmd.append("--color=yes")
-    
+
     # Set environment variables for testing
     os.environ["ENVIRONMENT"] = "test"
     os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
     os.environ["REDIS_URL"] = "redis://localhost:6379/15"
     os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
-    
+
     # Run the tests
     print("🧪 Running KRA API v2 Tests")
     print("=" * 60)
-    
+
     exit_code = run_command(pytest_cmd)
-    
+
     if exit_code == 0:
         print("\n✅ All tests passed!")
-        
+
         # Show coverage report location if generated
         if "--cov" in " ".join(pytest_cmd):
             print("\n📊 Coverage Reports:")
@@ -101,7 +105,7 @@ def main():
             print("  - XML: coverage.xml")
     else:
         print(f"\n❌ Tests failed with exit code: {exit_code}")
-    
+
     return exit_code
 
 

@@ -66,7 +66,7 @@ pip install prometheus-client==0.21.0
 # 개발 도구
 pip install pytest-asyncio==0.25.0
 pip install black==24.10.0
-pip install ruff==0.8.4
+pip install ruff>=0.8.0
 ```
 
 #### 1.3 환경 설정

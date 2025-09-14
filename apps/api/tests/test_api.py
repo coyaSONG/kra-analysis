@@ -11,10 +11,9 @@ API v2 테스트 스크립트 (legacy v1 경로 제거)
 프로덕션에서는 환경변수 VALID_API_KEYS 설정이 필요합니다.
 """
 
-import httpx
 import asyncio
-from typing import Optional
 
+import httpx
 
 BASE_URL = "http://localhost:8000"
 HEADERS = {"X-API-Key": "test-api-key-123456789"}
@@ -31,13 +30,9 @@ async def test_health_check() -> bool:
         return r.status_code == 200
 
 
-async def test_collect_v2() -> Optional[str]:
+async def test_collect_v2() -> str | None:
     async with httpx.AsyncClient(timeout=30.0, headers=HEADERS) as client:
-        payload = {
-            "date": "20250608",
-            "meet": 1,
-            "race_numbers": [1]
-        }
+        payload = {"date": "20250608", "meet": 1, "race_numbers": [1]}
         print(f"\n[POST] /api/v2/collection/ :: {payload}")
         r = await client.post(f"{BASE_URL}/api/v2/collection/", json=payload)
         print(f"Status: {r.status_code}")
@@ -54,7 +49,9 @@ async def test_collection_status_v2():
         date = "20250608"
         meet = 1
         print(f"\n[GET] /api/v2/collection/status?date={date}&meet={meet}")
-        r = await client.get(f"{BASE_URL}/api/v2/collection/status", params={"date": date, "meet": meet})
+        r = await client.get(
+            f"{BASE_URL}/api/v2/collection/status", params={"date": date, "meet": meet}
+        )
         print(f"Status: {r.status_code}")
         try:
             print(f"Body: {r.json()}")

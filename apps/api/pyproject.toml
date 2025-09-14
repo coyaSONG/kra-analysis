@@ -35,7 +35,6 @@ dev = [
     "pytest-asyncio>=0.25.0",
     "pytest-cov>=6.0.0",
     "black>=24.10.0",
-    "flake8>=7.1.1",
     "mypy>=1.13.0",
     "pre-commit>=4.0.1",
 ]
@@ -67,21 +66,25 @@ include = '\.pyi?$'
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
     "F",   # pyflakes
-    "I",   # isort
+    "I",   # isort (import sorting)
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
+    "E501",  # line too long handled by Black
+    "B008",  # allow function calls in argument defaults
+    "C901",  # too complex (info only)
     "W191",  # indentation contains tabs
 ]
+fixable = ["ALL"]
 
 [tool.mypy]
 python_version = "3.11"

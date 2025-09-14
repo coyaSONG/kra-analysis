@@ -1,8 +1,9 @@
-import pytest
 from datetime import datetime, timedelta
 
-from services.job_service import JobService
+import pytest
+
 from models.database_models import Job, JobStatus, JobType
+from services.job_service import JobService
 
 
 @pytest.mark.asyncio
@@ -47,7 +48,10 @@ async def test_start_job_queues_task(monkeypatch, db_session):
 
     # reload
     job2 = await service.get_job(job.job_id, db_session)
-    assert str(job2.status.value if hasattr(job2.status, "value") else job2.status) in ("queued", JobStatus.QUEUED.value)
+    assert str(job2.status.value if hasattr(job2.status, "value") else job2.status) in (
+        "queued",
+        JobStatus.QUEUED.value,
+    )
     assert job2.task_id == "stub-task-id"
 
 
@@ -87,6 +91,7 @@ async def test_get_job_status_with_celery(monkeypatch, db_session):
 
     # Patch where AsyncResult is referenced in the service module
     import services.job_service as js
+
     monkeypatch.setattr(js, "AsyncResult", DummyAsyncResult)
 
     status = await service.get_job_status(job.job_id, db_session)
@@ -128,9 +133,23 @@ async def test_cleanup_old_jobs(db_session):
     old_date = datetime.utcnow() - timedelta(days=10)
 
     # create two old completed jobs and one recent
-    j1 = Job(type=JobType.COLLECTION, status=JobStatus.COMPLETED, parameters={}, created_by="t", created_at=old_date)
-    j2 = Job(type=JobType.COLLECTION, status=JobStatus.FAILED, parameters={}, created_by="t", created_at=old_date)
-    j3 = Job(type=JobType.COLLECTION, status=JobStatus.PENDING, parameters={}, created_by="t")
+    j1 = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.COMPLETED,
+        parameters={},
+        created_by="t",
+        created_at=old_date,
+    )
+    j2 = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.FAILED,
+        parameters={},
+        created_by="t",
+        created_at=old_date,
+    )
+    j3 = Job(
+        type=JobType.COLLECTION, status=JobStatus.PENDING, parameters={}, created_by="t"
+    )
     db_session.add_all([j1, j2, j3])
     await db_session.commit()
 

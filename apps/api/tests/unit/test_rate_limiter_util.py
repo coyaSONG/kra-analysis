@@ -42,5 +42,6 @@ async def test_api_key_rate_limiter_allows_then_blocks():
     assert ok is False and info3["remaining"] == 0
 
     headers = limiter.get_headers(info3)
-    assert set(["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"]).issubset(headers.keys())
-
+    assert {"X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"}.issubset(
+        headers.keys()
+    )

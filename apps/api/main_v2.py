@@ -3,29 +3,32 @@ KRA 통합 데이터 수집 API 서버 v2
 모든 데이터 수집 및 분석 기능을 RESTful API로 제공
 """
 
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import structlog
+import os
 import time
 import uuid
-import os
-import asyncio
+from contextlib import asynccontextmanager
+
+import structlog
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from config import settings
+from infrastructure.database import check_database_connection, close_db, init_db
+from infrastructure.redis_client import (
+    check_redis_connection,
+    close_redis,
+    get_redis,
+    init_redis,
+)
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from routers import (
-    collection_v2,
-    jobs_v2
-)
-from infrastructure.database import init_db, close_db, check_database_connection
-from infrastructure.redis_client import init_redis, close_redis, check_redis_connection, get_redis
+from routers import collection_v2, jobs_v2
 
 # Celery는 선택적으로 로드
 try:
     from infrastructure.celery_app import celery_app
+
     CELERY_AVAILABLE = True
 except Exception:
     CELERY_AVAILABLE = False
@@ -39,7 +42,7 @@ structlog.configure(
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.contextvars.merge_contextvars,
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -52,12 +55,12 @@ logger = structlog.get_logger()
 async def create_required_directories():
     """필요한 디렉토리들을 생성"""
     directories = [
-        settings.data_dir, 
-        settings.cache_dir, 
-        settings.prompts_dir, 
-        settings.logs_dir
+        settings.data_dir,
+        settings.cache_dir,
+        settings.prompts_dir,
+        settings.logs_dir,
     ]
-    
+
     for dir_path in directories:
         try:
             os.makedirs(dir_path, exist_ok=True)
@@ -74,22 +77,22 @@ async def lifespan(app: FastAPI):
     logger.info(
         "Starting KRA Unified API Server",
         version=settings.version,
-        environment=settings.environment
+        environment=settings.environment,
     )
-    
+
     # 필요한 디렉토리 생성
     await create_required_directories()
-    
+
     # 초기화
     await init_db()
-    
+
     # Redis 초기화 (실패해도 서버는 시작)
     try:
         await init_redis()
         logger.info("Redis initialized successfully")
     except Exception as e:
         logger.warning(f"Redis initialization failed, running without Redis: {e}")
-    
+
     # Celery 워커 상태 확인 (선택적)
     if CELERY_AVAILABLE:
         try:
@@ -102,9 +105,9 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Could not check Celery status: {e}")
     else:
         logger.info("Running without Celery workers")
-    
+
     yield
-    
+
     # 종료
     logger.info("Shutting down KRA Unified API Server")
     await close_db()
@@ -117,13 +120,13 @@ app = FastAPI(
     description="""
     ## 개요
     경마 데이터 수집, 분석, 예측을 위한 통합 RESTful API
-    
+
     ## 주요 기능
     - **데이터 수집**: 경주, 말, 기수, 조교사 정보 자동 수집
     - **데이터 분석**: AI 기반 패턴 분석 및 인사이트 도출
     - **예측 실행**: 삼복연승 예측 및 평가
     - **작업 관리**: 비동기 작업 실행 및 모니터링
-    
+
     ## 인증
     - API Key: 헤더에 `X-API-Key` 포함
     - JWT: Bearer 토큰 사용 (선택적)
@@ -133,15 +136,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
-        {
-            "name": "collection",
-            "description": "데이터 수집 관련 API"
-        },
-        {
-            "name": "jobs",
-            "description": "작업 관리 API"
-        }
-    ]
+        {"name": "collection", "description": "데이터 수집 관련 API"},
+        {"name": "jobs", "description": "작업 관리 API"},
+    ],
 )
 
 # 미들웨어 추가
@@ -157,15 +154,9 @@ app.add_middleware(
 
 # 라우터 포함
 app.include_router(
-    collection_v2.router,
-    prefix="/api/v2/collection",
-    tags=["collection"]
+    collection_v2.router, prefix="/api/v2/collection", tags=["collection"]
 )
-app.include_router(
-    jobs_v2.router,
-    prefix="/api/v2/jobs",
-    tags=["jobs"]
-)
+app.include_router(jobs_v2.router, prefix="/api/v2/jobs", tags=["jobs"])
 
 
 @app.get("/")
@@ -178,26 +169,20 @@ async def root():
         "documentation": {
             "swagger": "/docs",
             "redoc": "/redoc",
-            "openapi": "/openapi.json"
+            "openapi": "/openapi.json",
         },
-        "endpoints": {
-            "collection": "/api/v2/collection",
-            "jobs": "/api/v2/jobs"
-        }
+        "endpoints": {"collection": "/api/v2/collection", "jobs": "/api/v2/jobs"},
     }
 
 
 @app.get("/health")
 async def health_check():
     """간단한 헬스체크"""
-    return {
-        "status": "healthy",
-        "timestamp": time.time()
-    }
+    return {"status": "healthy", "timestamp": time.time()}
 
 
 @app.get("/health/detailed")
-async def detailed_health_check(redis = Depends(get_redis)):
+async def detailed_health_check(redis=Depends(get_redis)):
     """의존성 상태를 포함한 상세 헬스체크"""
     db_ok = await check_database_connection()
     # Prefer DI-provided Redis (overridden in tests), fall back to global check
@@ -234,33 +219,33 @@ async def detailed_health_check(redis = Depends(get_redis)):
 async def global_exception_handler(request, exc):
     """전역 예외 처리"""
     error_id = str(uuid.uuid4())
-    
+
     logger.error(
-        f"Unhandled exception",
+        "Unhandled exception",
         error_id=error_id,
         exception=str(exc),
         path=request.url.path,
-        method=request.method
+        method=request.method,
     )
-    
+
     return JSONResponse(
         content={
             "error": "Internal server error",
             "error_id": error_id,
-            "message": "An unexpected error occurred. Please contact support with the error ID."
+            "message": "An unexpected error occurred. Please contact support with the error ID.",
         },
-        status_code=500
+        status_code=500,
     )
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main_v2:app",
         host=settings.host,
         port=settings.port,
         reload=settings.debug,
         log_level=settings.log_level.lower(),
-        access_log=False  # 커스텀 로깅 사용
+        access_log=False,  # 커스텀 로깅 사용
     )

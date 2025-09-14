@@ -2,14 +2,16 @@
 작업 관리 관련 데이터 모델
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class JobType(str, Enum):
     """작업 유형"""
+
     COLLECTION = "collection"
     ENRICHMENT = "enrichment"
     ANALYSIS = "analysis"
@@ -20,6 +22,7 @@ class JobType(str, Enum):
 
 class JobStatus(str, Enum):
     """작업 상태"""
+
     PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"
@@ -32,30 +35,31 @@ class JobStatus(str, Enum):
 
 class Job(BaseModel):
     """작업 기본 모델"""
+
     job_id: str = Field(..., description="작업 고유 ID")
     type: JobType = Field(..., description="작업 유형")
     status: JobStatus = Field(..., description="현재 상태")
-    
+
     # 시간 정보
     created_at: datetime = Field(..., description="생성 시간")
-    started_at: Optional[datetime] = Field(None, description="시작 시간")
-    completed_at: Optional[datetime] = Field(None, description="완료 시간")
-    
+    started_at: datetime | None = Field(None, description="시작 시간")
+    completed_at: datetime | None = Field(None, description="완료 시간")
+
     # 진행 상황
     progress: int = Field(0, ge=0, le=100, description="진행률 (%)")
-    current_step: Optional[str] = Field(None, description="현재 단계")
-    total_steps: Optional[int] = Field(None, description="전체 단계 수")
-    
+    current_step: str | None = Field(None, description="현재 단계")
+    total_steps: int | None = Field(None, description="전체 단계 수")
+
     # 결과 및 에러
-    result: Optional[Dict[str, Any]] = Field(None, description="작업 결과")
-    error_message: Optional[str] = Field(None, description="에러 메시지")
+    result: dict[str, Any] | None = Field(None, description="작업 결과")
+    error_message: str | None = Field(None, description="에러 메시지")
     retry_count: int = Field(0, description="재시도 횟수")
-    
+
     # 메타데이터
-    parameters: Optional[Dict[str, Any]] = Field(None, description="작업 파라미터")
-    created_by: Optional[str] = Field(None, description="생성자")
-    tags: List[str] = Field(default_factory=list, description="태그")
-    
+    parameters: dict[str, Any] | None = Field(None, description="작업 파라미터")
+    created_by: str | None = Field(None, description="생성자")
+    tags: list[str] = Field(default_factory=list, description="태그")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -66,54 +70,51 @@ class Job(BaseModel):
                 "started_at": "2025-06-22T10:00:05Z",
                 "progress": 65,
                 "current_step": "Enriching race 7 of 11",
-                "parameters": {
-                    "date": "20250622",
-                    "meet": 1
-                }
+                "parameters": {"date": "20250622", "meet": 1},
             }
         }
 
 
 class JobLog(BaseModel):
     """작업 로그 항목"""
+
     timestamp: datetime
     level: str  # INFO, WARNING, ERROR
     message: str
-    metadata: Optional[Dict[str, Any]] = None
-    
+    metadata: dict[str, Any] | None = None
+
     class Config:
         json_schema_extra = {
             "example": {
                 "timestamp": "2025-06-22T10:00:05Z",
                 "level": "INFO",
                 "message": "Started collecting race 1",
-                "metadata": {
-                    "race_no": 1,
-                    "horses": 12
-                }
+                "metadata": {"race_no": 1, "horses": 12},
             }
         }
 
 
 class JobDetailResponse(BaseModel):
     """작업 상세 응답"""
+
     job: Job = Field(..., description="작업 정보")
-    logs: Optional[List[JobLog]] = Field(None, description="작업 로그")
-    
+    logs: list[JobLog] | None = Field(None, description="작업 로그")
+
     # 추가 정보
-    estimated_completion: Optional[datetime] = Field(None, description="예상 완료 시간")
-    duration_seconds: Optional[int] = Field(None, description="소요 시간(초)")
-    resource_usage: Optional[Dict[str, Any]] = Field(None, description="리소스 사용량")
+    estimated_completion: datetime | None = Field(None, description="예상 완료 시간")
+    duration_seconds: int | None = Field(None, description="소요 시간(초)")
+    resource_usage: dict[str, Any] | None = Field(None, description="리소스 사용량")
 
 
 class JobListResponse(BaseModel):
     """작업 목록 응답"""
-    jobs: List[Job] = Field(..., description="작업 목록")
+
+    jobs: list[Job] = Field(..., description="작업 목록")
     total: int = Field(..., description="전체 작업 수")
     limit: int = Field(..., description="페이지당 개수")
     offset: int = Field(..., description="오프셋")
-    pagination: Optional[Dict[str, Any]] = Field(None, description="페이지네이션 정보")
-    
+    pagination: dict[str, Any] | None = Field(None, description="페이지네이션 정보")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -123,14 +124,9 @@ class JobListResponse(BaseModel):
                         "type": "collection",
                         "status": "processing",
                         "progress": 65,
-                        "created_at": "2025-06-22T10:00:00Z"
+                        "created_at": "2025-06-22T10:00:00Z",
                     }
                 ],
-                "pagination": {
-                    "page": 1,
-                    "limit": 20,
-                    "total": 45,
-                    "pages": 3
-                }
+                "pagination": {"page": 1, "limit": 20, "total": 45, "pages": 3},
             }
         }

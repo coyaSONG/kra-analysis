@@ -13,4 +13,3 @@ async def test_root_endpoint(client: AsyncClient):
     data = r.json()
     assert data["service"]
     assert "endpoints" in data
-

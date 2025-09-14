@@ -5,9 +5,11 @@ Unit tests for utils.field_mapping helpers.
 import pytest
 
 from utils.field_mapping import (
-    camel_to_snake, snake_to_camel,
-    convert_api_to_internal, convert_internal_to_api,
+    camel_to_snake,
+    convert_api_to_internal,
+    convert_internal_to_api,
     extract_race_horses,
+    snake_to_camel,
 )
 
 
@@ -46,11 +48,12 @@ def test_convert_internal_to_api_nested():
 
 @pytest.mark.unit
 def test_extract_race_horses_list_and_single_item():
-    resp_list = {"response": {"body": {"items": {"item": [{"hrNo": "001"}, {"hrNo": "002"}]}}}}
+    resp_list = {
+        "response": {"body": {"items": {"item": [{"hrNo": "001"}, {"hrNo": "002"}]}}}
+    }
     horses = extract_race_horses(resp_list)
     assert [h["hr_no"] for h in horses] == ["001", "002"]
 
     resp_single = {"response": {"body": {"items": {"item": {"hrNo": "003"}}}}}
     horses2 = extract_race_horses(resp_single)
     assert [h["hr_no"] for h in horses2] == ["003"]
-

@@ -3,14 +3,15 @@
 비동기 작업 생성, 모니터링, 관리
 """
 
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-import uuid
-import structlog
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc
-from models.database_models import Job, JobLog
 import importlib
+from datetime import datetime, timedelta
+from typing import Any
+
+import structlog
+from sqlalchemy import and_, desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.database_models import Job, JobLog
 
 # Optional globals for test-time injection
 AsyncResult = None  # type: ignore
@@ -71,23 +72,19 @@ class JobService:
         except Exception as e:
             logger.debug("collection_tasks module unavailable", error=str(e))
             return None
-    
+
     async def create_job(
-        self,
-        job_type: str,
-        parameters: Dict[str, Any],
-        user_id: str,
-        db: AsyncSession
+        self, job_type: str, parameters: dict[str, Any], user_id: str, db: AsyncSession
     ) -> Job:
         """
         새 작업 생성
-        
+
         Args:
             job_type: 작업 유형
             parameters: 작업 파라미터
             user_id: 사용자 ID
             db: 데이터베이스 세션
-            
+
         Returns:
             생성된 작업 객체
         """
@@ -97,83 +94,70 @@ class JobService:
                 type=job_type,
                 parameters=parameters,
                 status="pending",
-                created_by=user_id
+                created_by=user_id,
             )
-            
+
             db.add(job)
             await db.commit()
             await db.refresh(job)
-            
+
             logger.info(
-                "Job created",
-                job_id=job.job_id,
-                job_type=job_type,
-                user_id=user_id
+                "Job created", job_id=job.job_id, job_type=job_type, user_id=user_id
             )
-            
+
             return job
-            
+
         except Exception as e:
             logger.error("Failed to create job", error=str(e))
             await db.rollback()
             raise
-    
-    async def start_job(
-        self,
-        job_id: str,
-        db: AsyncSession
-    ) -> str:
+
+    async def start_job(self, job_id: str, db: AsyncSession) -> str:
         """
         작업 시작
-        
+
         Args:
             job_id: 작업 ID
             db: 데이터베이스 세션
-            
+
         Returns:
             Celery 태스크 ID
         """
         try:
             # 작업 조회
-            result = await db.execute(
-                select(Job).where(Job.job_id == job_id)
-            )
+            result = await db.execute(select(Job).where(Job.job_id == job_id))
             job = result.scalar_one_or_none()
-            
+
             if not job:
                 raise ValueError(f"Job not found: {job_id}")
-            
+
             if job.status != "pending":
                 raise ValueError(f"Job already started: {job.status}")
-            
+
             # 작업 유형에 따라 Celery 태스크 실행
             task_result = await self._dispatch_task(job)
-            
+
             # 상태 업데이트
             job.status = "queued"
             job.task_id = task_result.id
             job.started_at = datetime.utcnow()
-            
+
             await db.commit()
-            
+
             # 로그 추가
             await self.add_job_log(
                 job_id, "info", "Job started", {"task_id": task_result.id}, db
             )
-            
-            logger.info(
-                "Job started",
-                job_id=job_id,
-                task_id=task_result.id
-            )
-            
+
+            logger.info("Job started", job_id=job_id, task_id=task_result.id)
+
             return task_result.id
-            
+
         except Exception as e:
             logger.error("Failed to start job", job_id=job_id, error=str(e))
             await db.rollback()
             raise
-    
+
     async def _dispatch_task(self, job: Job) -> AsyncResult:
         """작업 유형에 따라 Celery 태스크 디스패치"""
         params = job.parameters
@@ -195,9 +179,7 @@ class JobService:
                 params["race_id"], job.job_id
             )
         elif job.type == "enrich_race":
-            return tasks_mod.enrich_race_data_task.delay(
-                params["race_id"], job.job_id
-            )
+            return tasks_mod.enrich_race_data_task.delay(params["race_id"], job.job_id)
         elif job.type == "batch_collect":
             return tasks_mod.batch_collect_races_task.delay(
                 params["race_date"], params["meet"], params["race_numbers"], job.job_id
@@ -208,40 +190,30 @@ class JobService:
             )
         else:
             raise ValueError(f"Unknown job type: {job.type}")
-    
-    async def get_job(
-        self,
-        job_id: str,
-        db: AsyncSession
-    ) -> Optional[Job]:
+
+    async def get_job(self, job_id: str, db: AsyncSession) -> Job | None:
         """작업 조회"""
-        result = await db.execute(
-            select(Job).where(Job.job_id == job_id)
-        )
+        result = await db.execute(select(Job).where(Job.job_id == job_id))
         return result.scalar_one_or_none()
-    
-    async def get_job_status(
-        self,
-        job_id: str,
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+
+    async def get_job_status(self, job_id: str, db: AsyncSession) -> dict[str, Any]:
         """
         작업 상태 조회
-        
+
         Args:
             job_id: 작업 ID
             db: 데이터베이스 세션
-            
+
         Returns:
             상태 정보
         """
         job = await self.get_job(job_id, db)
-        
+
         if not job:
             return None
-        
+
         # Celery 태스크 상태 확인 (선택적)
-        celery_status: Optional[Dict[str, Any]] = None
+        celery_status: dict[str, Any] | None = None
         if job.task_id:
             celery_app, AsyncResult = self._get_celery_components()
             if celery_app and AsyncResult:
@@ -249,18 +221,24 @@ class JobService:
                     task_result = AsyncResult(job.task_id, app=celery_app)
                     celery_status = {
                         "state": task_result.state,
-                        "info": task_result.info if isinstance(task_result.info, dict) else str(task_result.info),
+                        "info": (
+                            task_result.info
+                            if isinstance(task_result.info, dict)
+                            else str(task_result.info)
+                        ),
                         "ready": task_result.ready(),
-                        "successful": task_result.successful() if task_result.ready() else None,
+                        "successful": (
+                            task_result.successful() if task_result.ready() else None
+                        ),
                     }
                 except Exception as e:
                     logger.warning(f"Failed to get Celery status: {e}")
             else:
                 logger.debug("Celery not available; skipping status fetch")
-        
+
         # 작업 진행률 계산
         progress = self._calculate_progress(job, celery_status)
-        
+
         return {
             "job_id": job.job_id,
             "type": job.type,
@@ -271,13 +249,11 @@ class JobService:
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "error": getattr(job, "error_message", None),
             "celery_status": celery_status,
-            "parameters": job.parameters
+            "parameters": job.parameters,
         }
-    
+
     def _calculate_progress(
-        self,
-        job: Job,
-        celery_status: Optional[Dict[str, Any]]
+        self, job: Job, celery_status: dict[str, Any] | None
     ) -> int:
         """작업 진행률 계산 (0-100)"""
         if job.status == "completed":
@@ -295,19 +271,17 @@ class JobService:
                 if celery_status and "info" in celery_status:
                     info = celery_status["info"]
                     if isinstance(info, dict) and "steps" in info:
-                        completed = sum(1 for v in info["steps"].values() if v == "completed")
+                        completed = sum(
+                            1 for v in info["steps"].values() if v == "completed"
+                        )
                         return 10 + (completed * 30)  # 10-100%
             return 50  # 기본값
-        
+
         return 0
-    
+
     async def get_job_logs(
-        self,
-        job_id: str,
-        db: AsyncSession,
-        limit: int = 100,
-        offset: int = 0
-    ) -> List[JobLog]:
+        self, job_id: str, db: AsyncSession, limit: int = 100, offset: int = 0
+    ) -> list[JobLog]:
         """작업 로그 조회"""
         result = await db.execute(
             select(JobLog)
@@ -317,47 +291,42 @@ class JobService:
             .offset(offset)
         )
         return result.scalars().all()
-    
+
     async def add_job_log(
         self,
         job_id: str,
         level: str,
         message: str,
-        data: Dict[str, Any],
-        db: AsyncSession
+        data: dict[str, Any],
+        db: AsyncSession,
     ) -> JobLog:
         """작업 로그 추가"""
         try:
-            log = JobLog(
-                job_id=job_id,
-                level=level,
-                message=message,
-                log_metadata=data
-            )
-            
+            log = JobLog(job_id=job_id, level=level, message=message, log_metadata=data)
+
             db.add(log)
             await db.commit()
             await db.refresh(log)
-            
+
             return log
-            
+
         except Exception as e:
             logger.error("Failed to add job log", error=str(e))
             await db.rollback()
             raise
-    
+
     async def list_jobs(
         self,
         db: AsyncSession,
-        user_id: Optional[str] = None,
-        job_type: Optional[str] = None,
-        status: Optional[str] = None,
+        user_id: str | None = None,
+        job_type: str | None = None,
+        status: str | None = None,
         limit: int = 20,
-        offset: int = 0
-    ) -> List[Job]:
+        offset: int = 0,
+    ) -> list[Job]:
         """
         작업 목록 조회
-        
+
         Args:
             db: 데이터베이스 세션
             user_id: 사용자 ID (필터)
@@ -365,12 +334,12 @@ class JobService:
             status: 상태 (필터)
             limit: 조회 개수
             offset: 오프셋
-            
+
         Returns:
             작업 목록
         """
         query = select(Job)
-        
+
         # 필터 적용
         filters = []
         if user_id:
@@ -379,42 +348,39 @@ class JobService:
             filters.append(Job.type == job_type)
         if status:
             filters.append(Job.status == status)
-        
+
         if filters:
             query = query.where(and_(*filters))
-        
+
         # 정렬 및 페이징
         query = query.order_by(desc(Job.created_at)).limit(limit).offset(offset)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
-    
-    async def cancel_job(
-        self,
-        job_id: str,
-        db: AsyncSession
-    ) -> bool:
+
+    async def cancel_job(self, job_id: str, db: AsyncSession) -> bool:
         """
         작업 취소
-        
+
         Args:
             job_id: 작업 ID
             db: 데이터베이스 세션
-            
+
         Returns:
             성공 여부
         """
         try:
             job = await self.get_job(job_id, db)
-            
+
             if not job:
                 return False
-            
+
             if str(job.status) in ["completed", "failed", "cancelled"] or (
-                hasattr(job.status, "value") and job.status.value in ["completed", "failed", "cancelled"]
+                hasattr(job.status, "value")
+                and job.status.value in ["completed", "failed", "cancelled"]
             ):
                 return False
-            
+
             # Celery 태스크 취소
             task_id = getattr(job, "task_id", None)
             if task_id:
@@ -426,83 +392,75 @@ class JobService:
                         logger.warning(f"Failed to revoke Celery task: {e}")
                 else:
                     logger.debug("Celery not available; skipping revoke")
-            
+
             # 상태 업데이트
             job.status = "cancelled"
             job.completed_at = datetime.utcnow()
-            
+
             await db.commit()
-            
+
             # 로그 추가
-            await self.add_job_log(
-                job_id, "warning", "Job cancelled", {}, db
-            )
-            
+            await self.add_job_log(job_id, "warning", "Job cancelled", {}, db)
+
             return True
-            
+
         except Exception as e:
             logger.error("Failed to cancel job", job_id=job_id, error=str(e))
             await db.rollback()
             return False
-    
-    async def cleanup_old_jobs(
-        self,
-        db: AsyncSession,
-        days: int = 7
-    ) -> int:
+
+    async def cleanup_old_jobs(self, db: AsyncSession, days: int = 7) -> int:
         """
         오래된 작업 정리
-        
+
         Args:
             db: 데이터베이스 세션
             days: 보관 일수
-            
+
         Returns:
             삭제된 작업 수
         """
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=days)
-            
+
             # 완료된 오래된 작업 조회
             result = await db.execute(
                 select(Job).where(
                     and_(
                         Job.status.in_(["completed", "failed", "cancelled"]),
-                        Job.created_at < cutoff_date
+                        Job.created_at < cutoff_date,
                     )
                 )
             )
-            
+
             jobs = result.scalars().all()
             count = len(jobs)
-            
+
             # 삭제
             for job in jobs:
                 db.delete(job)
-            
+
             await db.commit()
-            
+
             logger.info(f"Cleaned up {count} old jobs")
-            
+
             return count
-            
+
         except Exception as e:
             logger.error("Failed to cleanup old jobs", error=str(e))
             await db.rollback()
             return 0
-    
+
     async def get_job_statistics(
-        self,
-        db: AsyncSession,
-        user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, db: AsyncSession, user_id: str | None = None
+    ) -> dict[str, Any]:
         """
         작업 통계 조회
-        
+
         Args:
             db: 데이터베이스 세션
             user_id: 사용자 ID (필터)
-            
+
         Returns:
             통계 정보
         """
@@ -511,45 +469,51 @@ class JobService:
             base_query = select(Job)
             if user_id:
                 base_query = base_query.where(Job.created_by == user_id)
-            
+
             # 전체 작업 수
             total_result = await db.execute(base_query)
             total_jobs = len(total_result.scalars().all())
-            
+
             # 상태별 작업 수
             status_counts = {}
-            for status in ["pending", "queued", "processing", "completed", "failed", "cancelled"]:
-                result = await db.execute(
-                    base_query.where(Job.status == status)
-                )
+            for status in [
+                "pending",
+                "queued",
+                "processing",
+                "completed",
+                "failed",
+                "cancelled",
+            ]:
+                result = await db.execute(base_query.where(Job.status == status))
                 status_counts[status] = len(result.scalars().all())
-            
+
             # 작업 유형별 수
             type_counts = {}
-            for job_type in ["collect_race", "preprocess_race", "enrich_race", "batch_collect", "full_pipeline"]:
-                result = await db.execute(
-                    base_query.where(Job.type == job_type)
-                )
+            for job_type in [
+                "collect_race",
+                "preprocess_race",
+                "enrich_race",
+                "batch_collect",
+                "full_pipeline",
+            ]:
+                result = await db.execute(base_query.where(Job.type == job_type))
                 type_counts[job_type] = len(result.scalars().all())
-            
+
             # 최근 24시간 작업 수
             yesterday = datetime.utcnow() - timedelta(days=1)
             recent_result = await db.execute(
                 base_query.where(Job.created_at >= yesterday)
             )
             recent_jobs = len(recent_result.scalars().all())
-            
+
             return {
                 "total_jobs": total_jobs,
                 "status_counts": status_counts,
                 "type_counts": type_counts,
                 "recent_jobs_24h": recent_jobs,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
-            
+
         except Exception as e:
             logger.error("Failed to get job statistics", error=str(e))
-            return {
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}

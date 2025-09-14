@@ -2,11 +2,9 @@
 Extended unit tests for authentication and authorization to improve coverage.
 """
 
-import pytest
-import pytest_asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi import HTTPException, status
 
 from dependencies import auth as auth_dep
@@ -21,12 +19,20 @@ async def test_verify_api_key_from_env(monkeypatch, db_session):
     key = "env-key-abcdef1234"
 
     # Patch settings.valid_api_keys
-    monkeypatch.setattr(auth_dep, "settings", type("S", (), {
-        "valid_api_keys": [key],
-        "access_token_expire_minutes": 30,
-        "secret_key": "test-secret",
-        "algorithm": "HS256"
-    })())
+    monkeypatch.setattr(
+        auth_dep,
+        "settings",
+        type(
+            "S",
+            (),
+            {
+                "valid_api_keys": [key],
+                "access_token_expire_minutes": 30,
+                "secret_key": "test-secret",
+                "algorithm": "HS256",
+            },
+        )(),
+    )
 
     result = await auth_dep.verify_api_key(key, db_session)
     assert result is not None
@@ -64,11 +70,19 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
 def test_verify_token_valid_and_invalid(monkeypatch):
     """Validate verify_token for valid, expired, and malformed tokens."""
     # Minimal settings for token operations
-    monkeypatch.setattr(auth_dep, "settings", type("S", (), {
-        "secret_key": "test-secret",
-        "algorithm": "HS256",
-        "access_token_expire_minutes": 30,
-    })())
+    monkeypatch.setattr(
+        auth_dep,
+        "settings",
+        type(
+            "S",
+            (),
+            {
+                "secret_key": "test-secret",
+                "algorithm": "HS256",
+                "access_token_expire_minutes": 30,
+            },
+        )(),
+    )
 
     # Valid token
     token_valid = auth_dep.create_access_token({"sub": "user-1"})
@@ -77,7 +91,7 @@ def test_verify_token_valid_and_invalid(monkeypatch):
 
     # Expired token
     expired = auth_dep.jwt.encode(
-        {"sub": "user-1", "exp": datetime.now(timezone.utc) - timedelta(minutes=1)},
+        {"sub": "user-1", "exp": datetime.now(UTC) - timedelta(minutes=1)},
         auth_dep.settings.secret_key,
         algorithm=auth_dep.settings.algorithm,
     )
@@ -91,18 +105,31 @@ def test_verify_token_valid_and_invalid(monkeypatch):
 @pytest.mark.asyncio
 async def test_get_current_user(monkeypatch, db_session):
     """get_current_user returns payload for Bearer token, None otherwise."""
-    monkeypatch.setattr(auth_dep, "settings", type("S", (), {
-        "secret_key": "test-secret",
-        "algorithm": "HS256",
-        "access_token_expire_minutes": 30,
-    })())
+    monkeypatch.setattr(
+        auth_dep,
+        "settings",
+        type(
+            "S",
+            (),
+            {
+                "secret_key": "test-secret",
+                "algorithm": "HS256",
+                "access_token_expire_minutes": 30,
+            },
+        )(),
+    )
 
     token = auth_dep.create_access_token({"sub": "tester"})
-    user = await auth_dep.get_current_user(authorization=f"Bearer {token}", db=db_session)
+    user = await auth_dep.get_current_user(
+        authorization=f"Bearer {token}", db=db_session
+    )
     assert user is not None and user.get("sub") == "tester"
 
     assert await auth_dep.get_current_user(authorization=None, db=db_session) is None
-    assert await auth_dep.get_current_user(authorization="Bearer invalid", db=db_session) is None
+    assert (
+        await auth_dep.get_current_user(authorization="Bearer invalid", db=db_session)
+        is None
+    )
 
 
 @pytest.mark.unit
@@ -131,17 +158,29 @@ async def test_require_permissions_allow_and_deny(db_session):
 @pytest.mark.asyncio
 async def test_check_resource_access_paths(db_session):
     # race: requires read permission
-    api_key = APIKey(key="k1-1234567890", name="u1", is_active=True, permissions=["read"]) 
-    assert await auth_dep.check_resource_access("race", "r1", api_key, db_session) is True
+    api_key = APIKey(
+        key="k1-1234567890", name="u1", is_active=True, permissions=["read"]
+    )
+    assert (
+        await auth_dep.check_resource_access("race", "r1", api_key, db_session) is True
+    )
 
     # job: only creator can access
     job = Job(type="collection", status="completed", parameters={}, created_by="u1")
     db_session.add(job)
     await db_session.commit()
-    assert await auth_dep.check_resource_access("job", job.job_id, api_key, db_session) is True
+    assert (
+        await auth_dep.check_resource_access("job", job.job_id, api_key, db_session)
+        is True
+    )
 
     # prediction: existence implies accessible (until created_by field exists)
-    pred = Prediction(prediction_id="p1", race_id="r1", prompt_id="t", predicted_positions=[1,2,3])
+    pred = Prediction(
+        prediction_id="p1", race_id="r1", prompt_id="t", predicted_positions=[1, 2, 3]
+    )
     db_session.add(pred)
     await db_session.commit()
-    assert await auth_dep.check_resource_access("prediction", "p1", api_key, db_session) is True
+    assert (
+        await auth_dep.check_resource_access("prediction", "p1", api_key, db_session)
+        is True
+    )

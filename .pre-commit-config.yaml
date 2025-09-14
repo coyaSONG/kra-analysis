@@ -1,0 +1,18 @@
+repos:
+  # Use local hooks with uvx to pin tool versions and avoid duplicated envs
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (lint + autofix)
+        entry: uvx --from ruff==0.13.0 ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: "^(.+/)?(apps|packages)/.*\.(py|pyi)$|^.*\.(py|pyi)$"
+      - id: black
+        name: black (format)
+        entry: uvx --from black==24.10.0 black
+        language: system
+        types_or: [python, pyi]
+        files: "^(.+/)?(apps|packages)/.*\.(py|pyi)$|^.*\.(py|pyi)$"
+        args: ["--line-length=88"]
+
