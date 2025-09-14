@@ -1,102 +1,26 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import structlog
-from config import settings
-from routers import race
-from middleware.logging import LoggingMiddleware
-from middleware.rate_limit import RateLimitMiddleware
+"""
+DEPRECATED: Use `main_v2.py` as the application entrypoint.
 
+이 파일은 하위 호환을 위해 남겨둔 포워더입니다.
+직접 사용할 경우 `main_v2:app`을 참조하세요.
+"""
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
+import warnings
+
+warnings.warn(
+    "apps/api/main.py 는 더 이상 사용되지 않습니다. main_v2.py를 사용하세요.",
+    DeprecationWarning,
 )
 
-logger = structlog.get_logger()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Starting KRA Race Prediction API", version=settings.version)
-    
-    # Initialize connections, cache, etc.
-    # await initialize_supabase()
-    # await initialize_redis()
-    
-    yield
-    
-    # Shutdown
-    logger.info("Shutting down KRA Race Prediction API")
-    # await cleanup_connections()
-
-
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
-    debug=settings.debug,
-    lifespan=lifespan,
-    openapi_tags=[
-        {
-            "name": "races",
-            "description": "Race data collection and management",
-        },
-    ]
-)
-
-# Middleware
-app.add_middleware(LoggingMiddleware)
-app.add_middleware(RateLimitMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure properly for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include routers
-app.include_router(race.router, prefix="/api/v1/races", tags=["races"])
-
-
-@app.get("/")
-async def root():
-    return {
-        "message": "KRA Race Prediction API",
-        "version": settings.version,
-        "docs": "/docs",
-        "redoc": "/redoc",
-    }
-
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "version": settings.version,
-    }
-
+# Forward import for backward compatibility
+from main_v2 import app  # noqa: F401
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "api.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.debug,
-        log_level=settings.log_level.lower(),
+        "main_v2:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info",
     )
