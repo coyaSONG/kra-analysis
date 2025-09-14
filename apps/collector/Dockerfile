@@ -5,7 +5,7 @@
 # =============================================================================
 # Base Stage - Common dependencies and setup
 # =============================================================================
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
 # Set working directory
 WORKDIR /app
@@ -83,7 +83,7 @@ RUN npm ci --only=production --silent && \
 # =============================================================================
 # Production Stage - Optimized for production deployment
 # =============================================================================
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 # Install system dependencies and security updates
 RUN apk add --no-cache \
