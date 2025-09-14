@@ -2,7 +2,7 @@
 export enum Meet {
   SEOUL = 1,
   JEJU = 2,
-  BUSAN = 3
+  BUSAN = 3,
 }
 
 // 경주 데이터 타입
