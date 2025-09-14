@@ -1,0 +1,34 @@
+# Reduce build context and image size for API
+
+# VCS
+.git
+.gitignore
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+
+# Build/coverage artifacts
+build/
+dist/
+htmlcov/
+.coverage*
+coverage.xml
+
+# Local env
+.env
+.env.*
+
+# Unnecessary for runtime image
+tests/
+docs/
+examples/
+data/
+
+# Keep uv.lock and pyproject.toml for dependency resolution
+!uv.lock
+!pyproject.toml
