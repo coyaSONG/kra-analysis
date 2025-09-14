@@ -492,7 +492,9 @@ class RaceService:
                     horse_detail = await self._get_cached_data(
                         "horse_cache",
                         horse_no,
-                        lambda horse_no=horse_no: self.kra_client.get_horse_detail(horse_no),
+                        lambda horse_no=horse_no: self.kra_client.get_horse_detail(
+                            horse_no
+                        ),
                     )
                     if horse_detail:
                         enriched_horse["horse_detail"] = horse_detail
@@ -503,7 +505,9 @@ class RaceService:
                     jockey_detail = await self._get_cached_data(
                         "jockey_cache",
                         jockey_no,
-                        lambda jockey_no=jockey_no: self.kra_client.get_jockey_detail(jockey_no),
+                        lambda jockey_no=jockey_no: self.kra_client.get_jockey_detail(
+                            jockey_no
+                        ),
                     )
                     if jockey_detail:
                         enriched_horse["jockey_detail"] = jockey_detail
@@ -514,7 +518,9 @@ class RaceService:
                     trainer_detail = await self._get_cached_data(
                         "trainer_cache",
                         trainer_no,
-                        lambda trainer_no=trainer_no: self.kra_client.get_trainer_detail(trainer_no),
+                        lambda trainer_no=trainer_no: self.kra_client.get_trainer_detail(
+                            trainer_no
+                        ),
                     )
                     if trainer_detail:
                         enriched_horse["trainer_detail"] = trainer_detail
