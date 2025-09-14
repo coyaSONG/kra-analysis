@@ -36,8 +36,8 @@
 - [x] Python 린트 도구 정책: Ruff 단일화로 확정. flake8 제거 및 설정/문서/의존성 반영 완료.
 
 ## 선택(미래 개선)
-- [ ] pnpm workspace constraints 도입(Typescript/ESLint 버전 상한·하한 고정).
-- [ ] Renovate/Bot 도입으로 의존성 자동 업데이트 파이프라인 구축.
+- [x] pnpm workspace constraints 도입(Typescript/ESLint 버전 상한·하한 고정).
+- [x] Renovate/Bot 도입으로 의존성 자동 업데이트 파이프라인 구축.
 
 ---
 본 목록은 레포 점검 결과를 반영한 실행 계획 초안입니다. 우선 P0 항목부터 PR로 분리하여 진행하는 것을 권장합니다.
