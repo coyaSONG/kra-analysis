@@ -31,6 +31,124 @@ class TestCollectionService:
     def collection_service(self, mock_kra_api_service):
         """Create collection service with mocked dependencies"""
         return CollectionService(mock_kra_api_service)
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_collect_horse_details_enriches_fields(self, collection_service, mock_kra_api_service):
+        """_collect_horse_details should add hrDetail/jkDetail/trDetail when API returns structured data."""
+        mock_kra_api_service.get_horse_info.return_value = {
+            "response": {"body": {"items": {"item": [{"hrNo": "001", "win_rate_t": "12.5"}]}}}
+        }
+        mock_kra_api_service.get_jockey_info.return_value = {
+            "response": {"body": {"items": {"item": {"jkNo": "J001", "rc_cnt_t": 10}}}}
+        }
+        mock_kra_api_service.get_trainer_info.return_value = {
+            "response": {"body": {"items": {"item": {"trNo": "T001", "win_rate_t": "15.0"}}}}
+        }
+
+        horse_basic = {"hr_no": "001", "jk_no": "J001", "tr_no": "T001"}
+        result = await collection_service._collect_horse_details(horse_basic)
+        assert result.get("hrDetail") is not None
+        assert result.get("jkDetail") is not None
+        assert result.get("trDetail") is not None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_save_race_data_updates_existing(self, collection_service, db_session):
+        """_save_race_data should update existing race instead of inserting new one."""
+        # Insert initial race
+        from models.database_models import Race, DataStatus
+        race = Race(
+            race_id="20240719_1_1",
+            date="20240719",
+            race_date="20240719",
+            meet=1,
+            race_number=1,
+            race_no=1,
+            basic_data={"date": "20240719", "meet": 1, "race_number": 1},
+            status=DataStatus.COLLECTED,
+            collection_status=DataStatus.COLLECTED,
+        )
+        db_session.add(race)
+        await db_session.commit()
+
+        # Update with new data
+        data = {
+            "date": "20240719",
+            "meet": 1,
+            "race_number": 1,
+            "horses": [],
+        }
+        await collection_service._save_race_data(data, db_session)
+
+        updated = await db_session.execute(
+            "SELECT * FROM races WHERE race_date = '20240719' AND meet = 1 AND race_no = 1"
+        )
+        assert updated.first() is not None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_get_horse_past_performances(self, collection_service, db_session):
+        from models.database_models import Race, DataStatus
+        # Create two past races within 3 months window
+        for d in ("20240701", "20240710"):
+            race = Race(
+                race_date=d,
+                date=d,
+                meet=1,
+                race_no=1,
+                race_number=1,
+                result_status=DataStatus.COLLECTED,
+                result_data={
+                    "horses": [
+                        {"hr_no": "001", "ord": 2, "win_odds": 5.0, "rating": 80, "weight": 480}
+                    ]
+                },
+            )
+            db_session.add(race)
+        await db_session.commit()
+
+        perfs = await collection_service._get_horse_past_performances("001", "20240719", db_session)
+        assert len(perfs) >= 2
+        assert perfs[0]["race_no"] == 1
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_get_jockey_trainer_stats_fallbacks(self, collection_service, mock_kra_api_service, db_session):
+        # No data from API --> default fallbacks
+        mock_kra_api_service.get_jockey_info.return_value = None
+        mock_kra_api_service.get_trainer_info.return_value = None
+        jk = await collection_service._get_jockey_stats("J001", "20240719", db_session)
+        tr = await collection_service._get_trainer_stats("T001", "20240719", db_session)
+        assert 0 <= jk["recent_win_rate"] <= 1
+        assert 0 <= tr["plc_rate"] <= 1
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_enrich_data_with_past_performances(self, collection_service, db_session, monkeypatch):
+        """_enrich_data should include past_stats when past performances exist."""
+        # Patch methods to control behavior
+        from unittest.mock import AsyncMock
+        collection_service._get_horse_past_performances = AsyncMock(return_value=[
+            {"position": 1, "date": "20240701"},
+            {"position": 3, "date": "20240708"},
+        ])
+        collection_service._get_jockey_stats = AsyncMock(return_value={
+            "recent_win_rate": 0.2, "career_win_rate": 0.15, "total_wins": 10, "total_races": 50, "recent_races": 10
+        })
+        collection_service._get_trainer_stats = AsyncMock(return_value={
+            "recent_win_rate": 0.18, "career_win_rate": 0.12, "total_wins": 20, "total_races": 100, "recent_races": 20, "plc_rate": 0.3, "meet": "SEOUL"
+        })
+
+        data = {
+            "race_date": "20240719",
+            "meet": 1,
+            "horses": [{"hr_no": "001", "jk_no": "J001", "tr_no": "T001"}],
+        }
+        result = await collection_service._enrich_data(data, db_session)
+        assert result["horses"][0]["past_stats"]["total_races"] == 2
+        assert "jockey_stats" in result["horses"][0]
+        assert "trainer_stats" in result["horses"][0]
     
     @pytest.mark.unit
     @pytest.mark.asyncio

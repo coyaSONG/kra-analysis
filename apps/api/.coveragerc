@@ -8,6 +8,7 @@ omit =
     setup.py
     */config.py
     main.py
+    main_v2.py
     run_tests.py
     infrastructure/claude_cli/*
     infrastructure/supabase_client.py

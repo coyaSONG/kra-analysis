@@ -24,7 +24,7 @@
 - Keep files small and cohesive; colocate tests with each app.
 
 ## Testing Guidelines
-- Node: Jest with ESM (`ts-jest`), 70% global coverage. Place tests under `apps/collector/tests/` mirroring `src/`. Run: `pnpm -F @apps/collector test`.
+- Node: Jest with ESM (`ts-jest`), 80% global coverage. Place tests under `apps/collector/tests/` mirroring `src/`. Run: `pnpm -F @apps/collector test`.
 - Python: Pytest with asyncio and coverage. Place tests under `apps/api/tests/` (e.g., `tests/services/test_job_service.py`). Run: `uv run pytest -q`.
 
 ## Commit & Pull Request Guidelines

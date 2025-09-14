@@ -64,6 +64,26 @@ class TestCollectionEndpoints:
             data = response.json()
             assert data["status"] == "success"
             assert "Collected 1 races" in data["message"]
+
+    @pytest.mark.integration
+    async def test_collect_races_partial_errors(self, authenticated_client: AsyncClient):
+        """When one race fails during iteration, the endpoint still returns success with others."""
+        with patch('services.collection_service.CollectionService.collect_race_data') as mock_collect:
+            mock_collect.side_effect = [Exception("boom"), {
+                "race_date": "20240719",
+                "meet": 1,
+                "race_no": 2,
+                "horses": [],
+            }]
+
+            response = await authenticated_client.post(
+                "/api/v2/collection/",
+                json={"date": "20240719", "meet": 1, "race_numbers": [1, 2]}
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "success"
+            assert "Collected 1 races" in data["message"]
     
     @pytest.mark.integration
     async def test_collect_races_invalid_date(self, authenticated_client: AsyncClient):

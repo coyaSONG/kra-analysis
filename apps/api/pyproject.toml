@@ -93,7 +93,34 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-v --tb=short"
+python_classes = ["Test*", "*Tests"]
+addopts = """
+  -v
+  --strict-markers
+  --tb=short
+  --cov=.
+  --cov-config=.coveragerc
+  --cov-branch
+  --cov-report=term-missing:skip-covered
+  --cov-report=html
+  --cov-report=xml
+  --maxfail=1
+  --disable-warnings
+  -p no:warnings
+  -k "not test_api.py"
+"""
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+  "unit: Unit tests (fast, isolated)",
+  "integration: Integration tests (may require external services)",
+  "e2e: End-to-end tests (full system tests)",
+  "slow: Slow running tests",
+  "auth: Authentication related tests",
+  "db: Database related tests",
+  "external: Tests requiring external API calls",
+  "smoke: Quick smoke tests",
+]
 
 [tool.coverage.run]
 source = ["api"]

@@ -14,12 +14,9 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 
   // Test file patterns
+  // Run unit + integration tests under tests/** (exclude e2e by ignore pattern below)
   testMatch: [
-    '<rootDir>/tests/api-simple.test.ts',
-    '<rootDir>/tests/middleware/validation.test.ts',
-    // Integration and E2E tests require real API, use pnpm test:real-api
-    // '<rootDir>/tests/integration/kra-api-integration.test.ts',
-    // '<rootDir>/tests/e2e/api-e2e.test.ts',
+    '<rootDir>/tests/**/*.test.ts'
   ],
 
   // Test categories
@@ -28,6 +25,7 @@ export default {
     '/dist/',
     '/cache/',
     '/logs/',
+    '/tests/e2e/'
   ],
 
   // Coverage configuration
@@ -45,10 +43,10 @@ export default {
   ],
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70,
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
     },
   },
 
@@ -109,10 +107,8 @@ export default {
   testResultsProcessor: undefined,
 
   // Global variables available in tests
+  // Note: ts-jest config moved to transform options above.
   globals: {
-    'ts-jest': {
-      useESM: true,
-    },
     // Test environment variables
     TEST_ENV: true,
     NODE_ENV: 'test',
