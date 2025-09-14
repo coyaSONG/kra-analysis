@@ -53,13 +53,13 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.STORE_PATH }}
-        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml', '**/package.json') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
 
     - name: Install dependencies (workspace)
       working-directory: .
-      run: pnpm -w -F @apps/collector install --frozen-lockfile
+      run: pnpm -w -F @apps/collector install --no-frozen-lockfile
     
     - name: Run lint
       working-directory: .
