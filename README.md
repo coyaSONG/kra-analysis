@@ -1,5 +1,8 @@
 # KRA 경마 예측 시스템
 
+[![API Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/OWNER/REPO)
+[![Collector Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg?flag=collector)](https://codecov.io/gh/OWNER/REPO)
+
 한국마사회(KRA) 경마 데이터를 분석하여 삼복연승(1-3위 예측)을 수행하는 AI 시스템입니다.
 
 ## 🚀 주요 기능

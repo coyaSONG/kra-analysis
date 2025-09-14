@@ -39,15 +39,18 @@ htmlcov/
 coverage/
 coverage.xml
 **/coverage.xml
+apps/collector/coverage/
 
 # Build
 dist/
 build/
 *.egg-info/
+**/*.tsbuildinfo
 
 # Logs
 logs/
 *.log
+apps/collector/logs/
 
 # Local data (optional - uncomment if you want to exclude data)
 # data/raw/
@@ -58,6 +61,8 @@ logs/
 *.tmp
 *.temp
 .cache/
+apps/collector/cache/
+apps/collector/tmp/
 
 # Package files
 package-lock.json

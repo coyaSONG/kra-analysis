@@ -1,142 +1,95 @@
 #!/usr/bin/env python3
 """
-FastAPI 서버 테스트 스크립트
+API v2 테스트 스크립트 (legacy v1 경로 제거)
+
+- 헬스 체크:        GET  /health
+- 데이터 수집:      POST /api/v2/collection/
+- 수집 상태 조회:   GET  /api/v2/collection/status?date=YYYYMMDD&meet=1
+- 작업 목록 조회:   GET  /api/v2/jobs/
+
+실행 전 개발/테스트 환경에서는 기본 테스트 키가 자동 활성화됩니다.
+프로덕션에서는 환경변수 VALID_API_KEYS 설정이 필요합니다.
 """
 
 import httpx
 import asyncio
-import json
-from datetime import datetime
+from typing import Optional
 
 
 BASE_URL = "http://localhost:8000"
+HEADERS = {"X-API-Key": "test-api-key-123456789"}
 
 
-async def test_health_check():
-    """헬스 체크 테스트"""
+async def test_health_check() -> bool:
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{BASE_URL}/health")
-        print(f"Health Check: {response.status_code}")
-        print(f"Response: {response.json()}")
-        return response.status_code == 200
+        r = await client.get(f"{BASE_URL}/health")
+        print(f"Health Check: {r.status_code}")
+        try:
+            print(f"Response: {r.json()}")
+        except Exception:
+            print("Response: <non-json>")
+        return r.status_code == 200
 
 
-async def test_collect_races():
-    """경주 데이터 수집 테스트"""
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        # 특정 날짜의 서울 경마장 데이터 수집
-        data = {
+async def test_collect_v2() -> Optional[str]:
+    async with httpx.AsyncClient(timeout=30.0, headers=HEADERS) as client:
+        payload = {
             "date": "20250608",
-            "meet": 1,  # 서울
-            "race_no": 1  # 1경주만 테스트
+            "meet": 1,
+            "race_numbers": [1]
         }
-        
-        print(f"\n경주 수집 요청: {data}")
-        response = await client.post(
-            f"{BASE_URL}/api/v1/races/collect",
-            json=data
-        )
-        
-        print(f"Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Job ID: {result['job_id']}")
-            print(f"Message: {result['message']}")
-            return result['job_id']
-        else:
-            print(f"Error: {response.text}")
-            return None
+        print(f"\n[POST] /api/v2/collection/ :: {payload}")
+        r = await client.post(f"{BASE_URL}/api/v2/collection/", json=payload)
+        print(f"Status: {r.status_code}")
+        if r.status_code in (200, 202):
+            data = r.json()
+            print(f"Result: {data}")
+            return data.get("job_id")
+        print(f"Error: {r.text}")
+        return None
 
 
-async def test_list_races():
-    """경주 목록 조회 테스트"""
-    async with httpx.AsyncClient() as client:
-        date = "20250608"
-        
-        print(f"\n{date} 경주 목록 조회")
-        response = await client.get(f"{BASE_URL}/api/v1/races/{date}")
-        
-        print(f"Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            races = response.json()
-            print(f"총 {len(races)}개 경주 조회됨")
-            
-            for race in races[:3]:  # 처음 3개만 출력
-                print(f"- {race['race_no']}R: {race['race_name']} "
-                      f"({race['horse_count']}두 출전)")
-        else:
-            print(f"Error: {response.text}")
-
-
-async def test_enrich_race(race_id: str):
-    """경주 데이터 보강 테스트"""
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        print(f"\n경주 {race_id} 데이터 보강 요청")
-        
-        response = await client.post(
-            f"{BASE_URL}/api/v1/races/enrich/{race_id}"
-        )
-        
-        print(f"Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Result: {result}")
-        else:
-            print(f"Error: {response.text}")
-
-
-async def test_get_race_result():
-    """경주 결과 조회 테스트"""
-    async with httpx.AsyncClient() as client:
+async def test_collection_status_v2():
+    async with httpx.AsyncClient(headers=HEADERS) as client:
         date = "20250608"
         meet = 1
-        race_no = 1
-        
-        print(f"\n{date} {meet}경마장 {race_no}R 결과 조회")
-        
-        response = await client.get(
-            f"{BASE_URL}/api/v1/races/results/{date}/{meet}/{race_no}"
-        )
-        
-        print(f"Status: {response.status_code}")
-        
-        if response.status_code == 200:
-            result = response.json()
-            print(f"1위: {result['winner']}번")
-            print(f"2위: {result['second']}번")
-            print(f"3위: {result['third']}번")
-        else:
-            print(f"Error: {response.text}")
+        print(f"\n[GET] /api/v2/collection/status?date={date}&meet={meet}")
+        r = await client.get(f"{BASE_URL}/api/v2/collection/status", params={"date": date, "meet": meet})
+        print(f"Status: {r.status_code}")
+        try:
+            print(f"Body: {r.json()}")
+        except Exception:
+            print("Body: <non-json>")
+
+
+async def test_list_jobs_v2():
+    async with httpx.AsyncClient(headers=HEADERS) as client:
+        print("\n[GET] /api/v2/jobs/")
+        r = await client.get(f"{BASE_URL}/api/v2/jobs/")
+        print(f"Status: {r.status_code}")
+        try:
+            data = r.json()
+            print(f"Jobs: total={data.get('total')} items={len(data.get('jobs', []))}")
+        except Exception:
+            print("Body: <non-json>")
 
 
 async def main():
-    """메인 테스트 함수"""
     print("=" * 60)
-    print("KRA Race Prediction API 테스트")
+    print("KRA API v2 Quick Test")
     print("=" * 60)
-    
-    # 1. 헬스 체크
+
     if not await test_health_check():
-        print("서버가 실행 중이지 않습니다!")
+        print("서버가 실행 중이 아닙니다.")
         return
-    
-    # 2. 경주 수집
-    job_id = await test_collect_races()
-    
+
+    job_id = await test_collect_v2()
     if job_id:
-        # 잠시 대기 (백그라운드 작업 진행)
         print("\n5초 대기 중...")
         await asyncio.sleep(5)
-        
-        # 3. 경주 목록 조회
-        await test_list_races()
-        
-        # 4. 경주 결과 조회
-        await test_get_race_result()
-    
+        await test_collection_status_v2()
+        await test_list_jobs_v2()
+
     print("\n테스트 완료!")
 
 

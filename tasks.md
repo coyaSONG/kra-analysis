@@ -22,14 +22,14 @@
 - [x] Redis 설정 개선(Collector): `utils/redis.ts`가 `REDIS_URL` 전체 문자열 파싱을 우선 사용하도록 개선(현재 host/port만 사용). (변경: `apps/collector/src/utils/redis.ts`)
 
 ## P2 — 레포 정리/청소
-- [ ] `.gitignore` 보강: `**/*.tsbuildinfo`, `apps/collector/{cache,logs,tmp}/`, `coverage/`, `htmlcov/` 등 추가.
-- [ ] 커밋된 빌드 산출물 제거: `packages/shared-types/tsconfig.tsbuildinfo` 삭제 후 무시 처리.
-- [ ] Node/TS 설정 점검: 워크스페이스 전반 `module`/`moduleResolution`(NodeNext) 및 Node 20/22 호환성 재확인.
+- [x] `.gitignore` 보강: `**/*.tsbuildinfo`, `apps/collector/{cache,logs,tmp}/`, `coverage/`, `htmlcov/` 등 추가.
+- [x] 커밋된 빌드 산출물 제거: `packages/shared-types/tsconfig.tsbuildinfo` 삭제 후 무시 처리.
+- [x] Node/TS 설정 점검: 워크스페이스 전반 `module`/`moduleResolution`(NodeNext) 및 Node 20/22 호환성 재확인.
 
 ## P2 — 테스트/문서 보강
-- [ ] `apps/api/test_api.py`의 v1 경로를 v2로 갱신하거나 legacy 스크립트로 명시.
-- [ ] Codecov 설정 보강: `collector`/`api` 플래그, 배지 추가 및 업로드 경로 확인.
-- [ ] 통합/E2E 테스트 게이팅 정비: 시크릿(`KRA_SERVICE_KEY`) 존재 시에만 외부 호출 테스트가 실행되도록 조건 일관성 확인.
+- [x] `apps/api/test_api.py`의 v1 경로를 v2로 갱신하거나 legacy 스크립트로 명시.
+- [x] Codecov 설정 보강: `collector`/`api` 플래그, 배지 추가 및 업로드 경로 확인.
+- [x] 통합/E2E 테스트 게이팅 정비: 시크릿(`KRA_SERVICE_KEY`) 존재 시에만 외부 호출 테스트가 실행되도록 조건 일관성 확인.
 
 ## 결정 필요(팀 합의 후 일괄 반영)
 - [ ] 커버리지 임계치 최종 확정: Node 70% 고정, Python 70% 또는 80% 중 선택 → 워크플로/설정 일괄 반영.
