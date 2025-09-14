@@ -1,0 +1,73 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":disableRateLimiting",
+    ":separateMajorReleases",
+    ":group:allNonMajor",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Asia/Seoul",
+  "schedule": ["after 22:00 before 04:00 every weekday"],
+  "prHourlyLimit": 4,
+  "prConcurrentLimit": 10,
+  "dependencyDashboard": true,
+  "rangeStrategy": "bump",
+  "labels": ["dependencies", "renovate"],
+  "enabledManagers": ["npm", "github-actions", "dockerfile"],
+  "ignorePaths": [
+    "data/**",
+    "examples/**",
+    "docs/**"
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge patch updates for all dependencies",
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Automerge minor updates for devDependencies",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Group TypeScript & ESLint ecosystem",
+      "matchPackagePatterns": [
+        "^typescript$",
+        "^@types/",
+        "^eslint$",
+        "^@typescript-eslint/",
+        "^eslint-"
+      ],
+      "groupName": "typescript-eslint",
+      "labels": ["ts", "eslint", "dependencies"]
+    },
+    {
+      "description": "Group Jest ecosystem",
+      "matchPackagePatterns": ["^jest$", "^ts-jest$", "^@types/jest$"],
+      "groupName": "jest",
+      "labels": ["test", "dependencies"]
+    },
+    {
+      "description": "Group Turbo updates",
+      "matchPackagePatterns": ["^turbo$"],
+      "groupName": "turbo",
+      "labels": ["build", "dependencies"]
+    },
+    {
+      "description": "GitHub Actions updates (minor/patch automerge)",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "branch",
+      "labels": ["ci", "dependencies"]
+    }
+  ]
+}
+
