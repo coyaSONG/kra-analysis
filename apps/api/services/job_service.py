@@ -9,23 +9,68 @@ import uuid
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc
-from celery.result import AsyncResult
-
 from models.database_models import Job, JobLog
-from infrastructure.celery_app import celery_app
-from tasks.collection_tasks import (
-    collect_race_data_task,
-    preprocess_race_data_task,
-    enrich_race_data_task,
-    batch_collect_races_task,
-    full_pipeline_task
-)
+import importlib
+
+# Optional globals for test-time injection
+AsyncResult = None  # type: ignore
+celery_app = None  # type: ignore
 
 logger = structlog.get_logger()
 
 
 class JobService:
     """작업 관리 서비스"""
+
+    @staticmethod
+    def _get_celery_components():
+        """
+        Celery 사용 컴포넌트를 지연 임포트합니다.
+        Celery 미설치/미구성 환경에서도 ImportError로 모듈 로드가 실패하지 않도록 가드합니다.
+
+        Returns:
+            tuple(celery_app | None, AsyncResult | None)
+        """
+        # 우선 모듈 전역으로 주입된 값 사용(테스트 호환)
+        injected_app = globals().get("celery_app")
+        injected_async_result = globals().get("AsyncResult")
+
+        app = None
+        ar = None
+
+        if injected_app is not None:
+            app = injected_app
+        else:
+            try:
+                infra = importlib.import_module("infrastructure.celery_app")
+                app = getattr(infra, "celery_app", None)
+            except Exception as e:
+                logger.debug("Celery app unavailable", error=str(e))
+                app = None
+
+        if injected_async_result is not None:
+            ar = injected_async_result
+        else:
+            try:
+                celery_result_mod = importlib.import_module("celery.result")
+                ar = getattr(celery_result_mod, "AsyncResult", None)
+            except Exception as e:
+                logger.debug("Celery AsyncResult unavailable", error=str(e))
+                ar = None
+
+        return app, ar
+
+    @staticmethod
+    def _get_collection_tasks_module():
+        """
+        Celery 태스크 모듈(tasks.collection_tasks)을 지연 임포트합니다.
+        Celery가 설치되지 않았거나 설정되지 않은 경우 None을 반환합니다.
+        """
+        try:
+            return importlib.import_module("tasks.collection_tasks")
+        except Exception as e:
+            logger.debug("collection_tasks module unavailable", error=str(e))
+            return None
     
     async def create_job(
         self,
@@ -132,43 +177,35 @@ class JobService:
     async def _dispatch_task(self, job: Job) -> AsyncResult:
         """작업 유형에 따라 Celery 태스크 디스패치"""
         params = job.parameters
-        
+
+        celery_app, _ = self._get_celery_components()
+        tasks_mod = self._get_collection_tasks_module()
+        if not celery_app or not tasks_mod:
+            raise RuntimeError(
+                "Celery가 설치/구성되지 않아 작업을 큐에 넣을 수 없습니다. "
+                "환경 변수 및 브로커 설정을 확인하세요."
+            )
+
         if job.type == "collect_race":
-            return collect_race_data_task.delay(
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id
+            return tasks_mod.collect_race_data_task.delay(
+                params["race_date"], params["meet"], params["race_no"], job.job_id
             )
-        
         elif job.type == "preprocess_race":
-            return preprocess_race_data_task.delay(
-                params["race_id"],
-                job.job_id
+            return tasks_mod.preprocess_race_data_task.delay(
+                params["race_id"], job.job_id
             )
-        
         elif job.type == "enrich_race":
-            return enrich_race_data_task.delay(
-                params["race_id"],
-                job.job_id
+            return tasks_mod.enrich_race_data_task.delay(
+                params["race_id"], job.job_id
             )
-        
         elif job.type == "batch_collect":
-            return batch_collect_races_task.delay(
-                params["race_date"],
-                params["meet"],
-                params["race_numbers"],
-                job.job_id
+            return tasks_mod.batch_collect_races_task.delay(
+                params["race_date"], params["meet"], params["race_numbers"], job.job_id
             )
-        
         elif job.type == "full_pipeline":
-            return full_pipeline_task.delay(
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id
+            return tasks_mod.full_pipeline_task.delay(
+                params["race_date"], params["meet"], params["race_no"], job.job_id
             )
-        
         else:
             raise ValueError(f"Unknown job type: {job.type}")
     
@@ -203,19 +240,23 @@ class JobService:
         if not job:
             return None
         
-        # Celery 태스크 상태 확인
-        celery_status = None
+        # Celery 태스크 상태 확인 (선택적)
+        celery_status: Optional[Dict[str, Any]] = None
         if job.task_id:
-            try:
-                task_result = AsyncResult(job.task_id, app=celery_app)
-                celery_status = {
-                    "state": task_result.state,
-                    "info": task_result.info if isinstance(task_result.info, dict) else str(task_result.info),
-                    "ready": task_result.ready(),
-                    "successful": task_result.successful() if task_result.ready() else None
-                }
-            except Exception as e:
-                logger.warning(f"Failed to get Celery status: {e}")
+            celery_app, AsyncResult = self._get_celery_components()
+            if celery_app and AsyncResult:
+                try:
+                    task_result = AsyncResult(job.task_id, app=celery_app)
+                    celery_status = {
+                        "state": task_result.state,
+                        "info": task_result.info if isinstance(task_result.info, dict) else str(task_result.info),
+                        "ready": task_result.ready(),
+                        "successful": task_result.successful() if task_result.ready() else None,
+                    }
+                except Exception as e:
+                    logger.warning(f"Failed to get Celery status: {e}")
+            else:
+                logger.debug("Celery not available; skipping status fetch")
         
         # 작업 진행률 계산
         progress = self._calculate_progress(job, celery_status)
@@ -377,10 +418,14 @@ class JobService:
             # Celery 태스크 취소
             task_id = getattr(job, "task_id", None)
             if task_id:
-                try:
-                    celery_app.control.revoke(task_id, terminate=True)
-                except Exception as e:
-                    logger.warning(f"Failed to revoke Celery task: {e}")
+                celery_app, _ = self._get_celery_components()
+                if celery_app:
+                    try:
+                        celery_app.control.revoke(task_id, terminate=True)
+                    except Exception as e:
+                        logger.warning(f"Failed to revoke Celery task: {e}")
+                else:
+                    logger.debug("Celery not available; skipping revoke")
             
             # 상태 업데이트
             job.status = "cancelled"
