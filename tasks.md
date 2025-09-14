@@ -1,4 +1,4 @@
-# 프로젝트 작업 목록 (업데이트: 2025-09-12)
+# 프로젝트 작업 목록 (업데이트: 2025-09-14)
 
 아래 체크리스트는 현재 레포 상태 점검 결과를 바탕으로 정리된 우선순위 작업 항목입니다. 각 항목 완료 시 체크해주세요.
 
@@ -10,16 +10,16 @@
 - [x] 루트 `pyproject.toml` 스타일 설정 정리: Black line length 88 및 Ruff 채택으로 일원화(중복 flake8/isort/pylint 제거 또는 `apps/api` 기준으로 맞춤).
 
 ## P1 — CI/빌드 최적화
-- [ ] Node 워크플로 캐시 적용: `actions/setup-node@v4`에 `cache: 'pnpm'` 추가 및 일관된 워크스페이스 설치 전략 적용.
-- [ ] Python 워크플로 uv 전환: `astral-sh/setup-uv@v3` 사용, `uv sync`로 의존성 설치(현 `requirements.txt` 기반 설치 제거).
-- [ ] API Dockerfile 정비: `apps/api/Dockerfile`을 `pyproject.toml`/uv 기반 설치로 전환(이미지 빌드 속도·일관성 개선).
-- [ ] Collector Docker 베이스 상향: `node:18-alpine` → `node:22-alpine`로 갱신(런타임/CI 노드 버전과 정합).
-- [ ] 코드 품질 워크플로 경로/도구 수정: `scripts/` → `packages/scripts/`로 검사 경로 수정, Node는 `pnpm -w run lint`, Python은 `ruff check`/`black --check` 사용.
+- [x] Node 워크플로 캐시 적용: `actions/setup-node@v4`에 `cache: 'pnpm'` 추가 및 일관된 워크스페이스 설치 전략 적용. (변경: `.github/workflows/collector-test.yml`, `code-quality.yml`)
+- [x] Python 워크플로 uv 전환: `astral-sh/setup-uv@v3` 사용, `uv sync`로 의존성 설치(현 `requirements.txt` 기반 설치 제거). (변경: `.github/workflows/test.yml`)
+- [x] API Dockerfile 정비: `apps/api/Dockerfile`을 `pyproject.toml`/uv 기반 설치로 전환(이미지 빌드 속도·일관성 개선). (변경: `apps/api/Dockerfile`)
+- [x] Collector Docker 베이스 상향: `node:18-alpine` → `node:22-alpine`로 갱신(런타임/CI 노드 버전과 정합). (변경: `apps/collector/Dockerfile`)
+- [x] 코드 품질 워크플로 경로/도구 수정: `scripts/` → `packages/scripts/`로 검사 경로 수정, Node는 `pnpm -w run lint`, Python은 `ruff check`/`black --check` 사용. (변경: `.github/workflows/code-quality.yml`)
 
 ## P1 — 구현 안정화/리팩터링
-- [ ] API 엔트리포인트 정리: `apps/api/main.py` 제거 또는 명시적 deprecated 주석 추가(표준은 `main_v2.py`).
-- [ ] Celery 의존성 느슨화: `apps/api/services/job_service.py`에서 Celery 임포트를 지연/가드 처리하여 비구성 환경에서 ImportError 방지.
-- [ ] Redis 설정 개선(Collector): `utils/redis.ts`가 `REDIS_URL` 전체 문자열 파싱을 우선 사용하도록 개선(현재 host/port만 사용).
+- [x] API 엔트리포인트 정리: `apps/api/main.py` 제거 또는 명시적 deprecated 주석 추가(표준은 `main_v2.py`).
+- [x] Celery 의존성 느슨화: `apps/api/services/job_service.py`에서 Celery 임포트를 지연/가드 처리하여 비구성 환경에서 ImportError 방지.
+- [x] Redis 설정 개선(Collector): `utils/redis.ts`가 `REDIS_URL` 전체 문자열 파싱을 우선 사용하도록 개선(현재 host/port만 사용). (변경: `apps/collector/src/utils/redis.ts`)
 
 ## P2 — 레포 정리/청소
 - [ ] `.gitignore` 보강: `**/*.tsbuildinfo`, `apps/collector/{cache,logs,tmp}/`, `coverage/`, `htmlcov/` 등 추가.
