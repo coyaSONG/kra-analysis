@@ -14,7 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import settings
-from infrastructure.database import check_database_connection, close_db, init_db
+from infrastructure.database import (
+    check_database_connection,
+    close_db,
+    get_db,
+    init_db,
+)
 from infrastructure.redis_client import (
     check_redis_connection,
     close_redis,
@@ -182,9 +187,11 @@ async def health_check():
 
 
 @app.get("/health/detailed")
-async def detailed_health_check(redis=Depends(get_redis)):
+async def detailed_health_check(
+    redis=Depends(get_redis), db=Depends(get_db)
+):
     """의존성 상태를 포함한 상세 헬스체크"""
-    db_ok = await check_database_connection()
+    db_ok = await check_database_connection(db)
     # Prefer DI-provided Redis (overridden in tests), fall back to global check
     redis_ok = False
     try:

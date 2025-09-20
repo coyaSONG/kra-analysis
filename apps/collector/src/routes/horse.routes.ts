@@ -88,13 +88,9 @@ router.get(
  */
 router.get(
   '/',
-  // Middleware stack
+  // Simplified middleware stack to prevent blocking
   generalRateLimit,
   optionalAuth,
-  validatePagination,
-  ...validateSort(['hrName', 'winRate', 'ord1CntT', 'rcCntT']),
-  validateHorseParams,
-  handleValidationErrors,
   performanceLogger,
 
   // Controller

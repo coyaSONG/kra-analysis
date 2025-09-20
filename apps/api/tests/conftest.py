@@ -25,14 +25,27 @@ from models.database_models import APIKey
 @pytest.fixture(scope="session")
 def test_settings():
     """Test-specific settings"""
-    return Settings(
+    s = Settings(
         environment="test",
         database_url="sqlite+aiosqlite:///:memory:",
         redis_url="redis://localhost:6379/15",  # Use test DB
         secret_key="test-secret-key-for-testing-only",
         valid_api_keys=["test-api-key-123", "test-api-key-456"],
         debug=True,
+        kra_api_key="test-kra-api-key",
     )
+    # Propagate settings to global singleton for modules that import config.settings
+    import config as global_config
+
+    global_config.settings.environment = s.environment
+    global_config.settings.database_url = s.database_url
+    global_config.settings.redis_url = s.redis_url
+    global_config.settings.secret_key = s.secret_key
+    global_config.settings.valid_api_keys = s.valid_api_keys
+    global_config.settings.debug = s.debug
+    global_config.settings.kra_api_key = s.kra_api_key
+
+    return s
 
 
 # Event loop configuration

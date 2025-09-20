@@ -53,8 +53,8 @@ export default {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
 
-  // Test timeout (10 seconds)
-  testTimeout: 10000,
+  // Test timeout (5 seconds for faster execution)
+  testTimeout: 5000,
 
   // Reporter configuration
   reporters: [
@@ -85,12 +85,13 @@ export default {
   // Verbose output
   verbose: false,
 
-  // Parallel test execution
-  maxWorkers: '50%',
+  // Parallel test execution (reduced for stability)
+  maxWorkers: 1,
 
   // Error handling
   bail: false,
   errorOnDeprecated: true,
+  forceExit: true, // Force exit to prevent hanging processes
 
   // Watch mode configuration
   watchman: false,

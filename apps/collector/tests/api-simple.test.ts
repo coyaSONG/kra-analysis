@@ -98,7 +98,7 @@ describe('Simple API Tests', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('not found');
+      expect(response.body.error.message).toContain('not found');
     });
   });
 });

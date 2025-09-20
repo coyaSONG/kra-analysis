@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -155,3 +157,137 @@ async def test_cleanup_old_jobs(db_session):
 
     deleted = await service.cleanup_old_jobs(db_session, days=7)
     assert deleted >= 2
+
+
+def test_get_celery_components_prefers_injected(monkeypatch):
+    import services.job_service as js
+
+    dummy_app = object()
+    dummy_async_result = object()
+
+    original_app = js.celery_app
+    original_async_result = js.AsyncResult
+
+    js.celery_app = dummy_app
+    js.AsyncResult = dummy_async_result
+
+    try:
+        app, async_result = JobService._get_celery_components()
+        assert app is dummy_app
+        assert async_result is dummy_async_result
+    finally:
+        js.celery_app = original_app
+        js.AsyncResult = original_async_result
+
+
+def test_get_celery_components_handles_missing(monkeypatch):
+    import services.job_service as js
+
+    original_app = js.celery_app
+    original_async_result = js.AsyncResult
+
+    js.celery_app = None
+    js.AsyncResult = None
+
+    def fake_import(name: str):
+        raise ImportError(f"missing {name}")
+
+    monkeypatch.setattr(js.importlib, "import_module", fake_import)
+
+    try:
+        app, async_result = JobService._get_celery_components()
+        assert app is None
+        assert async_result is None
+    finally:
+        js.celery_app = original_app
+        js.AsyncResult = original_async_result
+
+
+@pytest.mark.asyncio
+async def test_dispatch_task_collect_race(monkeypatch):
+    service = JobService()
+
+    class DummyTask:
+        def __init__(self):
+            self.calls: list[tuple[Any, ...]] = []
+
+        def delay(self, *args: Any):
+            self.calls.append(args)
+            return SimpleNamespace(id="task-id")
+
+    task = DummyTask()
+
+    tasks_module = SimpleNamespace(
+        collect_race_data_task=task,
+        preprocess_race_data_task=task,
+        enrich_race_data_task=task,
+        batch_collect_races_task=task,
+        full_pipeline_task=task,
+    )
+
+    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: tasks_module)
+    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (object(), object()))
+
+    job = SimpleNamespace(
+        type="collect_race",
+        parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
+        job_id="job-1",
+    )
+
+    result = await service._dispatch_task(job)
+
+    assert task.calls[0] == ("20240719", 1, 3, "job-1")
+    assert result.id == "task-id"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_task_requires_celery(monkeypatch):
+    service = JobService()
+    job = SimpleNamespace(type="collect_race", parameters={}, job_id="job-1")
+
+    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: None)
+    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (None, None))
+
+    with pytest.raises(RuntimeError):
+        await service._dispatch_task(job)
+
+
+@pytest.mark.asyncio
+async def test_dispatch_task_unknown_type(monkeypatch):
+    service = JobService()
+
+    class DummyTask:
+        def delay(self, *args: Any):
+            return SimpleNamespace(id="task-id")
+
+    tasks_module = SimpleNamespace(
+        collect_race_data_task=DummyTask(),
+        preprocess_race_data_task=DummyTask(),
+        enrich_race_data_task=DummyTask(),
+        batch_collect_races_task=DummyTask(),
+        full_pipeline_task=DummyTask(),
+    )
+
+    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: tasks_module)
+    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (object(), object()))
+
+    job = SimpleNamespace(type="unknown", parameters={}, job_id="job-1")
+
+    with pytest.raises(ValueError):
+        await service._dispatch_task(job)
+
+
+@pytest.mark.asyncio
+async def test_get_job_status_missing_returns_none(db_session):
+    service = JobService()
+    assert await service.get_job_status("missing", db_session) is None
+
+
+def test_calculate_progress_full_pipeline_steps():
+    service = JobService()
+    job = SimpleNamespace(status="processing", type="full_pipeline")
+    celery_status = {
+        "info": {"steps": {"collect": "completed", "enrich": "completed", "finalize": "pending"}}
+    }
+
+    assert service._calculate_progress(job, celery_status) == 10 + 2 * 30

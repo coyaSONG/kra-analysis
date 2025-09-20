@@ -15,7 +15,8 @@ describe('RaceController routes', () => {
       .expect(200);
 
     expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data).toHaveProperty('races');
+    expect(Array.isArray(res.body.data.races)).toBe(true);
     expect(res.body.message).toMatch(/Races retrieved successfully/);
     expect(res.body.meta).toBeDefined();
   });
@@ -36,7 +37,9 @@ describe('RaceController routes', () => {
       .expect(200);
 
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toMatchObject({ race_date: date, race_no: raceNo });
+    expect(res.body.data).toHaveProperty('race');
+    expect(res.body.data.race).toHaveProperty('raceInfo');
+    expect(res.body.data.race.raceInfo).toMatchObject({ date: date, raceNo: raceNo });
     expect(res.body.message).toMatch(/Race details retrieved successfully/);
   });
 

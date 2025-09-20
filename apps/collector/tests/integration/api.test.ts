@@ -42,10 +42,15 @@ describe('API Integration Tests', () => {
 
   afterAll(async () => {
     if (server) {
-      await new Promise<void>((resolve) => {
-        server.close(() => resolve());
+      await new Promise<void>((resolve, reject) => {
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
       });
     }
+    // Force cleanup
+    await waitFor(100);
   });
 
   beforeEach(() => {
@@ -535,6 +540,9 @@ describe('API Error Conditions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockReset();
+
+    // Set integration test flag to allow proper error handling
+    process.env.JEST_INTEGRATION_TEST = 'true';
   });
 
   describe('External API Errors', () => {

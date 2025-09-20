@@ -28,7 +28,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   // Handle ValidationError from express-validator
   const validationErrors = validationResult(req);
   if (!validationErrors.isEmpty() && !(err instanceof ValidationError)) {
-    const errors = validationErrors.array().map((error) => ({
+    const details = validationErrors.array().map((error) => ({
       field: error.type === 'field' ? error.path : 'unknown',
       message: error.msg,
       value: error.type === 'field' ? error.value : undefined,
@@ -36,8 +36,11 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
 
     res.status(400).json({
       success: false,
-      error: 'Request validation failed',
-      details: errors,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Request validation failed',
+        details,
+      },
       timestamp: new Date().toISOString(),
     });
     return;
@@ -47,8 +50,11 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err instanceof ValidationError) {
     res.status(err.statusCode).json({
       success: false,
-      error: err.message,
-      details: err.validationErrors,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: err.message,
+        details: err.validationErrors,
+      },
       timestamp: new Date().toISOString(),
       ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
@@ -70,10 +76,13 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
       })
       .json({
         success: false,
-        error: err.message,
-        retryAfter: err.retryAfter,
-        limit: err.limit,
-        current: err.current,
+        error: {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: err.message,
+          retryAfter: err.retryAfter,
+          limit: err.limit,
+          current: err.current,
+        },
         timestamp: new Date().toISOString(),
         ...(process.env.NODE_ENV === 'development' && {
           stack: err.stack,
@@ -87,12 +96,15 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err instanceof ExternalApiError) {
     res.status(err.statusCode).json({
       success: false,
-      error: err.message,
-      apiName: err.apiName,
-      endpoint: err.endpoint,
+      error: {
+        code: 'EXTERNAL_API_ERROR',
+        message: err.message,
+        apiName: err.apiName,
+        endpoint: err.endpoint,
+        ...(err.apiResponseCode && { apiResponseCode: err.apiResponseCode }),
+        ...(err.apiResponseMessage && { apiResponseMessage: err.apiResponseMessage }),
+      },
       timestamp: new Date().toISOString(),
-      ...(err.apiResponseCode && { apiResponseCode: err.apiResponseCode }),
-      ...(err.apiResponseMessage && { apiResponseMessage: err.apiResponseMessage }),
       ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
         context: err.context,
@@ -105,9 +117,12 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err instanceof NotFoundError) {
     res.status(err.statusCode).json({
       success: false,
-      error: err.message,
-      resourceType: err.resourceType,
-      resourceId: err.resourceId,
+      error: {
+        code: 'NOT_FOUND',
+        message: err.message,
+        resourceType: err.resourceType,
+        resourceId: err.resourceId,
+      },
       timestamp: new Date().toISOString(),
       ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
@@ -121,11 +136,14 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
-      error: err.message,
+      error: {
+        code: err.name === 'AppError' ? 'APPLICATION_ERROR' : err.name.toUpperCase(),
+        message: err.message,
+        ...(err.context && { context: err.context }),
+      },
       timestamp: new Date().toISOString(),
       ...(process.env.NODE_ENV === 'development' && {
         stack: err.stack,
-        context: err.context,
       }),
     });
     return;
@@ -135,8 +153,10 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err.name === 'ValidationError') {
     res.status(400).json({
       success: false,
-      error: 'Validation error',
-      message: err.message,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: err.message,
+      },
       timestamp: new Date().toISOString(),
     });
     return;
@@ -146,12 +166,12 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err.name === 'MongoError' || err.name === 'CastError') {
     res.status(400).json({
       success: false,
-      error: 'Database error',
-      message: 'Invalid data format or database operation failed',
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'Invalid data format or database operation failed',
+        ...(process.env.NODE_ENV === 'development' && { originalError: err.message }),
+      },
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV === 'development' && {
-        originalError: err.message,
-      }),
     });
     return;
   }
@@ -160,8 +180,23 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     res.status(401).json({
       success: false,
-      error: 'Authentication error',
-      message: 'Invalid or expired token',
+      error: {
+        code: 'AUTHENTICATION_ERROR',
+        message: 'Invalid or expired token',
+      },
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  // Handle payload too large errors
+  if (err.type === 'entity.too.large' || err.message?.includes('request entity too large')) {
+    res.status(413).json({
+      success: false,
+      error: {
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'Request payload exceeds maximum allowed size',
+      },
       timestamp: new Date().toISOString(),
     });
     return;
@@ -171,8 +206,10 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   if (err instanceof SyntaxError && 'body' in err) {
     res.status(400).json({
       success: false,
-      error: 'Syntax error',
-      message: 'Invalid JSON format in request body',
+      error: {
+        code: 'SYNTAX_ERROR',
+        message: 'Invalid JSON format in request body',
+      },
       timestamp: new Date().toISOString(),
     });
     return;
@@ -181,20 +218,43 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   // Handle unexpected errors
   res.status(500).json({
     success: false,
-    error: 'Internal server error',
-    message: 'An unexpected error occurred',
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
+      ...(process.env.NODE_ENV === 'development' && {
+        originalMessage: err.message,
+        stack: err.stack,
+      }),
+    },
     timestamp: new Date().toISOString(),
-    ...(process.env.NODE_ENV === 'development' && {
-      originalMessage: err.message,
-      stack: err.stack,
-    }),
   });
+};
+
+export const methodNotAllowedHandler = (req: Request, res: Response, next: NextFunction): void => {
+  // Check if this is a known route but with wrong method
+  const route = req.route;
+  if (route) {
+    res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: `Method ${req.method} not allowed for this endpoint`,
+        details: `Allowed methods: ${route.methods ? Object.keys(route.methods).join(', ').toUpperCase() : 'N/A'}`
+      },
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+  next();
 };
 
 export const notFoundHandler = (req: Request, res: Response, _next: NextFunction): void => {
   res.status(404).json({
     success: false,
-    error: 'Endpoint not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`,
+    error: {
+      code: 'NOT_FOUND',
+      message: `Route not found: ${req.method} ${req.originalUrl}`,
+    },
+    timestamp: new Date().toISOString(),
   });
 };

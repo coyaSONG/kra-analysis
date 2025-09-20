@@ -133,11 +133,14 @@ async def get_db():
 
 
 # 헬스체크용 함수
-async def check_database_connection():
+async def check_database_connection(session: AsyncSession | None = None):
     """데이터베이스 연결 상태 확인"""
     try:
-        async with engine.begin() as conn:
-            await conn.execute(text("SELECT 1"))
+        if session is not None:
+            await session.execute(text("SELECT 1"))
+        else:
+            async with async_session_maker() as session_obj:
+                await session_obj.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")

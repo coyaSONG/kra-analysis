@@ -32,7 +32,7 @@ async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
     # Patch DB health to False
     import main_v2
 
-    async def bad_db():
+    async def bad_db(*_args, **_kwargs):
         return False
 
     monkeypatch.setattr(main_v2, "check_database_connection", bad_db)

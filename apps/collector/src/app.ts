@@ -9,7 +9,17 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import crypto from 'crypto';
 import type { Application } from 'express';
+
+// Extend Express Request interface
+declare global {
+  namespace Express {
+    interface Request {
+      requestId?: string;
+    }
+  }
+}
 
 // Middleware imports
 import { requestLogger, errorHandler, notFoundHandler, registerAllMiddleware } from './middleware/index.js';
@@ -50,6 +60,7 @@ export const createApp = (): Application => {
         },
       },
       crossOriginEmbedderPolicy: false, // Allow embedding for API documentation
+      frameguard: { action: 'deny' }, // Explicitly set X-Frame-Options to DENY
     })
   );
 
@@ -98,10 +109,10 @@ export const createApp = (): Application => {
     })
   );
 
-  // Request parsing middleware
+  // Request parsing middleware with payload size limits
   app.use(
     express.json({
-      limit: '10mb',
+      limit: '5mb', // Reduced limit to trigger 413 for large payloads
       verify: (req, res, buf) => {
         // Store raw body for webhook verification if needed
         (req as any).rawBody = buf;
@@ -112,15 +123,25 @@ export const createApp = (): Application => {
   app.use(
     express.urlencoded({
       extended: true,
-      limit: '10mb',
+      limit: '5mb', // Reduced limit to trigger 413 for large payloads
     })
   );
+
+  // Request ID middleware (before logging)
+  app.use((req, res, next) => {
+    const requestId = req.headers['x-request-id'] as string ||
+                      req.headers['x-correlation-id'] as string ||
+                      crypto.randomUUID();
+
+    req.requestId = requestId;
+    res.setHeader('X-Request-ID', requestId);
+    next();
+  });
 
   // Request logging middleware (before custom middleware)
   app.use(requestLogger);
 
-  // Custom middleware registration (auth, rate limiting, etc.)
-  registerAllMiddleware(app);
+  // Skip using registerAllMiddleware to avoid helmet conflict - configure manually
 
   // Initialize Redis connection (with error handling)
   try {

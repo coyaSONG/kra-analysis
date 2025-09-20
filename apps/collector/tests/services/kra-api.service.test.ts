@@ -31,7 +31,10 @@ describe('KraApiService', () => {
     // Reset all mocks before each test
     jest.clearAllMocks();
     mockFetch.mockReset();
-    
+
+    // Set unit test flag to disable automatic mock data return
+    process.env.JEST_UNIT_TEST = 'true';
+
     // Create fresh instance for each test
     kraApiService = new KraApiService();
   });
@@ -119,7 +122,7 @@ describe('KraApiService', () => {
       // Verify fetch was called with correct parameters
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const fetchCall = mockFetch.mock.calls[0];
-      expect(fetchCall[0]).toContain('API214_1.json');
+      expect(fetchCall[0]).toContain('API214_1/RaceDetailResult_1');
       expect(fetchCall[0]).toContain(`rc_date=${testDate}`);
       expect(fetchCall[0]).toContain(`meet=${encodeURIComponent(testMeet)}`);
       expect(fetchCall[0]).toContain(`rc_no=${testRaceNo}`);
@@ -275,7 +278,7 @@ describe('KraApiService', () => {
       // Verify fetch was called correctly
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const fetchCall = mockFetch.mock.calls[0];
-      expect(fetchCall[0]).toContain('API8_2.json');
+      expect(fetchCall[0]).toContain('API8_2/raceHorseInfo_2');
       expect(fetchCall[0]).toContain(`hr_no=${testHrNo}`);
     });
 
@@ -533,8 +536,8 @@ describe('KraApiService', () => {
       // Assert
       const fetchCall = mockFetch.mock.calls[0];
       const url = new URL(fetchCall[0] as string);
-      
-      expect(url.pathname).toBe('/api/openapi/API214_1.json');
+
+      expect(url.pathname).toBe('/API214_1/RaceDetailResult_1');
       expect(url.searchParams.get('rc_date')).toBe('20241201');
       expect(url.searchParams.get('meet')).toBe('서울');
       expect(url.searchParams.get('rc_no')).toBe('1');
@@ -554,7 +557,7 @@ describe('KraApiService', () => {
       await kraApiService.getRaceResult('20241201', '서울', 1);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('API214_1.json'),
+        expect.stringContaining('API214_1/RaceDetailResult_1'),
         expect.any(Object)
       );
     });

@@ -184,6 +184,55 @@ export const registerRoutes = (app: Application): void => {
       message: 'KRA Data Collector API Documentation',
       version: 'v1',
       baseUrl: `${req.protocol}://${req.get('host')}/api/v1`,
+      endpoints: {
+        races: {
+          base: '/races',
+          methods: {
+            'GET /:date': 'Get races by date',
+            'GET /:date/:meet/:raceNo': 'Get specific race details',
+            'POST /collect': 'Trigger race data collection',
+            'POST /enrich': 'Trigger race data enrichment',
+            'GET /:date/:meet/:raceNo/result': 'Get race result',
+            'GET /stats': 'Get race statistics',
+          },
+        },
+        horses: {
+          base: '/horses',
+          methods: {
+            'GET /': 'Search horses',
+            'GET /:hrNo': 'Get horse details',
+            'GET /:hrNo/history': 'Get horse racing history',
+            'GET /:hrNo/performance': 'Get horse performance analytics',
+            'GET /top/performers': 'Get top performing horses',
+            'GET /stats': 'Get horse statistics',
+          },
+        },
+        jockeys: {
+          base: '/jockeys',
+          methods: {
+            'GET /': 'Search jockeys',
+            'GET /:jkNo': 'Get jockey details',
+            'GET /:jkNo/stats': 'Get jockey statistics',
+            'GET /:jkNo/performance': 'Get jockey performance',
+            'GET /:jkNo/races': 'Get jockey races',
+            'GET /top/performers': 'Get top jockeys',
+            'GET /rankings': 'Get jockey rankings',
+          },
+        },
+        trainers: {
+          base: '/trainers',
+          methods: {
+            'GET /': 'Search trainers',
+            'GET /:trNo': 'Get trainer details',
+            'GET /:trNo/stats': 'Get trainer statistics',
+            'GET /:trNo/specialization': 'Get trainer specialization',
+            'GET /:trNo/performance': 'Get trainer performance',
+            'GET /:trNo/horses': 'Get trainer horses',
+            'GET /top/performers': 'Get top trainers',
+            'GET /rankings': 'Get trainer rankings',
+          },
+        },
+      },
     });
   });
 

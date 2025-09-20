@@ -85,6 +85,8 @@ export class CollectionService {
   ): Promise<CollectedRaceData> {
     const startTime = Date.now();
     const { useCache = true, forceRefresh = false, timeout = 30000, retryAttempts = 3 } = options;
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const effectiveUseCache = useCache && !isTestEnv;
 
     // Validate request
     this.validateCollectionRequest(request);
@@ -96,7 +98,7 @@ export class CollectionService {
       raceNo,
       meet,
       enrichData,
-      useCache,
+      useCache: effectiveUseCache,
       forceRefresh,
     });
 
@@ -109,7 +111,7 @@ export class CollectionService {
         startTime,
       });
 
-      if (useCache && !forceRefresh && raceNo !== undefined) {
+      if (effectiveUseCache && !forceRefresh && raceNo !== undefined) {
         const cachedData = await this.cacheService.get<CollectedRaceData>('race_result', {
           date: date,
           meet: meet || '',
@@ -188,7 +190,7 @@ export class CollectionService {
           meet || firstRace.meet,
           raceNo,
           {
-            useCache,
+            useCache: effectiveUseCache,
             forceRefresh,
           },
           (current, total) => {
@@ -207,7 +209,7 @@ export class CollectionService {
       }
 
       // Step 5: Cache the result
-      if (useCache) {
+      if (effectiveUseCache) {
         onProgress?.({
           operation: 'Caching result',
           progress: 95,

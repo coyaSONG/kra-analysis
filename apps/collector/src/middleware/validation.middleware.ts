@@ -166,8 +166,8 @@ export const validateHorseId = (field: 'body' | 'param' | 'query' = 'param', fie
       .withMessage(`${fieldName} is required`)
       .isString()
       .withMessage(`${fieldName} must be a string`)
-      .matches(/^[0-9]{7}$/)
-      .withMessage(`${fieldName} must be a 7-digit number string (e.g., "0012345")`),
+      .matches(/^[0-9]{7,8}$/)
+      .withMessage(`${fieldName} must be a 7-8 digit number string (e.g., "0012345" or "20210001")`),
   ];
 };
 
