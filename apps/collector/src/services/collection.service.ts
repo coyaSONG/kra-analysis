@@ -513,10 +513,10 @@ export class CollectionService {
       });
     }
 
-    if (request.raceNo !== undefined && (request.raceNo < 1 || request.raceNo > 12)) {
+    if (request.raceNo !== undefined && (request.raceNo < 1 || request.raceNo > 20)) {
       errors.push({
         field: 'raceNo',
-        message: 'Race number must be between 1 and 12',
+        message: 'Race number must be between 1 and 20',
         value: request.raceNo,
       });
     }

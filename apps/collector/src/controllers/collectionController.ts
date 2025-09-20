@@ -4,6 +4,7 @@ import { KraApiService } from '../services/kraApiService.js';
 import { ValidationError } from '../types/index.js';
 import type { ApiResponse } from '../types/index.js';
 import logger from '../utils/logger.js';
+import { meetToApiParam, meetCodeToName } from '../utils/meet-converter.js';
 
 export class CollectionController {
   private kraApiService: KraApiService;
@@ -28,19 +29,40 @@ export class CollectionController {
         );
       }
 
-      const request = {
-        date: req.body.date || (req.query.date as string),
-        raceNo: req.body.raceNo || (req.query.raceNo ? parseInt(req.query.raceNo as string, 10) : undefined),
-        meet: req.body.meet || (req.query.meet as string),
+      const dateInput = (req.body.date || req.query.date) as string;
+      const meetInput = req.body.meet || (req.query.meet as string | undefined);
+      const raceNoInput = req.body.raceNo ?? (req.query.raceNo as number | string | undefined);
+
+      const normalizedDate = dateInput.replace(/-/g, '');
+
+      let meetCode: string;
+      try {
+        meetCode = meetToApiParam(meetInput ?? '');
+      } catch (error) {
+        throw new ValidationError('Validation failed for meet parameter', [
+          { field: 'meet', message: (error as Error).message, value: meetInput },
+        ]);
+      }
+      const raceNo =
+        typeof raceNoInput === 'number'
+          ? raceNoInput
+          : raceNoInput
+          ? parseInt(String(raceNoInput), 10)
+          : undefined;
+
+      const logContext = {
+        date: normalizedDate,
+        meetCode,
+        meetName: meetCodeToName(parseInt(meetCode, 10)),
+        raceNo: raceNo ?? 1,
       };
 
-      logger.info('Processing collection request', { request });
+      logger.info('Processing collection request', logContext);
 
-      // Fix: Use correct service method
       const data = await this.kraApiService.getRaceResult(
-        request.date.replace(/-/g, ''), // Convert YYYY-MM-DD to YYYYMMDD
-        request.meet || '서울',
-        request.raceNo || 1
+        normalizedDate,
+        meetCode,
+        raceNo ?? 1
       );
 
       res.json({

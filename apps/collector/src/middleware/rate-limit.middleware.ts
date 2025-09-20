@@ -119,7 +119,7 @@ class RateLimitStore {
 
   // Cleanup old entries from memory store periodically
   startCleanup(): void {
-    setInterval(() => {
+    const timer = setInterval(() => {
       const now = Date.now();
       for (const [key, value] of this.memoryStore.entries()) {
         if (value.resetTime <= now) {
@@ -127,6 +127,11 @@ class RateLimitStore {
         }
       }
     }, 60000); // Clean up every minute
+
+    // Allow Node.js process (and Jest) to exit naturally without waiting for this interval.
+    if (typeof timer.unref === 'function') {
+      timer.unref();
+    }
   }
 }
 

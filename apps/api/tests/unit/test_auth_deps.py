@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 from fastapi import HTTPException
@@ -92,6 +92,7 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
         is_active=True,
         daily_limit=1,
         today_requests=2,
+        last_used_at=datetime.utcnow(),
         permissions=["read"],
     )
     db_session.add(keyrow)

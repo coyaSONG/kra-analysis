@@ -187,7 +187,7 @@ describe('API Integration Tests', () => {
         } as Response);
 
         const response = await request(app)
-          .get('/api/v1/races/20241201?meet=서울&limit=5')
+          .get('/api/v1/races/20241201?meet=1&limit=5')
           .expect(200);
 
         expect(response.body).toMatchKraApiResponse();
@@ -205,7 +205,7 @@ describe('API Integration Tests', () => {
         } as Response);
 
         const response = await request(app)
-          .get('/api/v1/races/20241201/서울/1')
+          .get('/api/v1/races/20241201/1/1')
           .expect(200);
 
         expect(response.body).toMatchKraApiResponse();
@@ -228,6 +228,25 @@ describe('API Integration Tests', () => {
 
     describe('POST /api/v1/races/collect', () => {
       it('should trigger race data collection', async () => {
+        const response = await request(app)
+          .post('/api/v1/races/collect')
+          .send({
+            date: '20241201',
+            meet: '1',
+            raceNo: 1
+          })
+          .expect(202);
+
+        expect(response.body).toMatchObject({
+          success: true,
+          data: {
+            jobId: expect.any(String),
+            status: 'started'
+          }
+        });
+      });
+
+      it('should accept legacy Korean meet names for collection', async () => {
         const response = await request(app)
           .post('/api/v1/races/collect')
           .send({
@@ -527,7 +546,7 @@ describe('API Error Conditions', () => {
       );
 
       const response = await request(app)
-        .get('/api/v1/races/20241201/서울/1')
+        .get('/api/v1/races/20241201/1/1')
         .expect(502);
 
       expect(response.body).toMatchObject({
@@ -542,7 +561,7 @@ describe('API Error Conditions', () => {
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const response = await request(app)
-        .get('/api/v1/races/20241201/서울/1')
+        .get('/api/v1/races/20241201/1/1')
         .expect(502);
 
       expect(response.body).toMatchObject({
@@ -562,7 +581,7 @@ describe('API Error Conditions', () => {
       } as Response);
 
       const response = await request(app)
-        .get('/api/v1/races/20241201/서울/1')
+        .get('/api/v1/races/20241201/1/1')
         .expect(429);
 
       expect(response.body).toMatchObject({

@@ -69,7 +69,7 @@ jobs:
     - name: Run type checking (mypy)
       working-directory: ./apps/api
       run: |
-        uv run mypy . --ignore-missing-imports --no-strict-optional || true
+        uv run mypy . --ignore-missing-imports --no-strict-optional
     
     - name: Run unit tests
       working-directory: ./apps/api
@@ -93,7 +93,6 @@ jobs:
         PYTHONPATH: .
       run: |
         uv run pytest -v -m integration --tb=short --timeout=60
-      continue-on-error: true
     
     - name: Run unit tests with coverage (80% fail-under via .coveragerc)
       working-directory: ./apps/api

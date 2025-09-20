@@ -55,6 +55,7 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
         daily_limit=5,
         today_requests=5,  # verify_api_key will increment to 6
         created_at=datetime.utcnow(),
+        last_used_at=datetime.utcnow(),
     )
     db_session.add(api_key)
     await db_session.commit()
@@ -64,6 +65,32 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
 
     assert exc.value.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     assert "Daily request limit" in exc.value.detail
+
+
+@pytest.mark.unit
+@pytest.mark.auth
+@pytest.mark.asyncio
+async def test_verify_api_key_resets_today_requests(db_session):
+    key_value = "reset-key-123456"
+    yesterday = datetime.utcnow() - timedelta(days=1, minutes=5)
+
+    api_key = APIKey(
+        key=key_value,
+        name="ResetUser",
+        is_active=True,
+        daily_limit=10,
+        today_requests=7,
+        total_requests=42,
+        last_used_at=yesterday,
+    )
+    db_session.add(api_key)
+    await db_session.commit()
+
+    verified = await auth_dep.verify_api_key(key_value, db_session)
+    assert verified is not None
+    assert verified.today_requests == 1
+    assert verified.total_requests == 43
+    assert verified.last_used_at.date() == datetime.utcnow().date()
 
 
 @pytest.mark.unit

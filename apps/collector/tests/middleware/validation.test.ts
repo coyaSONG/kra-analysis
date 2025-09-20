@@ -216,7 +216,7 @@ describe('Validation Middleware', () => {
         mockValidationResult.mockReturnValue({
           isEmpty: () => false,
           array: () => [{
-            msg: 'Meet must be one of: 서울, 부산경남, 제주',
+            msg: 'Meet must be a valid meet code (1, 2, 3) or Korean name (서울, 제주, 부산, 부산경남)',
             param: 'meet',
             location: 'params'
           }]
@@ -261,7 +261,7 @@ describe('Validation Middleware', () => {
           mockValidationResult.mockReturnValue({
             isEmpty: () => false,
             array: () => [{
-              msg: 'Race number must be between 1 and 12',
+              msg: 'Race number must be between 1 and 20',
               param: 'raceNo',
               location: 'params'
             }]
@@ -292,7 +292,7 @@ describe('Validation Middleware', () => {
         // Arrange
         mockRequest.body = {
           date: '20241201',
-          meet: '서울',
+          meet: '1',
           raceNo: 1
         };
         mockValidationResult.mockReturnValue({ isEmpty: () => true } as any);
@@ -337,8 +337,8 @@ describe('Validation Middleware', () => {
           isEmpty: () => false,
           array: () => [
             { msg: 'Date must be a string', param: 'date', location: 'body' },
-            { msg: 'Meet must be a string', param: 'meet', location: 'body' },
-            { msg: 'Race number must be an integer', param: 'raceNo', location: 'body' }
+            { msg: 'Meet must be a valid meet code (1, 2, 3) or Korean name (서울, 제주, 부산, 부산경남)', param: 'meet', location: 'body' },
+            { msg: 'Race number must be between 1 and 20', param: 'raceNo', location: 'body' }
           ]
         } as any);
 
@@ -354,7 +354,7 @@ describe('Validation Middleware', () => {
         // Arrange
         mockRequest.body = {
           date: '20241201',
-          meet: '서울'
+          meet: '1'
           // raceNo is optional in some contexts
         };
         mockValidationResult.mockReturnValue({ isEmpty: () => true } as any);

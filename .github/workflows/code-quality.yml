@@ -37,7 +37,6 @@ jobs:
         run: |
           echo "🎨 Black 코드 포맷 검사 중..."
           black --check --diff packages/scripts
-        continue-on-error: true
 
   # JavaScript 코드 품질 검사 (pnpm 워크스페이스)
   javascript-quality:
@@ -74,7 +73,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Run workspace lint
-        run: pnpm -w run lint || true
+        run: pnpm -w run lint
 
   # 코드 품질 요약 리포트
   quality-summary:

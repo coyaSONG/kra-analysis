@@ -1,7 +1,8 @@
 # KRA 경마 예측 시스템
 
-[![API Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/OWNER/REPO)
-[![Collector Coverage](https://codecov.io/gh/OWNER/REPO/branch/main/graph/badge.svg?flag=collector)](https://codecov.io/gh/OWNER/REPO)
+[![API Coverage](https://codecov.io/gh/chsong/kra-analysis/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/chsong/kra-analysis)
+[![Collector Coverage](https://codecov.io/gh/chsong/kra-analysis/branch/main/graph/badge.svg?flag=collector)](https://codecov.io/gh/chsong/kra-analysis)
+[![CI](https://github.com/chsong/kra-analysis/actions/workflows/test.yml/badge.svg)](https://github.com/chsong/kra-analysis/actions/workflows/test.yml)
 
 한국마사회(KRA) 경마 데이터를 분석하여 삼복연승(1-3위 예측)을 수행하는 AI 시스템입니다.
 
@@ -50,6 +51,31 @@ kra-analysis/
 ```
 
 참고: API 서버 실행 시 `./data`, `./logs`, `./prompts` 등 런타임 디렉터리는 애플리케이션 시작 시 자동 생성됩니다.
+
+## 🔐 환경 변수 준비
+
+### 0) `.env` 파일 복사
+
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/collector/.env.example apps/collector/.env
+```
+
+필요한 값을 아래 표를 참고해 채워 넣으세요. 운영 환경에서는 **실제 비밀 값**으로 교체하고 `.env` 파일은 절대 커밋하지 마세요.
+
+| 앱 | 필수 변수 | 설명 |
+| --- | --- | --- |
+| `apps/api` | `DATABASE_URL` | Async SQLAlchemy URL (`postgresql+asyncpg://...`) |
+|  | `REDIS_URL` | Redis 캐시 및 세션 저장소 URL |
+|  | `SECRET_KEY` | JWT/보안 토큰 서명용 시크릿 |
+|  | `KRA_API_KEY` | KRA 공공데이터 API 키 (외부 연동 필요 시) |
+|  | `VALID_API_KEYS` | API 인증에 사용되는 키 목록(JSON 배열 또는 콤마 구분) |
+| `apps/collector` | `KRA_API_KEY` | 수집 시 사용할 KRA 공공데이터 서비스 키 |
+|  | `API_KEY` | Collector 엔드포인트 보호용 클라이언트 키 |
+|  | `JWT_SECRET` | 관리자/내부 인증 토큰 서명용 시크릿 |
+|  | `REDIS_URL` *(선택)* | 캐시·레이트 리밋에 Redis 사용 시 설정 |
+
+로컬 개발에서는 `.env.example`에 포함된 기본값으로 충분하지만, 운영 배포 시에는 **별도의 보안 저장소(예: GitHub Actions Secrets, AWS Parameter Store)**를 통해 주입하는 것을 권장합니다.
 
 ## 🛠️ 설치 및 실행 (Monorepo)
 

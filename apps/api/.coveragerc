@@ -13,14 +13,6 @@ omit =
     infrastructure/claude_cli/*
     infrastructure/supabase_client.py
     infrastructure/kra_api/client.py
-    infrastructure/database.py
-    routers/race.py
-    services/race_service.py
-    services/kra_api_service.py
-    tasks/collection_tasks.py
-    services/job_service.py
-    infrastructure/redis_client.py
-    routers/jobs_v2.py
 
 [report]
 fail_under = 80

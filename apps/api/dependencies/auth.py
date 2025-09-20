@@ -51,16 +51,23 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> APIKey | None:
         if api_key_obj.expires_at and api_key_obj.expires_at < datetime.now(UTC):
             return None
 
-        # 마지막 사용 시간 업데이트 (timezone-naive datetime 사용)
-        api_key_obj.last_used_at = datetime.utcnow()
-        api_key_obj.total_requests += 1
+        # 마지막 사용 시간과 사용량 업데이트 (timezone-naive datetime 유지)
+        current_time = datetime.utcnow()
+        previous_last_used = api_key_obj.last_used_at
+
+        api_key_obj.last_used_at = current_time
+        api_key_obj.total_requests = (api_key_obj.total_requests or 0) + 1
 
         # 일일 사용량 리셋 확인
-        today = datetime.utcnow().date()
-        if api_key_obj.last_used_at and api_key_obj.last_used_at.date() < today:
+        today_requests = api_key_obj.today_requests or 0
+        if previous_last_used is None:
             api_key_obj.today_requests = 1
         else:
-            api_key_obj.today_requests += 1
+            today = current_time.date()
+            if previous_last_used.date() < today:
+                api_key_obj.today_requests = 1
+            else:
+                api_key_obj.today_requests = today_requests + 1
 
         await db.commit()
 
