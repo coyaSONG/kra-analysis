@@ -16,11 +16,11 @@ def compare_race_data(file1, file2, label1="File 1", label2="File 2"):
         data2 = json.load(f)
 
     # 첫 번째 말 데이터 추출
-    horse1 = data1['response']['body']['items']['item']
+    horse1 = data1["response"]["body"]["items"]["item"]
     if isinstance(horse1, list):
         horse1 = horse1[0] if horse1 else {}
 
-    horse2 = data2['response']['body']['items']['item']
+    horse2 = data2["response"]["body"]["items"]["item"]
     if isinstance(horse2, list):
         horse2 = horse2[0] if horse2 else {}
 
@@ -30,31 +30,35 @@ def compare_race_data(file1, file2, label1="File 1", label2="File 2"):
 
     # 기본 정보
     print("\n📋 기본 정보")
-    print(f"{label1}: {horse1.get('rcDate', 'N/A')} {horse1.get('meet', 'N/A')} {horse1.get('rcNo', 'N/A')}R")
-    print(f"{label2}: {horse2.get('rcDate', 'N/A')} {horse2.get('meet', 'N/A')} {horse2.get('rcNo', 'N/A')}R")
+    print(
+        f"{label1}: {horse1.get('rcDate', 'N/A')} {horse1.get('meet', 'N/A')} {horse1.get('rcNo', 'N/A')}R"
+    )
+    print(
+        f"{label2}: {horse2.get('rcDate', 'N/A')} {horse2.get('meet', 'N/A')} {horse2.get('rcNo', 'N/A')}R"
+    )
 
     # 주요 필드 값 비교
     print("\n📊 주요 필드 값 비교")
-    key_fields = ['winOdds', 'plcOdds', 'wgHr', 'ord', 'rcTime', 'diffUnit']
+    key_fields = ["winOdds", "plcOdds", "wgHr", "ord", "rcTime", "diffUnit"]
 
     print(f"{'필드명':<15} {label1:<20} {label2:<20}")
     print("-" * 55)
 
     for field in key_fields:
-        val1 = horse1.get(field, '(없음)')
-        val2 = horse2.get(field, '(없음)')
+        val1 = horse1.get(field, "(없음)")
+        val2 = horse2.get(field, "(없음)")
 
         # None 처리
         if val1 is None:
-            val1 = 'null'
+            val1 = "null"
         if val2 is None:
-            val2 = 'null'
+            val2 = "null"
 
         # 0 값 특별 표시
         if val1 == 0:
-            val1 = '0 (미확정)'
+            val1 = "0 (미확정)"
         if val2 == 0:
-            val2 = '0 (미확정)'
+            val2 = "0 (미확정)"
 
         print(f"{field:<15} {str(val1):<20} {str(val2):<20}")
 
@@ -79,29 +83,37 @@ def compare_race_data(file1, file2, label1="File 1", label2="File 2"):
 
     # 구간 기록 필드 확인
     print("\n⏱️ 구간 기록 필드 존재 여부")
-    section_fields = ['buS1fTime', 'bu_1fGTime', 'seS1fTime', 'se_1fGTime']
+    section_fields = ["buS1fTime", "bu_1fGTime", "seS1fTime", "se_1fGTime"]
 
     for field in section_fields:
         has1 = field in horse1
         has2 = field in horse2
-        val1 = horse1.get(field, '-') if has1 else '없음'
-        val2 = horse2.get(field, '-') if has2 else '없음'
+        val1 = horse1.get(field, "-") if has1 else "없음"
+        val2 = horse2.get(field, "-") if has2 else "없음"
         print(f"{field:<15} {val1:<20} {val2:<20}")
 
     # 배당률 0인 말들 확인
     print("\n💰 배당률 상태")
 
     def count_zero_odds(data):
-        items = data['response']['body']['items']['item']
+        items = data["response"]["body"]["items"]["item"]
         if not isinstance(items, list):
             items = [items]
-        return sum(1 for h in items if h.get('winOdds') == 0)
+        return sum(1 for h in items if h.get("winOdds") == 0)
 
     zero1 = count_zero_odds(data1)
     zero2 = count_zero_odds(data2)
 
-    total1 = len(data1['response']['body']['items']['item']) if isinstance(data1['response']['body']['items']['item'], list) else 1
-    total2 = len(data2['response']['body']['items']['item']) if isinstance(data2['response']['body']['items']['item'], list) else 1
+    total1 = (
+        len(data1["response"]["body"]["items"]["item"])
+        if isinstance(data1["response"]["body"]["items"]["item"], list)
+        else 1
+    )
+    total2 = (
+        len(data2["response"]["body"]["items"]["item"])
+        if isinstance(data2["response"]["body"]["items"]["item"], list)
+        else 1
+    )
 
     print(f"{label1}: {zero1}/{total1} 말이 배당률 0")
     print(f"{label2}: {zero2}/{total2} 말이 배당률 0")
