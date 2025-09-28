@@ -135,10 +135,7 @@ export class RaceController {
           meet,
           raceNo: raceNumber.toString(),
         };
-        raceData = await services.cacheService.get(
-          includeEnriched ? 'enriched_race' : 'race_result',
-          raceCacheParams
-        );
+        raceData = await services.cacheService.get(includeEnriched ? 'enriched_race' : 'race_result', raceCacheParams);
       }
 
       if (!raceData) {

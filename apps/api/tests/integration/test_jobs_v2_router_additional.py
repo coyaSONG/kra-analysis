@@ -2,8 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from models.database_models import Job, JobStatus, JobType
 import services.job_service as job_service_module
+from models.database_models import Job, JobStatus, JobType
 
 
 @pytest.mark.asyncio

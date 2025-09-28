@@ -473,7 +473,6 @@ export class CacheService {
    */
   private async clearFromFile(pattern: string): Promise<void> {
     try {
-      const prefix = pattern.replace(':*', '');
       const files = await fs.readdir(this.fileCacheDir, { recursive: true });
 
       // Since we hash the keys, we need to check each file's metadata

@@ -6,10 +6,9 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
-import { services } from '../services/index.js';
 import type { ApiResponse, HorseQueryParams } from '../types/api.types.js';
 import type { Api8_2Item } from '../types/kra-api.types.js';
-import { ValidationError, AppError, NotFoundError } from '../types/index.js';
+import { ValidationError, NotFoundError } from '../types/index.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -105,7 +104,7 @@ export class HorseController {
           lastUpdated: new Date().toISOString(),
           dataSource: 'cache' as const,
           cacheExpiresAt: new Date(Date.now() + 14400 * 1000).toISOString(),
-        }
+        },
       } as HorseDetails;
 
       res.json({

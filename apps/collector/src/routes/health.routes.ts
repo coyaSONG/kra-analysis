@@ -18,7 +18,6 @@ import { getRedisClient } from '../utils/redis.js';
 import { services } from '../services/index.js';
 import logger from '../utils/logger.js';
 import { appConfig } from '../config/index.js';
-import type { LoggingRequest } from '../middleware/logging.middleware.js';
 
 const router: ExpressRouter = Router();
 
@@ -130,13 +129,13 @@ router.get(
       // Determine overall status (more lenient in test environment)
       const isTestEnv = process.env.NODE_ENV === 'test';
 
-      const hasFailures = isTestEnv ?
-        // In test environment, only controller failures matter
-        Object.values(response.components.controllers).some((status) => !status) :
-        // In production, all components matter
-        (response.components.redis.status === 'down' ||
-         Object.values(response.components.controllers).some((status) => !status) ||
-         Object.values(response.components.services).some((status) => !status));
+      const hasFailures = isTestEnv
+        ? // In test environment, only controller failures matter
+          Object.values(response.components.controllers).some((status) => !status)
+        : // In production, all components matter
+          response.components.redis.status === 'down' ||
+          Object.values(response.components.controllers).some((status) => !status) ||
+          Object.values(response.components.services).some((status) => !status);
 
       if (hasFailures && response.status === 'healthy') {
         response.status = 'degraded';
@@ -211,11 +210,11 @@ router.get(
 
       // Overall readiness (more lenient in test environment)
       const isTestEnv = process.env.NODE_ENV === 'test';
-      const isReady = isTestEnv ?
-        // In test environment, only require controllers and services
-        (checks.controllers && checks.services) :
-        // In production, require all components
-        Object.values(checks).every((check) => check);
+      const isReady = isTestEnv
+        ? // In test environment, only require controllers and services
+          checks.controllers && checks.services
+        : // In production, require all components
+          Object.values(checks).every((check) => check);
 
       const response = {
         ready: isReady,

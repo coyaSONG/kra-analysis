@@ -146,7 +146,7 @@ router.all('/:date', (req, res) => {
       error: {
         code: 'METHOD_NOT_ALLOWED',
         message: `Method ${req.method} not allowed for this endpoint`,
-        details: 'Allowed methods: GET'
+        details: 'Allowed methods: GET',
       },
       timestamp: new Date().toISOString(),
     });
@@ -160,7 +160,7 @@ router.all('/:date/:meet/:raceNo', (req, res) => {
       error: {
         code: 'METHOD_NOT_ALLOWED',
         message: `Method ${req.method} not allowed for this endpoint`,
-        details: 'Allowed methods: GET'
+        details: 'Allowed methods: GET',
       },
       timestamp: new Date().toISOString(),
     });

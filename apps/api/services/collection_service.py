@@ -11,6 +11,7 @@ import structlog
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from adapters.kra_response_adapter import KRAResponseAdapter
 from infrastructure.redis_client import CacheService
 from models.database_models import DataStatus, Race
 from services.kra_api_service import KRAAPIService
@@ -57,24 +58,15 @@ class CollectionService:
 
             # 마필별 상세 정보 수집
             horses_data = []
-            if (
-                race_info
-                and "response" in race_info
-                and "body" in race_info["response"]
-            ):
-                items = race_info["response"]["body"].get("items", {})
-                if items and "item" in items:
-                    horses = items["item"]
-                    if not isinstance(horses, list):
-                        horses = [horses]
+            if race_info and KRAResponseAdapter.is_successful_response(race_info):
+                normalized_race = KRAResponseAdapter.normalize_race_info(race_info)
+                horses = normalized_race["horses"]
 
-                    for horse in horses:
-                        # Convert API camelCase to internal snake_case
-                        horse_converted = convert_api_to_internal(horse)
-                        horse_detail = await self._collect_horse_details(
-                            horse_converted
-                        )
-                        horses_data.append(horse_detail)
+                for horse in horses:
+                    # Convert API camelCase to internal snake_case
+                    horse_converted = convert_api_to_internal(horse)
+                    horse_detail = await self._collect_horse_details(horse_converted)
+                    horses_data.append(horse_detail)
 
             # 데이터 통합
             collected_data = {
@@ -146,33 +138,21 @@ class CollectionService:
             # 통합 - Follow JavaScript enrichment pattern with hrDetail, jkDetail, trDetail
             result = {**horse_basic}
 
+            # 어댑터를 사용한 응답 정규화
             if horse_info:
-                # Extract items from API response
-                if "response" in horse_info and "body" in horse_info["response"]:
-                    items = horse_info["response"]["body"].get("items", {})
-                    if items and "item" in items:
-                        hr_data = items["item"]
-                        if isinstance(hr_data, list) and hr_data:
-                            hr_data = hr_data[0]
-                        result["hrDetail"] = convert_api_to_internal(hr_data)
+                normalized_horse = KRAResponseAdapter.normalize_horse_info(horse_info)
+                if normalized_horse:
+                    result["hrDetail"] = convert_api_to_internal(normalized_horse["raw_data"])
 
             if jockey_info:
-                if "response" in jockey_info and "body" in jockey_info["response"]:
-                    items = jockey_info["response"]["body"].get("items", {})
-                    if items and "item" in items:
-                        jk_data = items["item"]
-                        if isinstance(jk_data, list) and jk_data:
-                            jk_data = jk_data[0]
-                        result["jkDetail"] = convert_api_to_internal(jk_data)
+                normalized_jockey = KRAResponseAdapter.normalize_jockey_info(jockey_info)
+                if normalized_jockey:
+                    result["jkDetail"] = convert_api_to_internal(normalized_jockey["raw_data"])
 
             if trainer_info:
-                if "response" in trainer_info and "body" in trainer_info["response"]:
-                    items = trainer_info["response"]["body"].get("items", {})
-                    if items and "item" in items:
-                        tr_data = items["item"]
-                        if isinstance(tr_data, list) and tr_data:
-                            tr_data = tr_data[0]
-                        result["trDetail"] = convert_api_to_internal(tr_data)
+                normalized_trainer = KRAResponseAdapter.normalize_trainer_info(trainer_info)
+                if normalized_trainer:
+                    result["trDetail"] = convert_api_to_internal(normalized_trainer["raw_data"])
 
             return result
 
@@ -548,29 +528,21 @@ class CollectionService:
             # Get jockey info from API (no cache)
             jockey_info = await self.kra_api.get_jockey_info(jockey_no, use_cache=False)
 
-            if (
-                jockey_info
-                and "response" in jockey_info
-                and "body" in jockey_info["response"]
-            ):
-                items = jockey_info["response"]["body"].get("items", {})
-                if items and "item" in items:
-                    jk_data = items["item"]
-                    if isinstance(jk_data, list) and jk_data:
-                        jk_data = jk_data[0]
+            # 어댑터를 사용한 기수 정보 정규화
+            normalized_jockey = KRAResponseAdapter.normalize_jockey_info(jockey_info)
+            if normalized_jockey:
+                # Convert API response to internal format
+                from utils.field_mapping import convert_api_to_internal
 
-                    # Convert API response to internal format
-                    from utils.field_mapping import convert_api_to_internal
+                jk_data = convert_api_to_internal(normalized_jockey["raw_data"])
 
-                    jk_data = convert_api_to_internal(jk_data)
-
-                    return {
-                        "recent_win_rate": float(jk_data.get("win_rate_y", 0)) / 100,
-                        "career_win_rate": float(jk_data.get("win_rate_t", 0)) / 100,
-                        "total_wins": jk_data.get("ord1_cnt_t", 0),
-                        "total_races": jk_data.get("rc_cnt_t", 0),
-                        "recent_races": jk_data.get("rc_cnt_y", 0),
-                    }
+                return {
+                    "recent_win_rate": float(jk_data.get("win_rate_y", 0)) / 100,
+                    "career_win_rate": float(jk_data.get("win_rate_t", 0)) / 100,
+                    "total_wins": jk_data.get("ord1_cnt_t", 0),
+                    "total_races": jk_data.get("rc_cnt_t", 0),
+                    "recent_races": jk_data.get("rc_cnt_y", 0),
+                }
 
             # Default values if API call fails
             return {
@@ -601,27 +573,19 @@ class CollectionService:
                 trainer_no, use_cache=False
             )
 
-            if (
-                trainer_info
-                and "response" in trainer_info
-                and "body" in trainer_info["response"]
-            ):
-                items = trainer_info["response"]["body"].get("items", {})
-                if items and "item" in items:
-                    tr_data = items["item"]
-                    if isinstance(tr_data, list) and tr_data:
-                        tr_data = tr_data[0]
+            # 어댑터를 사용한 조교사 정보 정규화
+            normalized_trainer = KRAResponseAdapter.normalize_trainer_info(trainer_info)
+            if normalized_trainer:
+                # Convert API response to internal format
+                from utils.field_mapping import convert_api_to_internal
 
-                    # Convert API response to internal format
-                    from utils.field_mapping import convert_api_to_internal
+                tr_data = convert_api_to_internal(normalized_trainer["raw_data"])
 
-                    tr_data = convert_api_to_internal(tr_data)
-
-                    return {
-                        "recent_win_rate": float(tr_data.get("win_rate_y", 0)) / 100,
-                        "career_win_rate": float(tr_data.get("win_rate_t", 0)) / 100,
-                        "total_wins": tr_data.get("ord1_cnt_t", 0),
-                        "total_races": tr_data.get("rc_cnt_t", 0),
+                return {
+                    "recent_win_rate": float(tr_data.get("win_rate_y", 0)) / 100,
+                    "career_win_rate": float(tr_data.get("win_rate_t", 0)) / 100,
+                    "total_wins": tr_data.get("ord1_cnt_t", 0),
+                    "total_races": tr_data.get("rc_cnt_t", 0),
                         "recent_races": tr_data.get("rc_cnt_y", 0),
                         "plc_rate": float(tr_data.get("plc_rate_t", 0)) / 100,
                         "meet": tr_data.get("meet", ""),

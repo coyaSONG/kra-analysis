@@ -67,12 +67,9 @@ class TestCollectionService:
         race = Race(
             race_id="20240719_1_1",
             date="20240719",
-            race_date="20240719",
             meet=1,
             race_number=1,
-            race_no=1,
             basic_data={"date": "20240719", "meet": 1, "race_number": 1},
-            status=DataStatus.COLLECTED,
             collection_status=DataStatus.COLLECTED,
         )
         db_session.add(race)
@@ -88,7 +85,7 @@ class TestCollectionService:
         await collection_service._save_race_data(data, db_session)
 
         updated = await db_session.execute(
-            "SELECT * FROM races WHERE race_date = '20240719' AND meet = 1 AND race_no = 1"
+            "SELECT * FROM races WHERE date = '20240719' AND meet = 1 AND race_number = 1"
         )
         assert updated.first() is not None
 
@@ -100,10 +97,8 @@ class TestCollectionService:
         # Create two past races within 3 months window
         for d in ("20240701", "20240710"):
             race = Race(
-                race_date=d,
                 date=d,
                 meet=1,
-                race_no=1,
                 race_number=1,
                 result_status=DataStatus.COLLECTED,
                 result_data={
@@ -177,7 +172,7 @@ class TestCollectionService:
         )
 
         data = {
-            "race_date": "20240719",
+            "date": "20240719",
             "meet": 1,
             "horses": [{"hr_no": "001", "jk_no": "J001", "tr_no": "T001"}],
         }
@@ -247,7 +242,7 @@ class TestCollectionService:
 
         # Verify database save
         saved_race = await db_session.execute(
-            "SELECT * FROM races WHERE race_date = '20240719' AND meet = 1 AND race_no = 1"
+            "SELECT * FROM races WHERE date = '20240719' AND meet = 1 AND race_number = 1"
         )
         race = saved_race.first()
         assert race is not None
@@ -340,15 +335,15 @@ class TestCollectionService:
         """Test race data enrichment"""
         # Create test race
         race = Race(
-            race_date="20240719",
+            date="20240719",
             meet=1,
-            race_no=1,
+            race_number=1,
             raw_data={
                 "horses": [
                     {"horse_no": "001", "jockey_no": "J001", "trainer_no": "T001"}
                 ]
             },
-            status=DataStatus.COLLECTED,
+            collection_status=DataStatus.COLLECTED,
         )
         db_session.add(race)
         await db_session.commit()
@@ -446,7 +441,7 @@ class TestCollectionService:
 
         # Assert
         assert len(results) == 3
-        assert all(race_no in results for race_no in [1, 2, 3])
+        assert all(race_number in results for race_number in [1, 2, 3])
 
         # Verify API calls
         assert mock_kra_api_service.get_race_info.call_count == 3

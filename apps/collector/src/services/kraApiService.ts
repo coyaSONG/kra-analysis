@@ -150,21 +150,23 @@ export class KraApiService {
       // Integration tests with JEST_INTEGRATION_TEST should also throw errors properly
       if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
         logger.info('Test environment: returning mock race result data');
-        return [{
-          hrNo: '0053587', // 7-digit horse number (matching test data)
-          hrName: 'Test Horse',
-          jkNo: '080476', // 6-digit jockey number (matching test data)
-          jkName: 'Test Jockey',
-          trNo: '070165', // 6-digit trainer number (matching test data)
-          trName: 'Test Trainer',
-          ord: 1,
-          winOdds: 3.5,
-          wgBudam: 58.0,
-          rcTime: '1:35.2',
-          rcDate: date, // String format YYYYMMDD
-          rcNo: raceNo, // Race number as number
-          meet: meet || '1' // Meet code
-        }];
+        return [
+          {
+            hrNo: '0053587', // 7-digit horse number (matching test data)
+            hrName: 'Test Horse',
+            jkNo: '080476', // 6-digit jockey number (matching test data)
+            jkName: 'Test Jockey',
+            trNo: '070165', // 6-digit trainer number (matching test data)
+            trName: 'Test Trainer',
+            ord: 1,
+            winOdds: 3.5,
+            wgBudam: 58.0,
+            rcTime: '1:35.2',
+            rcDate: date, // String format YYYYMMDD
+            rcNo: raceNo, // Race number as number
+            meet: meet || '1', // Meet code
+          },
+        ];
       }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
@@ -238,7 +240,7 @@ export class KraApiService {
           rank: 1,
           rating: 85,
           owName: 'Test Owner',
-          country: '한국'
+          country: '한국',
         } as Api8_2Item;
       }
 
@@ -302,13 +304,15 @@ export class KraApiService {
       // In test environment, only return mock data for specific integration tests
       if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
         logger.info('Test environment: returning mock race totals data');
-        return [{
-          rcDate: date,
-          rcNo: 1,
-          meet: meet || '1',
-          totalBets: 1000000,
-          totalPayout: 800000
-        }] as Api299Item[];
+        return [
+          {
+            rcDate: date,
+            rcNo: 1,
+            meet: meet || '1',
+            totalBets: 1000000,
+            totalPayout: 800000,
+          },
+        ] as Api299Item[];
       }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
@@ -383,7 +387,7 @@ export class KraApiService {
           ord2CntT: 3,
           ord3CntT: 2,
           rcCntT: 15,
-          winRate: 33.3
+          winRate: 33.3,
         } as Api12_1Item;
       }
 
@@ -456,7 +460,7 @@ export class KraApiService {
           ord2CntT: 6,
           ord3CntT: 4,
           rcCntT: 25,
-          winRateT: 32.0
+          winRateT: 32.0,
         } as Api19_1Item;
       }
 

@@ -44,11 +44,7 @@ export class CollectionController {
         ]);
       }
       const raceNo =
-        typeof raceNoInput === 'number'
-          ? raceNoInput
-          : raceNoInput
-          ? parseInt(String(raceNoInput), 10)
-          : undefined;
+        typeof raceNoInput === 'number' ? raceNoInput : raceNoInput ? parseInt(String(raceNoInput), 10) : undefined;
 
       const logContext = {
         date: normalizedDate,
@@ -59,11 +55,7 @@ export class CollectionController {
 
       logger.info('Processing collection request', logContext);
 
-      const data = await this.kraApiService.getRaceResult(
-        normalizedDate,
-        meetCode,
-        raceNo ?? 1
-      );
+      const data = await this.kraApiService.getRaceResult(normalizedDate, meetCode, raceNo ?? 1);
 
       res.json({
         success: true,

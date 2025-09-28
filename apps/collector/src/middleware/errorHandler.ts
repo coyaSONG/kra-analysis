@@ -239,7 +239,7 @@ export const methodNotAllowedHandler = (req: Request, res: Response, next: NextF
       error: {
         code: 'METHOD_NOT_ALLOWED',
         message: `Method ${req.method} not allowed for this endpoint`,
-        details: `Allowed methods: ${route.methods ? Object.keys(route.methods).join(', ').toUpperCase() : 'N/A'}`
+        details: `Allowed methods: ${route.methods ? Object.keys(route.methods).join(', ').toUpperCase() : 'N/A'}`,
       },
       timestamp: new Date().toISOString(),
     });
