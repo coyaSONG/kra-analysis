@@ -121,32 +121,26 @@ class DataStatus(str, enum.Enum):
 
 
 class Race(Base):
-    """경주 데이터 모델"""
+    """경주 데이터 모델 - 정규화된 버전"""
 
     __tablename__ = "races"
 
     # 기본 키
     race_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
 
-    # 경주 정보
-    date = Column(
-        String(8), nullable=True, index=True
-    )  # Single column index for date queries
-    # compatibility columns for tests
-    race_date = Column(String(8), nullable=False, index=True)
-    meet = Column(Integer, nullable=False, index=True)
-    race_number = Column(Integer, nullable=True)
-    race_no = Column(Integer, nullable=False)
+    # 핵심 경주 정보 (정규화됨)
+    date = Column(String(8), nullable=False, index=True)  # YYYYMMDD 형식
+    meet = Column(Integer, nullable=False, index=True)    # 경마장 코드
+    race_number = Column(Integer, nullable=False)         # 경주 번호
+
+    # 경주 세부 정보
     race_name = Column(String(200))
     distance = Column(Integer)
     track = Column(String(50))
     weather = Column(String(50))
 
-    # 상태 정보
+    # 통합된 상태 정보
     collection_status = Column(
-        PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING
-    )
-    status = Column(
         PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING
     )
     enrichment_status = Column(
@@ -185,10 +179,41 @@ class Race(Base):
         Index("idx_race_status", "collection_status", "enrichment_status"),
     )
 
-    # convenience alias for tests
+    # 호환성을 위한 프로퍼티들 (기존 코드 지원)
     @property
     def id(self) -> str:
+        """convenience alias for tests"""
         return self.race_id
+
+    @property
+    def race_date(self) -> str:
+        """Legacy compatibility: race_date -> date"""
+        return self.date
+
+    @race_date.setter
+    def race_date(self, value: str):
+        """Legacy compatibility: allow setting via race_date"""
+        self.date = value
+
+    @property
+    def race_no(self) -> int:
+        """Legacy compatibility: race_no -> race_number"""
+        return self.race_number
+
+    @race_no.setter
+    def race_no(self, value: int):
+        """Legacy compatibility: allow setting via race_no"""
+        self.race_number = value
+
+    @property
+    def status(self) -> DataStatus:
+        """Legacy compatibility: general status -> collection_status"""
+        return self.collection_status
+
+    @status.setter
+    def status(self, value: DataStatus):
+        """Legacy compatibility: allow setting general status"""
+        self.collection_status = value
 
 
 class Job(Base):

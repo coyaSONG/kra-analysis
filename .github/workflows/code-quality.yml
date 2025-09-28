@@ -72,8 +72,16 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Run workspace lint
-        run: pnpm -w run lint
+      - name: Setup Turborepo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Run workspace lint with Turborepo
+        run: pnpm turbo run lint
 
   # 코드 품질 요약 리포트
   quality-summary:

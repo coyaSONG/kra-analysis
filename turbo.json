@@ -2,13 +2,22 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalDependencies": [".env*"],
+  "globalEnv": [
+    "NODE_ENV"
+  ],
+  "globalPassThroughEnv": [
+    "KRA_*",
+    "SUPABASE_*",
+    "REDIS_*",
+    "DATABASE_URL",
+    "SECRET_KEY",
+    "CELERY_*",
+    "PG*"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
-      "env": [
-        "NODE_ENV"
-      ]
+      "outputs": ["dist/**"]
     },
     "dev": {
       "cache": false,
@@ -29,7 +38,6 @@
       ],
       "outputs": ["coverage/**", "htmlcov/**", "coverage.xml"],
       "env": [
-        "NODE_ENV",
         "PORT",
         "HOST",
         "CORS_ORIGINS",
@@ -38,13 +46,6 @@
         "ADMIN_API_KEY",
         "USER_API_KEY",
         "READONLY_API_KEY",
-        "REDIS_*",
-        "KRA_*",
-        "SUPABASE_*",
-        "DATABASE_URL",
-        "SECRET_KEY",
-        "CELERY_*",
-        "PG*",
         "VALID_API_KEYS"
       ]
     },

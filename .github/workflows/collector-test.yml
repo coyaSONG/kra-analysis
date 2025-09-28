@@ -59,26 +59,34 @@ jobs:
 
     - name: Install dependencies (workspace)
       working-directory: .
-      run: pnpm -w -F @apps/collector install --no-frozen-lockfile
-    
-    - name: Run lint
+      run: pnpm install --no-frozen-lockfile
+
+    - name: Setup Turborepo cache
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-turbo-
+
+    - name: Run lint with Turborepo
       working-directory: .
-      run: pnpm -F @apps/collector run lint
-      
-    - name: Run type check
+      run: pnpm turbo run lint --filter=@apps/collector
+
+    - name: Run type check with Turborepo
       working-directory: .
-      run: pnpm -F @apps/collector run typecheck
-    
-    - name: Run unit tests (CI subset)
+      run: pnpm turbo run typecheck --filter=@apps/collector
+
+    - name: Run unit tests (CI subset) with Turborepo
       working-directory: .
-      run: pnpm -F @apps/collector run test:ci
+      run: pnpm turbo run test:ci --filter=@apps/collector
       env:
         NODE_ENV: test
         LOG_LEVEL: error
-    
-    - name: Run coverage (collector)
+
+    - name: Run coverage (collector) with Turborepo
       working-directory: .
-      run: pnpm -F @apps/collector run test:coverage
+      run: pnpm turbo run test:coverage --filter=@apps/collector
       env:
         NODE_ENV: test
         LOG_LEVEL: error
@@ -90,10 +98,13 @@ jobs:
         directory: ./apps/collector/coverage
         flags: collector
     
+    - name: Build with Turborepo
+      working-directory: .
+      run: pnpm turbo run build --filter=@apps/collector
+
     - name: Start server for E2E tests
       working-directory: .
       run: |
-        pnpm -F @apps/collector run build
         pnpm -F @apps/collector start &
         sleep 5
       env:

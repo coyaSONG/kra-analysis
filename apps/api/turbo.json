@@ -6,12 +6,18 @@
       "outputs": []
     },
     "test": {
-      "outputs": ["coverage/**", "htmlcov/**", ".coverage"],
+      "outputs": ["coverage/**", "htmlcov/**", ".coverage", "coverage.xml"],
       "inputs": ["**/*.py", "tests/**", "!**/__pycache__/**"]
     },
     "build": {
-      "outputs": ["dist/**"],
+      "outputs": [],
       "inputs": ["**/*.py", "!tests/**", "!**/__pycache__/**"]
+    },
+    "lint": {
+      "inputs": ["**/*.py", "!**/__pycache__/**"]
+    },
+    "typecheck": {
+      "inputs": ["**/*.py", "!**/__pycache__/**"]
     }
   }
 }

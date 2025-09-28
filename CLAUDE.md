@@ -20,27 +20,32 @@ Claude Code 작업 시 필수 지침입니다.
 - **절대 삭제 금지**: .env, data/, KRA_PUBLIC_API_GUIDE.md
 - **Git 제외**: data/ 폴더 (로컬 전용)
 
-## 주요 명령어
+## 주요 명령어 (Turborepo)
 
 ```bash
 # 데이터 수집
-node scripts/race_collector/collect_and_preprocess.js [날짜] [경주번호]
-node scripts/race_collector/enrich_race_data.js [날짜] [경주번호]
+pnpm --filter=@repo/scripts run collect:basic [날짜] [경주번호]
+pnpm --filter=@repo/scripts run collect:enrich [날짜] [경주번호]
 
 # 경주 결과 수집 (개별)
-node scripts/race_collector/get_race_result.js [날짜] [경마장] [경주번호]
+pnpm --filter=@repo/scripts run collect:result [날짜] [경마장] [경주번호]
 
 # 프롬프트 평가
-python3 scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [경주수] [병렬수]
+pnpm --filter=@repo/scripts run evaluate:v3 [버전] [프롬프트파일] [경주수] [병렬수]
 
 # 예측 전용 테스트 (결과 비교 없음)
-python3 scripts/evaluation/predict_only_test.py [프롬프트파일] [날짜/all] [제한]
+pnpm --filter=@repo/scripts run evaluate:predict-only [프롬프트파일] [날짜/all] [제한]
 
 # 재귀 개선 (v5 - 최신)
-python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py [프롬프트] [날짜/all] [-i 반복] [-p 병렬] [-r 경주수/all]
+pnpm --filter=@repo/scripts run improve:v5 [프롬프트] [날짜/all] [-i 반복] [-p 병렬] [-r 경주수/all]
 
 # 데이터 패턴 분석
-python3 scripts/prompt_improvement/analyze_enriched_patterns.py
+pnpm --filter=@repo/scripts run improve:analyze
+
+# 개발 시 유용한 명령어
+turbo watch dev                           # 파일 변경 감지 모드
+pnpm dev --filter=@apps/collector        # 특정 앱만 실행
+pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 ```
 
 ## 현재 상태

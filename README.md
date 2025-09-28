@@ -28,27 +28,35 @@
 - 완전 적중률 3.7% → 20% 달성 (5.4배)
 - JSON 오류 20% → 0% 완전 해결
 
-## 📁 프로젝트 구조 (Monorepo)
+## 📁 프로젝트 구조 (Turborepo Monorepo)
 
 ```
 kra-analysis/
-├─ apps/
-│  ├─ api/                     # FastAPI 서버 (v2, Python 3.11+)
+├─ apps/                           # 애플리케이션
+│  ├─ api/                         # FastAPI 서버 (@apps/api)
 │  │  ├─ routers/ services/ models/ middleware/ infrastructure/ tasks/
-│  │  └─ tests/                # unit / integration / utils
-│  └─ collector/               # 데이터 수집 서버 (TypeScript Node ESM)
-│     ├─ src/                  # routes / controllers / services / middleware / utils
-│     └─ tests/                # unit / integration / e2e
-├─ packages/
-│  ├─ scripts/                 # 수집·전처리·평가·프롬프트 개선 스크립트
-│  ├─ shared-types/            # 공용 TS 타입
-│  ├─ typescript-config/       # TS 공통 설정
-│  └─ eslint-config/           # ESLint 공통 설정
-├─ docs/                       # 설계·아키텍처·가이드 문서
-├─ examples/                   # KRA API 응답 샘플
-├─ .github/workflows/          # CI 워크플로우
-└─ turbo.json, pnpm-workspace.yaml, package.json
+│  │  └─ tests/                    # unit / integration / utils
+│  └─ collector/                   # 데이터 수집 서버 (@apps/collector)
+│     ├─ src/                      # routes / controllers / services / middleware / utils
+│     └─ tests/                    # unit / integration / e2e
+├─ packages/                       # 공유 패키지
+│  ├─ scripts/                     # 수집·전처리·평가·프롬프트 개선 (@repo/scripts)
+│  ├─ shared-types/                # 공용 TypeScript 타입 (@repo/shared-types)
+│  ├─ typescript-config/           # TypeScript 공통 설정 (@repo/typescript-config)
+│  └─ eslint-config/               # ESLint 공통 설정 (@repo/eslint-config)
+├─ docs/                           # 설계·아키텍처·가이드 문서
+├─ examples/                       # KRA API 응답 샘플
+├─ .github/workflows/              # CI/CD 워크플로우
+├─ .turbo/                         # Turborepo 캐시 (자동 생성)
+├─ turbo.json                      # Turborepo 설정
+├─ pnpm-workspace.yaml             # pnpm 워크스페이스 설정
+└─ package.json                    # 루트 패키지 설정
 ```
+
+**Turborepo 특징:**
+- 🚀 **캐싱**: 빌드/테스트 결과 자동 캐싱으로 재실행 시 빠른 속도
+- 🔄 **의존성 그래프**: 패키지 간 의존성 자동 추적 및 병렬 실행
+- 📊 **변경 감지**: 파일 변경 시에만 해당 패키지 빌드/테스트 실행
 
 참고: API 서버 실행 시 `./data`, `./logs`, `./prompts` 등 런타임 디렉터리는 애플리케이션 시작 시 자동 생성됩니다.
 
@@ -82,58 +90,106 @@ cp apps/collector/.env.example apps/collector/.env
 ### 1) 의존성 설치
 
 ```bash
-pnpm i
+# pnpm 설치 (없는 경우)
+npm install -g pnpm@9
+
+# 전체 워크스페이스 의존성 설치
+pnpm install
+
+# Python 의존성 설치 (API용)
+cd apps/api && uv sync
 ```
 
 ### 2) 개발 서버 실행
 
 ```bash
-# 전체 앱 동시 실행 (Turbo)
+# 전체 앱 동시 실행 (Turborepo)
 pnpm dev
 
-# Collector만 실행
-pnpm -w -F @apps/collector dev
+# 특정 앱만 실행
+pnpm dev --filter=@apps/collector
+pnpm dev --filter=@apps/api
 
-# API만 실행 (uv 기반)
-pnpm -w -F @apps/api dev
+# 여러 앱 동시 실행
+pnpm dev --filter=@apps/api --filter=@apps/collector
 ```
 
-### 3) 테스트
+### 3) 빌드 및 테스트
 
 ```bash
+# 전체 워크스페이스 빌드
+pnpm build
+
 # 전체 워크스페이스 테스트
 pnpm test
 
-# Collector만
-pnpm -w -F @apps/collector test
+# 특정 패키지만 실행
+pnpm test --filter=@apps/collector
+pnpm lint --filter=@apps/api
 
-# API만 (직접 실행)
-cd apps/api && uv run pytest -q
+# 여러 패키지 동시 실행
+pnpm test --filter=@apps/api --filter=@apps/collector
+
+# 의존성 그래프 기반 실행 (변경된 패키지만)
+pnpm build --filter=...@apps/collector
+pnpm test --filter=...@apps/api
+
+# 캐시 관리
+pnpm build --force                    # 캐시 무효화 실행
+turbo prune @apps/api --docker        # Docker용 프루닝
+pnpm turbo run build --dry           # 실행 계획 미리보기
+```
+
+### 3.1) 개발 시 유용한 명령어
+
+```bash
+# 파일 변경 감지 모드 (권장)
+turbo watch dev
+
+# 특정 앱만 워치 모드
+turbo watch dev --filter=@apps/collector
+
+# 캐시 상태 확인
+turbo run build --summarize
+
+# 의존성 그래프 시각화
+turbo run build --graph
 ```
 
 ### 4) 데이터 수집
 
 ```bash
-# 기본 데이터 수집 (API214_1)
-node packages/scripts/race_collector/collect_and_preprocess.js 20250608 1
+# 도움말 보기
+pnpm --filter=@repo/scripts run collect:help
 
-# 데이터 보강 (API8_2, API12_1, API19_1)
-node packages/scripts/race_collector/enrich_race_data.js 20250608 1
+# 기본 데이터 수집 (API214_1)
+pnpm --filter=@repo/scripts run collect:basic 20250608 1
+
+# 데이터 보강 (말/기수/조교사 상세정보)
+pnpm --filter=@repo/scripts run collect:enrich 20250608 1
+
+# 경주 결과 수집
+pnpm --filter=@repo/scripts run collect:result 20250608 서울 1
 ```
 
 ### 5) 예측 실행
 
 ```bash
+# 도움말 보기
+pnpm --filter=@repo/scripts run evaluate:help
+pnpm --filter=@repo/scripts run improve:help
+
 # 프롬프트 평가 (최신 v3 시스템)
-python3 scripts/evaluation/evaluate_prompt_v3.py v10.3 prompts/prediction-template-v10.3.md 30 3
+pnpm --filter=@repo/scripts run evaluate:v3 v10.3 prompts/prediction-template-v10.3.md 30 3
 
 # 예측 전용 테스트 (경주 전 데이터만 사용, 결과 비교 없음)
-python3 scripts/evaluation/predict_only_test.py prompts/base-prompt-v1.0.md 20250601 10
+pnpm --filter=@repo/scripts run evaluate:predict-only prompts/base-prompt-v1.0.md 20250601 10
 
-# 재귀적 프롬프트 개선 (v4)
-python3 scripts/prompt_improvement/recursive_prompt_improvement_v4.py prompts/base-prompt-v1.0.md all 5 3
+# 재귀적 프롬프트 개선 (v5 최신)
+pnpm --filter=@repo/scripts run improve:v5 prompts/base-prompt-v1.0.md all -i 5 -p 3
 
-# 파라미터: 버전명, 프롬프트파일, 테스트경주수, 병렬실행수
+# 데이터 패턴 분석
+pnpm --filter=@repo/scripts run improve:analyze
 ```
 
 ## 📊 성능 현황

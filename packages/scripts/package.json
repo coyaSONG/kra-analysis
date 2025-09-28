@@ -4,13 +4,34 @@
   "private": true,
   "description": "경마 데이터 처리 및 분석 스크립트",
   "scripts": {
-    "collect": "node race_collector/collect_and_preprocess.js",
-    "enrich": "node race_collector/enrich_race_data.js",
-    "evaluate": "python3 evaluation/evaluate_prompt_v3.py",
-    "improve": "python3 prompt_improvement/recursive_prompt_improvement_v5.py"
+    "collect:help": "echo 'Usage: pnpm --filter=@repo/scripts collect:basic <date> <raceNo>'",
+    "collect:basic": "node race_collector/collect_and_preprocess.js",
+    "collect:enrich": "node race_collector/enrich_race_data.js",
+    "collect:result": "node race_collector/get_race_result.js",
+    "collect:retry": "node race_collector/retry_failed_enrichment.js",
+    "evaluate:help": "echo 'Usage: pnpm --filter=@repo/scripts evaluate:v3 <version> <promptFile> <raceCount> <parallel>'",
+    "evaluate:v3": "python3 evaluation/evaluate_prompt_v3.py",
+    "evaluate:predict-only": "python3 evaluation/predict_only_test.py",
+    "improve:help": "echo 'Usage: pnpm --filter=@repo/scripts improve:v5 <promptFile> <date/all> [options]'",
+    "improve:v5": "python3 prompt_improvement/recursive_prompt_improvement_v5.py",
+    "improve:analyze": "python3 prompt_improvement/analyze_enriched_patterns.py",
+    "verify:data": "python3 race_collector/verify_data_consistency.py",
+    "preprocess:smart": "python3 race_collector/smart_preprocess_races.py",
+    "preprocess:v2": "python3 race_collector/preprocess_race_data_v2.py",
+    "test:v5": "python3 prompt_improvement/test_v5_advanced_techniques.py"
   },
   "dependencies": {
     "dotenv": "^17.2.0",
     "node-fetch": "^3.3.0"
-  }
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*"
+  },
+  "keywords": [
+    "kra",
+    "horse-racing",
+    "data-collection",
+    "ai-prediction",
+    "prompt-engineering"
+  ]
 }
