@@ -63,9 +63,7 @@ async def test_jobs_v2_cancel_endpoint_updates_status(authenticated_client, db_s
     )
 
     try:
-        response = await authenticated_client.post(
-            f"/api/v2/jobs/{job.job_id}/cancel"
-        )
+        response = await authenticated_client.post(f"/api/v2/jobs/{job.job_id}/cancel")
         assert response.status_code == 200
         data = response.json()
         assert data["message"]

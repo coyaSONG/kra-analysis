@@ -142,17 +142,27 @@ class CollectionService:
             if horse_info:
                 normalized_horse = KRAResponseAdapter.normalize_horse_info(horse_info)
                 if normalized_horse:
-                    result["hrDetail"] = convert_api_to_internal(normalized_horse["raw_data"])
+                    result["hrDetail"] = convert_api_to_internal(
+                        normalized_horse["raw_data"]
+                    )
 
             if jockey_info:
-                normalized_jockey = KRAResponseAdapter.normalize_jockey_info(jockey_info)
+                normalized_jockey = KRAResponseAdapter.normalize_jockey_info(
+                    jockey_info
+                )
                 if normalized_jockey:
-                    result["jkDetail"] = convert_api_to_internal(normalized_jockey["raw_data"])
+                    result["jkDetail"] = convert_api_to_internal(
+                        normalized_jockey["raw_data"]
+                    )
 
             if trainer_info:
-                normalized_trainer = KRAResponseAdapter.normalize_trainer_info(trainer_info)
+                normalized_trainer = KRAResponseAdapter.normalize_trainer_info(
+                    trainer_info
+                )
                 if normalized_trainer:
-                    result["trDetail"] = convert_api_to_internal(normalized_trainer["raw_data"])
+                    result["trDetail"] = convert_api_to_internal(
+                        normalized_trainer["raw_data"]
+                    )
 
             return result
 
@@ -586,10 +596,10 @@ class CollectionService:
                     "career_win_rate": float(tr_data.get("win_rate_t", 0)) / 100,
                     "total_wins": tr_data.get("ord1_cnt_t", 0),
                     "total_races": tr_data.get("rc_cnt_t", 0),
-                        "recent_races": tr_data.get("rc_cnt_y", 0),
-                        "plc_rate": float(tr_data.get("plc_rate_t", 0)) / 100,
-                        "meet": tr_data.get("meet", ""),
-                    }
+                    "recent_races": tr_data.get("rc_cnt_y", 0),
+                    "plc_rate": float(tr_data.get("plc_rate_t", 0)) / 100,
+                    "meet": tr_data.get("meet", ""),
+                }
 
             # Default values if API call fails
             return {

@@ -187,9 +187,7 @@ async def health_check():
 
 
 @app.get("/health/detailed")
-async def detailed_health_check(
-    redis=Depends(get_redis), db=Depends(get_db)
-):
+async def detailed_health_check(redis=Depends(get_redis), db=Depends(get_db)):
     """의존성 상태를 포함한 상세 헬스체크"""
     db_ok = await check_database_connection(db)
     # Prefer DI-provided Redis (overridden in tests), fall back to global check

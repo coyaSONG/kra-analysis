@@ -15,6 +15,7 @@ from tenacity import (
     wait_exponential,
 )
 
+from adapters.kra_response_adapter import KRAResponseAdapter
 from config import settings
 from infrastructure.redis_client import CacheService
 
@@ -341,24 +342,22 @@ class KRAAPIService:
             "horses": [],
         }
 
-        if race_info and "response" in race_info and "body" in race_info["response"]:
-            items = race_info["response"]["body"].get("items", {})
-            if items and "item" in items:
-                horses = items["item"]
-                if not isinstance(horses, list):
-                    horses = [horses]
+        # 어댑터를 사용한 응답 정규화
+        if race_info and KRAResponseAdapter.is_successful_response(race_info):
+            normalized_race = KRAResponseAdapter.normalize_race_info(race_info)
+            horses = normalized_race["horses"]
 
-                for horse in horses:
-                    odds_data["horses"].append(
-                        {
-                            "hr_no": horse.get("hrNo"),
-                            "hr_name": horse.get("hrName"),
-                            "chul_no": horse.get("chulNo"),
-                            "win_odds": horse.get("winOdds", 0),
-                            "plc_odds": horse.get("plcOdds", 0),
-                            "ord": horse.get("ord", 0),
-                        }
-                    )
+            for horse in horses:
+                odds_data["horses"].append(
+                    {
+                        "hr_no": horse.get("hrNo"),
+                        "hr_name": horse.get("hrName"),
+                        "chul_no": horse.get("chulNo"),
+                        "win_odds": horse.get("winOdds", 0),
+                        "plc_odds": horse.get("plcOdds", 0),
+                        "ord": horse.get("ord", 0),
+                    }
+                )
 
         return odds_data
 

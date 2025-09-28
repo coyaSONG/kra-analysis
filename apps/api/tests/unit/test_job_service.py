@@ -225,8 +225,12 @@ async def test_dispatch_task_collect_race(monkeypatch):
         full_pipeline_task=task,
     )
 
-    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: tasks_module)
-    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (object(), object()))
+    monkeypatch.setattr(
+        JobService, "_get_collection_tasks_module", lambda _self: tasks_module
+    )
+    monkeypatch.setattr(
+        JobService, "_get_celery_components", lambda _self: (object(), object())
+    )
 
     job = SimpleNamespace(
         type="collect_race",
@@ -246,7 +250,9 @@ async def test_dispatch_task_requires_celery(monkeypatch):
     job = SimpleNamespace(type="collect_race", parameters={}, job_id="job-1")
 
     monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: None)
-    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (None, None))
+    monkeypatch.setattr(
+        JobService, "_get_celery_components", lambda _self: (None, None)
+    )
 
     with pytest.raises(RuntimeError):
         await service._dispatch_task(job)
@@ -268,8 +274,12 @@ async def test_dispatch_task_unknown_type(monkeypatch):
         full_pipeline_task=DummyTask(),
     )
 
-    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: tasks_module)
-    monkeypatch.setattr(JobService, "_get_celery_components", lambda _self: (object(), object()))
+    monkeypatch.setattr(
+        JobService, "_get_collection_tasks_module", lambda _self: tasks_module
+    )
+    monkeypatch.setattr(
+        JobService, "_get_celery_components", lambda _self: (object(), object())
+    )
 
     job = SimpleNamespace(type="unknown", parameters={}, job_id="job-1")
 
@@ -287,7 +297,13 @@ def test_calculate_progress_full_pipeline_steps():
     service = JobService()
     job = SimpleNamespace(status="processing", type="full_pipeline")
     celery_status = {
-        "info": {"steps": {"collect": "completed", "enrich": "completed", "finalize": "pending"}}
+        "info": {
+            "steps": {
+                "collect": "completed",
+                "enrich": "completed",
+                "finalize": "pending",
+            }
+        }
     }
 
     assert service._calculate_progress(job, celery_status) == 10 + 2 * 30

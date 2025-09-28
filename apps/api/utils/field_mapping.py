@@ -6,8 +6,6 @@ Handles conversion between KRA API camelCase and internal snake_case
 import re
 from typing import Any
 
-from adapters.kra_response_adapter import KRAResponseAdapter
-
 
 def camel_to_snake(name: str) -> str:
     """Convert camelCase to snake_case."""

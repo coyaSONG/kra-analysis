@@ -3,7 +3,8 @@ KRA API 응답 어댑터
 KRA API의 응답 구조를 정규화하고 비즈니스 로직에서 분리
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+
 import structlog
 
 logger = structlog.get_logger()
@@ -13,7 +14,7 @@ class KRAResponseAdapter:
     """KRA API 응답을 정규화된 형태로 변환하는 어댑터"""
 
     @staticmethod
-    def extract_items(api_response: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_items(api_response: dict[str, Any]) -> list[dict[str, Any]]:
         """
         KRA API 응답에서 items 추출 및 정규화
 
@@ -59,12 +60,16 @@ class KRAResponseAdapter:
             logger.error(
                 "Failed to extract items from KRA API response",
                 error=str(e),
-                response_keys=list(api_response.keys()) if isinstance(api_response, dict) else "not_dict"
+                response_keys=(
+                    list(api_response.keys())
+                    if isinstance(api_response, dict)
+                    else "not_dict"
+                ),
             )
             return []
 
     @staticmethod
-    def extract_single_item(api_response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def extract_single_item(api_response: dict[str, Any]) -> dict[str, Any] | None:
         """
         KRA API 응답에서 단일 아이템 추출
 
@@ -78,7 +83,7 @@ class KRAResponseAdapter:
         return items[0] if items else None
 
     @staticmethod
-    def normalize_race_info(api_response: Dict[str, Any]) -> Dict[str, Any]:
+    def normalize_race_info(api_response: dict[str, Any]) -> dict[str, Any]:
         """
         경주 정보 응답 정규화
 
@@ -93,11 +98,11 @@ class KRAResponseAdapter:
         return {
             "horses": horses,
             "horse_count": len(horses),
-            "has_data": len(horses) > 0
+            "has_data": len(horses) > 0,
         }
 
     @staticmethod
-    def normalize_horse_info(api_response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def normalize_horse_info(api_response: dict[str, Any]) -> dict[str, Any] | None:
         """
         마필 정보 응답 정규화
 
@@ -116,13 +121,15 @@ class KRAResponseAdapter:
             "hr_no": horse_data.get("hrNo"),
             "hr_name": horse_data.get("hrName"),
             "win_rate": KRAResponseAdapter._safe_float(horse_data.get("win_rate_t")),
-            "place_rate": KRAResponseAdapter._safe_float(horse_data.get("place_rate_t")),
+            "place_rate": KRAResponseAdapter._safe_float(
+                horse_data.get("place_rate_t")
+            ),
             "recent_form": horse_data.get("recent_form"),
-            "raw_data": horse_data  # 원본 데이터 보존
+            "raw_data": horse_data,  # 원본 데이터 보존
         }
 
     @staticmethod
-    def normalize_jockey_info(api_response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def normalize_jockey_info(api_response: dict[str, Any]) -> dict[str, Any] | None:
         """
         기수 정보 응답 정규화
 
@@ -144,11 +151,11 @@ class KRAResponseAdapter:
             "race_count": KRAResponseAdapter._safe_int(jockey_data.get("rc_cnt_t")),
             "win_count": KRAResponseAdapter._safe_int(jockey_data.get("win_cnt_t")),
             "place_count": KRAResponseAdapter._safe_int(jockey_data.get("place_cnt_t")),
-            "raw_data": jockey_data  # 원본 데이터 보존
+            "raw_data": jockey_data,  # 원본 데이터 보존
         }
 
     @staticmethod
-    def normalize_trainer_info(api_response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def normalize_trainer_info(api_response: dict[str, Any]) -> dict[str, Any] | None:
         """
         조교사 정보 응답 정규화
 
@@ -169,12 +176,14 @@ class KRAResponseAdapter:
             "win_rate": KRAResponseAdapter._safe_float(trainer_data.get("win_rate_t")),
             "race_count": KRAResponseAdapter._safe_int(trainer_data.get("rc_cnt_t")),
             "win_count": KRAResponseAdapter._safe_int(trainer_data.get("win_cnt_t")),
-            "place_count": KRAResponseAdapter._safe_int(trainer_data.get("place_cnt_t")),
-            "raw_data": trainer_data  # 원본 데이터 보존
+            "place_count": KRAResponseAdapter._safe_int(
+                trainer_data.get("place_cnt_t")
+            ),
+            "raw_data": trainer_data,  # 원본 데이터 보존
         }
 
     @staticmethod
-    def is_successful_response(api_response: Dict[str, Any]) -> bool:
+    def is_successful_response(api_response: dict[str, Any]) -> bool:
         """
         KRA API 응답이 성공적인지 확인
 
@@ -203,7 +212,7 @@ class KRAResponseAdapter:
         return True
 
     @staticmethod
-    def get_error_message(api_response: Dict[str, Any]) -> str:
+    def get_error_message(api_response: dict[str, Any]) -> str:
         """
         KRA API 응답에서 에러 메시지 추출
 

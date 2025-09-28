@@ -130,8 +130,8 @@ class Race(Base):
 
     # 핵심 경주 정보 (정규화됨)
     date = Column(String(8), nullable=False, index=True)  # YYYYMMDD 형식
-    meet = Column(Integer, nullable=False, index=True)    # 경마장 코드
-    race_number = Column(Integer, nullable=False)         # 경주 번호
+    meet = Column(Integer, nullable=False, index=True)  # 경마장 코드
+    race_number = Column(Integer, nullable=False)  # 경주 번호
 
     # 경주 세부 정보
     race_name = Column(String(200))
