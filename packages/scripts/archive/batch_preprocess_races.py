@@ -26,27 +26,27 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
     print(f"\n📁 {len(files)}개 파일 발견")
 
     stats = {
-        'processed': 0,
-        'failed': 0,
-        'total_horses': 0,
-        'excluded_horses': 0
+        "processed": 0,
+        "failed": 0,
+        "total_horses": 0,
+        "excluded_horses": 0,
     }
 
     for file_path in files:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"📄 처리 중: {os.path.basename(file_path)}")
 
         try:
             # 원본 데이터 읽기
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 raw_data = json.load(f)
 
             # 원본 말 수
             orig_count = 0
-            if 'response' in raw_data and 'body' in raw_data['response']:
-                items = raw_data['response']['body'].get('items', {})
-                if items and 'item' in items:
-                    orig_items = items['item']
+            if "response" in raw_data and "body" in raw_data["response"]:
+                items = raw_data["response"]["body"].get("items", {})
+                if items and "item" in items:
+                    orig_items = items["item"]
                     orig_count = len(orig_items) if isinstance(orig_items, list) else 1
 
             # 데이터 정제

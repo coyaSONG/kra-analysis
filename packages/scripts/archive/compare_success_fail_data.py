@@ -14,31 +14,63 @@ def analyze_race_data(race_id, status):
         print(f"{race_id}: 파일 없음")
         return None
 
-    with open(race_files[0], encoding='utf-8') as f:
+    with open(race_files[0], encoding="utf-8") as f:
         data = json.load(f)
 
     analysis = {
         "race_id": race_id,
         "status": status,
         "horses_count": len(data["horses"]),
-        "special_cases": []
+        "special_cases": [],
     }
 
     # 특수 케이스 확인
     for horse in data["horses"]:
         # 1. 특수문자 포함된 말 이름
         hr_name = horse["hr_name"]
-        special_chars = ['(', ')', '[', ']', '{', '}', '"', "'", '\\', '/', '|', '&', '$', '#', '%', '!', '?', '*', '+', '=', '<', '>', '^', '~', '`']
+        special_chars = [
+            "(",
+            ")",
+            "[",
+            "]",
+            "{",
+            "}",
+            '"',
+            "'",
+            "\\",
+            "/",
+            "|",
+            "&",
+            "$",
+            "#",
+            "%",
+            "!",
+            "?",
+            "*",
+            "+",
+            "=",
+            "<",
+            ">",
+            "^",
+            "~",
+            "`",
+        ]
         if any(char in hr_name for char in special_chars):
-            analysis["special_cases"].append(f"특수문자 이름: {horse['chul_no']}번 {hr_name}")
+            analysis["special_cases"].append(
+                f"특수문자 이름: {horse['chul_no']}번 {hr_name}"
+            )
 
         # 2. 매우 긴 이름
         if len(hr_name) > 15:
-            analysis["special_cases"].append(f"긴 이름: {horse['chul_no']}번 {hr_name} (길이: {len(hr_name)})")
+            analysis["special_cases"].append(
+                f"긴 이름: {horse['chul_no']}번 {hr_name} (길이: {len(hr_name)})"
+            )
 
         # 3. 영어/숫자 포함
         if any(char.isascii() and not char.isspace() for char in hr_name):
-            analysis["special_cases"].append(f"영어/숫자: {horse['chul_no']}번 {hr_name}")
+            analysis["special_cases"].append(
+                f"영어/숫자: {horse['chul_no']}번 {hr_name}"
+            )
 
         # 4. 기수/조교사 이름 특수문자
         jk_name = horse["jockey"]["jk_name"]
@@ -50,7 +82,7 @@ def analyze_race_data(race_id, status):
 
         # 5. 체중 형식 이상
         weight = horse.get("weight", "")
-        if weight and not weight[-1].isdigit() and weight[-1] != ')':
+        if weight and not weight[-1].isdigit() and weight[-1] != ")":
             analysis["special_cases"].append(f"체중 형식: {horse['chul_no']}번 {weight}")
 
         # 6. 배당률 특이값

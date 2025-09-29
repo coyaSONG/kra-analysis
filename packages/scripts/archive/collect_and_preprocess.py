@@ -22,12 +22,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 환경 변수 로드
 load_dotenv()
 
-API_KEY = os.getenv('KRA_SERVICE_KEY')
+API_KEY = os.getenv("KRA_SERVICE_KEY")
 if not API_KEY:
     raise ValueError("KRA_SERVICE_KEY가 .env 파일에 설정되어 있지 않습니다.")
 
 # URL 디코딩 (이미 인코딩된 경우 처리)
-if '%' in API_KEY:
+if "%" in API_KEY:
     API_KEY = urllib.parse.unquote(API_KEY)
 
 BASE_URL = "https://apis.data.go.kr/B551015/API214_1/RaceDetailResult_1"
@@ -46,13 +46,13 @@ def collect_race_data(meet: str, rc_date: str, rc_no: int) -> dict[str, Any]:
         경주 데이터 (JSON)
     """
     params = {
-        'serviceKey': API_KEY,
-        'numOfRows': '50',
-        'pageNo': '1',
-        'meet': meet,
-        'rc_date': rc_date,
-        'rc_no': str(rc_no),
-        '_type': 'json'
+        "serviceKey": API_KEY,
+        "numOfRows": "50",
+        "pageNo": "1",
+        "meet": meet,
+        "rc_date": rc_date,
+        "rc_no": str(rc_no),
+        "_type": "json",
     }
 
     try:
@@ -62,8 +62,8 @@ def collect_race_data(meet: str, rc_date: str, rc_no: int) -> dict[str, Any]:
 
         data = response.json()
 
-        if data['response']['header']['resultCode'] == '00':
-            if data['response']['body']['items']:
+        if data["response"]["header"]["resultCode"] == "00":
+            if data["response"]["body"]["items"]:
                 return data
 
         return None
@@ -85,25 +85,25 @@ def collect_all_races_for_day(meet: str, rc_date: str, max_races: int = 15) -> l
     Returns:
         수집된 경주 데이터 리스트
     """
-    meet_names = {'1': '서울', '2': '제주', '3': '부산경남'}
+    meet_names = {"1": "서울", "2": "제주", "3": "부산경남"}
     print(f"\n📅 {rc_date} {meet_names.get(meet, meet)} 경마장 데이터 수집")
-    print("="*60)
+    print("=" * 60)
 
     races = []
 
     for rc_no in range(1, max_races + 1):
-        print(f"\n{rc_no}R 수집 중...", end=' ')
+        print(f"\n{rc_no}R 수집 중...", end=" ")
 
         data = collect_race_data(meet, rc_date, rc_no)
 
         if data:
             # 원본 데이터 저장
             raw_filename = f"data/race_{meet}_{rc_date}_{rc_no}.json"
-            with open(raw_filename, 'w', encoding='utf-8') as f:
+            with open(raw_filename, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
 
             # 경주 정보 출력
-            items = data['response']['body']['items']['item']
+            items = data["response"]["body"]["items"]["item"]
             if not isinstance(items, list):
                 items = [items]
 
