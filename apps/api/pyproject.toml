@@ -3,7 +3,7 @@ name = "kra-race-prediction-api"
 version = "1.0.0"
 description = "KRA Horse Racing Prediction REST API"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.115.5",
     "uvicorn[standard]>=0.32.1",
@@ -67,12 +67,12 @@ package = true  # API는 패키지로 배포 가능
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py313']
 include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py313"
 extend-exclude = [".venv"]
 
 [tool.ruff.lint]
@@ -94,11 +94,14 @@ ignore = [
 fixable = ["ALL"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
+explicit_package_bases = true
+mypy_path = "."
+namespace_packages = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -69,7 +69,7 @@ jobs:
     - name: Run type checking (mypy)
       working-directory: ./apps/api
       run: |
-        uv run mypy . --ignore-missing-imports --no-strict-optional
+        uv run mypy . --ignore-missing-imports --no-strict-optional --explicit-package-bases
     
     - name: Run unit tests
       working-directory: ./apps/api
@@ -78,7 +78,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/15
         SECRET_KEY: test-secret-key
         ENVIRONMENT: test
-        PYTHONPATH: .
       run: |
         uv run pytest -v -m unit --tb=short -o addopts=""
     
@@ -90,7 +89,6 @@ jobs:
         SECRET_KEY: test-secret-key
         ENVIRONMENT: test
         RATE_LIMIT_ENABLED: "false"
-        PYTHONPATH: .
       run: |
         uv run pytest -v -m integration --tb=short --timeout=60
     
@@ -101,7 +99,6 @@ jobs:
         REDIS_URL: redis://localhost:6379/15
         SECRET_KEY: test-secret-key
         ENVIRONMENT: test
-        PYTHONPATH: .
       run: |
         # Use pytest.ini addopts and .coveragerc (fail_under = 80)
         uv run pytest -v -m unit
