@@ -163,7 +163,7 @@ async def test_cleanup_old_jobs(db_session):
     deleted = await service.cleanup_old_jobs(db_session, days=7)
     assert deleted >= 2
 
-
+@pytest.mark.unit
 def test_get_celery_components_prefers_injected(monkeypatch):
     import services.job_service as js
 
@@ -184,7 +184,7 @@ def test_get_celery_components_prefers_injected(monkeypatch):
         js.celery_app = original_app
         js.AsyncResult = original_async_result
 
-
+@pytest.mark.unit
 def test_get_celery_components_handles_missing(monkeypatch):
     import services.job_service as js
 
@@ -302,68 +302,6 @@ async def test_get_job_status_missing_returns_none(db_session):
     assert await service.get_job_status("missing", db_session) is None
 
 
-def test_calculate_progress_full_pipeline_steps():
-    service = JobService()
-    job = SimpleNamespace(status="processing", type="full_pipeline")
-    celery_status = {
-        "info": {
-            "steps": {
-                "collect": "completed",
-                "enrich": "completed",
-                "finalize": "pending",
-            }
-        }
-    }
-
-    assert service._calculate_progress(job, celery_status) == 10 + 2 * 30
-
-
-@pytest.mark.unit
-def test_get_celery_components_prefers_injected(monkeypatch):
-    import services.job_service as js
-
-    dummy_app = object()
-    dummy_async_result = object()
-
-    original_app = js.celery_app
-    original_async_result = js.AsyncResult
-
-    js.celery_app = dummy_app
-    js.AsyncResult = dummy_async_result
-
-    try:
-        app, async_result = JobService._get_celery_components()
-        assert app is dummy_app
-        assert async_result is dummy_async_result
-    finally:
-        js.celery_app = original_app
-        js.AsyncResult = original_async_result
-
-
-@pytest.mark.unit
-def test_get_celery_components_handles_missing(monkeypatch):
-    import services.job_service as js
-
-    original_app = js.celery_app
-    original_async_result = js.AsyncResult
-
-    js.celery_app = None
-    js.AsyncResult = None
-
-    def fake_import(name: str):
-        raise ImportError(f"missing {name}")
-
-    monkeypatch.setattr(js.importlib, "import_module", fake_import)
-
-    try:
-        app, async_result = JobService._get_celery_components()
-        assert app is None
-        assert async_result is None
-    finally:
-        js.celery_app = original_app
-        js.AsyncResult = original_async_result
-
-
 @pytest.mark.unit
 def test_calculate_progress_full_pipeline_steps():
     service = JobService()
@@ -386,14 +324,14 @@ def test_calculate_progress_full_pipeline_steps():
 async def test_get_collection_tasks_module_import_error(monkeypatch):
     """Test _get_collection_tasks_module when import fails"""
     service = JobService()
-    
+
     import importlib
-    
+
     def fake_import(name):
         raise ImportError("Module not found")
-    
+
     monkeypatch.setattr(importlib, "import_module", fake_import)
-    
+
     result = service._get_collection_tasks_module()
     assert result is None
 

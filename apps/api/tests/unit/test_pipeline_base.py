@@ -236,15 +236,15 @@ class TestPipeline:
         assert pipeline.status == PipelineStatus.IDLE
 
 
-@pytest.mark.unit 
+@pytest.mark.unit
 class TestPipelineBuilderAdditional:
     """Additional tests for PipelineBuilder"""
-    
+
     @pytest.mark.unit
     def test_builder_multiple_stages(self):
         """Test PipelineBuilder with multiple stages"""
         from pipelines.base import PipelineBuilder, PipelineStage
-        
+
         class DummyStage(PipelineStage):
             async def validate_prerequisites(self, context):
                 return True
@@ -255,14 +255,14 @@ class TestPipelineBuilderAdditional:
                 return False
             async def rollback(self, context):
                 pass
-        
+
         builder = PipelineBuilder("test")
         pipeline = (builder
             .add_stage(DummyStage("stage1"))
             .add_stage(DummyStage("stage2"))
             .add_stage(DummyStage("stage3"))
             .build())
-        
+
         assert len(pipeline.stages) == 3
         assert pipeline.name == "test"
 
@@ -270,21 +270,21 @@ class TestPipelineBuilderAdditional:
 @pytest.mark.unit
 class TestPipelineContextAdditional:
     """Additional tests for PipelineContext"""
-    
+
     @pytest.mark.unit
     def test_context_metadata(self):
         """Test PipelineContext metadata operations"""
         from pipelines.base import PipelineContext
-        
+
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
-        
+
         # Test metadata operations
         context.metadata["test_key"] = "test_value"
         assert context.metadata["test_key"] == "test_value"
-        
+
         # Test race ID generation
         assert context.get_race_id() == "20240101_1_5"
-        
+
         # Test initial state
         assert context.started_at is None
         assert context.completed_at is None
