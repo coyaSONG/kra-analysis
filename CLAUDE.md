@@ -20,7 +20,25 @@ Claude Code 작업 시 필수 지침입니다.
 - **절대 삭제 금지**: .env, data/, KRA_PUBLIC_API_GUIDE.md
 - **Git 제외**: data/ 폴더 (로컬 전용)
 
-## 주요 명령어 (Turborepo)
+## 주요 명령어
+
+### Python 스크립트 실행 (uv 사용)
+
+```bash
+# uv를 통한 직접 실행 (가상환경 자동 활성화)
+uv run python3 packages/scripts/evaluation/evaluate_prompt_v3.py [버전] [프롬프트파일] [경주수] [병렬수]
+uv run python3 packages/scripts/evaluation/predict_only_test.py [프롬프트파일] [날짜/all] [제한]
+uv run python3 packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py [프롬프트] [날짜/all] [-i 반복] [-p 병렬] [-r 경주수/all]
+uv run python3 packages/scripts/prompt_improvement/analyze_enriched_patterns.py
+
+# Python 의존성 관리
+uv sync                      # 전체 workspace 의존성 설치
+uv sync --group dev          # 개발 의존성 포함 설치
+uv add pandas                # 새 패키지 추가
+uv remove pandas             # 패키지 제거
+```
+
+### Node.js 스크립트 실행 (pnpm/Turborepo)
 
 ```bash
 # 데이터 수집

@@ -1,0 +1,42 @@
+[project]
+name = "kra-scripts"
+version = "0.1.0"
+description = "KRA 경마 데이터 수집 및 분석 스크립트"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.26.0",
+    "aiofiles>=23.2.1",
+    "tenacity>=8.2.3",
+    "rich>=13.7.0",
+    "click>=8.1.0",
+    "pydantic>=2.5.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+]
+
+[tool.uv]
+package = false  # 이것은 스크립트 모음이지 패키지가 아닙니다
+
+[tool.uv.scripts]
+# 데이터 수집 스크립트
+collect-basic = "race_collector.collect_race_data:main"
+collect-enrich = "race_collector.enrich_race_data:main"
+collect-result = "race_collector.collect_race_results:main"
+
+# 평가 스크립트
+evaluate-v3 = "evaluation.evaluate_prompt_v3:main"
+evaluate-predict = "evaluation.predict_only_test:main"
+
+# 개선 스크립트
+improve-v5 = "prompt_improvement.recursive_prompt_improvement_v5:main"
+improve-analyze = "prompt_improvement.analyze_enriched_patterns:main"

@@ -1,8 +1,40 @@
 # Python 프로젝트 설정 파일
 
+[project]
+name = "kra-analysis"
+version = "0.1.0"
+description = "한국마사회(KRA) 경마 데이터 분석 및 예측 시스템"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.3.0",
+    "mypy>=1.8.0",
+    "ipython>=8.20.0",
+    "jupyter>=1.0.0",
+    "pre-commit>=3.6.0",
+    "ipdb>=0.13.13",
+    "rich>=13.7.0",
+]
+
+[tool.uv]
+package = false  # 이것은 라이브러리가 아닌 애플리케이션입니다
+
+[tool.uv.workspace]
+members = ["apps/api", "packages/scripts"]
+
 [tool.black]
 line-length = 88
-target-version = ['py312']
+target-version = ['py313']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -16,7 +48,7 @@ exclude = '''
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py313"
 # 기본 제외 목록에 추가로 내부 가상환경을 무시
 extend-exclude = [
     "apps/api/.venv",

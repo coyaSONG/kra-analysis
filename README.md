@@ -89,16 +89,41 @@ cp apps/collector/.env.example apps/collector/.env
 
 ### 1) 의존성 설치
 
+#### Node.js/TypeScript 의존성
+
 ```bash
 # pnpm 설치 (없는 경우)
 npm install -g pnpm@9
 
 # 전체 워크스페이스 의존성 설치
 pnpm install
-
-# Python 의존성 설치 (API용)
-cd apps/api && uv sync
 ```
+
+#### Python 의존성 (uv 사용)
+
+```bash
+# uv 설치 (없는 경우) - https://github.com/astral-sh/uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# 또는 macOS
+brew install uv
+
+# Python 3.13 자동 설치 및 가상환경 생성
+uv sync
+
+# 개발 의존성 포함 설치
+uv sync --group dev
+
+# 특정 워크스페이스만 동기화
+uv sync --package kra-scripts
+uv sync --package kra-race-prediction-api
+```
+
+**uv 주요 명령어:**
+- `uv sync` - 의존성 설치 및 lock 파일 업데이트
+- `uv add <패키지>` - 새 패키지 추가
+- `uv remove <패키지>` - 패키지 제거
+- `uv run <명령>` - 가상환경 내에서 명령 실행
+- `uv pip list` - 설치된 패키지 목록
 
 ### 2) 개발 서버 실행
 
