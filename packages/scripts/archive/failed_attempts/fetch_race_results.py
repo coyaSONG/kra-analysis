@@ -92,7 +92,7 @@ def save_result_cache(result_data: dict, cache_dir: Path = Path("data/cache/resu
 
     if items:
         first_item = items[0]
-        filename = f"result_{first_item["rcDate"]}_{first_item["meet"]}_{first_item["rcNo"]}.json"
+        filename = f"result_{first_item['rcDate']}_{first_item['meet']}_{first_item['rcNo']}.json"
         cache_file = cache_dir / filename
 
         with open(cache_file, "w", encoding="utf-8") as f:

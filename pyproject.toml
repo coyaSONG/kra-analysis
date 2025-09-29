@@ -2,7 +2,7 @@
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py312']
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -16,7 +16,7 @@ exclude = '''
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py312"
 # 기본 제외 목록에 추가로 내부 가상환경을 무시
 extend-exclude = [
     "apps/api/.venv",
