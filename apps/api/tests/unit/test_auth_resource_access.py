@@ -7,6 +7,8 @@ from models.database_models import Job, JobStatus, JobType, Prediction
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_check_resource_access_prediction_true(db_session):
     p = Prediction(
         prediction_id="pred-1",
@@ -25,6 +27,8 @@ async def test_check_resource_access_prediction_true(db_session):
     assert ok is True
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_require_resource_access_job_allow_and_deny(db_session):
     # Create job owned by env key name 'Environment Key'

@@ -2,6 +2,8 @@ import pytest
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_collect_race_error_returns_500(monkeypatch, authenticated_client):
     # Patch service to raise inside route handler
     import services.collection_service as cs

@@ -22,6 +22,8 @@ class DummyResponse:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_race_info_success(monkeypatch):
     svc = KRAAPIService()
 
@@ -42,6 +44,8 @@ async def test_get_race_info_success(monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_race_info_http_error(monkeypatch):
     svc = KRAAPIService()
 
@@ -58,6 +62,8 @@ async def test_get_race_info_http_error(monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_race_info_connection_error(monkeypatch):
     svc = KRAAPIService()
 
@@ -72,6 +78,8 @@ async def test_get_race_info_connection_error(monkeypatch):
         await svc.get_race_info("20240719", "1", 1, use_cache=False)
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_jockey_and_trainer_success(monkeypatch):
     svc = KRAAPIService()
@@ -102,6 +110,8 @@ async def test_get_jockey_and_trainer_success(monkeypatch):
     assert trainer["response"]["header"]["resultCode"] == "00"
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_batch_get_race_results(monkeypatch):
     svc = KRAAPIService()

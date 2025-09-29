@@ -2,6 +2,8 @@ import pytest
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_collect_race_data_async_error(monkeypatch, authenticated_client):
     import routers.collection_v2 as r
 
@@ -18,6 +20,8 @@ async def test_collect_race_data_async_error(monkeypatch, authenticated_client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_collect_race_data_top_level_error(monkeypatch, authenticated_client):
     import routers.collection_v2 as r
 
@@ -33,6 +37,8 @@ async def test_collect_race_data_top_level_error(monkeypatch, authenticated_clie
     assert resp.status_code == 500
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_collection_status_error(monkeypatch, authenticated_client):
     import routers.collection_v2 as r

@@ -11,6 +11,8 @@ class DummyKRA(KRAAPIService):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_preprocess_data_various_values():
     svc = CollectionService(DummyKRA())
     raw = {
@@ -27,6 +29,8 @@ async def test_preprocess_data_various_values():
     assert any("weight_ratio" in h for h in active)
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_save_race_data_update_path(db_session):
     svc = CollectionService(DummyKRA())

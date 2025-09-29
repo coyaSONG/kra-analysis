@@ -5,6 +5,8 @@ from main_v2 import app
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_root_endpoint():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

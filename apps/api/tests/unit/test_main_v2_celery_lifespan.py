@@ -20,6 +20,8 @@ class DummyCelery:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_lifespan_with_celery_inspect(monkeypatch):
     # Patch celery_app used in main_v2
     monkeypatch.setattr(main_v2, "celery_app", DummyCelery())
@@ -40,6 +42,8 @@ class BoomControl:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_lifespan_with_celery_inspect_error(monkeypatch):
     monkeypatch.setattr(
         main_v2, "celery_app", type("X", (), {"control": BoomControl()})()
@@ -50,6 +54,8 @@ async def test_lifespan_with_celery_inspect_error(monkeypatch):
         assert r.status_code == 200
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_lifespan_redis_init_fail(monkeypatch):
     import infrastructure.redis_client as rc

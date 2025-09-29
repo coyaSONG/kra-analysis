@@ -18,12 +18,16 @@ class DummyKRA(KRAAPIService):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_horse_past_performances_bad_date(db_session):
     svc = CollectionService(DummyKRA())
     out = await svc._get_horse_past_performances("H001", "BADDATE", db_session)
     assert out == []
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_jockey_stats_exception_path():
     svc = CollectionService(DummyKRA(raise_j=True))
@@ -32,6 +36,8 @@ async def test_get_jockey_stats_exception_path():
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_trainer_stats_default_path():
     svc = CollectionService(DummyKRA())
     stats = await svc._get_trainer_stats("T001", "20240719", None)
@@ -39,6 +45,8 @@ async def test_get_trainer_stats_default_path():
     assert stats["career_win_rate"] == 0.16
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_enrich_data_empty_horses():
     svc = CollectionService(DummyKRA())

@@ -18,6 +18,8 @@ from models.database_models import Job
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_verify_api_key_env_valid(db_session):
     # test_settings fixture seeds valid_api_keys with test keys
     key = (
@@ -31,6 +33,8 @@ async def test_verify_api_key_env_valid(db_session):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_verify_api_key_invalid_format(db_session):
     key = "bad"  # too short, invalid format
     api_key_obj = await verify_api_key(key, db_session)
@@ -38,12 +42,16 @@ async def test_verify_api_key_invalid_format(db_session):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_require_api_key_missing_raises(db_session):
     with pytest.raises(HTTPException) as ex:
         await require_api_key(x_api_key=None, api_key=None, db=db_session)
     assert ex.value.status_code == 401
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_require_permissions_allow_and_forbid(db_session):
     # Prepare API key object with write permission
@@ -67,6 +75,8 @@ async def test_require_permissions_allow_and_forbid(db_session):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_jwt_token_and_current_user(db_session):
     token = create_access_token({"sub": "user-1"}, expires_delta=timedelta(seconds=60))
     payload = verify_token(token)
@@ -76,10 +86,13 @@ async def test_jwt_token_and_current_user(db_session):
     assert user is not None and user.get("sub") == "user-1"
 
 
+@pytest.mark.unit
 def test_verify_token_invalid_returns_none():
     assert verify_token("not-a-jwt") is None
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_require_api_key_daily_limit_exceeded(db_session):
     # Create a DB key that is not in env valid_api_keys
@@ -103,6 +116,8 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
     assert ex.value.status_code == 429
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_check_resource_access_paths(db_session):
     # Admin path

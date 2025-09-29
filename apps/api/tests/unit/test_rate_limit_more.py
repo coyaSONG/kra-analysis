@@ -6,6 +6,8 @@ from middleware.rate_limit import RateLimitMiddleware
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_rate_limit_excluded_paths(monkeypatch):
     app = FastAPI()
     app.add_middleware(RateLimitMiddleware)
@@ -57,6 +59,8 @@ async def test_rate_limit_excluded_paths(monkeypatch):
     settings.rate_limit_enabled = old_flag
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_rate_limit_client_id_header_vs_ip(monkeypatch):
     app = FastAPI()

@@ -9,7 +9,6 @@ from services.job_service import JobService
 
 
 @pytest.mark.unit
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_create_job(db_session):
     service = JobService()
@@ -317,3 +316,101 @@ def test_calculate_progress_full_pipeline_steps():
     }
 
     assert service._calculate_progress(job, celery_status) == 10 + 2 * 30
+
+
+@pytest.mark.unit
+def test_get_celery_components_prefers_injected(monkeypatch):
+    import services.job_service as js
+
+    dummy_app = object()
+    dummy_async_result = object()
+
+    original_app = js.celery_app
+    original_async_result = js.AsyncResult
+
+    js.celery_app = dummy_app
+    js.AsyncResult = dummy_async_result
+
+    try:
+        app, async_result = JobService._get_celery_components()
+        assert app is dummy_app
+        assert async_result is dummy_async_result
+    finally:
+        js.celery_app = original_app
+        js.AsyncResult = original_async_result
+
+
+@pytest.mark.unit
+def test_get_celery_components_handles_missing(monkeypatch):
+    import services.job_service as js
+
+    original_app = js.celery_app
+    original_async_result = js.AsyncResult
+
+    js.celery_app = None
+    js.AsyncResult = None
+
+    def fake_import(name: str):
+        raise ImportError(f"missing {name}")
+
+    monkeypatch.setattr(js.importlib, "import_module", fake_import)
+
+    try:
+        app, async_result = JobService._get_celery_components()
+        assert app is None
+        assert async_result is None
+    finally:
+        js.celery_app = original_app
+        js.AsyncResult = original_async_result
+
+
+@pytest.mark.unit
+def test_calculate_progress_full_pipeline_steps():
+    service = JobService()
+    job = SimpleNamespace(status="processing", type="full_pipeline")
+    celery_status = {
+        "info": {
+            "steps": {
+                "collect": "completed",
+                "enrich": "completed",
+                "finalize": "pending",
+            }
+        }
+    }
+
+    assert service._calculate_progress(job, celery_status) == 10 + 2 * 30
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_collection_tasks_module_import_error(monkeypatch):
+    """Test _get_collection_tasks_module when import fails"""
+    service = JobService()
+    
+    import importlib
+    
+    def fake_import(name):
+        raise ImportError("Module not found")
+    
+    monkeypatch.setattr(importlib, "import_module", fake_import)
+    
+    result = service._get_collection_tasks_module()
+    assert result is None
+
+
+@pytest.mark.unit
+def test_job_service_methods_exist():
+    """Test that JobService has expected methods"""
+    service = JobService()
+
+    # Check that service has expected methods
+    assert hasattr(service, 'create_job')
+    assert hasattr(service, 'get_job')
+    assert hasattr(service, 'list_jobs')
+    assert hasattr(service, 'get_job_status')
+    assert hasattr(service, 'cancel_job')
+    assert hasattr(service, 'start_job')
+    assert hasattr(service, '_calculate_progress')
+    assert hasattr(service, '_dispatch_task')
+    assert hasattr(service, '_get_celery_components')
+    assert hasattr(service, '_get_collection_tasks_module')

@@ -6,11 +6,15 @@ from main_v2 import create_required_directories, global_exception_handler
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_create_required_directories_runs():
     # Function should not raise and ensures dirs exist
     await create_required_directories()
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_global_exception_handler_response():
     scope: Scope = {

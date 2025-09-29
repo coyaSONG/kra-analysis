@@ -11,6 +11,8 @@ class DummyKRA(KRAAPIService):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_enrich_race_data_with_stats(monkeypatch, db_session):
     svc = CollectionService(DummyKRA())
     # Seed race with basic_data containing two horses
@@ -63,6 +65,8 @@ async def test_enrich_race_data_with_stats(monkeypatch, db_session):
     assert "trainer_stats" in horses[0]
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_enrich_race_data_not_found_raises(db_session):
     svc = CollectionService(DummyKRA())

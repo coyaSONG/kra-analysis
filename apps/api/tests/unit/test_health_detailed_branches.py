@@ -7,6 +7,8 @@ class FailPing:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_detailed_health_redis_unhealthy(monkeypatch, authenticated_client):
     # Override dependency to simulate redis with failing ping
     async def override():
@@ -27,6 +29,8 @@ async def test_detailed_health_redis_unhealthy(monkeypatch, authenticated_client
         fastapp.dependency_overrides.clear()
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
     # Patch DB health to False

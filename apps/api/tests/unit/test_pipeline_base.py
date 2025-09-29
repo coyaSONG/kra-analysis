@@ -50,6 +50,7 @@ class MockStage(PipelineStage):
 class TestPipelineContext:
     """Test PipelineContext functionality"""
 
+    @pytest.mark.unit
     def test_pipeline_context_creation(self):
         """PipelineContext should be created with basic race information"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
@@ -59,6 +60,7 @@ class TestPipelineContext:
         assert context.race_number == 5
         assert context.get_race_id() == "20240101_1_5"
 
+    @pytest.mark.unit
     def test_stage_result_management(self):
         """PipelineContext should manage stage results properly"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
@@ -72,6 +74,7 @@ class TestPipelineContext:
         assert context.is_stage_completed("test_stage") is True
         assert context.is_stage_completed("nonexistent_stage") is False
 
+    @pytest.mark.unit
     def test_execution_time_calculation(self):
         """PipelineContext should calculate execution time correctly"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
@@ -89,12 +92,14 @@ class TestPipelineContext:
 class TestStageResult:
     """Test StageResult functionality"""
 
+    @pytest.mark.unit
     def test_stage_result_success(self):
         """StageResult should correctly identify success"""
         result = StageResult(status=StageStatus.COMPLETED)
         assert result.is_success() is True
         assert result.is_failure() is False
 
+    @pytest.mark.unit
     def test_stage_result_failure(self):
         """StageResult should correctly identify failure"""
         result = StageResult(status=StageStatus.FAILED, error="Test error")
@@ -125,6 +130,8 @@ class TestPipeline:
         assert result_context.is_stage_completed("stage1")
         assert result_context.is_stage_completed("stage2")
 
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_pipeline_execution_failure(self):
@@ -193,6 +200,7 @@ class TestPipeline:
         assert pipeline.status == PipelineStatus.FAILED
         assert stage1.rolled_back is True
 
+    @pytest.mark.unit
     def test_pipeline_builder(self):
         """PipelineBuilder should create pipelines correctly"""
         builder = PipelineBuilder("test_pipeline")
@@ -206,6 +214,7 @@ class TestPipeline:
         assert pipeline.stages[0] == stage1
         assert pipeline.stages[1] == stage2
 
+    @pytest.mark.unit
     def test_pipeline_stage_names(self):
         """Pipeline should return correct stage names"""
         stage1 = MockStage("stage1")
@@ -217,6 +226,7 @@ class TestPipeline:
         stage_names = pipeline.get_stage_names()
         assert stage_names == ["stage1", "stage2"]
 
+    @pytest.mark.unit
     def test_pipeline_reset(self):
         """Pipeline should reset status correctly"""
         pipeline = Pipeline("test_pipeline")
@@ -224,3 +234,57 @@ class TestPipeline:
 
         pipeline.reset()
         assert pipeline.status == PipelineStatus.IDLE
+
+
+@pytest.mark.unit 
+class TestPipelineBuilderAdditional:
+    """Additional tests for PipelineBuilder"""
+    
+    @pytest.mark.unit
+    def test_builder_multiple_stages(self):
+        """Test PipelineBuilder with multiple stages"""
+        from pipelines.base import PipelineBuilder, PipelineStage
+        
+        class DummyStage(PipelineStage):
+            async def validate_prerequisites(self, context):
+                return True
+            async def execute(self, context):
+                from pipelines.base import StageResult, StageStatus
+                return StageResult(status=StageStatus.COMPLETED)
+            def should_skip(self, context):
+                return False
+            async def rollback(self, context):
+                pass
+        
+        builder = PipelineBuilder("test")
+        pipeline = (builder
+            .add_stage(DummyStage("stage1"))
+            .add_stage(DummyStage("stage2"))
+            .add_stage(DummyStage("stage3"))
+            .build())
+        
+        assert len(pipeline.stages) == 3
+        assert pipeline.name == "test"
+
+
+@pytest.mark.unit
+class TestPipelineContextAdditional:
+    """Additional tests for PipelineContext"""
+    
+    @pytest.mark.unit
+    def test_context_metadata(self):
+        """Test PipelineContext metadata operations"""
+        from pipelines.base import PipelineContext
+        
+        context = PipelineContext(race_date="20240101", meet=1, race_number=5)
+        
+        # Test metadata operations
+        context.metadata["test_key"] = "test_value"
+        assert context.metadata["test_key"] == "test_value"
+        
+        # Test race ID generation
+        assert context.get_race_id() == "20240101_1_5"
+        
+        # Test initial state
+        assert context.started_at is None
+        assert context.completed_at is None

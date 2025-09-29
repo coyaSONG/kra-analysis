@@ -4,6 +4,8 @@ from config import settings
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_rate_limit_bypass_in_test_env(authenticated_client):
     # In test env, middleware bypasses rate limit
     resp = await authenticated_client.get("/api/v2/jobs/")
@@ -53,6 +55,8 @@ class FakeRedis:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_rate_limit_enforced_in_production(monkeypatch, authenticated_client):
     # Set to production-like env to avoid bypass
     old_env = settings.environment
@@ -83,6 +87,8 @@ async def test_rate_limit_enforced_in_production(monkeypatch, authenticated_clie
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_rate_limit_no_pipeline_bypass(monkeypatch, authenticated_client):
     # Force production but return redis-like object without pipeline
     from config import settings
@@ -107,6 +113,8 @@ async def test_rate_limit_no_pipeline_bypass(monkeypatch, authenticated_client):
     settings.rate_limit_enabled = old_flag
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_rate_limit_redis_required_unavailable(monkeypatch, authenticated_client):
     from config import settings

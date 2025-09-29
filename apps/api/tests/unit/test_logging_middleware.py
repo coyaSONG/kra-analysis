@@ -6,6 +6,8 @@ from middleware.logging import LoggingMiddleware
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_logging_middleware_sets_request_id():
     app = FastAPI()
     app.add_middleware(LoggingMiddleware)

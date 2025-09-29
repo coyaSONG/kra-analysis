@@ -22,6 +22,7 @@ class TestDataProcessingPipeline:
     def mock_db_session(self):
         return Mock()
 
+    @pytest.mark.unit
     def test_create_standard_pipeline(self, mock_kra_api_service, mock_db_session):
         """create_standard_pipeline should create pipeline with all stages"""
         pipeline = DataProcessingPipeline.create_standard_pipeline(
@@ -35,6 +36,7 @@ class TestDataProcessingPipeline:
         assert "enrichment" in stage_names
         assert "validation" in stage_names
 
+    @pytest.mark.unit
     def test_create_collection_only_pipeline(
         self, mock_kra_api_service, mock_db_session
     ):
@@ -50,6 +52,7 @@ class TestDataProcessingPipeline:
         assert "enrichment" not in stage_names
         assert "validation" not in stage_names
 
+    @pytest.mark.unit
     def test_create_enrichment_pipeline(self, mock_kra_api_service, mock_db_session):
         """create_enrichment_pipeline should create pipeline with enrichment and validation"""
         pipeline = DataProcessingPipeline.create_enrichment_pipeline(
@@ -63,6 +66,8 @@ class TestDataProcessingPipeline:
         assert "collection" not in stage_names
         assert "preprocessing" not in stage_names
 
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_process_race_data_unknown_pipeline_type(
@@ -97,6 +102,7 @@ class TestPipelineOrchestrator:
     def orchestrator(self, mock_kra_api_service, mock_db_session):
         return PipelineOrchestrator(mock_kra_api_service, mock_db_session)
 
+    @pytest.mark.unit
     def test_get_pipeline_status_summary_empty(self, orchestrator):
         """get_pipeline_status_summary should handle empty context list"""
         summary = orchestrator.get_pipeline_status_summary([])
@@ -106,6 +112,7 @@ class TestPipelineOrchestrator:
         assert summary["failed"] == 0
         assert summary["success_rate"] == 0
 
+    @pytest.mark.unit
     def test_get_pipeline_status_summary_with_data(self, orchestrator):
         """get_pipeline_status_summary should calculate statistics correctly"""
         # Create mock contexts

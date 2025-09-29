@@ -5,6 +5,8 @@ from tests.utils.mocks import MockRedisClient
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_api_key_rate_limiter_counts_and_headers():
     limiter = APIKeyRateLimiter()
     limiter.redis_client = MockRedisClient()

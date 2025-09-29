@@ -6,6 +6,8 @@ from main_v2 import app
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_docs_and_openapi_excluded_from_rate_limit(monkeypatch):
     # Force production so middleware is active
     old_env = settings.environment

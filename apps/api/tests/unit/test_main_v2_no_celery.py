@@ -5,6 +5,8 @@ import main_v2
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_lifespan_without_celery_workers(monkeypatch):
     # Force CELERY_AVAILABLE to False to cover branch
     monkeypatch.setattr(main_v2, "CELERY_AVAILABLE", False)

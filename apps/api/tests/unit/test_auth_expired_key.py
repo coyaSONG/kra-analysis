@@ -7,6 +7,8 @@ from models.database_models import APIKey as DBAPIKey
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_verify_api_key_expired_returns_none(db_session):
     key = "EXPIREDKEY12345"
     expired = DBAPIKey(

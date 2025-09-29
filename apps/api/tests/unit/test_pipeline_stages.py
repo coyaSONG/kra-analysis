@@ -55,6 +55,8 @@ class TestCollectionStage:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_validate_prerequisites_missing_session(
         self, mock_kra_api_service, pipeline_context
     ):
@@ -65,12 +67,16 @@ class TestCollectionStage:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_validate_prerequisites_invalid_params(self, collection_stage):
         """CollectionStage should fail validation with invalid race parameters"""
         context = PipelineContext(race_date="", meet=0, race_number=0)
         result = await collection_stage.validate_prerequisites(context)
         assert result is False
 
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_success(self, collection_stage, pipeline_context):
@@ -95,6 +101,8 @@ class TestCollectionStage:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_execute_failure(self, collection_stage, pipeline_context):
         """CollectionStage should handle execution failure"""
         collection_stage.collection_service.collect_race_data = AsyncMock(
@@ -106,11 +114,13 @@ class TestCollectionStage:
         assert result.status == StageStatus.FAILED
         assert "Collection failed" in result.error
 
+    @pytest.mark.unit
     def test_should_skip_with_existing_data(self, collection_stage, pipeline_context):
         """CollectionStage should skip when raw data already exists"""
         pipeline_context.raw_data = {"existing": "data"}
         assert collection_stage.should_skip(pipeline_context) is True
 
+    @pytest.mark.unit
     def test_should_not_skip_without_data(self, collection_stage, pipeline_context):
         """CollectionStage should not skip when no raw data exists"""
         assert collection_stage.should_skip(pipeline_context) is False
@@ -165,6 +175,8 @@ class TestPreprocessingStage:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_execute_success(
         self, preprocessing_stage, pipeline_context_with_raw_data
     ):
@@ -194,6 +206,7 @@ class TestPreprocessingStage:
         result = await preprocessing_stage.execute(context)
         assert result.status == StageStatus.FAILED
 
+    @pytest.mark.unit
     def test_should_skip_with_existing_data(self, preprocessing_stage):
         """PreprocessingStage should skip when preprocessed data already exists"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
@@ -270,6 +283,8 @@ class TestValidationStage:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_execute_success(
         self, validation_stage, pipeline_context_with_enriched_data
     ):
@@ -280,6 +295,8 @@ class TestValidationStage:
         assert pipeline_context_with_enriched_data.validation_result is not None
         assert pipeline_context_with_enriched_data.validation_result["is_valid"] is True
 
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_insufficient_horses(
@@ -323,6 +340,7 @@ class TestValidationStage:
         assert result.status == StageStatus.FAILED
         assert "Low quality score" in result.error
 
+    @pytest.mark.unit
     def test_should_skip_with_existing_validation(self, validation_stage):
         """ValidationStage should skip when validation result already exists"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)

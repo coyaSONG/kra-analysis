@@ -17,6 +17,8 @@ class DummyKRA(KRAAPIService):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_jockey_stats_success():
     payload = {
         "response": {
@@ -42,6 +44,8 @@ async def test_get_jockey_stats_success():
     assert stats["recent_races"] == 12
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_trainer_stats_success():
     payload = {
@@ -69,6 +73,8 @@ async def test_get_trainer_stats_success():
     assert stats["meet"] == "서울"
 
 
+@pytest.mark.asyncio
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_collect_batch_races_mixed(monkeypatch):
     svc = CollectionService(DummyKRA())

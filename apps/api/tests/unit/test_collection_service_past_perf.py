@@ -13,6 +13,8 @@ class DummyKRA(KRAAPIService):
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
 async def test_get_horse_past_performances(db_session):
     svc = CollectionService(DummyKRA())
     # insert past race within 3 months
