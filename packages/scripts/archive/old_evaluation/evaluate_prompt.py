@@ -28,7 +28,7 @@ class PromptEvaluator:
         """테스트할 경주 파일 찾기 (결과가 있는 경주만)"""
         # 2025년 5-6월 경주 결과 파일들
         result_files = []
-        for month in ['05', '06']:
+        for month in ["05", "06"]:
             pattern = f"data/raw/results/2025/{month}/race_*.json"
             files = sorted(glob.glob(pattern))
             result_files.extend(files)
@@ -41,7 +41,7 @@ class PromptEvaluator:
 
     def prepare_race_data(self, result_file: Path) -> dict | None:
         """결과 파일에서 예측용 데이터 생성 (결과 제거)"""
-        with open(result_file, encoding='utf-8') as f:
+        with open(result_file, encoding="utf-8") as f:
             data = json.load(f)
 
         # 결과 정보 제거
@@ -54,7 +54,7 @@ class PromptEvaluator:
         for horse in data["horses"]:
             # 기권/제외 말 스킵 (win_odds가 0인 경우)
             if horse.get("win_odds", 999) == 0:
-                print(f"  - {horse['chul_no']}번 {horse['hr_name']} 기권/제외 - 스킵")
+                print(f"  - {horse["chul_no"]}번 {horse["hr_name"]} 기권/제외 - 스킵")
                 continue
 
             horse_data = horse.copy()
@@ -75,11 +75,11 @@ class PromptEvaluator:
         """Claude CLI를 통해 예측 실행"""
         # 임시 파일에 race data 저장
         temp_file = f"/tmp/race_{race_id}.json"
-        with open(temp_file, 'w', encoding='utf-8') as f:
+        with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(race_data, f, ensure_ascii=False, indent=2)
 
         # 프롬프트 읽기
-        with open(self.prompt_path, encoding='utf-8') as f:
+        with open(self.prompt_path, encoding="utf-8") as f:
             prompt_template = f.read()
 
         # 프롬프트 구성
@@ -103,7 +103,7 @@ class PromptEvaluator:
 
         try:
             # Claude CLI 실행
-            cmd = ['claude', '-p', prompt]
+            cmd = ["claude", "-p", prompt]
             result = subprocess.run(cmd,
                                   capture_output=True,
                                   text=True,
@@ -120,7 +120,7 @@ class PromptEvaluator:
             import re
 
             # 패턴 1: 코드블록 내 JSON
-            code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', output, re.DOTALL)
+            code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
             if code_block_match:
                 try:
                     prediction = json.loads(code_block_match.group(1))
@@ -129,7 +129,7 @@ class PromptEvaluator:
                     pass
 
             # 패턴 2: 일반 JSON
-            json_match = re.search(r'\{.*\}', output, re.DOTALL)
+            json_match = re.search(r"\{.*\}", output, re.DOTALL)
             if json_match:
                 try:
                     prediction = json.loads(json_match.group())
@@ -153,7 +153,7 @@ class PromptEvaluator:
 
     def extract_actual_result(self, result_file: Path) -> list[int]:
         """실제 결과에서 1-3위 말 번호 추출"""
-        with open(result_file, encoding='utf-8') as f:
+        with open(result_file, encoding="utf-8") as f:
             data = json.load(f)
 
         # 결과가 있는 말들을 순위별로 정렬
@@ -199,7 +199,7 @@ class PromptEvaluator:
     def analyze_failure(self, race_data: dict, predicted: list[int],
                        actual: list[int], result_file: Path) -> dict:
         """실패 원인 분석"""
-        with open(result_file, encoding='utf-8') as f:
+        with open(result_file, encoding="utf-8") as f:
             full_data = json.load(f)
 
         # 놓친 말들 분석
@@ -311,7 +311,7 @@ class PromptEvaluator:
 
             print(f"  예측: {predicted_horses}")
             print(f"  실제: {actual_result}")
-            print(f"  적중: {reward['correct_count']}/3 ({reward['hit_rate']:.1f}%)")
+            print(f"  적중: {reward["correct_count"]}/3 ({reward["hit_rate"]:.1f}%)")
 
             # API 제한 대응
             time.sleep(5)
@@ -330,14 +330,14 @@ class PromptEvaluator:
 
         # 결과 저장
         output_file = self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
         print("\n" + "=" * 60)
         print("평가 완료!")
         print(f"전체 경주: {total_races}")
-        print(f"완전 적중: {successful_predictions} ({summary['success_rate']:.1f}%)")
-        print(f"평균 적중 말 수: {summary['average_correct_horses']:.2f}")
+        print(f"완전 적중: {successful_predictions} ({summary["success_rate"]:.1f}%)")
+        print(f"평균 적중 말 수: {summary["average_correct_horses"]:.2f}")
         print(f"결과 저장: {output_file}")
 
         return summary

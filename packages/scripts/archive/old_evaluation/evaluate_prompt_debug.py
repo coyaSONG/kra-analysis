@@ -14,7 +14,7 @@ def run_single_prediction(race_file, prompt_path):
     """단일 경주 예측 실행 (디버그 정보 포함)"""
 
     # 데이터 로드
-    with open(race_file, encoding='utf-8') as f:
+    with open(race_file, encoding="utf-8") as f:
         data = json.load(f)
 
     # 기권/제외 말 필터링
@@ -32,7 +32,7 @@ def run_single_prediction(race_file, prompt_path):
                 del horse[field]
 
     # 프롬프트 읽기
-    with open(prompt_path, encoding='utf-8') as f:
+    with open(prompt_path, encoding="utf-8") as f:
         prompt_template = f.read()
 
     # 데이터 크기 확인
@@ -51,7 +51,7 @@ def run_single_prediction(race_file, prompt_path):
 
     # 임시 파일로 저장 (너무 긴 경우 대비)
     temp_file = f"/tmp/race_debug_{os.getpid()}.txt"
-    with open(temp_file, 'w', encoding='utf-8') as f:
+    with open(temp_file, "w", encoding="utf-8") as f:
         f.write(prompt)
 
     try:
@@ -60,11 +60,11 @@ def run_single_prediction(race_file, prompt_path):
 
         # 방법 1: 직접 프롬프트
         if len(prompt) < 5000:
-            cmd = ['claude', '-p', prompt]
+            cmd = ["claude", "-p", prompt]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
         else:
             # 방법 2: 파일에서 읽기
-            cmd = ['claude', '-p', f'@{temp_file}']
+            cmd = ["claude", "-p", f"@{temp_file}"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
 
         elapsed = time.time() - start_time
@@ -81,7 +81,7 @@ def run_single_prediction(race_file, prompt_path):
         import re
 
         # JSON 추출 시도
-        json_match = re.search(r'\{.*\}', output, re.DOTALL)
+        json_match = re.search(r"\{.*\}", output, re.DOTALL)
         if json_match:
             try:
                 prediction = json.loads(json_match.group())

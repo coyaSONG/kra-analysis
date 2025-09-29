@@ -59,11 +59,11 @@ class RecursivePromptImprovementV5:
         self.race_limit = race_limit
 
         # 작업 디렉토리 설정
-        self.working_dir = get_data_dir() / f"recursive_improvement_v5/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.working_dir = get_data_dir() / f"recursive_improvement_v5/{datetime.now().strftime("%Y%m%d_%H%M%S")}"
         ensure_directory(self.working_dir)
 
         # 로거 설정
-        self.logger = setup_logger('v5_main')
+        self.logger = setup_logger("v5_main")
 
         # 모듈 초기화
         self.prompt_parser = PromptParser()
@@ -97,7 +97,7 @@ class RecursivePromptImprovementV5:
         start_time = time.time()
 
         for iteration in range(1, self.max_iterations + 1):
-            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"\n{"="*60}")
             self.logger.info(f"반복 {iteration}/{self.max_iterations} 시작")
             self.logger.info(f"현재 프롬프트: {current_structure.version}")
 
@@ -112,21 +112,21 @@ class RecursivePromptImprovementV5:
                 break
 
             # 성능 계산
-            metrics = calculate_success_metrics(evaluation_results['detailed_results'])
-            current_performance = metrics['success_rate']
+            metrics = calculate_success_metrics(evaluation_results["detailed_results"])
+            current_performance = metrics["success_rate"]
 
             self.logger.info("평가 완료:")
             self.logger.info(f"  - 성공률: {current_performance:.1f}%")
-            self.logger.info(f"  - 평균 적중: {metrics['avg_correct']:.2f}마리")
-            self.logger.info(f"  - 평가 경주 수: {metrics['total_races']}개")
+            self.logger.info(f"  - 평균 적중: {metrics["avg_correct"]:.2f}마리")
+            self.logger.info(f"  - 평가 경주 수: {metrics["total_races"]}개")
 
             # 이력 저장
             iteration_data = {
-                'iteration': iteration,
-                'version': current_structure.version,
-                'performance': current_performance,
-                'metrics': metrics,
-                'prompt_path': str(current_prompt_path)
+                "iteration": iteration,
+                "version": current_structure.version,
+                "performance": current_performance,
+                "metrics": metrics,
+                "prompt_path": str(current_prompt_path)
             }
             self.iteration_history.append(iteration_data)
 
@@ -151,14 +151,14 @@ class RecursivePromptImprovementV5:
 
             # 예시 추가 (최대 20개)
             added_count = self.examples_manager.add_examples_from_evaluation(
-                evaluation_results['detailed_results'],
+                evaluation_results["detailed_results"],
                 limit=20
             )
             self.logger.info(f"  - 예시 풀에 {added_count}개 추가")
 
             # 인사이트 분석
             insight_analysis = self.insight_analyzer.analyze(
-                evaluation_results['detailed_results']
+                evaluation_results["detailed_results"]
             )
 
             # 분석 보고서 저장
@@ -166,7 +166,7 @@ class RecursivePromptImprovementV5:
             analysis_path = self.working_dir / f"analysis_iteration_{iteration}.md"
             write_text_file(analysis_report, analysis_path)
 
-            self.logger.info(f"  - 주요 발견사항: {len(insight_analysis.summary.get('key_findings', []))}개")
+            self.logger.info(f"  - 주요 발견사항: {len(insight_analysis.summary.get("key_findings", []))}개")
             self.logger.info(f"  - 권고사항: {len(insight_analysis.recommendations)}개")
 
             # 3. 프롬프트 개선
@@ -187,12 +187,12 @@ class RecursivePromptImprovementV5:
             advanced_status = self.reconstructor.get_advanced_techniques_status(current_performance)
             applied_techniques = [tech for tech, applied in advanced_status.items() if applied]
             if applied_techniques:
-                self.logger.info(f"  - 적용된 고급 기법: {', '.join(applied_techniques)}")
+                self.logger.info(f"  - 적용된 고급 기법: {", ".join(applied_techniques)}")
 
             # 예시 업데이트
             used_example_ids = self.examples_manager.update_examples_section(
                 new_structure,
-                strategy='balanced'
+                strategy="balanced"
             )
 
             # 성능 추적
@@ -207,7 +207,7 @@ class RecursivePromptImprovementV5:
 
             # 특별히 고급 기법 관련 변경사항 강조
             advanced_changes = [c for c in changes if any(
-                tech in c.description.lower() for tech in ['thinking', '검증', '토큰', '최적화']
+                tech in c.description.lower() for tech in ["thinking", "검증", "토큰", "최적화"]
             )]
             if advanced_changes:
                 self.logger.info("  - 고급 기법 변경사항:")
@@ -262,12 +262,12 @@ class RecursivePromptImprovementV5:
 
         # 결과 반환
         return {
-            'success': True,
-            'best_performance': self.best_performance,
-            'best_prompt_path': str(self.best_prompt_path),
-            'iterations': len(self.iteration_history),
-            'working_dir': str(self.working_dir),
-            'report_path': str(report_path)
+            "success": True,
+            "best_performance": self.best_performance,
+            "best_prompt_path": str(self.best_prompt_path),
+            "iterations": len(self.iteration_history),
+            "working_dir": str(self.working_dir),
+            "report_path": str(report_path)
         }
 
     def _evaluate_prompt(self, prompt_path: Path) -> dict[str, Any] | None:
@@ -310,7 +310,7 @@ class RecursivePromptImprovementV5:
                 # 특정 날짜만 평가하도록 수정 필요
                 pass
 
-            self.logger.info(f"평가 명령: {' '.join(cmd)}")
+            self.logger.info(f"평가 명령: {" ".join(cmd)}")
             if race_count == "999999":
                 self.logger.info("평가할 경주 수: 전체 (제한 없음)")
             else:
@@ -362,7 +362,7 @@ class RecursivePromptImprovementV5:
         report = []
 
         report.append("# 재귀 프롬프트 개선 v5 최종 보고서\n")
-        report.append(f"생성일시: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        report.append(f"생성일시: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n")
 
         # 요약
         report.append("## 요약")
@@ -378,9 +378,9 @@ class RecursivePromptImprovementV5:
 
         for item in self.iteration_history:
             report.append(
-                f"| {item['iteration']} | {item['version']} | "
-                f"{item['performance']:.1f}% | "
-                f"{item['metrics']['avg_correct']:.2f}마리 |"
+                f"| {item["iteration"]} | {item["version"]} | "
+                f"{item["performance"]:.1f}% | "
+                f"{item["metrics"]["avg_correct"]:.2f}마리 |"
             )
 
         # 개선 내역
@@ -393,10 +393,10 @@ class RecursivePromptImprovementV5:
         # 예시 통계
         report.append("\n## 예시 관리 통계")
         stats = self.examples_manager.get_statistics()
-        report.append(f"- 총 예시 수: {stats['total_examples']}")
-        report.append(f"- 성공 예시: {stats['success_examples']}")
-        report.append(f"- 실패 예시: {stats['failure_examples']}")
-        report.append(f"- 평균 성과: {stats['avg_performance']:.1f}%")
+        report.append(f"- 총 예시 수: {stats["total_examples"]}")
+        report.append(f"- 성공 예시: {stats["success_examples"]}")
+        report.append(f"- 실패 예시: {stats["failure_examples"]}")
+        report.append(f"- 평균 성과: {stats["avg_performance"]:.1f}%")
 
         # 결론
         report.append("\n## 결론")
@@ -404,9 +404,9 @@ class RecursivePromptImprovementV5:
         if self.best_performance >= 70.0:
             report.append("✅ **목표 달성**: 70% 이상의 성공률을 달성했습니다!")
         else:
-            improvement = self.best_performance - self.iteration_history[0]['performance']
+            improvement = self.best_performance - self.iteration_history[0]["performance"]
             report.append(f"📈 **개선 성과**: {improvement:+.1f}% 향상")
-            report.append(f"   (초기: {self.iteration_history[0]['performance']:.1f}% → 최종: {self.best_performance:.1f}%)")
+            report.append(f"   (초기: {self.iteration_history[0]["performance"]:.1f}% → 최종: {self.best_performance:.1f}%)")
 
         # v4와의 차이점
         report.append("\n## v4 대비 개선사항")
@@ -423,17 +423,17 @@ class RecursivePromptImprovementV5:
         # 각 반복에서 적용된 기법 추적
         techniques_used = set()
         for item in self.iteration_history:
-            perf = item['performance']
+            perf = item["performance"]
             status = self.reconstructor.get_advanced_techniques_status(perf)
             for tech, applied in status.items():
                 if applied:
                     techniques_used.add(tech)
 
-        if 'extended_thinking' in techniques_used:
+        if "extended_thinking" in techniques_used:
             report.append("- **Extended Thinking Mode**: 저성과 구간에서 ultrathink 키워드 적용")
-        if 'self_verification' in techniques_used:
+        if "self_verification" in techniques_used:
             report.append("- **강화된 자가 검증**: 다단계 검증 프로세스 및 오류 복구 가이드 추가")
-        if 'token_optimization' in techniques_used:
+        if "token_optimization" in techniques_used:
             report.append("- **토큰 최적화**: 중복 제거, 표 형식 도입, 약어 사용으로 효율성 향상")
 
         return "\n".join(report)
@@ -467,38 +467,38 @@ def main():
     )
 
     parser.add_argument(
-        'prompt_path',
-        nargs='?',
-        default='prompts/base-prompt-v1.0.md',
-        help='초기 프롬프트 파일 경로 (기본값: prompts/base-prompt-v1.0.md)'
+        "prompt_path",
+        nargs="?",
+        default="prompts/base-prompt-v1.0.md",
+        help="초기 프롬프트 파일 경로 (기본값: prompts/base-prompt-v1.0.md)"
     )
 
     parser.add_argument(
-        'target_date',
-        nargs='?',
-        default='all',
-        help='평가 대상 날짜 (YYYYMMDD 또는 all, 기본값: all)'
+        "target_date",
+        nargs="?",
+        default="all",
+        help="평가 대상 날짜 (YYYYMMDD 또는 all, 기본값: all)"
     )
 
     parser.add_argument(
-        '-i', '--iterations',
+        "-i", "--iterations",
         type=int,
         default=5,
-        help='최대 반복 횟수 (기본값: 5)'
+        help="최대 반복 횟수 (기본값: 5)"
     )
 
     parser.add_argument(
-        '-p', '--parallel',
+        "-p", "--parallel",
         type=int,
         default=5,
-        help='병렬 처리 수 (기본값: 5)'
+        help="병렬 처리 수 (기본값: 5)"
     )
 
     parser.add_argument(
-        '-r', '--races',
+        "-r", "--races",
         type=str,
         default=None,
-        help='평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, "all": 전체 경주)'
+        help="평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, "all": 전체 경주)"
     )
 
     args = parser.parse_args()
@@ -521,11 +521,11 @@ def main():
     try:
         result = system.run()
 
-        if result['success']:
+        if result["success"]:
             print("\n✅ 재귀 개선 완료!")
-            print(f"   최고 성능: {result['best_performance']:.1f}%")
-            print(f"   최고 성능 프롬프트: {result['best_prompt_path']}")
-            print(f"   보고서: {result['report_path']}")
+            print(f"   최고 성능: {result["best_performance"]:.1f}%")
+            print(f"   최고 성능 프롬프트: {result["best_prompt_path"]}")
+            print(f"   보고서: {result["report_path"]}")
         else:
             print("\n❌ 재귀 개선 실패")
             sys.exit(1)

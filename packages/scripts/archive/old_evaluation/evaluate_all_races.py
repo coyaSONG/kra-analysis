@@ -32,7 +32,7 @@ class FullEvaluator:
     def prepare_race_data(self, result_file: Path) -> dict:
         """결과 파일에서 예측용 데이터 생성 (결과 제거)"""
         try:
-            with open(result_file, encoding='utf-8') as f:
+            with open(result_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             # 결과 정보 제거
@@ -72,7 +72,7 @@ class FullEvaluator:
         all_results = []
 
         # 프롬프트 읽기
-        with open(self.prompt_path, encoding='utf-8') as f:
+        with open(self.prompt_path, encoding="utf-8") as f:
             prompt_template = f.read()
 
         print(f"\n전체 평가 시작: {len(race_files)}개 경주")
@@ -88,7 +88,7 @@ class FullEvaluator:
                 race_id = result_file.stem
                 current_idx = i + j + 1
 
-                print(f"[{current_idx}/{len(race_files)}] {race_id} ", end='', flush=True)
+                print(f"[{current_idx}/{len(race_files)}] {race_id} ", end="", flush=True)
 
                 # 예측용 데이터 준비
                 race_data = self.prepare_race_data(result_file)
@@ -117,7 +117,7 @@ class FullEvaluator:
 
                 try:
                     # Claude CLI 실행
-                    cmd = ['claude', '-p', prompt]
+                    cmd = ["claude", "-p", prompt]
                     result = subprocess.run(cmd,
                                           capture_output=True,
                                           text=True,
@@ -132,7 +132,7 @@ class FullEvaluator:
                     import re
 
                     # 패턴 1: 코드블록 내 JSON
-                    code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', output, re.DOTALL)
+                    code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
                     if code_block_match:
                         try:
                             prediction = json.loads(code_block_match.group(1))
@@ -141,7 +141,7 @@ class FullEvaluator:
                             continue
                     else:
                         # 패턴 2: 일반 JSON
-                        json_match = re.search(r'\{.*\}', output, re.DOTALL)
+                        json_match = re.search(r"\{.*\}", output, re.DOTALL)
                         if json_match:
                             try:
                                 prediction = json.loads(json_match.group())
@@ -153,7 +153,7 @@ class FullEvaluator:
                             continue
 
                     # 실제 결과 추출
-                    with open(result_file, encoding='utf-8') as f:
+                    with open(result_file, encoding="utf-8") as f:
                         full_data = json.load(f)
 
                     actual_result = []
@@ -214,10 +214,10 @@ class FullEvaluator:
                 "current_success_rate": successful_predictions / total_races * 100 if total_races > 0 else 0
             }
 
-            with open(progress_file, 'w', encoding='utf-8') as f:
+            with open(progress_file, "w", encoding="utf-8") as f:
                 json.dump(progress, f, ensure_ascii=False, indent=2)
 
-            print(f"\n현재까지: {total_races}경주 처리, {successful_predictions}회 완전적중 ({progress['current_success_rate']:.1f}%)")
+            print(f"\n현재까지: {total_races}경주 처리, {successful_predictions}회 완전적중 ({progress["current_success_rate"]:.1f}%)")
 
             # 배치 간 휴식
             if i + batch_size < len(race_files):
@@ -241,14 +241,14 @@ class FullEvaluator:
         }
 
         # 결과 저장
-        with open(results_file, 'w', encoding='utf-8') as f:
+        with open(results_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
         # 요약 보고서 생성
         report_file = self.results_dir / f"summary_report_{timestamp}.md"
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             f.write("# 전체 경주 평가 보고서\n\n")
-            f.write(f"- **평가 일시**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"- **평가 일시**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n")
             f.write(f"- **프롬프트 버전**: {self.prompt_version}\n")
             f.write(f"- **전체 경주 파일**: {len(race_files)}개\n")
             f.write(f"- **성공적으로 처리**: {total_races}개\n\n")
@@ -259,7 +259,7 @@ class FullEvaluator:
             f.write(f"| 2마리 적중 (2/3) | {partial_correct_2} | {partial_correct_2/total_races*100:.1f}% |\n")
             f.write(f"| 1마리 적중 (1/3) | {partial_correct_1} | {partial_correct_1/total_races*100:.1f}% |\n")
             f.write(f"| 미적중 (0/3) | {total_races - successful_predictions - partial_correct_2 - partial_correct_1} | {(total_races - successful_predictions - partial_correct_2 - partial_correct_1)/total_races*100:.1f}% |\n")
-            f.write(f"\n**평균 적중 말 수**: {summary['average_correct_horses']:.2f}/3\n")
+            f.write(f"\n**평균 적중 말 수**: {summary["average_correct_horses"]:.2f}/3\n")
 
         print("\n" + "=" * 60)
         print("전체 평가 완료!")
@@ -287,7 +287,7 @@ def main():
     print(f"예상 소요 시간: 약 {len(race_files) * 3 / 60:.1f}시간")
     response = input("계속하시겠습니까? (y/n): ")
 
-    if response.lower() != 'y':
+    if response.lower() != "y":
         print("평가를 취소했습니다.")
         return
 

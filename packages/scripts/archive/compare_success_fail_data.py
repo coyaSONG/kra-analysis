@@ -35,8 +35,8 @@ def analyze_race_data(race_id, status):
             "]",
             "{",
             "}",
-            '"',
-            "'",
+            """,
+            """,
             "\\",
             "/",
             "|",
@@ -57,19 +57,19 @@ def analyze_race_data(race_id, status):
         ]
         if any(char in hr_name for char in special_chars):
             analysis["special_cases"].append(
-                f"특수문자 이름: {horse['chul_no']}번 {hr_name}"
+                f"특수문자 이름: {horse["chul_no"]}번 {hr_name}"
             )
 
         # 2. 매우 긴 이름
         if len(hr_name) > 15:
             analysis["special_cases"].append(
-                f"긴 이름: {horse['chul_no']}번 {hr_name} (길이: {len(hr_name)})"
+                f"긴 이름: {horse["chul_no"]}번 {hr_name} (길이: {len(hr_name)})"
             )
 
         # 3. 영어/숫자 포함
         if any(char.isascii() and not char.isspace() for char in hr_name):
             analysis["special_cases"].append(
-                f"영어/숫자: {horse['chul_no']}번 {hr_name}"
+                f"영어/숫자: {horse["chul_no"]}번 {hr_name}"
             )
 
         # 4. 기수/조교사 이름 특수문자
@@ -83,18 +83,18 @@ def analyze_race_data(race_id, status):
         # 5. 체중 형식 이상
         weight = horse.get("weight", "")
         if weight and not weight[-1].isdigit() and weight[-1] != ")":
-            analysis["special_cases"].append(f"체중 형식: {horse['chul_no']}번 {weight}")
+            analysis["special_cases"].append(f"체중 형식: {horse["chul_no"]}번 {weight}")
 
         # 6. 배당률 특이값
         win_odds = horse.get("win_odds", 999)
         if win_odds == 0 or win_odds > 100:
-            analysis["special_cases"].append(f"배당률 특이: {horse['chul_no']}번 {win_odds}")
+            analysis["special_cases"].append(f"배당률 특이: {horse["chul_no"]}번 {win_odds}")
 
         # 7. 누락된 필드
         required_fields = ["hr_name", "jockey", "trainer", "chul_no"]
         for field in required_fields:
             if field not in horse:
-                analysis["special_cases"].append(f"필드 누락: {horse.get('chul_no', '?')}번 {field} 없음")
+                analysis["special_cases"].append(f"필드 누락: {horse.get("chul_no", "?")}번 {field} 없음")
 
     return analysis
 
@@ -124,10 +124,10 @@ def main():
         if analysis:
             results.append(analysis)
             print(f"\n{race_id} ({status})")
-            print(f"말 수: {analysis['horses_count']}")
-            if analysis['special_cases']:
+            print(f"말 수: {analysis["horses_count"]}")
+            if analysis["special_cases"]:
                 print("특수 케이스:")
-                for case in analysis['special_cases'][:5]:  # 최대 5개만
+                for case in analysis["special_cases"][:5]:  # 최대 5개만
                     print(f"  - {case}")
             else:
                 print("특수 케이스: 없음")

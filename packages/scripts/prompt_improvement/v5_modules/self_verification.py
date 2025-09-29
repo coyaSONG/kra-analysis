@@ -14,7 +14,7 @@ class VerificationRule:
     """검증 규칙"""
     name: str
     description: str
-    check_type: str  # 'constraint', 'consistency', 'quality'
+    check_type: str  # "constraint", "consistency", "quality"
     error_message: str
 
 
@@ -83,32 +83,32 @@ class SelfVerificationEngine:
         changes = []
 
         # 기존 검증 섹션 확인
-        verification_section = structure.get_section('verification')
+        verification_section = structure.get_section("verification")
 
         if not verification_section:
             # 새 섹션 추가
             section = PromptSection(
-                tag='verification',
+                tag="verification",
                 content=self.verification_template.strip()
             )
-            structure.sections['verification'] = section
+            structure.sections["verification"] = section
 
             changes.append(Change(
-                change_type='add',
-                target_section='verification',
-                description='강화된 자가 검증 섹션 추가',
+                change_type="add",
+                target_section="verification",
+                description="강화된 자가 검증 섹션 추가",
                 new_value=self.verification_template.strip()
             ))
         else:
             # 기존 섹션 업데이트
-            if 'verification_process' not in verification_section.content:
-                new_content = verification_section.content + '\n\n' + self.verification_template
-                structure.update_section('verification', new_content)
+            if "verification_process" not in verification_section.content:
+                new_content = verification_section.content + "\n\n" + self.verification_template
+                structure.update_section("verification", new_content)
 
                 changes.append(Change(
-                    change_type='modify',
-                    target_section='verification',
-                    description='검증 프로세스 강화',
+                    change_type="modify",
+                    target_section="verification",
+                    description="검증 프로세스 강화",
                     old_value=verification_section.content,
                     new_value=new_content
                 ))
@@ -119,17 +119,17 @@ class SelfVerificationEngine:
         """출력 형식에 검증 결과 추가"""
         changes = []
 
-        output_section = structure.get_section('output_format')
+        output_section = structure.get_section("output_format")
         if not output_section:
             return changes
 
         # 검증 필드가 이미 있는지 확인
-        if 'verification_passed' in output_section.content:
+        if "verification_passed" in output_section.content:
             return changes
 
         # JSON 형식 찾기 및 수정
         import re
-        json_pattern = r'```json\s*(\{[^`]+\})\s*```'
+        json_pattern = r"```json\s*(\{[^`]+\})\s*```"
         match = re.search(json_pattern, output_section.content)
 
         if match:
@@ -152,12 +152,12 @@ class SelfVerificationEngine:
 - verification_passed: 검증 통과 여부 (true/false)
 - verification_notes: 검증 결과 요약 (10자 이내)"""
 
-            structure.update_section('output_format', enhanced_format)
+            structure.update_section("output_format", enhanced_format)
 
             changes.append(Change(
-                change_type='modify',
-                target_section='output_format',
-                description='출력 형식에 검증 필드 추가',
+                change_type="modify",
+                target_section="output_format",
+                description="출력 형식에 검증 필드 추가",
                 old_value=output_section.content,
                 new_value=enhanced_format
             ))
@@ -168,12 +168,12 @@ class SelfVerificationEngine:
         """분석 후 검증 단계 추가"""
         changes = []
 
-        analysis_section = structure.get_section('analysis_steps')
+        analysis_section = structure.get_section("analysis_steps")
         if not analysis_section:
             return changes
 
         # 이미 사후 검증이 있는지 확인
-        if '사후 검증' in analysis_section.content:
+        if "사후 검증" in analysis_section.content:
             return changes
 
         # 검증 단계 추가
@@ -197,12 +197,12 @@ class SelfVerificationEngine:
    검증 실패 시: 3단계(복합 점수 계산)로 돌아가 재평가"""
 
         new_content = analysis_section.content.rstrip() + post_verification
-        structure.update_section('analysis_steps', new_content)
+        structure.update_section("analysis_steps", new_content)
 
         changes.append(Change(
-            change_type='modify',
-            target_section='analysis_steps',
-            description='사후 검증 단계 추가',
+            change_type="modify",
+            target_section="analysis_steps",
+            description="사후 검증 단계 추가",
             old_value=analysis_section.content,
             new_value=new_content
         ))
@@ -214,7 +214,7 @@ class SelfVerificationEngine:
         changes = []
 
         # important_notes 섹션에 추가
-        notes_section = structure.get_section('important_notes')
+        notes_section = structure.get_section("important_notes")
         if not notes_section:
             return changes
 
@@ -223,14 +223,14 @@ class SelfVerificationEngine:
 - 3번 이상 검증 실패 시: 보수적 접근(인기 1-5위 중심)으로 전환하세요
 - 데이터 불일치 발견 시: enriched 데이터를 재확인하세요"""
 
-        if '검증 실패 시' not in notes_section.content:
+        if "검증 실패 시" not in notes_section.content:
             new_content = notes_section.content.rstrip() + error_recovery
-            structure.update_section('important_notes', new_content)
+            structure.update_section("important_notes", new_content)
 
             changes.append(Change(
-                change_type='modify',
-                target_section='important_notes',
-                description='오류 복구 가이드 추가',
+                change_type="modify",
+                target_section="important_notes",
+                description="오류 복구 가이드 추가",
                 old_value=notes_section.content,
                 new_value=new_content
             ))
@@ -272,25 +272,25 @@ class SelfVerificationEngine:
         changes = []
 
         # 각 주요 단계에 미니 검증 추가
-        sections_to_modify = ['requirements', 'analysis_steps']
+        sections_to_modify = ["requirements", "analysis_steps"]
 
         for section_name in sections_to_modify:
             section = structure.get_section(section_name)
             if not section:
                 continue
 
-            if section_name == 'requirements':
+            if section_name == "requirements":
                 # 요구사항에 검증 관련 추가
                 verification_req = "\n4. 각 분석 단계마다 중간 검증 수행"
 
-                if '중간 검증' not in section.content:
+                if "중간 검증" not in section.content:
                     new_content = section.content.rstrip() + verification_req
                     structure.update_section(section_name, new_content)
 
                     changes.append(Change(
-                        change_type='modify',
+                        change_type="modify",
                         target_section=section_name,
-                        description='중간 검증 요구사항 추가',
+                        description="중간 검증 요구사항 추가",
                         old_value=section.content,
                         new_value=new_content
                     ))

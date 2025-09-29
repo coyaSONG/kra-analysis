@@ -49,9 +49,9 @@ class WeightOptimizer:
 
         # 가장 높은 상관관계를 가진 특성 찾기
         _feature_map = {
-            'win_odds_rank': 'odds',
-            'jockey_win_rate': 'jockey',
-            'horse_place_rate': 'horse'
+            "win_odds_rank": "odds",
+            "jockey_win_rate": "jockey",
+            "horse_place_rate": "horse"
         }
 
         # 현재 가중치 합계가 1이 되도록 정규화
@@ -62,13 +62,13 @@ class WeightOptimizer:
 
         # 권고사항에서 가중치 조정 찾기
         for rec in analysis_results.get_recommendations():
-            if rec.type == 'weight_adjustment' and rec.target in new_weights:
+            if rec.type == "weight_adjustment" and rec.target in new_weights:
                 old_value = new_weights[rec.target]
 
-                if rec.action == 'increase':
+                if rec.action == "increase":
                     adjustment = rec.value if rec.value else 0.1
                     new_weights[rec.target] = min(0.7, old_value + adjustment)
-                elif rec.action == 'decrease':
+                elif rec.action == "decrease":
                     adjustment = rec.value if rec.value else 0.1
                     new_weights[rec.target] = max(0.1, old_value - adjustment)
 
@@ -80,8 +80,8 @@ class WeightOptimizer:
                         new_weights[key] = remaining / len(other_keys)
 
                 changes.append(Change(
-                    change_type='modify',
-                    target_section='analysis_steps',
+                    change_type="modify",
+                    target_section="analysis_steps",
                     description=f"{rec.target} 가중치 조정: {old_value:.0%} → {new_weights[rec.target]:.0%}",
                     old_value=str(old_value),
                     new_value=str(new_weights[rec.target])
@@ -103,7 +103,7 @@ class RuleEngine:
         req_editor = RequirementsEditor(structure)
 
         for rec in recommendations:
-            if rec.type == 'add_rule' and rec.target == 'requirements':
+            if rec.type == "add_rule" and rec.target == "requirements":
                 # 새 규칙 추가
                 current_reqs = req_editor.get_requirements()
 
@@ -111,15 +111,15 @@ class RuleEngine:
                 if rec.value and rec.value not in current_reqs:
                     req_editor.add_requirement(rec.value)
                     changes.append(Change(
-                        change_type='add',
-                        target_section='requirements',
+                        change_type="add",
+                        target_section="requirements",
                         description=f"새 규칙 추가: {rec.value}",
                         new_value=rec.value
                     ))
 
-            elif rec.type == 'strategy_change':
+            elif rec.type == "strategy_change":
                 # 전략 변경은 보통 analysis_steps나 important_notes에 반영
-                if 'popular_ratio' in rec.action:
+                if "popular_ratio" in rec.action:
                     # 인기마 비율 조정 전략
                     steps_editor = AnalysisStepsEditor(structure)
                     steps = steps_editor.get_steps()
@@ -130,8 +130,8 @@ class RuleEngine:
                             new_step = f"상위 3마리 선정 ({rec.value} 균형 선택)"
                             steps_editor.modify_step(i, new_step)
                             changes.append(Change(
-                                change_type='modify',
-                                target_section='analysis_steps',
+                                change_type="modify",
+                                target_section="analysis_steps",
                                 description=f"선정 전략 변경: {rec.value}",
                                 old_value=step,
                                 new_value=new_step
@@ -155,21 +155,21 @@ class SectionModifier:
     ) -> list[Change]:
         """context 섹션 수정"""
         changes = []
-        section = structure.get_section('context')
+        section = structure.get_section("context")
 
         if section:
             # 성능 정보 업데이트
-            pattern = r'평균 적중 [\d.]+마리.*?완전 적중률 [\d.]+%'
-            new_text = f"평균 적중 {new_performance['avg_correct']:.1f}마리, 완전 적중률 {new_performance['success_rate']:.1f}%"
+            pattern = r"평균 적중 [\d.]+마리.*?완전 적중률 [\d.]+%"
+            new_text = f"평균 적중 {new_performance["avg_correct"]:.1f}마리, 완전 적중률 {new_performance["success_rate"]:.1f}%"
 
             new_content = re.sub(pattern, new_text, section.content)
 
             if new_content != section.content:
-                structure.update_section('context', new_content)
+                structure.update_section("context", new_content)
                 changes.append(Change(
-                    change_type='modify',
-                    target_section='context',
-                    description='성능 정보 업데이트',
+                    change_type="modify",
+                    target_section="context",
+                    description="성능 정보 업데이트",
                     old_value=section.content,
                     new_value=new_content
                 ))
@@ -183,26 +183,26 @@ class SectionModifier:
     ) -> list[Change]:
         """analysis_steps 섹션의 가중치 업데이트"""
         changes = []
-        section = structure.get_section('analysis_steps')
+        section = structure.get_section("analysis_steps")
 
         if section:
             # 가중치 부분 찾아서 업데이트
-            weight_pattern = r'(배당률.*?:)\s*(\d+)%(.*?기수.*?:)\s*(\d+)%(.*?말.*?:)\s*(\d+)%'
+            weight_pattern = r"(배당률.*?:)\s*(\d+)%(.*?기수.*?:)\s*(\d+)%(.*?말.*?:)\s*(\d+)%"
 
             replacement = (
-                f"\\1 {int(new_weights.get('odds', 0.4) * 100)}%"
-                f"\\3 {int(new_weights.get('jockey', 0.3) * 100)}%"
-                f"\\5 {int(new_weights.get('horse', 0.3) * 100)}%"
+                f"\\1 {int(new_weights.get("odds", 0.4) * 100)}%"
+                f"\\3 {int(new_weights.get("jockey", 0.3) * 100)}%"
+                f"\\5 {int(new_weights.get("horse", 0.3) * 100)}%"
             )
 
             new_content = re.sub(weight_pattern, replacement, section.content, flags=re.DOTALL)
 
             if new_content != section.content:
-                structure.update_section('analysis_steps', new_content)
+                structure.update_section("analysis_steps", new_content)
                 changes.append(Change(
-                    change_type='modify',
-                    target_section='analysis_steps',
-                    description='가중치 업데이트',
+                    change_type="modify",
+                    target_section="analysis_steps",
+                    description="가중치 업데이트",
                     old_value=section.content,
                     new_value=new_content
                 ))
@@ -219,7 +219,7 @@ class ConflictResolver:
         processed_targets = set()
 
         # 우선순위와 타입별로 정렬
-        priority_order = {'high': 0, 'medium': 1, 'low': 2}
+        priority_order = {"high": 0, "medium": 1, "low": 2}
         sorted_recs = sorted(
             recommendations,
             key=lambda r: (priority_order.get(r.priority, 3), r.type)
@@ -268,7 +268,7 @@ class ChangeTracker:
         """변경사항 요약"""
         summary = []
         summary.append(f"## 변경사항 요약 ({record.version_from} → {record.version_to})")
-        summary.append(f"- 변경 시각: {record.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        summary.append(f"- 변경 시각: {record.timestamp.strftime("%Y-%m-%d %H:%M:%S")}")
         summary.append(f"- 이전 성능: {record.performance_before:.1f}%")
         if record.performance_after:
             summary.append(f"- 이후 성능: {record.performance_after:.1f}%")
@@ -349,10 +349,10 @@ class DynamicReconstructor:
         all_changes.extend(rule_changes)
 
         # 6. 고급 기법 적용
-        current_success_rate = current_performance.get('success_rate', 0)
+        current_success_rate = current_performance.get("success_rate", 0)
 
         # 6.1 Extended Thinking Mode
-        if self.guide_loader.should_apply_technique('extended_thinking', current_success_rate):
+        if self.guide_loader.should_apply_technique("extended_thinking", current_success_rate):
             thinking_changes = self.extended_thinking.apply_extended_thinking(
                 modified_structure,
                 current_success_rate
@@ -364,7 +364,7 @@ class DynamicReconstructor:
             all_changes.extend(verification_changes)
 
         # 6.2 강화된 자가 검증
-        if self.guide_loader.should_apply_technique('self_verification', current_success_rate):
+        if self.guide_loader.should_apply_technique("self_verification", current_success_rate):
             # 검증 섹션 추가
             verification_changes = self.self_verification.add_verification_section(modified_structure)
             all_changes.extend(verification_changes)
@@ -382,7 +382,7 @@ class DynamicReconstructor:
             all_changes.extend(recovery_changes)
 
         # 6.3 토큰 최적화 (항상 적용)
-        if self.guide_loader.should_apply_technique('token_optimization', current_success_rate):
+        if self.guide_loader.should_apply_technique("token_optimization", current_success_rate):
             # 기본 최적화
             _, token_changes = self.token_optimizer.optimize_prompt(modified_structure)
             all_changes.extend(token_changes)
@@ -401,25 +401,25 @@ class DynamicReconstructor:
                 version_from=current_structure.version,
                 version_to=new_version,
                 changes=all_changes,
-                performance_before=current_performance.get('success_rate', 0)
+                performance_before=current_performance.get("success_rate", 0)
             )
 
         return modified_structure, all_changes
 
     def _extract_current_weights(self, structure: PromptStructure) -> dict[str, float]:
         """현재 가중치 추출"""
-        weights = {'odds': 0.4, 'jockey': 0.3, 'horse': 0.3}  # 기본값
+        weights = {"odds": 0.4, "jockey": 0.3, "horse": 0.3}  # 기본값
 
-        section = structure.get_section('analysis_steps')
+        section = structure.get_section("analysis_steps")
         if section:
             # 가중치 패턴 찾기
-            pattern = r'배당률.*?(\d+)%.*?기수.*?(\d+)%.*?말.*?(\d+)%'
+            pattern = r"배당률.*?(\d+)%.*?기수.*?(\d+)%.*?말.*?(\d+)%"
             match = re.search(pattern, section.content, re.DOTALL)
 
             if match:
-                weights['odds'] = int(match.group(1)) / 100
-                weights['jockey'] = int(match.group(2)) / 100
-                weights['horse'] = int(match.group(3)) / 100
+                weights["odds"] = int(match.group(1)) / 100
+                weights["jockey"] = int(match.group(2)) / 100
+                weights["horse"] = int(match.group(3)) / 100
 
         return weights
 
@@ -428,7 +428,7 @@ class DynamicReconstructor:
         issues = []
 
         # 필수 섹션 확인
-        required_sections = ['context', 'role', 'task', 'requirements', 'analysis_steps', 'output_format']
+        required_sections = ["context", "role", "task", "requirements", "analysis_steps", "output_format"]
         for section in required_sections:
             if not structure.get_section(section):
                 issues.append(f"필수 섹션 누락: {section}")
@@ -440,11 +440,11 @@ class DynamicReconstructor:
             issues.append(f"가중치 합계 오류: {weight_sum:.2f} (1.0이어야 함)")
 
         # JSON 형식 확인 (output_format)
-        output_section = structure.get_section('output_format')
+        output_section = structure.get_section("output_format")
         if output_section:
             try:
                 # JSON 블록 추출
-                json_match = re.search(r'```json\n(.*?)\n```', output_section.content, re.DOTALL)
+                json_match = re.search(r"```json\n(.*?)\n```", output_section.content, re.DOTALL)
                 if json_match:
                     json.loads(json_match.group(1))
             except json.JSONDecodeError:
@@ -455,9 +455,9 @@ class DynamicReconstructor:
     def get_advanced_techniques_status(self, current_performance: float) -> dict[str, bool]:
         """고급 기법 적용 상태 조회"""
         return {
-            'extended_thinking': self.guide_loader.should_apply_technique('extended_thinking', current_performance),
-            'self_verification': self.guide_loader.should_apply_technique('self_verification', current_performance),
-            'token_optimization': self.guide_loader.should_apply_technique('token_optimization', current_performance)
+            "extended_thinking": self.guide_loader.should_apply_technique("extended_thinking", current_performance),
+            "self_verification": self.guide_loader.should_apply_technique("self_verification", current_performance),
+            "token_optimization": self.guide_loader.should_apply_technique("token_optimization", current_performance)
         }
 
     def generate_change_report(self) -> str:
@@ -503,11 +503,11 @@ if __name__ == "__main__":
     analysis = InsightAnalysis()
     analysis.recommendations = [
         Recommendation(
-            type='weight_adjustment',
-            priority='high',
-            description='배당률 가중치 상향',
-            target='odds',
-            action='increase',
+            type="weight_adjustment",
+            priority="high",
+            description="배당률 가중치 상향",
+            target="odds",
+            action="increase",
             value=0.1
         )
     ]
@@ -517,8 +517,8 @@ if __name__ == "__main__":
     new_structure, changes = reconstructor.reconstruct_prompt(
         structure,
         analysis,
-        'v2.2',
-        {'avg_correct': 1.5, 'success_rate': 7.5}
+        "v2.2",
+        {"avg_correct": 1.5, "success_rate": 7.5}
     )
 
     print("변경사항:")

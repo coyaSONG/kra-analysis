@@ -13,7 +13,7 @@ from typing import Any
 @dataclass
 class PromptSection:
     """프롬프트의 개별 섹션을 표현하는 클래스"""
-    tag: str  # 'context', 'role', 'task' 등
+    tag: str  # "context", "role", "task" 등
     content: str  # 섹션 내용
     attributes: dict[str, Any] = field(default_factory=dict)  # 추가 속성
     order: int = 0  # 원본에서의 순서
@@ -83,19 +83,19 @@ class PromptParser:
 
     # 인식 가능한 XML 태그들
     RECOGNIZED_TAGS = [
-        'context',
-        'role',
-        'task',
-        'requirements',
-        'analysis_steps',
-        'output_format',
-        'examples',
-        'important_notes'
+        "context",
+        "role",
+        "task",
+        "requirements",
+        "analysis_steps",
+        "output_format",
+        "examples",
+        "important_notes"
     ]
 
     def __init__(self):
-        self.tag_pattern = re.compile(r'<(\w+)>(.*?)</\1>', re.DOTALL)
-        self.title_pattern = re.compile(r'^#\s+(.+?)(?:\s+v([\d.]+))?$', re.MULTILINE)
+        self.tag_pattern = re.compile(r"<(\w+)>(.*?)</\1>", re.DOTALL)
+        self.title_pattern = re.compile(r"^#\s+(.+?)(?:\s+v([\d.]+))?$", re.MULTILINE)
 
     def parse(self, content: str) -> PromptStructure:
         """프롬프트 텍스트를 구조화된 형태로 파싱"""
@@ -115,11 +115,11 @@ class PromptParser:
 
             if tag in self.RECOGNIZED_TAGS:
                 # 특수 섹션 처리
-                if tag == 'examples':
+                if tag == "examples":
                     section_content = self._parse_examples(section_content)
-                elif tag == 'requirements':
+                elif tag == "requirements":
                     section_content = self._parse_requirements(section_content)
-                elif tag == 'analysis_steps':
+                elif tag == "analysis_steps":
                     section_content = self._parse_analysis_steps(section_content)
 
                 structure.add_section(tag, section_content, order=i)
@@ -152,20 +152,20 @@ class PromptParser:
         metadata = {}
 
         # 성능 정보 추출 (예: "평균 적중 1.1마리, 완전 적중률 5.1%")
-        perf_pattern = r'평균 적중 ([\d.]+)마리.*?완전 적중률 ([\d.]+)%'
+        perf_pattern = r"평균 적중 ([\d.]+)마리.*?완전 적중률 ([\d.]+)%"
         perf_match = re.search(perf_pattern, content)
         if perf_match:
-            metadata['avg_correct'] = float(perf_match.group(1))
-            metadata['success_rate'] = float(perf_match.group(2))
+            metadata["avg_correct"] = float(perf_match.group(1))
+            metadata["success_rate"] = float(perf_match.group(2))
 
         # 가중치 정보 추출
-        weight_pattern = r'배당률.*?(\d+)%.*?기수.*?(\d+)%.*?말.*?(\d+)%'
+        weight_pattern = r"배당률.*?(\d+)%.*?기수.*?(\d+)%.*?말.*?(\d+)%"
         weight_match = re.search(weight_pattern, content, re.DOTALL)
         if weight_match:
-            metadata['weights'] = {
-                'odds': int(weight_match.group(1)) / 100,
-                'jockey': int(weight_match.group(2)) / 100,
-                'horse': int(weight_match.group(3)) / 100
+            metadata["weights"] = {
+                "odds": int(weight_match.group(1)) / 100,
+                "jockey": int(weight_match.group(2)) / 100,
+                "horse": int(weight_match.group(3)) / 100
             }
 
         return metadata
@@ -179,12 +179,12 @@ class RequirementsEditor:
 
     def get_requirements(self) -> list[str]:
         """요구사항 목록 반환"""
-        section = self.structure.get_section('requirements')
+        section = self.structure.get_section("requirements")
         if not section:
             return []
 
         # 번호가 있는 항목들 추출
-        pattern = r'^\d+\.\s+(.+?)$'
+        pattern = r"^\d+\.\s+(.+?)$"
         requirements = re.findall(pattern, section.content, re.MULTILINE)
         return requirements
 
@@ -201,7 +201,7 @@ class RequirementsEditor:
         new_content = "\n".join(
             f"{i+1}. {req}" for i, req in enumerate(requirements)
         )
-        self.structure.update_section('requirements', new_content)
+        self.structure.update_section("requirements", new_content)
 
     def remove_requirement(self, index: int) -> bool:
         """요구사항 제거"""
@@ -211,7 +211,7 @@ class RequirementsEditor:
             new_content = "\n".join(
                 f"{i+1}. {req}" for i, req in enumerate(requirements)
             )
-            self.structure.update_section('requirements', new_content)
+            self.structure.update_section("requirements", new_content)
             return True
         return False
 
@@ -223,7 +223,7 @@ class RequirementsEditor:
             new_content = "\n".join(
                 f"{i+1}. {req}" for i, req in enumerate(requirements)
             )
-            self.structure.update_section('requirements', new_content)
+            self.structure.update_section("requirements", new_content)
             return True
         return False
 
@@ -236,12 +236,12 @@ class AnalysisStepsEditor:
 
     def get_steps(self) -> list[str]:
         """분석 단계 목록 반환"""
-        section = self.structure.get_section('analysis_steps')
+        section = self.structure.get_section("analysis_steps")
         if not section:
             return []
 
         # 번호가 있는 단계들 추출
-        pattern = r'^\d+\.\s+(.+?)(?=^\d+\.|$)'
+        pattern = r"^\d+\.\s+(.+?)(?=^\d+\.|$)"
         steps = re.findall(pattern, section.content, re.MULTILINE | re.DOTALL)
         return [step.strip() for step in steps]
 
@@ -254,7 +254,7 @@ class AnalysisStepsEditor:
         new_content = "\n".join(
             f"{i+1}. {step}" for i, step in enumerate(steps)
         )
-        self.structure.update_section('analysis_steps', new_content)
+        self.structure.update_section("analysis_steps", new_content)
 
     def modify_step(self, index: int, new_step: str) -> bool:
         """분석 단계 수정"""
@@ -264,7 +264,7 @@ class AnalysisStepsEditor:
             new_content = "\n".join(
                 f"{i+1}. {step}" for i, step in enumerate(steps)
             )
-            self.structure.update_section('analysis_steps', new_content)
+            self.structure.update_section("analysis_steps", new_content)
             return True
         return False
 
@@ -303,6 +303,6 @@ if __name__ == "__main__":
     print(f"Metadata: {structure.metadata}")
 
     # 섹션 수정 테스트
-    structure.update_section('context', '수정된 컨텍스트 내용')
+    structure.update_section("context", "수정된 컨텍스트 내용")
     print("\n재구성된 프롬프트:")
     print(structure.to_prompt())

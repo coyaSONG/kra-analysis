@@ -23,8 +23,8 @@ def test_special_chars():
         ("위화살표", "↑"),
         ("콜론", ":"),
         ("세미콜론", ";"),
-        ("따옴표", '"'),
-        ("작은따옴표", "'"),
+        ("따옴표", """),
+        ("작은따옴표", """),
         ("백틱", "`"),
         ("물결", "~"),
         ("앰퍼샌드", "&"),
@@ -45,23 +45,23 @@ def test_special_chars():
     print("=== 특수문자 테스트 ===\n")
 
     for name, char in special_chars:
-        prompt = f"테스트 {char} 포함. JSON: {{'test': 1}}"
+        prompt = f"테스트 {char} 포함. JSON: {{"test": 1}}"
 
         try:
-            cmd = ['claude', '-p', prompt]
+            cmd = ["claude", "-p", prompt]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
             if "Execution error" in result.stdout:
-                print(f"❌ {name} '{char}': Execution error")
+                print(f"❌ {name} "{char}": Execution error")
             elif result.returncode != 0:
-                print(f"❌ {name} '{char}': Return code {result.returncode}")
+                print(f"❌ {name} "{char}": Return code {result.returncode}")
             else:
-                print(f"✅ {name} '{char}': OK")
+                print(f"✅ {name} "{char}": OK")
 
         except subprocess.TimeoutExpired:
-            print(f"⏱️  {name} '{char}': Timeout")
+            print(f"⏱️  {name} "{char}": Timeout")
         except Exception as e:
-            print(f"❌ {name} '{char}': {type(e).__name__}")
+            print(f"❌ {name} "{char}": {type(e).__name__}")
 
         time.sleep(0.5)
 
@@ -83,19 +83,19 @@ def test_combinations():
     ]
 
     for pattern in patterns:
-        prompt = f"{pattern} JSON: {{'test': 1}}"
+        prompt = f"{pattern} JSON: {{"test": 1}}"
 
         try:
-            cmd = ['claude', '-p', prompt]
+            cmd = ["claude", "-p", prompt]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
             if "Execution error" in result.stdout:
-                print(f"❌ '{pattern[:30]}...': Execution error")
+                print(f"❌ "{pattern[:30]}...": Execution error")
             else:
-                print(f"✅ '{pattern[:30]}...': OK")
+                print(f"✅ "{pattern[:30]}...": OK")
 
         except Exception as e:
-            print(f"❌ '{pattern[:30]}...': {type(e).__name__}")
+            print(f"❌ "{pattern[:30]}...": {type(e).__name__}")
 
         time.sleep(0.5)
 

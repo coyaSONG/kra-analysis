@@ -32,10 +32,10 @@ class PromptEvaluatorV3:
         # Claude Code 환경 설정
         self.claude_env = {
             **os.environ,
-            'BASH_DEFAULT_TIMEOUT_MS': '120000',
-            'BASH_MAX_TIMEOUT_MS': '300000',
-            'CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR': 'true',
-            'DISABLE_INTERLEAVED_THINKING': 'true'  # 더 빠른 응답
+            "BASH_DEFAULT_TIMEOUT_MS": "120000",
+            "BASH_MAX_TIMEOUT_MS": "300000",
+            "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
+            "DISABLE_INTERLEAVED_THINKING": "true"  # 더 빠른 응답
         }
 
     def find_test_races(self, limit: int = None) -> list[dict[str, any]]:
@@ -47,23 +47,23 @@ class PromptEvaluatorV3:
         enriched_files = sorted(glob.glob(enriched_pattern))
 
         for enriched_file in enriched_files:
-            path_parts = enriched_file.split('/')
+            path_parts = enriched_file.split("/")
             # race_1_20250608_1_enriched.json -> 정보 추출
             filename = path_parts[-1]
-            race_prefix = '_'.join(filename.split('_')[0:2])
-            race_date = filename.split('_')[2]
-            race_no = filename.split('_')[3].replace('_enriched.json', '')
+            race_prefix = "_".join(filename.split("_")[0:2])
+            race_date = filename.split("_")[2]
+            race_no = filename.split("_")[3].replace("_enriched.json", "")
 
             # meet 정보 추출
             meet = path_parts[-2]  # seoul, jeju, busan 등
-            meet_map = {'seoul': '서울', 'jeju': '제주', 'busan': '부산경남'}
+            meet_map = {"seoul": "서울", "jeju": "제주", "busan": "부산경남"}
 
             race_files.append({
-                'enriched_file': Path(enriched_file),
-                'race_id': f"{race_prefix}_{race_date}_{race_no}",
-                'race_date': race_date,
-                'race_no': race_no,
-                'meet': meet_map.get(meet, '서울')
+                "enriched_file": Path(enriched_file),
+                "race_id": f"{race_prefix}_{race_date}_{race_no}",
+                "race_date": race_date,
+                "race_no": race_no,
+                "meet": meet_map.get(meet, "서울")
             })
 
         if limit:
@@ -75,55 +75,55 @@ class PromptEvaluatorV3:
     def load_race_data(self, race_info: dict) -> dict | None:
         """enriched 파일에서 경주 데이터 로드"""
         try:
-            with open(race_info['enriched_file'], encoding='utf-8') as f:
+            with open(race_info["enriched_file"], encoding="utf-8") as f:
                 data = json.load(f)
 
             # API 응답 형식에서 실제 데이터 추출
-            if 'response' in data and 'body' in data['response']:
-                items = data['response']['body']['items']['item']
+            if "response" in data and "body" in data["response"]:
+                items = data["response"]["body"]["items"]["item"]
 
                 # 데이터 정리
                 horses = []
                 for item in items:
                     # 기권/제외 말 필터링
-                    if item.get('winOdds', 999) == 0:
+                    if item.get("winOdds", 999) == 0:
                         continue
 
                     horse = {
-                        'chulNo': item['chulNo'],
-                        'hrName': item['hrName'],
-                        'hrNo': item['hrNo'],
-                        'jkName': item['jkName'],
-                        'jkNo': item['jkNo'],
-                        'trName': item['trName'],
-                        'trNo': item['trNo'],
-                        'wgBudam': item['wgBudam'],
-                        'winOdds': item['winOdds'],
-                        'plcOdds': item['plcOdds'],
-                        'rating': item.get('rating', 0),
-                        'rank': item.get('rank', ''),
-                        'age': item.get('age', 0),
-                        'sex': item.get('sex', ''),
+                        "chulNo": item["chulNo"],
+                        "hrName": item["hrName"],
+                        "hrNo": item["hrNo"],
+                        "jkName": item["jkName"],
+                        "jkNo": item["jkNo"],
+                        "trName": item["trName"],
+                        "trNo": item["trNo"],
+                        "wgBudam": item["wgBudam"],
+                        "winOdds": item["winOdds"],
+                        "plcOdds": item["plcOdds"],
+                        "rating": item.get("rating", 0),
+                        "rank": item.get("rank", ""),
+                        "age": item.get("age", 0),
+                        "sex": item.get("sex", ""),
                         # 보강된 데이터
-                        'hrDetail': item.get('hrDetail', {}),
-                        'jkDetail': item.get('jkDetail', {}),
-                        'trDetail': item.get('trDetail', {})
+                        "hrDetail": item.get("hrDetail", {}),
+                        "jkDetail": item.get("jkDetail", {}),
+                        "trDetail": item.get("trDetail", {})
                     }
 
                     horses.append(horse)
 
                 # 경주 정보 구성
                 race_data = {
-                    'raceInfo': {
-                        'rcDate': items[0]['rcDate'],
-                        'rcNo': items[0]['rcNo'],
-                        'rcName': items[0].get('rcName', ''),
-                        'rcDist': items[0]['rcDist'],
-                        'track': items[0].get('track', ''),
-                        'weather': items[0].get('weather', ''),
-                        'meet': items[0]['meet']
+                    "raceInfo": {
+                        "rcDate": items[0]["rcDate"],
+                        "rcNo": items[0]["rcNo"],
+                        "rcName": items[0].get("rcName", ""),
+                        "rcDist": items[0]["rcDist"],
+                        "track": items[0].get("track", ""),
+                        "weather": items[0].get("weather", ""),
+                        "meet": items[0]["meet"]
                     },
-                    'horses': horses
+                    "horses": horses
                 }
 
                 return race_data
@@ -140,7 +140,7 @@ class PromptEvaluatorV3:
         start_time = time.time()
 
         # 프롬프트 읽기
-        with open(self.prompt_path, encoding='utf-8') as f:
+        with open(self.prompt_path, encoding="utf-8") as f:
             prompt_template = f.read()
 
         # 프롬프트 구성
@@ -166,8 +166,8 @@ class PromptEvaluatorV3:
             # Claude Code 실행 (stream-json 형식)
             with self.api_lock:
                 cmd = [
-                    'claude',
-                    '-p',
+                    "claude",
+                    "-p",
                     prompt
                 ]
 
@@ -215,7 +215,7 @@ class PromptEvaluatorV3:
     def _parse_stream_json(self, output: str, execution_time: float) -> dict | None:
         """stream-json 형식 파싱"""
         try:
-            for line in output.strip().split('\n'):
+            for line in output.strip().split("\n"):
                 if not line:
                     continue
 
@@ -226,30 +226,30 @@ class PromptEvaluatorV3:
 
                     if isinstance(data, dict):
                         # 직접 JSON 응답인 경우
-                        if 'selected_horses' in data or 'predicted' in data:
-                            data['execution_time'] = execution_time
+                        if "selected_horses" in data or "predicted" in data:
+                            data["execution_time"] = execution_time
                             # predicted를 selected_horses로 변환
-                            if 'predicted' in data and 'selected_horses' not in data:
-                                data['selected_horses'] = [{"chulNo": no} for no in data['predicted']]
+                            if "predicted" in data and "selected_horses" not in data:
+                                data["selected_horses"] = [{"chulNo": no} for no in data["predicted"]]
                             return data
 
                         # stream 형식인 경우
-                        if 'type' in data and data['type'] == 'message':
-                            content = data.get('content', '')
-                        elif 'content' in data:
-                            content = data['content']
-                        elif 'text' in data:
-                            content = data['text']
+                        if "type" in data and data["type"] == "message":
+                            content = data.get("content", "")
+                        elif "content" in data:
+                            content = data["content"]
+                        elif "text" in data:
+                            content = data["text"]
 
                     if content:
                         # content에서 JSON 추출 (selected_horses 또는 predicted)
-                        json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', content, re.DOTALL)
+                        json_match = re.search(r"\{.*"(?:selected_horses|predicted)".*?\}", content, re.DOTALL)
                         if json_match:
                             prediction = json.loads(json_match.group())
-                            prediction['execution_time'] = execution_time
+                            prediction["execution_time"] = execution_time
                             # predicted를 selected_horses로 변환
-                            if 'predicted' in prediction and 'selected_horses' not in prediction:
-                                prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
+                            if "predicted" in prediction and "selected_horses" not in prediction:
+                                prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
                             return prediction
 
                 except json.JSONDecodeError:
@@ -264,27 +264,27 @@ class PromptEvaluatorV3:
         """일반 출력 파싱 (폴백)"""
         try:
             # 코드블록 내 JSON
-            code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', output, re.DOTALL)
+            code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
             if code_block_match:
                 try:
                     prediction = json.loads(code_block_match.group(1))
-                    prediction['execution_time'] = execution_time
+                    prediction["execution_time"] = execution_time
                     # predicted를 selected_horses로 변환
-                    if 'predicted' in prediction and 'selected_horses' not in prediction:
-                        prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
+                    if "predicted" in prediction and "selected_horses" not in prediction:
+                        prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
                     return prediction
                 except Exception:
                     pass
 
             # 일반 JSON (selected_horses 또는 predicted)
-            json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', output, re.DOTALL)
+            json_match = re.search(r"\{.*"(?:selected_horses|predicted)".*?\}", output, re.DOTALL)
             if json_match:
                 try:
                     prediction = json.loads(json_match.group())
-                    prediction['execution_time'] = execution_time
+                    prediction["execution_time"] = execution_time
                     # predicted를 selected_horses로 변환
-                    if 'predicted' in prediction and 'selected_horses' not in prediction:
-                        prediction['selected_horses'] = [{"chulNo": no} for no in prediction['predicted']]
+                    if "predicted" in prediction and "selected_horses" not in prediction:
+                        prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
                     return prediction
                 except Exception:
                     pass
@@ -310,27 +310,27 @@ class PromptEvaluatorV3:
     def extract_actual_result(self, race_info: dict) -> list[int]:
         """캐시된 1-3위 결과 파일에서 실제 결과 추출"""
         try:
-            meet = race_info.get('meet', '서울')
-            rc_date = race_info['race_date']
-            rc_no = race_info['race_no']
+            meet = race_info.get("meet", "서울")
+            rc_date = race_info["race_date"]
+            rc_no = race_info["race_no"]
 
             # 1-3위 결과 파일 경로
             cache_file = Path(f"data/cache/results/top3_{rc_date}_{meet}_{rc_no}.json")
 
             # 캐시 파일이 있으면 읽기
             if cache_file.exists():
-                with open(cache_file, encoding='utf-8') as f:
+                with open(cache_file, encoding="utf-8") as f:
                     top3 = json.load(f)
                 return top3
 
             # 캐시가 없으면 API를 통해 가져오기
             print(f"  결과 캐시 없음. API로 가져오기: {meet} {rc_date} {rc_no}경주")
-            cmd = ['node', 'scripts/fetch_and_save_results.js', meet, rc_date, str(rc_no)]
+            cmd = ["node", "scripts/fetch_and_save_results.js", meet, rc_date, str(rc_no)]
 
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                 if result.returncode == 0 and cache_file.exists():
-                    with open(cache_file, encoding='utf-8') as f:
+                    with open(cache_file, encoding="utf-8") as f:
                         top3 = json.load(f)
                     return top3
             except Exception:
@@ -376,7 +376,7 @@ class PromptEvaluatorV3:
 
     def process_single_race(self, race_info: dict, race_data: dict) -> dict | None:
         """단일 경주 처리"""
-        race_id = race_info['race_id']
+        race_id = race_info["race_id"]
 
         # 예측 실행 (재시도 포함)
         prediction, error_type = self.run_prediction_with_retry(race_data, race_id)
@@ -454,36 +454,36 @@ class PromptEvaluatorV3:
                         results.append(result)
 
                         # 통계 업데이트
-                        if result['prediction'] is not None:
-                            if result['reward']['correct_count'] == 3:
+                        if result["prediction"] is not None:
+                            if result["reward"]["correct_count"] == 3:
                                 successful_predictions += 1
-                            total_correct_horses += result['reward']['correct_count']
+                            total_correct_horses += result["reward"]["correct_count"]
 
                         completed_count += 1
                         elapsed = time.time() - start_time
                         avg_time = elapsed / completed_count
                         eta = avg_time * (total_races - completed_count)
 
-                        status = "✓" if result['prediction'] else "✗"
-                        if result['prediction']:
-                            correct = result['reward']['correct_count']
-                            hit_rate = result['reward']['hit_rate']
-                            predicted = result.get('predicted', [])
-                            actual = result.get('actual', [])
+                        status = "✓" if result["prediction"] else "✗"
+                        if result["prediction"]:
+                            correct = result["reward"]["correct_count"]
+                            hit_rate = result["reward"]["hit_rate"]
+                            predicted = result.get("predicted", [])
+                            actual = result.get("actual", [])
 
                             # 예측과 실제 결과를 문자열로 포맷
-                            pred_str = f"[{','.join(map(str, predicted))}]" if predicted else "[?]"
-                            actual_str = f"[{','.join(map(str, actual))}]" if actual else "[?]"
+                            pred_str = f"[{",".join(map(str, predicted))}]" if predicted else "[?]"
+                            actual_str = f"[{",".join(map(str, actual))}]" if actual else "[?]"
 
-                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
+                            print(f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
                         else:
-                            print(f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 에러: {result.get('error_type', 'unknown')} | 진행률: {completed_count/total_races*100:.1f}%")
+                            print(f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 에러: {result.get("error_type", "unknown")} | 진행률: {completed_count/total_races*100:.1f}%")
 
                 except Exception as e:
-                    print(f"Error processing {race_info['race_id']}: {e}")
+                    print(f"Error processing {race_info["race_id"]}: {e}")
 
         # 전체 요약
-        valid_results = [r for r in results if r['prediction'] is not None]
+        valid_results = [r for r in results if r["prediction"] is not None]
         summary = {
             "prompt_version": self.prompt_version,
             "test_date": timestamp,
@@ -494,13 +494,13 @@ class PromptEvaluatorV3:
             "average_correct_horses": total_correct_horses / len(valid_results) if valid_results else 0,
             "total_correct_horses": total_correct_horses,
             "error_stats": dict(self.error_stats),
-            "avg_execution_time": sum(r['execution_time'] for r in valid_results) / len(valid_results) if valid_results else 0,
+            "avg_execution_time": sum(r["execution_time"] for r in valid_results) / len(valid_results) if valid_results else 0,
             "detailed_results": results
         }
 
         # 결과 저장
         output_file = self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
         # 결과 출력
@@ -512,17 +512,17 @@ class PromptEvaluatorV3:
         """요약 결과 출력"""
         print("\n" + "=" * 60)
         print("평가 완료!")
-        print(f"프롬프트 버전: {summary['prompt_version']}")
-        print(f"전체 경주: {summary['total_races']}")
-        print(f"유효 예측: {summary['valid_predictions']}")
+        print(f"프롬프트 버전: {summary["prompt_version"]}")
+        print(f"전체 경주: {summary["total_races"]}")
+        print(f"유효 예측: {summary["valid_predictions"]}")
 
-        if summary['valid_predictions'] > 0:
-            print(f"완전 적중: {summary['successful_predictions']} ({summary['success_rate']:.1f}%)")
-            print(f"평균 적중 말 수: {summary['average_correct_horses']:.2f}")
-            print(f"평균 실행 시간: {summary['avg_execution_time']:.1f}초")
+        if summary["valid_predictions"] > 0:
+            print(f"완전 적중: {summary["successful_predictions"]} ({summary["success_rate"]:.1f}%)")
+            print(f"평균 적중 말 수: {summary["average_correct_horses"]:.2f}")
+            print(f"평균 실행 시간: {summary["avg_execution_time"]:.1f}초")
 
         print("\n에러 통계:")
-        for error_type, count in summary['error_stats'].items():
+        for error_type, count in summary["error_stats"].items():
             print(f"  - {error_type}: {count}건")
 
         print(f"\n결과 저장: {output_file}")

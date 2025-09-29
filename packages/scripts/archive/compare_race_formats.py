@@ -24,24 +24,24 @@ def compare_race_data(file1, file2, label1="File 1", label2="File 2"):
     if isinstance(horse2, list):
         horse2 = horse2[0] if horse2 else {}
 
-    print(f"\n{'='*60}")
+    print(f"\n{"="*60}")
     print("경주 데이터 형식 비교")
-    print(f"{'='*60}")
+    print(f"{"="*60}")
 
     # 기본 정보
     print("\n📋 기본 정보")
     print(
-        f"{label1}: {horse1.get('rcDate', 'N/A')} {horse1.get('meet', 'N/A')} {horse1.get('rcNo', 'N/A')}R"
+        f"{label1}: {horse1.get("rcDate", "N/A")} {horse1.get("meet", "N/A")} {horse1.get("rcNo", "N/A")}R"
     )
     print(
-        f"{label2}: {horse2.get('rcDate', 'N/A')} {horse2.get('meet', 'N/A')} {horse2.get('rcNo', 'N/A')}R"
+        f"{label2}: {horse2.get("rcDate", "N/A")} {horse2.get("meet", "N/A")} {horse2.get("rcNo", "N/A")}R"
     )
 
     # 주요 필드 값 비교
     print("\n📊 주요 필드 값 비교")
     key_fields = ["winOdds", "plcOdds", "wgHr", "ord", "rcTime", "diffUnit"]
 
-    print(f"{'필드명':<15} {label1:<20} {label2:<20}")
+    print(f"{"필드명":<15} {label1:<20} {label2:<20}")
     print("-" * 55)
 
     for field in key_fields:

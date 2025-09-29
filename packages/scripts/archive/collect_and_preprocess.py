@@ -113,11 +113,11 @@ def collect_all_races_for_day(meet: str, rc_date: str, max_races: int = 15) -> l
             result = smart_process_race_file(raw_filename, "data/processed/pre-race")
 
             races.append({
-                'race_no': rc_no,
-                'horses': len(items),
-                'status': result.get('status', 'Unknown'),
-                'raw_file': raw_filename,
-                'processed_file': result.get('output', '')
+                "race_no": rc_no,
+                "horses": len(items),
+                "status": result.get("status", "Unknown"),
+                "raw_file": raw_filename,
+                "processed_file": result.get("output", "")
             })
 
         else:
@@ -136,7 +136,7 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
         meets: 경마장 리스트 (기본값: 모든 경마장)
     """
     if meets is None:
-        meets = ['1', '2', '3']  # 서울, 제주, 부산
+        meets = ["1", "2", "3"]  # 서울, 제주, 부산
 
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days_back)
@@ -145,7 +145,7 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
 
     current_date = start_date
     while current_date <= end_date:
-        date_str = current_date.strftime('%Y%m%d')
+        date_str = current_date.strftime("%Y%m%d")
 
         # 주말(금토일)에만 경마 진행
         if current_date.weekday() in [4, 5, 6]:  # 금토일
@@ -153,33 +153,33 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
                 races = collect_all_races_for_day(meet, date_str)
                 if races:
                     all_results.append({
-                        'date': date_str,
-                        'meet': meet,
-                        'races': races
+                        "date": date_str,
+                        "meet": meet,
+                        "races": races
                     })
 
         current_date += timedelta(days=1)
 
     # 수집 결과 요약
-    print(f"\n{'='*60}")
+    print(f"\n{"="*60}")
     print("📊 전체 수집 결과")
-    print(f"{'='*60}")
+    print(f"{"="*60}")
 
     total_races = 0
     total_completed = 0
     total_waiting = 0
 
     for result in all_results:
-        date_races = len(result['races'])
-        completed = sum(1 for r in result['races'] if '완료' in r['status'])
+        date_races = len(result["races"])
+        completed = sum(1 for r in result["races"] if "완료" in r["status"])
         waiting = date_races - completed
 
         total_races += date_races
         total_completed += completed
         total_waiting += waiting
 
-        meet_names = {'1': '서울', '2': '제주', '3': '부산'}
-        print(f"{result['date']} {meet_names[result['meet']]}: "
+        meet_names = {"1": "서울", "2": "제주", "3": "부산"}
+        print(f"{result["date"]} {meet_names[result["meet"]]}: "
               f"{date_races}개 경주 (완료: {completed}, 대기: {waiting})")
 
     print(f"\n총계: {total_races}개 경주")
@@ -188,20 +188,20 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
 
     # 요약 파일 저장
     summary_path = "data/collection_summary.json"
-    with open(summary_path, 'w', encoding='utf-8') as f:
+    with open(summary_path, "w", encoding="utf-8") as f:
         json.dump({
-            'collection_date': datetime.now().isoformat(),
-            'days_collected': days_back,
-            'total_races': total_races,
-            'completed': total_completed,
-            'waiting': total_waiting,
-            'details': all_results
+            "collection_date": datetime.now().isoformat(),
+            "days_collected": days_back,
+            "total_races": total_races,
+            "completed": total_completed,
+            "waiting": total_waiting,
+            "details": all_results
         }, f, ensure_ascii=False, indent=2)
 
     print(f"\n📄 수집 요약: {summary_path}")
 
 
-def collect_specific_date(date_str: str, meet: str = '1'):
+def collect_specific_date(date_str: str, meet: str = "1"):
     """
     특정 날짜의 경주 데이터 수집 및 전처리
 
@@ -229,12 +229,12 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         # 특정 날짜 수집
         date_str = sys.argv[1]
-        meet = sys.argv[2] if len(sys.argv) > 2 else '1'
+        meet = sys.argv[2] if len(sys.argv) > 2 else "1"
 
         print(f"특정 날짜 수집: {date_str} (경마장: {meet})")
         collect_specific_date(date_str, meet)
     else:
         # 오늘 날짜 수집
-        today = datetime.now().strftime('%Y%m%d')
+        today = datetime.now().strftime("%Y%m%d")
         print(f"오늘 날짜 수집: {today}")
-        collect_specific_date(today, '1')  # 서울 경마장
+        collect_specific_date(today, "1")  # 서울 경마장
