@@ -238,7 +238,7 @@ class PromptEvaluatorV3Base:
 
                     if content:
                         # content에서 JSON 추출
-                        json_match = re.search(r"\{.*"predicted".*?\}", content, re.DOTALL)
+                        json_match = re.search(r'\{.*"predicted".*?\}', content, re.DOTALL)
                         if json_match:
                             prediction = json.loads(json_match.group())
                             prediction["execution_time"] = execution_time
@@ -266,7 +266,7 @@ class PromptEvaluatorV3Base:
                     pass
 
             # 일반 JSON
-            json_match = re.search(r"\{.*"predicted".*?\}", output, re.DOTALL)
+            json_match = re.search(r'\{.*"predicted".*?\}', output, re.DOTALL)
             if json_match:
                 try:
                     prediction = json.loads(json_match.group())

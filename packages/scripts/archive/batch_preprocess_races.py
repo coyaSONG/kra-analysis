@@ -33,7 +33,7 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
     }
 
     for file_path in files:
-        print(f"\n{"=" * 60}")
+        print(f"\n{'=' * 60}")
         print(f"📄 처리 중: {os.path.basename(file_path)}")
 
         try:
@@ -72,8 +72,8 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
                     "track": sample_item.get("track", "")
                 }
 
-                print(f"📅 경주 정보: {race_info["date"]} {race_info["meet"]} {race_info["race_no"]}R")
-                print(f"🏃 거리: {race_info["distance"]}m | 날씨: {race_info["weather"]} | 주로: {race_info["track"]}")
+                print(f"📅 경주 정보: {race_info['date']} {race_info['meet']} {race_info['race_no']}R")
+                print(f"🏃 거리: {race_info['distance']}m | 날씨: {race_info['weather']} | 주로: {race_info['track']}")
 
             # 통계 업데이트
             stats["total_horses"] += orig_count
@@ -98,9 +98,9 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
                     horses = [horses]
 
                 for horse in horses[:5]:  # 처음 5마리만
-                    odds_str = f"{horse.get("winOdds", "N/A"):>5}"
-                    print(f"  {horse.get("chulNo"):>2}번 {horse.get("hrName"):<12} "
-                          f"기수: {horse.get("jkName"):<6} 배당률: {odds_str}")
+                    odds_str = f"{horse.get('winOdds', 'N/A'):>5}"
+                    print(f"  {horse.get('chulNo'):>2}번 {horse.get('hrName'):<12} "
+                          f"기수: {horse.get('jkName'):<6} 배당률: {odds_str}")
 
                 if len(horses) > 5:
                     print(f"  ... 외 {len(horses) - 5}두")
@@ -112,13 +112,13 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
             stats["failed"] += 1
 
     # 최종 통계
-    print(f"\n{"="*60}")
+    print(f"\n{'='*60}")
     print("📊 전체 처리 결과")
-    print(f"  - 처리 성공: {stats["processed"]}개 파일")
-    print(f"  - 처리 실패: {stats["failed"]}개 파일")
-    print(f"  - 총 말 수: {stats["total_horses"]}두")
-    print(f"  - 제외된 말: {stats["excluded_horses"]}두")
-    print(f"  - 최종 말 수: {stats["total_horses"] - stats["excluded_horses"]}두")
+    print(f"  - 처리 성공: {stats['processed']}개 파일")
+    print(f"  - 처리 실패: {stats['failed']}개 파일")
+    print(f"  - 총 말 수: {stats['total_horses']}두")
+    print(f"  - 제외된 말: {stats['excluded_horses']}두")
+    print(f"  - 최종 말 수: {stats['total_horses'] - stats['excluded_horses']}두")
 
 
 def create_race_summary(prerace_dir: str = "data/processed/pre-race"):

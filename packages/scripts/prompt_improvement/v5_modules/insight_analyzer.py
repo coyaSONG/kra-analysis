@@ -618,8 +618,8 @@ class InsightAnalyzer:
         # 요약
         report.append("## 인사이트 분석 보고서\n")
         report.append("### 요약")
-        report.append(f"- 분석 경주 수: {analysis.summary["total_races_analyzed"]}개")
-        report.append(f"- 성공률: {analysis.summary["success_rate"]:.1f}%")
+        report.append(f"- 분석 경주 수: {analysis.summary['total_races_analyzed']}개")
+        report.append(f"- 성공률: {analysis.summary['success_rate']:.1f}%")
         report.append("- 주요 발견사항:")
         for finding in analysis.summary["key_findings"]:
             report.append(f"  - {finding}")
@@ -640,14 +640,14 @@ class InsightAnalyzer:
         odds = analysis.detailed_analysis.get("odds_analysis", {})
         if odds.get("popular_vs_unpopular"):
             report.append("\n#### 배당률 분석")
-            report.append(f"- 인기마 선택 비율: {odds["popular_vs_unpopular"]["popular_ratio"]:.1%}")
-            report.append(f"- 비인기마 선택 비율: {odds["popular_vs_unpopular"]["unpopular_ratio"]:.1%}")
+            report.append(f"- 인기마 선택 비율: {odds['popular_vs_unpopular']['popular_ratio']:.1%}")
+            report.append(f"- 비인기마 선택 비율: {odds['popular_vs_unpopular']['unpopular_ratio']:.1%}")
 
         # 기수 분석
         jockey = analysis.detailed_analysis.get("jockey_analysis", {})
         if jockey.get("high_winrate_success"):
             report.append("\n#### 기수 분석")
-            report.append(f"- 고승률(15%+) 기수 성공률: {jockey["high_winrate_success"]:.1%}")
+            report.append(f"- 고승률(15%+) 기수 성공률: {jockey['high_winrate_success']:.1%}")
 
         # 패턴 분석
         if analysis.patterns.get("success_patterns"):

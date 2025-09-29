@@ -67,7 +67,7 @@ class PromptEngineeringGuideLoader:
 
             # 키워드 추출
             keywords = []
-            keyword_pattern = r"\*\*"(think[^"]*?)"\*\* - ([^\n]+)"
+            keyword_pattern = r'\*\*"(think[^"]*?)"\*\* - ([^\n]+)'
             for keyword_match in re.finditer(keyword_pattern, section):
                 keywords.append({
                     "keyword": keyword_match.group(1),
@@ -191,7 +191,7 @@ class PromptEngineeringGuideLoader:
         elif technique_name == "self_verification":
             # 중간 성능에서 검증 강화
             return 40 <= current_performance < 70
-        elif technique_name == "token_optimization':
+        elif technique_name == "token_optimization":
             # 항상 적용
             return True
 

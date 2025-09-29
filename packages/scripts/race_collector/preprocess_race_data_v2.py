@@ -38,7 +38,7 @@ def clean_race_data_v2(race_data: dict[str, Any]) -> dict[str, Any]:
                 # 기권/제외 말 필터링 (winOdds가 명확히 0인 경우)
                 win_odds = horse.get("winOdds")
                 if win_odds == 0:
-                    print(f"⚠️  기권/제외: {horse.get("hrName")} (출주번호: {horse.get("chulNo")})")
+                    print(f"⚠️  기권/제외: {horse.get('hrName')} (출주번호: {horse.get('chulNo')})")
                     continue
 
                 # 경주 후에만 확정되는 필드들을 0 또는 기본값으로 초기화

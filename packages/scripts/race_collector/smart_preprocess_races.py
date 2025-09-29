@@ -137,7 +137,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> dict[str
 
         if horses and horses[0]:
             sample = horses[0]
-            print(f"   경주: {sample.get("rcDate")} {sample.get("meet")} {sample.get("rcNo")}R")
+            print(f"   경주: {sample.get('rcDate')} {sample.get('meet')} {sample.get('rcNo')}R")
             print(f"   출전: {len(horses)}두")
 
         return result
@@ -189,13 +189,13 @@ def batch_smart_process(pattern: str, output_dir: str = None):
             stats["waiting"] += 1
 
     # 최종 통계
-    print(f"\n{"="*60}")
+    print(f"\n{'='*60}")
     print("📊 처리 결과 요약")
-    print(f"  - 전체: {stats["total"]}개")
-    print(f"  - 경주 완료 (전처리): {stats["completed"]}개")
-    print(f"  - 경주 미시작 (원본): {stats["not_started"]}개")
-    print(f"  - 경주 대기 (원본): {stats["waiting"]}개")
-    print(f"  - 처리 오류: {stats["error"]}개")
+    print(f"  - 전체: {stats['total']}개")
+    print(f"  - 경주 완료 (전처리): {stats['completed']}개")
+    print(f"  - 경주 미시작 (원본): {stats['not_started']}개")
+    print(f"  - 경주 대기 (원본): {stats['waiting']}개")
+    print(f"  - 처리 오류: {stats['error']}개")
 
     # 상세 결과 저장 (output_dir이 지정된 경우만)
     if output_dir:

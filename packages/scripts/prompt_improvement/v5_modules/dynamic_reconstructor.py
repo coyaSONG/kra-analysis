@@ -160,7 +160,7 @@ class SectionModifier:
         if section:
             # 성능 정보 업데이트
             pattern = r"평균 적중 [\d.]+마리.*?완전 적중률 [\d.]+%"
-            new_text = f"평균 적중 {new_performance["avg_correct"]:.1f}마리, 완전 적중률 {new_performance["success_rate"]:.1f}%"
+            new_text = f"평균 적중 {new_performance['avg_correct']:.1f}마리, 완전 적중률 {new_performance['success_rate']:.1f}%"
 
             new_content = re.sub(pattern, new_text, section.content)
 
@@ -190,9 +190,9 @@ class SectionModifier:
             weight_pattern = r"(배당률.*?:)\s*(\d+)%(.*?기수.*?:)\s*(\d+)%(.*?말.*?:)\s*(\d+)%"
 
             replacement = (
-                f"\\1 {int(new_weights.get("odds", 0.4) * 100)}%"
-                f"\\3 {int(new_weights.get("jockey", 0.3) * 100)}%"
-                f"\\5 {int(new_weights.get("horse", 0.3) * 100)}%"
+                f"\\1 {int(new_weights.get('odds', 0.4) * 100)}%"
+                f"\\3 {int(new_weights.get('jockey', 0.3) * 100)}%"
+                f"\\5 {int(new_weights.get('horse', 0.3) * 100)}%"
             )
 
             new_content = re.sub(weight_pattern, replacement, section.content, flags=re.DOTALL)
@@ -268,7 +268,7 @@ class ChangeTracker:
         """변경사항 요약"""
         summary = []
         summary.append(f"## 변경사항 요약 ({record.version_from} → {record.version_to})")
-        summary.append(f"- 변경 시각: {record.timestamp.strftime("%Y-%m-%d %H:%M:%S")}")
+        summary.append(f"- 변경 시각: {record.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
         summary.append(f"- 이전 성능: {record.performance_before:.1f}%")
         if record.performance_after:
             summary.append(f"- 이후 성능: {record.performance_after:.1f}%")

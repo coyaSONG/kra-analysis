@@ -26,7 +26,7 @@ def verify_race_data(file_path):
 
     return {
         "file": os.path.basename(file_path),
-        "race": f"{horse.get("rcDate")} {horse.get("meet")} {horse.get("rcNo")}R",
+        "race": f"{horse.get('rcDate')} {horse.get('meet')} {horse.get('rcNo')}R",
         "horses": len(horses),
         "ord": horse.get("ord", "N/A"),
         "rcTime": horse.get("rcTime", "N/A"),
@@ -42,7 +42,7 @@ def main():
 
     print("📊 전처리된 경주 데이터 일관성 검증")
     print("="*80)
-    print(f"{"파일명":<30} {"경주":<20} {"두수":>4} {"착순":>6} {"기록":>6} {"배당률":>6} {"결과?"}")
+    print(f"{'파일명':<30} {'경주':<20} {'두수':>4} {'착순':>6} {'기록':>6} {'배당률':>6} {'결과?'}")
     print("-"*80)
 
     all_consistent = True
@@ -52,9 +52,9 @@ def main():
         if info:
             result_mark = "❌" if info["has_result"] else "✅"
 
-            print(f"{info["file"]:<30} {info["race"]:<20} {info["horses"]:>4} "
-                  f"{str(info["ord"]):>6} {str(info["rcTime"]):>6} "
-                  f"{str(info["winOdds"]):>6} {result_mark}")
+            print(f"{info['file']:<30} {info['race']:<20} {info['horses']:>4} "
+                  f"{str(info['ord']):>6} {str(info['rcTime']):>6} "
+                  f"{str(info['winOdds']):>6} {result_mark}")
 
             if info["has_result"]:
                 all_consistent = False

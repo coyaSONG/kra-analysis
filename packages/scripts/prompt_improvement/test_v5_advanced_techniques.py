@@ -35,9 +35,9 @@ def test_guide_loader():
     print("\n성능별 기법 적용 여부:")
     for perf in [30, 50, 65, 75]:
         print(f"\n성능 {perf}%:")
-        print(f"  - Extended Thinking: {loader.should_apply_technique("extended_thinking", perf)}")
-        print(f"  - Self Verification: {loader.should_apply_technique("self_verification", perf)}")
-        print(f"  - Token Optimization: {loader.should_apply_technique("token_optimization", perf)}")
+        print(f"  - Extended Thinking: {loader.should_apply_technique('extended_thinking', perf)}")
+        print(f"  - Self Verification: {loader.should_apply_technique('self_verification', perf)}")
+        print(f"  - Token Optimization: {loader.should_apply_technique('token_optimization', perf)}")
 
 
 def test_extended_thinking():

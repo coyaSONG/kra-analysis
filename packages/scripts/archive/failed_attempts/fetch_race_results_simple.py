@@ -48,7 +48,7 @@ def fetch_race_result_simple(meet: str, rc_date: str, rc_no: int) -> dict | None
         if data["response"]["header"]["resultCode"] == "00":
             return data
         else:
-            print(f"API 오류: {data["response"]["header"]["resultMsg"]}")
+            print(f"API 오류: {data['response']['header']['resultMsg']}")
             return None
 
     except Exception as e:

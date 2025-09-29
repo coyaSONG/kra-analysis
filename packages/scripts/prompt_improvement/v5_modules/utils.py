@@ -120,7 +120,7 @@ def validate_race_data(race_data: dict[str, Any]) -> bool:
 
         # win_odds가 0인 경우는 기권/제외
         if entry.get("win_odds", 0) < 0:
-            logger.warning(f"잘못된 배당률: 말번호 {entry["horse_no"]}")
+            logger.warning(f"잘못된 배당률: 말번호 {entry['horse_no']}")
             return False
 
     return True
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     print(f"데이터 디렉토리: {get_data_dir()}")
 
     # ID 생성 테스트
-    print(f"생성된 ID: {generate_id("test")}")
+    print(f"생성된 ID: {generate_id('test')}")
 
     # 시간 포맷 테스트
     print(f"30초: {format_duration(30)}")

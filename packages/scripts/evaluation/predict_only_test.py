@@ -126,7 +126,7 @@ class PredictionTester:
 
             return None
         except Exception as e:
-            print(f"데이터 로드 오류 ({file_info["race_id"]}): {e}")
+            print(f"데이터 로드 오류 ({file_info['race_id']}): {e}")
             return None
 
     def run_prediction(self, race_data: dict, race_id: str) -> dict | None:
@@ -262,11 +262,11 @@ class PredictionTester:
 
     def run_test(self, date_filter: str | None = None, limit: int | None = None):
         """예측 테스트 실행"""
-        print(f"\n{"="*60}")
+        print(f"\n{'='*60}")
         print("경주 예측 테스트 시작")
         print(f"프롬프트: {self.prompt_path}")
-        print(f"날짜 필터: {date_filter if date_filter else "전체"}")
-        print(f"{"="*60}\n")
+        print(f"날짜 필터: {date_filter if date_filter else '전체'}")
+        print(f"{'='*60}\n")
 
         # enriched 파일 찾기
         enriched_files = self.find_enriched_files(date_filter)
@@ -280,7 +280,7 @@ class PredictionTester:
         analyses = []
 
         for i, file_info in enumerate(enriched_files):
-            print(f"\n[{i+1}/{len(enriched_files)}] {file_info["race_id"]} 예측 중...")
+            print(f"\n[{i+1}/{len(enriched_files)}] {file_info['race_id']} 예측 중...")
 
             # 경주 데이터 로드
             race_data = self.load_race_data(file_info)
@@ -288,7 +288,7 @@ class PredictionTester:
                 print("  ❌ 데이터 로드 실패")
                 continue
 
-            print(f"  - 출주마: {len(race_data["horses"])}마리")
+            print(f"  - 출주마: {len(race_data['horses'])}마리")
 
             # 예측 수행
             prediction = self.run_prediction(race_data, file_info["race_id"])
@@ -303,10 +303,10 @@ class PredictionTester:
             analyses.append(analysis)
 
             # 결과 출력
-            print(f"  ✅ 예측 완료 (실행시간: {prediction["execution_time"]:.1f}초)")
-            print(f"  - 예측: {prediction["predicted"]}")
-            print(f"  - 신뢰도: {prediction["confidence"]}%")
-            print(f"  - 이유: {prediction["reason"]}")
+            print(f"  ✅ 예측 완료 (실행시간: {prediction['execution_time']:.1f}초)")
+            print(f"  - 예측: {prediction['predicted']}")
+            print(f"  - 신뢰도: {prediction['confidence']}%")
+            print(f"  - 이유: {prediction['reason']}")
             print(f"  - 전략: {analysis["prediction_strategy"]}")
 
             # 예측한 말들 정보

@@ -32,7 +32,7 @@ class Example:
         result_symbol = "✅" if self.correct_count == 3 else "❌"
 
         text = "입력: [경주 데이터]\n"
-        text += f"출력: {{"predicted": {self.predicted}, "confidence": {self.confidence}, "brief_reason": ""}}\n"
+        text += f"출력: {{'predicted': {self.predicted}, 'confidence': {self.confidence}, 'brief_reason': ''}}\n"
         text += f"결과: {result_symbol} 정답 {self.actual}"
 
         if self.analysis_note:
@@ -347,7 +347,7 @@ class ExamplesManager:
 
         # 예시 생성
         example = Example(
-            example_id=f"{race_result.get("race_id", "unknown")}_{datetime.now().timestamp()}",
+            example_id=f"{race_result.get('race_id', 'unknown')}_{datetime.now().timestamp()}",
             example_type=example_type,
             race_id=race_result.get("race_id", ""),
             input_data=race_result.get("race_data", {}),

@@ -59,7 +59,7 @@ class RecursivePromptImprovementV5:
         self.race_limit = race_limit
 
         # 작업 디렉토리 설정
-        self.working_dir = get_data_dir() / f"recursive_improvement_v5/{datetime.now().strftime("%Y%m%d_%H%M%S")}"
+        self.working_dir = get_data_dir() / f"recursive_improvement_v5/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         ensure_directory(self.working_dir)
 
         # 로거 설정
@@ -97,7 +97,7 @@ class RecursivePromptImprovementV5:
         start_time = time.time()
 
         for iteration in range(1, self.max_iterations + 1):
-            self.logger.info(f"\n{"="*60}")
+            self.logger.info(f"\n{'='*60}")
             self.logger.info(f"반복 {iteration}/{self.max_iterations} 시작")
             self.logger.info(f"현재 프롬프트: {current_structure.version}")
 
@@ -117,8 +117,8 @@ class RecursivePromptImprovementV5:
 
             self.logger.info("평가 완료:")
             self.logger.info(f"  - 성공률: {current_performance:.1f}%")
-            self.logger.info(f"  - 평균 적중: {metrics["avg_correct"]:.2f}마리")
-            self.logger.info(f"  - 평가 경주 수: {metrics["total_races"]}개")
+            self.logger.info(f"  - 평균 적중: {metrics['avg_correct']:.2f}마리")
+            self.logger.info(f"  - 평가 경주 수: {metrics['total_races']}개")
 
             # 이력 저장
             iteration_data = {
@@ -498,7 +498,7 @@ def main():
         "-r", "--races",
         type=str,
         default=None,
-        help="평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, "all": 전체 경주)"
+        help="평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, 'all': 전체 경주)"
     )
 
     args = parser.parse_args()
