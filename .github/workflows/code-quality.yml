@@ -15,28 +15,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up uv (Python + cache)
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.12'
+          python-version: '3.13'
+          enable-cache: true
 
-      - name: Install quality tools (ruff/black)
+      - name: Install quality tools with uv
         run: |
-          python -m pip install --upgrade pip
-          pip install ruff black
+          uv sync --group dev
 
       - name: Ruff - 린트 검사 (게이트)
         run: |
           echo "🔍 Ruff 검사(게이트) 중..."
           # 자동수정이 필요한 변경점을 diff로 출력하고, 발견 시 실패 처리
-          ruff check . --diff --exit-non-zero-on-fix
+          uv run ruff check . --diff --exit-non-zero-on-fix
           # 비수정 가능 위반까지 게이트
-          ruff check .
+          uv run ruff check .
 
       - name: Black - 코드 포맷 검사
         run: |
           echo "🎨 Black 코드 포맷 검사 중..."
-          black --check --diff packages/scripts
+          uv run black --check --diff packages/scripts
 
   # JavaScript 코드 품질 검사 (pnpm 워크스페이스)
   javascript-quality:
@@ -97,7 +97,7 @@ jobs:
           echo "다음 단계:"
           echo "1. 위의 검사 결과를 확인하세요"
           echo "2. 코드 스타일 자동 수정을 원하면 로컬에서 다음 명령어를 실행하세요:"
-          echo "   - Python: black packages/scripts && ruff check --fix packages/scripts"
+          echo "   - Python: uv run black packages/scripts && uv run ruff check --fix packages/scripts"
           echo "   - Node: pnpm -w run lint"
           echo ""
           echo "💡 설정은 pyproject.toml 및 각 패키지의 ESLint 설정을 참고하세요."

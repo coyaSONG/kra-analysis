@@ -49,13 +49,13 @@ jobs:
     - name: Set up uv (Python + cache)
       uses: astral-sh/setup-uv@v3
       with:
-        python-version: '3.11'
+        python-version: '3.13'
         enable-cache: true
     
     - name: Install dependencies with uv
       working-directory: ./apps/api
       run: |
-        uv sync --all-extras --dev
+        uv sync --all-extras --group dev
     
     - name: Run linting (ruff/black)
       working-directory: ./apps/api
