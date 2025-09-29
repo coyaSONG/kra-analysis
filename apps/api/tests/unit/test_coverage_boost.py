@@ -1,4 +1,5 @@
 """Additional tests to boost coverage to 80%"""
+
 from datetime import datetime
 from unittest.mock import Mock
 
@@ -83,10 +84,10 @@ class TestCollectionServicePartial:
         service = CollectionService(mock_kra)
 
         # Check that service has expected methods
-        assert hasattr(service, 'collect_race_data')
-        assert hasattr(service, 'collect_batch_races')
-        assert hasattr(service, '_preprocess_data')
-        assert hasattr(service, '_save_race_data')
+        assert hasattr(service, "collect_race_data")
+        assert hasattr(service, "collect_batch_races")
+        assert hasattr(service, "_preprocess_data")
+        assert hasattr(service, "_save_race_data")
 
 
 @pytest.mark.unit
@@ -99,7 +100,7 @@ def test_race_model_basic():
         meet=1,
         race_no=1,
         raw_data={},
-        collected_at=datetime.utcnow()
+        collected_at=datetime.utcnow(),
     )
 
     assert race.race_id == "20240719_1_1"

@@ -1,4 +1,5 @@
 """Additional tests to reach 80% coverage"""
+
 from unittest.mock import Mock
 
 import pytest
@@ -123,7 +124,7 @@ class TestModelsCoverage:
             type=JobType.COLLECTION,
             status=JobStatus.PENDING,
             parameters={"test": "value"},
-            created_by="tester"
+            created_by="tester",
         )
 
         assert job.job_id == "test-123"
@@ -137,11 +138,7 @@ class TestModelsCoverage:
         """Test PipelineContext initialization"""
         from pipelines.base import PipelineContext
 
-        ctx = PipelineContext(
-            race_date="20240719",
-            meet=3,
-            race_number=7
-        )
+        ctx = PipelineContext(race_date="20240719", meet=3, race_number=7)
 
         assert ctx.race_date == "20240719"
         assert ctx.meet == 3
@@ -192,19 +189,19 @@ class TestImportsAndConstants:
         from config import settings
 
         # Check that settings exist
-        assert hasattr(settings, 'environment')
-        assert hasattr(settings, 'database_url')
-        assert hasattr(settings, 'secret_key')
+        assert hasattr(settings, "environment")
+        assert hasattr(settings, "database_url")
+        assert hasattr(settings, "secret_key")
 
     @pytest.mark.unit
     def test_pipeline_stage_abstract_methods(self):
         """Test that PipelineStage defines required methods"""
 
         # Check that abstract methods are defined
-        assert hasattr(PipelineStage, 'validate_prerequisites')
-        assert hasattr(PipelineStage, 'execute')
-        assert hasattr(PipelineStage, 'should_skip')
-        assert hasattr(PipelineStage, 'rollback')
+        assert hasattr(PipelineStage, "validate_prerequisites")
+        assert hasattr(PipelineStage, "execute")
+        assert hasattr(PipelineStage, "should_skip")
+        assert hasattr(PipelineStage, "rollback")
 
 
 @pytest.mark.unit
@@ -234,14 +231,14 @@ class TestUtilsCoverage:
         from models.database_models import APIKey, Race
 
         # Check that models have expected attributes
-        assert hasattr(Race, 'race_id')
-        assert hasattr(Race, 'date')
-        assert hasattr(Race, 'meet')
-        assert hasattr(Race, 'race_no')
+        assert hasattr(Race, "race_id")
+        assert hasattr(Race, "date")
+        assert hasattr(Race, "meet")
+        assert hasattr(Race, "race_no")
 
-        assert hasattr(APIKey, 'key')
-        assert hasattr(APIKey, 'name')
-        assert hasattr(APIKey, 'is_active')
+        assert hasattr(APIKey, "key")
+        assert hasattr(APIKey, "name")
+        assert hasattr(APIKey, "is_active")
 
     @pytest.mark.unit
     def test_pipeline_orchestrator_init(self):

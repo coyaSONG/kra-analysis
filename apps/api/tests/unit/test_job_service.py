@@ -163,6 +163,7 @@ async def test_cleanup_old_jobs(db_session):
     deleted = await service.cleanup_old_jobs(db_session, days=7)
     assert deleted >= 2
 
+
 @pytest.mark.unit
 def test_get_celery_components_prefers_injected(monkeypatch):
     import services.job_service as js
@@ -183,6 +184,7 @@ def test_get_celery_components_prefers_injected(monkeypatch):
     finally:
         js.celery_app = original_app
         js.AsyncResult = original_async_result
+
 
 @pytest.mark.unit
 def test_get_celery_components_handles_missing(monkeypatch):
@@ -342,13 +344,13 @@ def test_job_service_methods_exist():
     service = JobService()
 
     # Check that service has expected methods
-    assert hasattr(service, 'create_job')
-    assert hasattr(service, 'get_job')
-    assert hasattr(service, 'list_jobs')
-    assert hasattr(service, 'get_job_status')
-    assert hasattr(service, 'cancel_job')
-    assert hasattr(service, 'start_job')
-    assert hasattr(service, '_calculate_progress')
-    assert hasattr(service, '_dispatch_task')
-    assert hasattr(service, '_get_celery_components')
-    assert hasattr(service, '_get_collection_tasks_module')
+    assert hasattr(service, "create_job")
+    assert hasattr(service, "get_job")
+    assert hasattr(service, "list_jobs")
+    assert hasattr(service, "get_job_status")
+    assert hasattr(service, "cancel_job")
+    assert hasattr(service, "start_job")
+    assert hasattr(service, "_calculate_progress")
+    assert hasattr(service, "_dispatch_task")
+    assert hasattr(service, "_get_celery_components")
+    assert hasattr(service, "_get_collection_tasks_module")

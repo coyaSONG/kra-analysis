@@ -248,20 +248,25 @@ class TestPipelineBuilderAdditional:
         class DummyStage(PipelineStage):
             async def validate_prerequisites(self, context):
                 return True
+
             async def execute(self, context):
                 from pipelines.base import StageResult, StageStatus
+
                 return StageResult(status=StageStatus.COMPLETED)
+
             def should_skip(self, context):
                 return False
+
             async def rollback(self, context):
                 pass
 
         builder = PipelineBuilder("test")
-        pipeline = (builder
-            .add_stage(DummyStage("stage1"))
+        pipeline = (
+            builder.add_stage(DummyStage("stage1"))
             .add_stage(DummyStage("stage2"))
             .add_stage(DummyStage("stage3"))
-            .build())
+            .build()
+        )
 
         assert len(pipeline.stages) == 3
         assert pipeline.name == "test"
