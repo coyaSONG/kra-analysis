@@ -105,6 +105,7 @@ class TestStageResult:
 class TestPipeline:
     """Test Pipeline functionality"""
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_pipeline_execution_success(self):
         """Pipeline should execute all stages successfully"""
@@ -124,6 +125,7 @@ class TestPipeline:
         assert result_context.is_stage_completed("stage1")
         assert result_context.is_stage_completed("stage2")
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_pipeline_execution_failure(self):
         """Pipeline should handle stage failures and perform rollback"""
@@ -146,6 +148,7 @@ class TestPipeline:
         assert stage1.rolled_back is True  # Should be rolled back
         assert stage2.rolled_back is False  # Failed stage shouldn't rollback
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_pipeline_stage_skipping(self):
         """Pipeline should skip stages when should_skip returns True"""
@@ -166,6 +169,7 @@ class TestPipeline:
         assert stage3.executed is True
         assert result_context.get_stage_result("stage2").status == StageStatus.SKIPPED
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_pipeline_prerequisite_failure(self):
         """Pipeline should fail when prerequisites are not met"""

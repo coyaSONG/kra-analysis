@@ -8,6 +8,8 @@ from models.database_models import Job, JobStatus, JobType
 from services.job_service import JobService
 
 
+@pytest.mark.unit
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_create_job(db_session):
     service = JobService()
@@ -22,6 +24,7 @@ async def test_create_job(db_session):
     assert job.parameters["meet"] == 1
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_start_job_queues_task(monkeypatch, db_session):
     service = JobService()
@@ -57,6 +60,7 @@ async def test_start_job_queues_task(monkeypatch, db_session):
     assert job2.task_id == "stub-task-id"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_job_status_with_celery(monkeypatch, db_session):
     service = JobService()
@@ -101,6 +105,7 @@ async def test_get_job_status_with_celery(monkeypatch, db_session):
     assert status["celery_status"]["successful"] is True
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_cancel_job_revokes_task(monkeypatch, db_session):
     service = JobService()
@@ -129,6 +134,7 @@ async def test_cancel_job_revokes_task(monkeypatch, db_session):
     assert calls["revoked"][0] == ("to-cancel", True)
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_cleanup_old_jobs(db_session):
     service = JobService()
@@ -203,6 +209,7 @@ def test_get_celery_components_handles_missing(monkeypatch):
         js.AsyncResult = original_async_result
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_dispatch_task_collect_race(monkeypatch):
     service = JobService()
@@ -244,6 +251,7 @@ async def test_dispatch_task_collect_race(monkeypatch):
     assert result.id == "task-id"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_dispatch_task_requires_celery(monkeypatch):
     service = JobService()
@@ -258,6 +266,7 @@ async def test_dispatch_task_requires_celery(monkeypatch):
         await service._dispatch_task(job)
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_dispatch_task_unknown_type(monkeypatch):
     service = JobService()
@@ -287,6 +296,7 @@ async def test_dispatch_task_unknown_type(monkeypatch):
         await service._dispatch_task(job)
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_get_job_status_missing_returns_none(db_session):
     service = JobService()

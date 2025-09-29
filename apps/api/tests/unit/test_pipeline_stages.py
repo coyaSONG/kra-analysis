@@ -34,6 +34,7 @@ class TestCollectionStage:
     def pipeline_context(self):
         return PipelineContext(race_date="20240101", meet=1, race_number=5)
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_success(
         self, collection_stage, pipeline_context
@@ -42,6 +43,7 @@ class TestCollectionStage:
         result = await collection_stage.validate_prerequisites(pipeline_context)
         assert result is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_missing_service(
         self, mock_db_session, pipeline_context
@@ -51,6 +53,7 @@ class TestCollectionStage:
         result = await stage.validate_prerequisites(pipeline_context)
         assert result is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_missing_session(
         self, mock_kra_api_service, pipeline_context
@@ -60,6 +63,7 @@ class TestCollectionStage:
         result = await stage.validate_prerequisites(pipeline_context)
         assert result is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_invalid_params(self, collection_stage):
         """CollectionStage should fail validation with invalid race parameters"""
@@ -67,6 +71,7 @@ class TestCollectionStage:
         result = await collection_stage.validate_prerequisites(context)
         assert result is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_success(self, collection_stage, pipeline_context):
         """CollectionStage should execute successfully"""
@@ -88,6 +93,7 @@ class TestCollectionStage:
         assert pipeline_context.raw_data == mock_collected_data
         assert result.metadata["horses_count"] == 1
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_failure(self, collection_stage, pipeline_context):
         """CollectionStage should handle execution failure"""
@@ -109,6 +115,7 @@ class TestCollectionStage:
         """CollectionStage should not skip when no raw data exists"""
         assert collection_stage.should_skip(pipeline_context) is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_rollback(self, collection_stage, pipeline_context):
         """CollectionStage should clear raw data on rollback"""
@@ -137,6 +144,7 @@ class TestPreprocessingStage:
         }
         return context
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_success(
         self, preprocessing_stage, pipeline_context_with_raw_data
@@ -147,6 +155,7 @@ class TestPreprocessingStage:
         )
         assert result is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_no_raw_data(self, preprocessing_stage):
         """PreprocessingStage should fail validation without raw data"""
@@ -154,6 +163,7 @@ class TestPreprocessingStage:
         result = await preprocessing_stage.validate_prerequisites(context)
         assert result is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_success(
         self, preprocessing_stage, pipeline_context_with_raw_data
@@ -174,6 +184,7 @@ class TestPreprocessingStage:
         assert "002" not in valid_horse_numbers  # Filtered out (win_odds = 0)
         assert "004" not in valid_horse_numbers  # Filtered out (invalid format)
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_failure(self, preprocessing_stage):
         """PreprocessingStage should handle execution failure"""
@@ -189,6 +200,7 @@ class TestPreprocessingStage:
         context.preprocessed_data = {"existing": "data"}
         assert preprocessing_stage.should_skip(context) is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_rollback(self, preprocessing_stage):
         """PreprocessingStage should clear preprocessed data on rollback"""
@@ -237,6 +249,7 @@ class TestValidationStage:
         }
         return context
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_success(
         self, validation_stage, pipeline_context_with_enriched_data
@@ -247,6 +260,7 @@ class TestValidationStage:
         )
         assert result is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_validate_prerequisites_no_enriched_data(self, validation_stage):
         """ValidationStage should fail validation without enriched data"""
@@ -254,6 +268,7 @@ class TestValidationStage:
         result = await validation_stage.validate_prerequisites(context)
         assert result is False
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_success(
         self, validation_stage, pipeline_context_with_enriched_data
@@ -265,6 +280,7 @@ class TestValidationStage:
         assert pipeline_context_with_enriched_data.validation_result is not None
         assert pipeline_context_with_enriched_data.validation_result["is_valid"] is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_insufficient_horses(
         self, pipeline_context_with_enriched_data
@@ -277,6 +293,7 @@ class TestValidationStage:
         assert result.status == StageStatus.FAILED
         assert "Insufficient horses" in result.error
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_low_quality(self):
         """ValidationStage should fail with low quality score"""
@@ -312,6 +329,7 @@ class TestValidationStage:
         context.validation_result = {"is_valid": True}
         assert validation_stage.should_skip(context) is True
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_rollback(self, validation_stage):
         """ValidationStage should clear validation result on rollback"""

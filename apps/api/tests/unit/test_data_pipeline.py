@@ -63,6 +63,7 @@ class TestDataProcessingPipeline:
         assert "collection" not in stage_names
         assert "preprocessing" not in stage_names
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_process_race_data_unknown_pipeline_type(
         self, mock_kra_api_service, mock_db_session
@@ -123,12 +124,14 @@ class TestPipelineOrchestrator:
         assert summary["failed"] == 1
         assert summary["success_rate"] == 0.5
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_process_race_batch_empty(self, orchestrator):
         """process_race_batch should handle empty race requests"""
         results = await orchestrator.process_race_batch([])
         assert results == []
 
+    @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_process_date_range_single_day(self, orchestrator):
         """process_date_range should handle single day correctly"""
