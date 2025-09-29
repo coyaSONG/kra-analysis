@@ -6,7 +6,6 @@ Python 3.11에서는 f-string 내부에 외부와 같은 따옴표를 사용할 
 
 import os
 import re
-import glob
 
 def fix_fstring_quotes(content):
     """
@@ -35,7 +34,7 @@ def fix_fstring_quotes(content):
 def process_file(filepath):
     """파일 처리"""
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, encoding='utf-8') as f:
             original_content = f.read()
 
         fixed_content = fix_fstring_quotes(original_content)
