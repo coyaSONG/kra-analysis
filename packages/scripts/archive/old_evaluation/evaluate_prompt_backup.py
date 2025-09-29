@@ -45,10 +45,7 @@ class PromptEvaluator:
             data = json.load(f)
 
         # 결과 정보 제거
-        prediction_data = {
-            "race_info": data["race_info"].copy(),
-            "horses": []
-        }
+        prediction_data = {"race_info": data["race_info"].copy(), "horses": []}
 
         # 결과 필드 제거 및 기권/제외 말 필터링
         for horse in data["horses"]:
@@ -104,10 +101,7 @@ class PromptEvaluator:
         try:
             # Claude CLI 실행
             cmd = ["claude", "-p", prompt]
-            result = subprocess.run(cmd,
-                                  capture_output=True,
-                                  text=True,
-                                  timeout=120)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
             if result.returncode != 0:
                 print(f"Error running claude: {result.stderr}")
@@ -120,7 +114,9 @@ class PromptEvaluator:
             import re
 
             # 패턴 1: 코드블록 내 JSON
-            code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
+            code_block_match = re.search(
+                r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
+            )
             if code_block_match:
                 try:
                     prediction = json.loads(code_block_match.group(1))
@@ -160,10 +156,9 @@ class PromptEvaluator:
         horses_with_result = []
         for horse in data["horses"]:
             if "result" in horse and horse["result"].get("ord"):
-                horses_with_result.append({
-                    "chul_no": horse["chul_no"],
-                    "ord": horse["result"]["ord"]
-                })
+                horses_with_result.append(
+                    {"chul_no": horse["chul_no"], "ord": horse["result"]["ord"]}
+                )
 
         # 순위별 정렬
         horses_with_result.sort(key=lambda x: x["ord"])
@@ -193,11 +188,16 @@ class PromptEvaluator:
             "base_score": base_score,
             "bonus": bonus,
             "total_score": total_score,
-            "hit_rate": correct_count / 3 * 100
+            "hit_rate": correct_count / 3 * 100,
         }
 
-    def analyze_failure(self, race_data: dict, predicted: list[int],
-                       actual: list[int], result_file: Path) -> dict:
+    def analyze_failure(
+        self,
+        race_data: dict,
+        predicted: list[int],
+        actual: list[int],
+        result_file: Path,
+    ) -> dict:
         """실패 원인 분석"""
         with open(result_file, encoding="utf-8") as f:
             full_data = json.load(f)
@@ -207,41 +207,50 @@ class PromptEvaluator:
         missed_analysis = []
 
         for chul_no in missed_horses:
-            horse = next((h for h in full_data["horses"] if h["chul_no"] == chul_no), None)
+            horse = next(
+                (h for h in full_data["horses"] if h["chul_no"] == chul_no), None
+            )
             if horse:
                 # 인기도 확인 (배당률 기반)
-                all_odds = [(h["chul_no"], h.get("win_odds", 999))
-                           for h in full_data["horses"] if h.get("win_odds")]
+                all_odds = [
+                    (h["chul_no"], h.get("win_odds", 999))
+                    for h in full_data["horses"]
+                    if h.get("win_odds")
+                ]
                 all_odds.sort(key=lambda x: x[1])
-                popularity_rank = next((i+1 for i, (no, _) in enumerate(all_odds)
-                                      if no == chul_no), -1)
+                popularity_rank = next(
+                    (i + 1 for i, (no, _) in enumerate(all_odds) if no == chul_no), -1
+                )
 
-                missed_analysis.append({
-                    "chul_no": chul_no,
-                    "hr_name": horse["hr_name"],
-                    "popularity_rank": popularity_rank,
-                    "data_count": len(horse.get("recent_records", [])),
-                    "actual_position": actual.index(chul_no) + 1
-                })
+                missed_analysis.append(
+                    {
+                        "chul_no": chul_no,
+                        "hr_name": horse["hr_name"],
+                        "popularity_rank": popularity_rank,
+                        "data_count": len(horse.get("recent_records", [])),
+                        "actual_position": actual.index(chul_no) + 1,
+                    }
+                )
 
         # 잘못 선택한 말들 분석
         wrong_horses = set(predicted) - set(actual)
         wrong_analysis = []
 
         for chul_no in wrong_horses:
-            horse = next((h for h in full_data["horses"] if h["chul_no"] == chul_no), None)
+            horse = next(
+                (h for h in full_data["horses"] if h["chul_no"] == chul_no), None
+            )
             if horse and "result" in horse:
-                wrong_analysis.append({
-                    "chul_no": chul_no,
-                    "hr_name": horse["hr_name"],
-                    "predicted_reason": "분석 필요",
-                    "actual_position": horse["result"].get("ord", 99)
-                })
+                wrong_analysis.append(
+                    {
+                        "chul_no": chul_no,
+                        "hr_name": horse["hr_name"],
+                        "predicted_reason": "분석 필요",
+                        "actual_position": horse["result"].get("ord", 99),
+                    }
+                )
 
-        return {
-            "missed_horses": missed_analysis,
-            "wrong_horses": wrong_analysis
-        }
+        return {"missed_horses": missed_analysis, "wrong_horses": wrong_analysis}
 
     def evaluate_all(self, test_limit: int = 10):
         """전체 평가 프로세스 실행"""
@@ -299,7 +308,7 @@ class PromptEvaluator:
                 "reward": reward,
                 "confidence": prediction.get("confidence", 0),
                 "reasoning": prediction.get("reasoning", ""),
-                "failure_analysis": failure_analysis
+                "failure_analysis": failure_analysis,
             }
 
             results.append(result)
@@ -322,14 +331,20 @@ class PromptEvaluator:
             "test_date": timestamp,
             "total_races": total_races,
             "successful_predictions": successful_predictions,
-            "success_rate": successful_predictions / total_races * 100 if total_races > 0 else 0,
-            "average_correct_horses": total_correct_horses / total_races if total_races > 0 else 0,
+            "success_rate": (
+                successful_predictions / total_races * 100 if total_races > 0 else 0
+            ),
+            "average_correct_horses": (
+                total_correct_horses / total_races if total_races > 0 else 0
+            ),
             "total_correct_horses": total_correct_horses,
-            "detailed_results": results
+            "detailed_results": results,
         }
 
         # 결과 저장
-        output_file = self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
+        output_file = (
+            self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
+        )
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
@@ -350,7 +365,7 @@ class PromptEvaluator:
         missed_patterns = {
             "high_popularity_missed": 0,
             "low_data_missed": 0,
-            "weight_change_missed": 0
+            "weight_change_missed": 0,
         }
 
         for result in evaluation_results["detailed_results"]:
@@ -363,14 +378,20 @@ class PromptEvaluator:
 
         # 패턴별 제안
         if missed_patterns["high_popularity_missed"] > 3:
-            suggestions.append("인기마(1-3위) 배제 기준이 너무 엄격함. 시장 평가 가중치 추가 상향 필요")
+            suggestions.append(
+                "인기마(1-3위) 배제 기준이 너무 엄격함. 시장 평가 가중치 추가 상향 필요"
+            )
 
         if missed_patterns["low_data_missed"] > 2:
-            suggestions.append("데이터 부족 말 평가 로직 개선 필요. C그룹 가중치 조정 검토")
+            suggestions.append(
+                "데이터 부족 말 평가 로직 개선 필요. C그룹 가중치 조정 검토"
+            )
 
         # 성공률 기반 제안
         if evaluation_results["success_rate"] < 10:
-            suggestions.append("전반적인 접근 방식 재검토 필요. Few-shot 예시 추가 확대")
+            suggestions.append(
+                "전반적인 접근 방식 재검토 필요. Few-shot 예시 추가 확대"
+            )
         elif evaluation_results["success_rate"] < 20:
             suggestions.append("세부 조정 필요. 보정 요소 가중치 미세 조정")
 
@@ -379,8 +400,12 @@ class PromptEvaluator:
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python evaluate_prompt.py <prompt_version> <prompt_file> [test_limit]")
-        print("Example: python evaluate_prompt.py v2.0 prompts/prediction-template-v2.0.md 10")
+        print(
+            "Usage: python evaluate_prompt.py <prompt_version> <prompt_file> [test_limit]"
+        )
+        print(
+            "Example: python evaluate_prompt.py v2.0 prompts/prediction-template-v2.0.md 10"
+        )
         sys.exit(1)
 
     prompt_version = sys.argv[1]

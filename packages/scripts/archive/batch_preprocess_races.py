@@ -69,18 +69,24 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
                     "race_no": sample_item.get("rcNo", ""),
                     "distance": sample_item.get("rcDist", ""),
                     "weather": sample_item.get("weather", ""),
-                    "track": sample_item.get("track", "")
+                    "track": sample_item.get("track", ""),
                 }
 
-                print(f"📅 경주 정보: {race_info['date']} {race_info['meet']} {race_info['race_no']}R")
-                print(f"🏃 거리: {race_info['distance']}m | 날씨: {race_info['weather']} | 주로: {race_info['track']}")
+                print(
+                    f"📅 경주 정보: {race_info['date']} {race_info['meet']} {race_info['race_no']}R"
+                )
+                print(
+                    f"🏃 거리: {race_info['distance']}m | 날씨: {race_info['weather']} | 주로: {race_info['track']}"
+                )
 
             # 통계 업데이트
             stats["total_horses"] += orig_count
-            stats["excluded_horses"] += (orig_count - clean_count)
+            stats["excluded_horses"] += orig_count - clean_count
 
             # 정제된 데이터 저장
-            output_filename = os.path.basename(file_path).replace(".json", "_prerace.json")
+            output_filename = os.path.basename(file_path).replace(
+                ".json", "_prerace.json"
+            )
             output_path = os.path.join(output_dir, output_filename)
 
             with open(output_path, "w", encoding="utf-8") as f:
@@ -99,8 +105,10 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
 
                 for horse in horses[:5]:  # 처음 5마리만
                     odds_str = f"{horse.get('winOdds', 'N/A'):>5}"
-                    print(f"  {horse.get('chulNo'):>2}번 {horse.get('hrName'):<12} "
-                          f"기수: {horse.get('jkName'):<6} 배당률: {odds_str}")
+                    print(
+                        f"  {horse.get('chulNo'):>2}번 {horse.get('hrName'):<12} "
+                        f"기수: {horse.get('jkName'):<6} 배당률: {odds_str}"
+                    )
 
                 if len(horses) > 5:
                     print(f"  ... 외 {len(horses) - 5}두")
@@ -145,21 +153,27 @@ def create_race_summary(prerace_dir: str = "data/processed/pre-race"):
                     "race_no": items[0].get("rcNo"),
                     "distance": items[0].get("rcDist"),
                     "horses": len(items),
-                    "has_odds": any(h.get("winOdds") for h in items)
+                    "has_odds": any(h.get("winOdds") for h in items),
                 }
                 summary.append(race_info)
 
     # 요약 출력
     print("\n📋 전처리된 경주 요약")
-    print("="*70)
+    print("=" * 70)
     print("날짜      장소  R  거리    두수  배당률")
-    print("-"*70)
+    print("-" * 70)
 
     for race in summary:
         date_val = str(race["date"]) if race["date"] else ""
-        date_str = date_val[:4] + "-" + date_val[4:6] + "-" + date_val[6:] if date_val else "N/A"
+        date_str = (
+            date_val[:4] + "-" + date_val[4:6] + "-" + date_val[6:]
+            if date_val
+            else "N/A"
+        )
         odds_str = "있음" if race["has_odds"] else "없음"
-        print(f"{date_str}  {race['meet']:<4}  {race['race_no']:>2}  {race['distance']:>4}m  {race['horses']:>4}  {odds_str}")
+        print(
+            f"{date_str}  {race['meet']:<4}  {race['race_no']:>2}  {race['distance']:>4}m  {race['horses']:>4}  {odds_str}"
+        )
 
     # 요약 파일 저장
     with open(os.path.join(prerace_dir, "_summary.json"), "w", encoding="utf-8") as f:

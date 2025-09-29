@@ -13,6 +13,7 @@ from .utils import read_text_file, setup_logger
 @dataclass
 class GuideTechnique:
     """가이드의 개별 기법"""
+
     name: str
     category: str
     description: str
@@ -26,7 +27,11 @@ class PromptEngineeringGuideLoader:
 
     def __init__(self):
         self.logger = setup_logger("guide_loader")
-        self.guide_path = Path(__file__).parent.parent.parent.parent / "docs" / "prompt-engineering-guide.md"
+        self.guide_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "docs"
+            / "prompt-engineering-guide.md"
+        )
         self.techniques: dict[str, GuideTechnique] = {}
         self.load_guide()
 
@@ -69,10 +74,9 @@ class PromptEngineeringGuideLoader:
             keywords = []
             keyword_pattern = r'\*\*"(think[^"]*?)"\*\* - ([^\n]+)'
             for keyword_match in re.finditer(keyword_pattern, section):
-                keywords.append({
-                    "keyword": keyword_match.group(1),
-                    "level": keyword_match.group(2)
-                })
+                keywords.append(
+                    {"keyword": keyword_match.group(1), "level": keyword_match.group(2)}
+                )
 
             # 사용 예시 추출
             example_pattern = r"#### 예시\s*```(.*?)```"
@@ -84,7 +88,7 @@ class PromptEngineeringGuideLoader:
                 category="advanced",
                 description="Claude에게 더 많은 계산 시간을 부여하여 더 신중한 평가를 할 수 있도록 하는 기능",
                 keywords=[k["keyword"] for k in keywords],
-                example=example
+                example=example,
             )
 
             # 키워드별 레벨 저장
@@ -108,7 +112,7 @@ class PromptEngineeringGuideLoader:
                 name="자가 검증",
                 category="advanced",
                 description="결과 생성 후 검증 단계를 추가하여 정확성을 높이는 기법",
-                usage_pattern="\n".join(steps)
+                usage_pattern="\n".join(steps),
             )
 
     def _parse_token_optimization(self, content: str) -> None:
@@ -129,7 +133,7 @@ class PromptEngineeringGuideLoader:
                 name="토큰 최적화",
                 category="advanced",
                 description="응답 효율성을 높이기 위한 토큰 사용 최적화",
-                usage_pattern="\n".join(methods)
+                usage_pattern="\n".join(methods),
             )
 
     def _parse_xml_structure(self, content: str) -> None:
@@ -148,7 +152,7 @@ class PromptEngineeringGuideLoader:
                 name="XML 태그 구조화",
                 category="basic",
                 description="입력과 출력을 명확히 구분하고 복잡한 정보를 체계적으로 조직화",
-                example=example_match.group(1).strip() if example_match else None
+                example=example_match.group(1).strip() if example_match else None,
             )
 
     def _parse_chain_of_thought(self, content: str) -> None:
@@ -167,7 +171,7 @@ class PromptEngineeringGuideLoader:
                 name="Chain of Thought",
                 category="basic",
                 description="복잡한 작업을 단계별로 분해하여 추론 과정을 명시적으로 요청",
-                example=example_match.group(1).strip() if example_match else None
+                example=example_match.group(1).strip() if example_match else None,
             )
 
     def get_technique(self, name: str) -> GuideTechnique | None:
@@ -182,7 +186,9 @@ class PromptEngineeringGuideLoader:
         """Extended Thinking 키워드 조회"""
         return self.techniques.get("thinking_levels", [])
 
-    def should_apply_technique(self, technique_name: str, current_performance: float) -> bool:
+    def should_apply_technique(
+        self, technique_name: str, current_performance: float
+    ) -> bool:
         """특정 기법 적용 여부 결정"""
         # 성능에 따른 적용 전략
         if technique_name == "extended_thinking":

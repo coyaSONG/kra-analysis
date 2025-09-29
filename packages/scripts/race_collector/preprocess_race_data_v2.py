@@ -38,7 +38,9 @@ def clean_race_data_v2(race_data: dict[str, Any]) -> dict[str, Any]:
                 # 기권/제외 말 필터링 (winOdds가 명확히 0인 경우)
                 win_odds = horse.get("winOdds")
                 if win_odds == 0:
-                    print(f"⚠️  기권/제외: {horse.get('hrName')} (출주번호: {horse.get('chulNo')})")
+                    print(
+                        f"⚠️  기권/제외: {horse.get('hrName')} (출주번호: {horse.get('chulNo')})"
+                    )
                     continue
 
                 # 경주 후에만 확정되는 필드들을 0 또는 기본값으로 초기화
@@ -58,46 +60,110 @@ def clean_race_data_v2(race_data: dict[str, Any]) -> dict[str, Any]:
 
                 # 모든 구간 기록을 0으로 초기화
                 # 부산경남 구간
-                for field in ["buS1fTime", "buS1fAccTime", "buS1fOrd",
-                             "bu_1fGTime", "bu_2fGTime", "bu_3fGTime", "bu_4fGTime",
-                             "bu_4_2fTime", "bu_6_4fTime",
-                             "buG1fTime", "buG1fAccTime", "buG1fOrd",
-                             "buG2fTime", "buG2fAccTime", "buG2fOrd",
-                             "buG3fTime", "buG3fAccTime", "buG3fOrd",
-                             "buG4fTime", "buG4fAccTime", "buG4fOrd",
-                             "buG6fTime", "buG6fAccTime", "buG6fOrd",
-                             "buG8fTime", "buG8fAccTime", "buG8fOrd",
-                             "bu_10_8fTime", "bu_8_6fTime"]:
+                for field in [
+                    "buS1fTime",
+                    "buS1fAccTime",
+                    "buS1fOrd",
+                    "bu_1fGTime",
+                    "bu_2fGTime",
+                    "bu_3fGTime",
+                    "bu_4fGTime",
+                    "bu_4_2fTime",
+                    "bu_6_4fTime",
+                    "buG1fTime",
+                    "buG1fAccTime",
+                    "buG1fOrd",
+                    "buG2fTime",
+                    "buG2fAccTime",
+                    "buG2fOrd",
+                    "buG3fTime",
+                    "buG3fAccTime",
+                    "buG3fOrd",
+                    "buG4fTime",
+                    "buG4fAccTime",
+                    "buG4fOrd",
+                    "buG6fTime",
+                    "buG6fAccTime",
+                    "buG6fOrd",
+                    "buG8fTime",
+                    "buG8fAccTime",
+                    "buG8fOrd",
+                    "bu_10_8fTime",
+                    "bu_8_6fTime",
+                ]:
                     if field in horse and horse[field] != 0:
                         horse[field] = 0
 
                 # 서울 구간
-                for field in ["seS1fTime", "seS1fAccTime", "seS1fOrd",
-                             "se_1fGTime", "se_2fGTime", "se_3fGTime", "se_4fGTime",
-                             "se_4_2fTime", "se_6_4fTime",
-                             "seG1fTime", "seG1fAccTime", "seG1fOrd",
-                             "seG2fTime", "seG2fAccTime", "seG2fOrd",
-                             "seG3fTime", "seG3fAccTime", "seG3fOrd",
-                             "seG4fTime", "seG4fAccTime", "seG4fOrd",
-                             "seG6fTime", "seG6fAccTime", "seG6fOrd",
-                             "seG8fTime", "seG8fAccTime", "seG8fOrd",
-                             "se_10_8fTime", "se_8_6fTime"]:
+                for field in [
+                    "seS1fTime",
+                    "seS1fAccTime",
+                    "seS1fOrd",
+                    "se_1fGTime",
+                    "se_2fGTime",
+                    "se_3fGTime",
+                    "se_4fGTime",
+                    "se_4_2fTime",
+                    "se_6_4fTime",
+                    "seG1fTime",
+                    "seG1fAccTime",
+                    "seG1fOrd",
+                    "seG2fTime",
+                    "seG2fAccTime",
+                    "seG2fOrd",
+                    "seG3fTime",
+                    "seG3fAccTime",
+                    "seG3fOrd",
+                    "seG4fTime",
+                    "seG4fAccTime",
+                    "seG4fOrd",
+                    "seG6fTime",
+                    "seG6fAccTime",
+                    "seG6fOrd",
+                    "seG8fTime",
+                    "seG8fAccTime",
+                    "seG8fOrd",
+                    "se_10_8fTime",
+                    "se_8_6fTime",
+                ]:
                     if field in horse and horse[field] != 0:
                         horse[field] = 0
 
                 # 제주 구간
-                for field in ["jeS1fTime", "jeS1fAccTime", "jeS1fOrd",
-                             "je_1fGTime", "je_2fGTime", "je_3fGTime", "je_4fGTime",
-                             "je_4_2fTime", "je_6_4fTime",
-                             "jeG1fTime", "jeG1fAccTime", "jeG1fOrd",
-                             "jeG2fTime", "jeG2fAccTime", "jeG2fOrd",
-                             "jeG3fTime", "jeG3fAccTime", "jeG3fOrd"]:
+                for field in [
+                    "jeS1fTime",
+                    "jeS1fAccTime",
+                    "jeS1fOrd",
+                    "je_1fGTime",
+                    "je_2fGTime",
+                    "je_3fGTime",
+                    "je_4fGTime",
+                    "je_4_2fTime",
+                    "je_6_4fTime",
+                    "jeG1fTime",
+                    "jeG1fAccTime",
+                    "jeG1fOrd",
+                    "jeG2fTime",
+                    "jeG2fAccTime",
+                    "jeG2fOrd",
+                    "jeG3fTime",
+                    "jeG3fAccTime",
+                    "jeG3fOrd",
+                ]:
                     if field in horse and horse[field] != 0:
                         horse[field] = 0
 
                 # 기타 구간 기록
-                for field in ["g1fTime", "g2fTime", "g3fTime", "g4fTime",
-                             "s1fTime", "s2fTime", "s3fTime", "s4fTime"]:
+                for field in [
+                    "g1fTime",
+                    "g2fTime",
+                    "g3fTime",
+                    "g4fTime",
+                    "s1fTime",
+                    "s2fTime",
+                    "s3fTime",
+                    "s4fTime",
+                ]:
                     if field in horse and horse[field] != 0:
                         horse[field] = 0
 
@@ -168,7 +234,7 @@ def validate_prerace_format(cleaned_path: str, actual_prerace_path: str) -> None
         actual = json.load(f)
 
     print("\n🔍 형식 검증")
-    print("="*50)
+    print("=" * 50)
 
     # 첫 번째 말로 비교
     if cleaned["response"]["body"]["items"] and actual["response"]["body"]["items"]:
@@ -181,8 +247,16 @@ def validate_prerace_format(cleaned_path: str, actual_prerace_path: str) -> None
             actual_horse = actual_horse[0]
 
         # 주요 필드 비교
-        key_fields = ["ord", "rcTime", "winOdds", "plcOdds", "wgHr", "diffUnit",
-                     "buS1fTime", "seG1fAccTime"]
+        key_fields = [
+            "ord",
+            "rcTime",
+            "winOdds",
+            "plcOdds",
+            "wgHr",
+            "diffUnit",
+            "buS1fTime",
+            "seG1fAccTime",
+        ]
 
         all_match = True
         for field in key_fields:
@@ -200,7 +274,9 @@ def validate_prerace_format(cleaned_path: str, actual_prerace_path: str) -> None
             print("✅ 모든 주요 필드가 일치합니다!")
 
         # 필드 개수 비교
-        print(f"\n필드 개수: 전처리={len(cleaned_horse.keys())}, 실제={len(actual_horse.keys())}")
+        print(
+            f"\n필드 개수: 전처리={len(cleaned_horse.keys())}, 실제={len(actual_horse.keys())}"
+        )
 
 
 if __name__ == "__main__":
@@ -220,7 +296,9 @@ if __name__ == "__main__":
         # 기본값: 같은 디렉토리에 _prerace 접미사 추가
         base_name = os.path.basename(input_file).replace(".json", "")
         dir_name = os.path.dirname(input_file)
-        output_file = os.path.join(dir_name, "processed", "pre-race", f"{base_name}_prerace_v2.json")
+        output_file = os.path.join(
+            dir_name, "processed", "pre-race", f"{base_name}_prerace_v2.json"
+        )
 
     # 출력 디렉토리 생성
     os.makedirs(os.path.dirname(output_file), exist_ok=True)

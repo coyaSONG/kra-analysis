@@ -26,10 +26,12 @@ class EnrichedDataAnalyzer:
             "weight_change_impact": defaultdict(list),
             "data_availability": defaultdict(int),
             "success_patterns": [],
-            "failure_patterns": []
+            "failure_patterns": [],
         }
 
-    def load_race_with_result(self, enriched_file: str) -> tuple[dict | None, list[int] | None]:
+    def load_race_with_result(
+        self, enriched_file: str
+    ) -> tuple[dict | None, list[int] | None]:
         """enriched 파일과 대응하는 결과 로드"""
         try:
             # enriched 파일에서 정보 추출
@@ -83,8 +85,14 @@ class EnrichedDataAnalyzer:
         if "hrDetail" in horse and horse["hrDetail"]:
             hr = horse["hrDetail"]
             if hr.get("rcCntT", 0) > 0:
-                place_rate = ((hr.get("ord1CntT", 0) + hr.get("ord2CntT", 0) +
-                              hr.get("ord3CntT", 0)) / hr["rcCntT"]) * 100
+                place_rate = (
+                    (
+                        hr.get("ord1CntT", 0)
+                        + hr.get("ord2CntT", 0)
+                        + hr.get("ord3CntT", 0)
+                    )
+                    / hr["rcCntT"]
+                ) * 100
                 place_rate_bin = int(place_rate / 10) * 10  # 10% 단위로 그룹화
 
                 self.stats["horse_place_rate_bins"][place_rate_bin]["total"] += 1
@@ -146,7 +154,7 @@ class EnrichedDataAnalyzer:
 
                 # 배당률 순위 매기기
                 valid_horses.sort(key=lambda x: x["winOdds"])
-                odds_ranks = {h["chulNo"]: i+1 for i, h in enumerate(valid_horses)}
+                odds_ranks = {h["chulNo"]: i + 1 for i, h in enumerate(valid_horses)}
 
                 # 각 말 분석
                 for horse in valid_horses:
@@ -158,19 +166,23 @@ class EnrichedDataAnalyzer:
 
                     # 성공/실패 패턴 수집
                     if is_winner and odds_rank <= 3:
-                        self.stats["success_patterns"].append({
-                            "type": "popular_horse_won",
-                            "odds_rank": odds_rank,
-                            "jockey_win_rate": self._get_jockey_win_rate(horse),
-                            "horse_place_rate": self._get_horse_place_rate(horse)
-                        })
+                        self.stats["success_patterns"].append(
+                            {
+                                "type": "popular_horse_won",
+                                "odds_rank": odds_rank,
+                                "jockey_win_rate": self._get_jockey_win_rate(horse),
+                                "horse_place_rate": self._get_horse_place_rate(horse),
+                            }
+                        )
                     elif is_winner and odds_rank > 5:
-                        self.stats["success_patterns"].append({
-                            "type": "underdog_won",
-                            "odds_rank": odds_rank,
-                            "jockey_win_rate": self._get_jockey_win_rate(horse),
-                            "horse_place_rate": self._get_horse_place_rate(horse)
-                        })
+                        self.stats["success_patterns"].append(
+                            {
+                                "type": "underdog_won",
+                                "odds_rank": odds_rank,
+                                "jockey_win_rate": self._get_jockey_win_rate(horse),
+                                "horse_place_rate": self._get_horse_place_rate(horse),
+                            }
+                        )
 
         print("\n디버깅 정보:")
         print(f"- 결과 파일 없음: {no_result_count}개")
@@ -190,8 +202,14 @@ class EnrichedDataAnalyzer:
         if "hrDetail" in horse and horse["hrDetail"]:
             hr = horse["hrDetail"]
             if hr.get("rcCntT", 0) > 0:
-                return ((hr.get("ord1CntT", 0) + hr.get("ord2CntT", 0) +
-                        hr.get("ord3CntT", 0)) / hr["rcCntT"]) * 100
+                return (
+                    (
+                        hr.get("ord1CntT", 0)
+                        + hr.get("ord2CntT", 0)
+                        + hr.get("ord3CntT", 0)
+                    )
+                    / hr["rcCntT"]
+                ) * 100
         return 0.0
 
     def print_analysis_results(self):
@@ -222,9 +240,15 @@ class EnrichedDataAnalyzer:
 
                 cumulative_top3 += top3
                 cumulative_total += total
-                cumulative_rate = (cumulative_top3 / cumulative_total * 100) if cumulative_total > 0 else 0
+                cumulative_rate = (
+                    (cumulative_top3 / cumulative_total * 100)
+                    if cumulative_total > 0
+                    else 0
+                )
 
-                print(f"{rank:<6} {total:<8} {top3:<8} {rate:<10.1f}% {cumulative_rate:<12.1f}%")
+                print(
+                    f"{rank:<6} {total:<8} {top3:<8} {rate:<10.1f}% {cumulative_rate:<12.1f}%"
+                )
 
         # 기수 승률별 입상률
         print("\n🏆 기수 승률별 말의 입상률:")
@@ -264,30 +288,56 @@ class EnrichedDataAnalyzer:
         print("\n📊 데이터 가용성:")
         total_valid = self.stats["valid_horses"]
         if total_valid > 0:
-            print(f"- 말 상세정보 보유율: {self.stats["data_availability"]["has_hr_detail"]/total_valid*100:.1f}%")
-            print(f"- 기수 상세정보 보유율: {self.stats["data_availability"]["has_jk_detail"]/total_valid*100:.1f}%")
-            print(f"- 조교사 상세정보 보유율: {self.stats["data_availability"]["has_tr_detail"]/total_valid*100:.1f}%")
+            print(
+                f"- 말 상세정보 보유율: {self.stats["data_availability"]["has_hr_detail"]/total_valid*100:.1f}%"
+            )
+            print(
+                f"- 기수 상세정보 보유율: {self.stats["data_availability"]["has_jk_detail"]/total_valid*100:.1f}%"
+            )
+            print(
+                f"- 조교사 상세정보 보유율: {self.stats["data_availability"]["has_tr_detail"]/total_valid*100:.1f}%"
+            )
 
         # 핵심 인사이트
         print("\n💡 핵심 인사이트:")
 
         # 1-3위 배당률의 입상률 계산
-        top3_odds_total = sum(self.stats["odds_rank_distribution"][i]["total"] for i in range(1, 4))
-        top3_odds_winners = sum(self.stats["odds_rank_distribution"][i]["top3"] for i in range(1, 4))
+        top3_odds_total = sum(
+            self.stats["odds_rank_distribution"][i]["total"] for i in range(1, 4)
+        )
+        top3_odds_winners = sum(
+            self.stats["odds_rank_distribution"][i]["top3"] for i in range(1, 4)
+        )
         if top3_odds_total > 0:
             top3_rate = top3_odds_winners / top3_odds_total * 100
             print(f"1. 배당률 1-3위 말의 평균 입상률: {top3_rate:.1f}%")
 
         # 기수 승률 15% 이상의 영향
-        high_jockey_total = sum(data["total"] for rate, data in self.stats["jockey_win_rate_bins"].items() if rate >= 15)
-        high_jockey_winners = sum(data["top3"] for rate, data in self.stats["jockey_win_rate_bins"].items() if rate >= 15)
+        high_jockey_total = sum(
+            data["total"]
+            for rate, data in self.stats["jockey_win_rate_bins"].items()
+            if rate >= 15
+        )
+        high_jockey_winners = sum(
+            data["top3"]
+            for rate, data in self.stats["jockey_win_rate_bins"].items()
+            if rate >= 15
+        )
         if high_jockey_total > 0:
             high_jockey_rate = high_jockey_winners / high_jockey_total * 100
             print(f"2. 기수 승률 15% 이상 말의 입상률: {high_jockey_rate:.1f}%")
 
         # 말 입상률 30% 이상의 영향
-        high_horse_total = sum(data["total"] for rate, data in self.stats["horse_place_rate_bins"].items() if rate >= 30)
-        high_horse_winners = sum(data["top3"] for rate, data in self.stats["horse_place_rate_bins"].items() if rate >= 30)
+        high_horse_total = sum(
+            data["total"]
+            for rate, data in self.stats["horse_place_rate_bins"].items()
+            if rate >= 30
+        )
+        high_horse_winners = sum(
+            data["top3"]
+            for rate, data in self.stats["horse_place_rate_bins"].items()
+            if rate >= 30
+        )
         if high_horse_total > 0:
             high_horse_rate = high_horse_winners / high_horse_total * 100
             print(f"3. 말 과거 입상률 30% 이상의 실제 입상률: {high_horse_rate:.1f}%")
@@ -303,7 +353,7 @@ class EnrichedDataAnalyzer:
         report = {
             "analysis_date": datetime.now().isoformat(),
             "statistics": dict(self.stats),
-            "insights": self._generate_insights()
+            "insights": self._generate_insights(),
         }
 
         with open(filename, "w", encoding="utf-8") as f:
@@ -326,7 +376,9 @@ class EnrichedDataAnalyzer:
                 cumulative_top3 += data["top3"]
                 cumulative_total += data["total"]
                 if cumulative_total > 0:
-                    cumulative_rates[f"top{rank}"] = cumulative_top3 / cumulative_total * 100
+                    cumulative_rates[f"top{rank}"] = (
+                        cumulative_top3 / cumulative_total * 100
+                    )
 
         insights["odds_cumulative_rates"] = cumulative_rates
 
@@ -334,17 +386,21 @@ class EnrichedDataAnalyzer:
         if self.stats["jockey_win_rate_bins"]:
             best_jockey_rate = max(
                 self.stats["jockey_win_rate_bins"].items(),
-                key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0
+                key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0,
             )
-            insights["best_jockey_win_rate_range"] = f"{best_jockey_rate[0]}-{best_jockey_rate[0]+5}%"
+            insights["best_jockey_win_rate_range"] = (
+                f"{best_jockey_rate[0]}-{best_jockey_rate[0]+5}%"
+            )
 
         # 최적 말 입상률 구간
         if self.stats["horse_place_rate_bins"]:
             best_horse_rate = max(
                 self.stats["horse_place_rate_bins"].items(),
-                key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0
+                key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0,
             )
-            insights["best_horse_place_rate_range"] = f"{best_horse_rate[0]}-{best_horse_rate[0]+10}%"
+            insights["best_horse_place_rate_range"] = (
+                f"{best_horse_rate[0]}-{best_horse_rate[0]+10}%"
+            )
 
         return insights
 

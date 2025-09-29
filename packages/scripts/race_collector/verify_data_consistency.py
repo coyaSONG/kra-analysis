@@ -34,16 +34,19 @@ def verify_race_data(file_path):
         "wgHr": horse.get("wgHr", "N/A"),
         "diffUnit": horse.get("diffUnit", "N/A"),
         "buS1fTime": horse.get("buS1fTime", "N/A"),
-        "has_result": horse.get("ord", 0) != 0 or horse.get("rcTime", 0) != 0
+        "has_result": horse.get("ord", 0) != 0 or horse.get("rcTime", 0) != 0,
     }
+
 
 def main():
     files = sorted(glob.glob("data/processed/pre-race/race_*.json"))
 
     print("📊 전처리된 경주 데이터 일관성 검증")
-    print("="*80)
-    print(f"{'파일명':<30} {'경주':<20} {'두수':>4} {'착순':>6} {'기록':>6} {'배당률':>6} {'결과?'}")
-    print("-"*80)
+    print("=" * 80)
+    print(
+        f"{'파일명':<30} {'경주':<20} {'두수':>4} {'착순':>6} {'기록':>6} {'배당률':>6} {'결과?'}"
+    )
+    print("-" * 80)
 
     all_consistent = True
 
@@ -52,14 +55,16 @@ def main():
         if info:
             result_mark = "❌" if info["has_result"] else "✅"
 
-            print(f"{info['file']:<30} {info['race']:<20} {info['horses']:>4} "
-                  f"{str(info['ord']):>6} {str(info['rcTime']):>6} "
-                  f"{str(info['winOdds']):>6} {result_mark}")
+            print(
+                f"{info['file']:<30} {info['race']:<20} {info['horses']:>4} "
+                f"{str(info['ord']):>6} {str(info['rcTime']):>6} "
+                f"{str(info['winOdds']):>6} {result_mark}"
+            )
 
             if info["has_result"]:
                 all_consistent = False
 
-    print("="*80)
+    print("=" * 80)
 
     if all_consistent:
         print("✅ 모든 경주 데이터가 경주 전 상태로 일관성 있게 처리되었습니다!")
@@ -71,7 +76,7 @@ def main():
 
     # 상세 비교: 완료된 경주 vs 미시작 경주
     print("\n📋 상세 비교 (1R 완료 vs 5R 미시작)")
-    print("-"*50)
+    print("-" * 50)
 
     with open("data/processed/pre-race/race_1_20250608_1_prerace.json") as f:
         race1 = json.load(f)
@@ -81,8 +86,16 @@ def main():
     horse1 = race1["response"]["body"]["items"]["item"][0]
     horse5 = race5["response"]["body"]["items"]["item"][0]
 
-    compare_fields = ["ord", "rcTime", "winOdds", "plcOdds", "wgHr", "diffUnit",
-                     "buS1fTime", "seG1fAccTime"]
+    compare_fields = [
+        "ord",
+        "rcTime",
+        "winOdds",
+        "plcOdds",
+        "wgHr",
+        "diffUnit",
+        "buS1fTime",
+        "seG1fAccTime",
+    ]
 
     for field in compare_fields:
         val1 = horse1.get(field, "N/A")
@@ -100,6 +113,7 @@ def main():
 
         status = "✅" if match else "❌"
         print(f"{field:<15} 1R: {str(val1):>10} | 5R: {str(val5):>10} {status}")
+
 
 if __name__ == "__main__":
     main()

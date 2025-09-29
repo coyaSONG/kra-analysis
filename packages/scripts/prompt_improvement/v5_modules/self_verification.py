@@ -12,6 +12,7 @@ from .prompt_parser import PromptSection, PromptStructure
 @dataclass
 class VerificationRule:
     """검증 규칙"""
+
     name: str
     description: str
     check_type: str  # "constraint", "consistency", "quality"
@@ -28,32 +29,32 @@ class SelfVerificationEngine:
                 "horse_count",
                 "정확히 3마리 선택 확인",
                 "constraint",
-                "선택한 말이 3마리가 아닙니다"
+                "선택한 말이 3마리가 아닙니다",
             ),
             VerificationRule(
                 "valid_horses",
                 "모든 말의 winOdds > 0 확인",
                 "constraint",
-                "기권/제외 말이 포함되어 있습니다"
+                "기권/제외 말이 포함되어 있습니다",
             ),
             VerificationRule(
                 "popularity_balance",
                 "인기도 균형 확인 (모두 인기마/비인기마 방지)",
                 "quality",
-                "극단적인 선택입니다"
+                "극단적인 선택입니다",
             ),
             VerificationRule(
                 "confidence_range",
                 "confidence 값 60-90 범위 확인",
                 "constraint",
-                "confidence 값이 범위를 벗어났습니다"
+                "confidence 값이 범위를 벗어났습니다",
             ),
             VerificationRule(
                 "data_utilization",
                 "enriched 데이터 활용 확인",
                 "quality",
-                "중요한 데이터를 놓쳤을 수 있습니다"
-            )
+                "중요한 데이터를 놓쳤을 수 있습니다",
+            ),
         ]
 
         # 검증 단계 템플릿
@@ -88,34 +89,41 @@ class SelfVerificationEngine:
         if not verification_section:
             # 새 섹션 추가
             section = PromptSection(
-                tag="verification",
-                content=self.verification_template.strip()
+                tag="verification", content=self.verification_template.strip()
             )
             structure.sections["verification"] = section
 
-            changes.append(Change(
-                change_type="add",
-                target_section="verification",
-                description="강화된 자가 검증 섹션 추가",
-                new_value=self.verification_template.strip()
-            ))
+            changes.append(
+                Change(
+                    change_type="add",
+                    target_section="verification",
+                    description="강화된 자가 검증 섹션 추가",
+                    new_value=self.verification_template.strip(),
+                )
+            )
         else:
             # 기존 섹션 업데이트
             if "verification_process" not in verification_section.content:
-                new_content = verification_section.content + "\n\n" + self.verification_template
+                new_content = (
+                    verification_section.content + "\n\n" + self.verification_template
+                )
                 structure.update_section("verification", new_content)
 
-                changes.append(Change(
-                    change_type="modify",
-                    target_section="verification",
-                    description="검증 프로세스 강화",
-                    old_value=verification_section.content,
-                    new_value=new_content
-                ))
+                changes.append(
+                    Change(
+                        change_type="modify",
+                        target_section="verification",
+                        description="검증 프로세스 강화",
+                        old_value=verification_section.content,
+                        new_value=new_content,
+                    )
+                )
 
         return changes
 
-    def add_verification_to_output_format(self, structure: PromptStructure) -> list[Change]:
+    def add_verification_to_output_format(
+        self, structure: PromptStructure
+    ) -> list[Change]:
         """출력 형식에 검증 결과 추가"""
         changes = []
 
@@ -129,6 +137,7 @@ class SelfVerificationEngine:
 
         # JSON 형식 찾기 및 수정
         import re
+
         json_pattern = r"```json\s*(\{[^`]+\})\s*```"
         match = re.search(json_pattern, output_section.content)
 
@@ -154,17 +163,21 @@ class SelfVerificationEngine:
 
             structure.update_section("output_format", enhanced_format)
 
-            changes.append(Change(
-                change_type="modify",
-                target_section="output_format",
-                description="출력 형식에 검증 필드 추가",
-                old_value=output_section.content,
-                new_value=enhanced_format
-            ))
+            changes.append(
+                Change(
+                    change_type="modify",
+                    target_section="output_format",
+                    description="출력 형식에 검증 필드 추가",
+                    old_value=output_section.content,
+                    new_value=enhanced_format,
+                )
+            )
 
         return changes
 
-    def create_post_analysis_verification(self, structure: PromptStructure) -> list[Change]:
+    def create_post_analysis_verification(
+        self, structure: PromptStructure
+    ) -> list[Change]:
         """분석 후 검증 단계 추가"""
         changes = []
 
@@ -199,13 +212,15 @@ class SelfVerificationEngine:
         new_content = analysis_section.content.rstrip() + post_verification
         structure.update_section("analysis_steps", new_content)
 
-        changes.append(Change(
-            change_type="modify",
-            target_section="analysis_steps",
-            description="사후 검증 단계 추가",
-            old_value=analysis_section.content,
-            new_value=new_content
-        ))
+        changes.append(
+            Change(
+                change_type="modify",
+                target_section="analysis_steps",
+                description="사후 검증 단계 추가",
+                old_value=analysis_section.content,
+                new_value=new_content,
+            )
+        )
 
         return changes
 
@@ -227,13 +242,15 @@ class SelfVerificationEngine:
             new_content = notes_section.content.rstrip() + error_recovery
             structure.update_section("important_notes", new_content)
 
-            changes.append(Change(
-                change_type="modify",
-                target_section="important_notes",
-                description="오류 복구 가이드 추가",
-                old_value=notes_section.content,
-                new_value=new_content
-            ))
+            changes.append(
+                Change(
+                    change_type="modify",
+                    target_section="important_notes",
+                    description="오류 복구 가이드 추가",
+                    old_value=notes_section.content,
+                    new_value=new_content,
+                )
+            )
 
         return changes
 
@@ -287,12 +304,14 @@ class SelfVerificationEngine:
                     new_content = section.content.rstrip() + verification_req
                     structure.update_section(section_name, new_content)
 
-                    changes.append(Change(
-                        change_type="modify",
-                        target_section=section_name,
-                        description="중간 검증 요구사항 추가",
-                        old_value=section.content,
-                        new_value=new_content
-                    ))
+                    changes.append(
+                        Change(
+                            change_type="modify",
+                            target_section=section_name,
+                            description="중간 검증 요구사항 추가",
+                            old_value=section.content,
+                            new_value=new_content,
+                        )
+                    )
 
         return changes

@@ -37,5 +37,5 @@ __all__ = [
     "PromptEngineeringGuideLoader",
     "ExtendedThinkingEngine",
     "SelfVerificationEngine",
-    "TokenOptimizationEngine"
+    "TokenOptimizationEngine",
 ]

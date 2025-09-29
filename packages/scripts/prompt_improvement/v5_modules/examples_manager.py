@@ -14,6 +14,7 @@ from typing import Any
 @dataclass
 class Example:
     """개별 예시를 표현하는 클래스"""
+
     example_id: str
     example_type: str  # "success" or "failure"
     race_id: str
@@ -46,7 +47,7 @@ class Example:
             "odds_ranks": [],  # 예측한 말들의 배당률 순위
             "jockey_winrates": [],  # 기수 승률
             "horse_placerates": [],  # 말 입상률
-            "is_balanced": False  # 균형 잡힌 선택인지
+            "is_balanced": False,  # 균형 잡힌 선택인지
         }
 
         if self.input_data.get("entries"):
@@ -55,20 +56,26 @@ class Example:
             # 배당률 순위 계산
             sorted_entries = sorted(
                 [e for e in entries if e.get("win_odds", 0) > 0],
-                key=lambda x: x["win_odds"]
+                key=lambda x: x["win_odds"],
             )
-            odds_ranks = {e["horse_no"]: i+1 for i, e in enumerate(sorted_entries)}
+            odds_ranks = {e["horse_no"]: i + 1 for i, e in enumerate(sorted_entries)}
 
             for horse_no in self.predicted:
-                entry = next((e for e in entries if e.get("horse_no") == horse_no), None)
+                entry = next(
+                    (e for e in entries if e.get("horse_no") == horse_no), None
+                )
                 if entry:
                     features["odds_ranks"].append(odds_ranks.get(horse_no, 99))
 
                     if entry.get("jkDetail"):
-                        features["jockey_winrates"].append(entry["jkDetail"].get("winRate", 0))
+                        features["jockey_winrates"].append(
+                            entry["jkDetail"].get("winRate", 0)
+                        )
 
                     if entry.get("hrDetail"):
-                        features["horse_placerates"].append(entry["hrDetail"].get("placeRate", 0))
+                        features["horse_placerates"].append(
+                            entry["hrDetail"].get("placeRate", 0)
+                        )
 
             # 균형 확인 (인기마와 비인기마 혼합)
             if features["odds_ranks"]:
@@ -82,6 +89,7 @@ class Example:
 @dataclass
 class ExamplePool:
     """예시 풀을 관리하는 클래스"""
+
     examples: dict[str, Example] = field(default_factory=dict)
     success_examples: list[str] = field(default_factory=list)  # 성공 예시 ID 목록
     failure_examples: list[str] = field(default_factory=list)  # 실패 예시 ID 목록
@@ -115,14 +123,18 @@ class ExamplePool:
 
     def get_success_examples(self, limit: int | None = None) -> list[Example]:
         """성공 예시 목록 반환"""
-        examples = [self.examples[eid] for eid in self.success_examples if eid in self.examples]
+        examples = [
+            self.examples[eid] for eid in self.success_examples if eid in self.examples
+        ]
         if limit:
             examples = examples[:limit]
         return examples
 
     def get_failure_examples(self, limit: int | None = None) -> list[Example]:
         """실패 예시 목록 반환"""
-        examples = [self.examples[eid] for eid in self.failure_examples if eid in self.examples]
+        examples = [
+            self.examples[eid] for eid in self.failure_examples if eid in self.examples
+        ]
         if limit:
             examples = examples[:limit]
         return examples
@@ -133,7 +145,7 @@ class ExamplePool:
         sorted_examples = sorted(
             all_examples,
             key=lambda e: (e.performance_score, -e.usage_count),
-            reverse=True
+            reverse=True,
         )
         return sorted_examples[:count]
 
@@ -172,9 +184,7 @@ class ExamplePerformanceTracker:
         self.performance_history: dict[str, list[float]] = defaultdict(list)
 
     def track_performance(
-        self,
-        example_ids: list[str],
-        evaluation_result: float
+        self, example_ids: list[str], evaluation_result: float
     ) -> None:
         """특정 예시들이 포함된 프롬프트의 성과 기록"""
         for example_id in example_ids:
@@ -193,7 +203,7 @@ class ExamplePerformanceTracker:
 
         avg = sum(history) / len(history)
         variance = sum((x - avg) ** 2 for x in history) / len(history)
-        std_dev = variance ** 0.5
+        std_dev = variance**0.5
 
         # 표준편차가 낮을수록 일관성이 높음
         return 1.0 / (1.0 + std_dev)
@@ -202,14 +212,14 @@ class ExamplePerformanceTracker:
 class ExampleCurator:
     """최적의 예시 선택을 담당하는 큐레이터"""
 
-    def __init__(self, example_pool: ExamplePool, performance_tracker: ExamplePerformanceTracker):
+    def __init__(
+        self, example_pool: ExamplePool, performance_tracker: ExamplePerformanceTracker
+    ):
         self.example_pool = example_pool
         self.performance_tracker = performance_tracker
 
     def select_optimal_examples(
-        self,
-        target_count: int = 4,
-        strategy: str = "balanced"
+        self, target_count: int = 4, strategy: str = "balanced"
     ) -> list[Example]:
         """최적의 예시 조합 선택"""
 
@@ -230,8 +240,8 @@ class ExampleCurator:
         # 1. 최고 성과 성공 예시 2개
         top_success = []
         for example in self.example_pool.get_success_examples():
-            example.performance_score = self.performance_tracker.get_average_performance(
-                example.example_id
+            example.performance_score = (
+                self.performance_tracker.get_average_performance(example.example_id)
             )
             top_success.append(example)
 
@@ -240,10 +250,10 @@ class ExampleCurator:
 
         # 2. 경계 사례 (아슬아슬하게 성공한 경우)
         edge_cases = [
-            e for e in self.example_pool.get_success_examples()
-            if e.correct_count == 3 and any(
-                rank > 5 for rank in e.get_pattern_features()["odds_ranks"]
-            )
+            e
+            for e in self.example_pool.get_success_examples()
+            if e.correct_count == 3
+            and any(rank > 5 for rank in e.get_pattern_features()["odds_ranks"])
         ]
         if edge_cases:
             selected.append(edge_cases[0])
@@ -253,7 +263,8 @@ class ExampleCurator:
         if failure_examples:
             # 가장 최근의 실패 중에서 분석 노트가 있는 것 우선
             educational_failures = [
-                e for e in failure_examples
+                e
+                for e in failure_examples
                 if e.analysis_note and "인기마 무시" in e.analysis_note
             ]
             if educational_failures:
@@ -269,10 +280,12 @@ class ExampleCurator:
         all_examples = []
 
         for example in self.example_pool.examples.values():
-            example.performance_score = self.performance_tracker.get_average_performance(
+            example.performance_score = (
+                self.performance_tracker.get_average_performance(example.example_id)
+            )
+            consistency = self.performance_tracker.get_consistency_score(
                 example.example_id
             )
-            consistency = self.performance_tracker.get_consistency_score(example.example_id)
 
             # 종합 점수 = 성과 * 일관성
             combined_score = example.performance_score * consistency
@@ -315,9 +328,7 @@ class ExamplesManager:
         self.curator = ExampleCurator(self.example_pool, self.performance_tracker)
 
     def create_example_from_result(
-        self,
-        race_result: dict[str, Any],
-        example_type: str | None = None
+        self, race_result: dict[str, Any], example_type: str | None = None
     ) -> Example:
         """평가 결과로부터 예시 생성"""
         # 타입 자동 결정
@@ -334,9 +345,11 @@ class ExamplesManager:
                 entries = race_result["race_data"]["entries"]
                 sorted_entries = sorted(
                     [e for e in entries if e.get("win_odds", 0) > 0],
-                    key=lambda x: x["win_odds"]
+                    key=lambda x: x["win_odds"],
                 )
-                odds_ranks = {e["horse_no"]: i+1 for i, e in enumerate(sorted_entries)}
+                odds_ranks = {
+                    e["horse_no"]: i + 1 for i, e in enumerate(sorted_entries)
+                }
 
                 predicted_ranks = [odds_ranks.get(h, 99) for h in predicted]
 
@@ -355,31 +368,37 @@ class ExamplesManager:
             actual=race_result.get("actual", []),
             confidence=race_result.get("confidence", 70),
             correct_count=race_result.get("reward", {}).get("correct_count", 0),
-            analysis_note=analysis_note
+            analysis_note=analysis_note,
         )
 
         return example
 
     def add_examples_from_evaluation(
-        self,
-        evaluation_results: list[dict[str, Any]],
-        limit: int | None = None
+        self, evaluation_results: list[dict[str, Any]], limit: int | None = None
     ) -> int:
         """평가 결과에서 예시들 추가"""
         added_count = 0
 
         # 성공/실패 균형을 위해 각각 수집
-        success_results = [r for r in evaluation_results if r.get("reward", {}).get("correct_count", 0) == 3]
-        failure_results = [r for r in evaluation_results if r.get("reward", {}).get("correct_count", 0) == 0]
+        success_results = [
+            r
+            for r in evaluation_results
+            if r.get("reward", {}).get("correct_count", 0) == 3
+        ]
+        failure_results = [
+            r
+            for r in evaluation_results
+            if r.get("reward", {}).get("correct_count", 0) == 0
+        ]
 
         # 성공 예시 추가
-        for result in success_results[:limit//2 if limit else None]:
+        for result in success_results[: limit // 2 if limit else None]:
             example = self.create_example_from_result(result, "success")
             self.example_pool.add_example(example)
             added_count += 1
 
         # 실패 예시 추가
-        for result in failure_results[:limit//2 if limit else None]:
+        for result in failure_results[: limit // 2 if limit else None]:
             example = self.create_example_from_result(result, "failure")
             self.example_pool.add_example(example)
             added_count += 1
@@ -387,15 +406,12 @@ class ExamplesManager:
         return added_count
 
     def update_examples_section(
-        self,
-        prompt_structure,
-        strategy: str = "balanced"
+        self, prompt_structure, strategy: str = "balanced"
     ) -> list[str]:
         """프롬프트의 examples 섹션 업데이트"""
         # 최적 예시 선택
         selected_examples = self.curator.select_optimal_examples(
-            target_count=4,
-            strategy=strategy
+            target_count=4, strategy=strategy
         )
 
         # 섹션 내용 구성
@@ -425,9 +441,7 @@ class ExamplesManager:
         return [e.example_id for e in selected_examples]
 
     def track_usage_performance(
-        self,
-        example_ids: list[str],
-        performance: float
+        self, example_ids: list[str], performance: float
     ) -> None:
         """예시 사용 성과 추적"""
         # 성과 기록
@@ -438,8 +452,8 @@ class ExamplesManager:
             example = self.example_pool.get_example(example_id)
             if example:
                 example.usage_count += 1
-                example.performance_score = self.performance_tracker.get_average_performance(
-                    example_id
+                example.performance_score = (
+                    self.performance_tracker.get_average_performance(example_id)
                 )
 
     def cleanup_low_performers(self, threshold: float = 0.3) -> int:
@@ -450,7 +464,9 @@ class ExamplesManager:
         to_remove = []
         for example_id, example in self.example_pool.examples.items():
             if example.usage_count >= 3:  # 최소 3회 이상 사용
-                avg_performance = self.performance_tracker.get_average_performance(example_id)
+                avg_performance = self.performance_tracker.get_average_performance(
+                    example_id
+                )
                 if avg_performance < threshold:
                     to_remove.append(example_id)
 
@@ -467,13 +483,19 @@ class ExamplesManager:
             "total_examples": len(self.example_pool.examples),
             "success_examples": len(self.example_pool.success_examples),
             "failure_examples": len(self.example_pool.failure_examples),
-            "avg_performance": sum(
-                e.performance_score for e in self.example_pool.examples.values()
-            ) / len(self.example_pool.examples) if self.example_pool.examples else 0,
-            "most_used": max(
-                self.example_pool.examples.values(),
-                key=lambda e: e.usage_count
-            ).example_id if self.example_pool.examples else None
+            "avg_performance": (
+                sum(e.performance_score for e in self.example_pool.examples.values())
+                / len(self.example_pool.examples)
+                if self.example_pool.examples
+                else 0
+            ),
+            "most_used": (
+                max(
+                    self.example_pool.examples.values(), key=lambda e: e.usage_count
+                ).example_id
+                if self.example_pool.examples
+                else None
+            ),
         }
 
 
@@ -494,9 +516,9 @@ if __name__ == "__main__":
                 "entries": [
                     {"horse_no": 1, "win_odds": 2.5},
                     {"horse_no": 3, "win_odds": 4.2},
-                    {"horse_no": 5, "win_odds": 8.1}
+                    {"horse_no": 5, "win_odds": 8.1},
                 ]
-            }
+            },
         },
         {
             "race_id": "test_2",
@@ -508,10 +530,10 @@ if __name__ == "__main__":
                 "entries": [
                     {"horse_no": 2, "win_odds": 15.5},
                     {"horse_no": 4, "win_odds": 22.2},
-                    {"horse_no": 6, "win_odds": 31.1}
+                    {"horse_no": 6, "win_odds": 31.1},
                 ]
-            }
-        }
+            },
+        },
     ]
 
     # 예시 추가
@@ -524,6 +546,7 @@ if __name__ == "__main__":
 
     # 최적 예시 선택
     from prompt_parser import PromptStructure
+
     structure = PromptStructure()
     used_ids = manager.update_examples_section(structure, strategy="balanced")
     print(f"사용된 예시 ID: {used_ids}")

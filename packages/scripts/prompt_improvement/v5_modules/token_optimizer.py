@@ -13,6 +13,7 @@ from .prompt_parser import PromptStructure
 @dataclass
 class OptimizationRule:
     """최적화 규칙"""
+
     name: str
     description: str
     pattern: str | None = None
@@ -29,26 +30,23 @@ class TokenOptimizationEngine:
                 "remove_redundancy",
                 "중복된 표현 제거",
                 r"(\b\w+\b)(\s+\1)+",  # 같은 단어 반복
-                r"\1"
+                r"\1",
             ),
             OptimizationRule(
                 "compact_lists",
                 "목록 형식 간소화",
                 r"^\s*[-•]\s+",  # 불필요한 공백이 있는 목록
-                "- "
+                "- ",
             ),
             OptimizationRule(
-                "simplify_percentages",
-                "백분율 표현 간소화",
-                r"(\d+)\s*퍼센트",
-                r"\1%"
+                "simplify_percentages", "백분율 표현 간소화", r"(\d+)\s*퍼센트", r"\1%"
             ),
             OptimizationRule(
                 "remove_empty_lines",
                 "빈 줄 제거",
                 r"\n\s*\n\s*\n",  # 연속된 빈 줄
-                "\n\n"
-            )
+                "\n\n",
+            ),
         ]
 
         # 데이터 표현 최적화 템플릿
@@ -59,7 +57,9 @@ class TokenOptimizationEngine:
 | {item2} | {value2} | {desc2} |
 """
 
-    def optimize_prompt(self, structure: PromptStructure) -> tuple[PromptStructure, list[Change]]:
+    def optimize_prompt(
+        self, structure: PromptStructure
+    ) -> tuple[PromptStructure, list[Change]]:
         """전체 프롬프트 최적화"""
         changes = []
 
@@ -96,7 +96,7 @@ class TokenOptimizationEngine:
                         rule.pattern,
                         rule.replacement,
                         optimized_content,
-                        flags=re.MULTILINE
+                        flags=re.MULTILINE,
                     )
 
             # 추가 최적화: 과도한 설명 제거
@@ -107,13 +107,15 @@ class TokenOptimizationEngine:
                 token_reduction = (len(original_content) - len(optimized_content)) // 4
 
                 structure.update_section(section.tag, optimized_content)
-                changes.append(Change(
-                    change_type="modify",
-                    target_section=section.tag,
-                    description=f"텍스트 최적화 (약 {token_reduction}토큰 절약)",
-                    old_value=original_content,
-                    new_value=optimized_content
-                ))
+                changes.append(
+                    Change(
+                        change_type="modify",
+                        target_section=section.tag,
+                        description=f"텍스트 최적화 (약 {token_reduction}토큰 절약)",
+                        old_value=original_content,
+                        new_value=optimized_content,
+                    )
+                )
 
         return changes
 
@@ -140,7 +142,9 @@ class TokenOptimizationEngine:
         section = structure.get_section("analysis_steps")
         if section:
             # 긴 설명을 표 형식으로 변환
-            score_pattern = r"점수 계산 방법:\s*\n\s*- ([^\n]+)\s*\n\s*- ([^\n]+)\s*\n\s*- ([^\n]+)"
+            score_pattern = (
+                r"점수 계산 방법:\s*\n\s*- ([^\n]+)\s*\n\s*- ([^\n]+)\s*\n\s*- ([^\n]+)"
+            )
             match = re.search(score_pattern, section.content)
 
             if match:
@@ -157,13 +161,15 @@ class TokenOptimizationEngine:
 
                 if new_content != section.content:
                     structure.update_section("analysis_steps", new_content)
-                    changes.append(Change(
-                        change_type="modify",
-                        target_section="analysis_steps",
-                        description="점수 계산을 표 형식으로 최적화",
-                        old_value=section.content,
-                        new_value=new_content
-                    ))
+                    changes.append(
+                        Change(
+                            change_type="modify",
+                            target_section="analysis_steps",
+                            description="점수 계산을 표 형식으로 최적화",
+                            old_value=section.content,
+                            new_value=new_content,
+                        )
+                    )
 
         return changes
 
@@ -191,13 +197,15 @@ class TokenOptimizationEngine:
                 structure.update_section("examples", simplified)
 
                 token_saved = (len(content) - len(simplified)) // 4
-                changes.append(Change(
-                    change_type="modify",
-                    target_section="examples",
-                    description=f"예시 간소화 (약 {token_saved}토큰 절약)",
-                    old_value=content,
-                    new_value=simplified
-                ))
+                changes.append(
+                    Change(
+                        change_type="modify",
+                        target_section="examples",
+                        description=f"예시 간소화 (약 {token_saved}토큰 절약)",
+                        old_value=content,
+                        new_value=simplified,
+                    )
+                )
 
         return changes
 
@@ -223,7 +231,10 @@ class TokenOptimizationEngine:
 
         for line in lines:
             # 핵심 라인만 유지
-            if any(keyword in line for keyword in ["예시", "입력:", "출력:", "결과:", "```"]):
+            if any(
+                keyword in line
+                for keyword in ["예시", "입력:", "출력:", "결과:", "```"]
+            ):
                 core_lines.append(line)
             elif re.match(r"^\s*[-•]\s*\d+번마:", line):  # 말 정보
                 # 핵심 정보만 추출
@@ -232,7 +243,9 @@ class TokenOptimizationEngine:
 
         return "\n".join(core_lines)
 
-    def create_optimization_report(self, original_structure: PromptStructure, optimized_structure: PromptStructure) -> str:
+    def create_optimization_report(
+        self, original_structure: PromptStructure, optimized_structure: PromptStructure
+    ) -> str:
         """최적화 보고서 생성"""
         original_size = sum(len(s.content) for s in original_structure.sections)
         optimized_size = sum(len(s.content) for s in optimized_structure.sections)
@@ -268,7 +281,7 @@ class TokenOptimizationEngine:
             "배당률": "배당",
             "출전번호": "번호",
             "복승률": "복승",
-            "입상률": "입상"
+            "입상률": "입상",
         }
 
         for _, section in structure.sections.items():
@@ -281,19 +294,23 @@ class TokenOptimizationEngine:
                     # 첫 번째는 그대로 두고 이후는 약어로
                     parts = content.split(full_term, 1)
                     if len(parts) == 2:
-                        new_content = parts[0] + full_term + parts[1].replace(full_term, abbrev)
+                        new_content = (
+                            parts[0] + full_term + parts[1].replace(full_term, abbrev)
+                        )
                         if new_content != content:
                             content = new_content
                             modified = True
 
             if modified:
                 structure.update_section(section.name, content)
-                changes.append(Change(
-                    change_type="modify",
-                    target_section=section.tag,
-                    description="약어 적용으로 토큰 절약",
-                    old_value=section.content,
-                    new_value=content
-                ))
+                changes.append(
+                    Change(
+                        change_type="modify",
+                        target_section=section.tag,
+                        description="약어 적용으로 토큰 절약",
+                        old_value=section.content,
+                        new_value=content,
+                    )
+                )
 
         return changes

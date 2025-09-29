@@ -126,7 +126,7 @@ if __name__ == "__main__":
         "data/race_1_20250608_5.json",
         "data/processed/pre-race/race_1_20250608_1_prerace.json",
         "경주 전 (5R 원본)",
-        "전처리된 (1R)"
+        "전처리된 (1R)",
     )
 
     # 경주 완료 원본 vs 전처리된 데이터
@@ -135,5 +135,5 @@ if __name__ == "__main__":
         "data/race_1_20250608_1.json",
         "data/processed/pre-race/race_1_20250608_1_prerace.json",
         "경주 후 원본 (1R)",
-        "전처리된 (1R)"
+        "전처리된 (1R)",
     )

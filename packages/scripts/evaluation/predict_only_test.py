@@ -29,10 +29,12 @@ class PredictionTester:
             "BASH_DEFAULT_TIMEOUT_MS": "120000",
             "BASH_MAX_TIMEOUT_MS": "300000",
             "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-            "DISABLE_INTERLEAVED_THINKING": "true"
+            "DISABLE_INTERLEAVED_THINKING": "true",
         }
 
-    def find_enriched_files(self, date_filter: str | None = None) -> list[dict[str, any]]:
+    def find_enriched_files(
+        self, date_filter: str | None = None
+    ) -> list[dict[str, any]]:
         """enriched 파일 찾기"""
         enriched_files = []
 
@@ -56,13 +58,15 @@ class PredictionTester:
             meet = path_parts[-2]
             meet_map = {"seoul": "서울", "jeju": "제주", "busan": "부산경남"}
 
-            enriched_files.append({
-                "file_path": Path(file),
-                "race_id": f"{race_prefix}_{race_date}_{race_no}",
-                "race_date": race_date,
-                "race_no": race_no,
-                "meet": meet_map.get(meet, "서울")
-            })
+            enriched_files.append(
+                {
+                    "file_path": Path(file),
+                    "race_id": f"{race_prefix}_{race_date}_{race_no}",
+                    "race_date": race_date,
+                    "race_no": race_no,
+                    "meet": meet_map.get(meet, "서울"),
+                }
+            )
 
         return enriched_files
 
@@ -99,7 +103,7 @@ class PredictionTester:
                         "rating": item.get("rating", ""),
                         "jkWeight": item.get("jkWeight", ""),
                         "diffUnit": item.get("diffUnit", ""),
-                        "prizeCond": item.get("prizeCond", "")
+                        "prizeCond": item.get("prizeCond", ""),
                     }
 
                     # enriched 데이터 추가
@@ -120,8 +124,8 @@ class PredictionTester:
                     "raceInfo": {
                         "distance": items[0].get("distance", "") if horses else "",
                         "grade": items[0].get("grade", "") if horses else "",
-                        "track": items[0].get("track", "") if horses else ""
-                    }
+                        "track": items[0].get("track", "") if horses else "",
+                    },
                 }
 
             return None
@@ -140,20 +144,12 @@ class PredictionTester:
             prompt = f"{prompt_template}\n\n제공된 경주 데이터:\n```json\n{json.dumps(race_data, ensure_ascii=False, indent=2)}\n```"
 
             # Claude Code CLI 명령 구성
-            cmd = [
-                "claude",
-                "-p",
-                prompt
-            ]
+            cmd = ["claude", "-p", prompt]
 
             start_time = time.time()
 
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,
-                env=self.claude_env
+                cmd, capture_output=True, text=True, timeout=180, env=self.claude_env
             )
 
             execution_time = time.time() - start_time
@@ -177,7 +173,7 @@ class PredictionTester:
                         "confidence": prediction_data.get("confidence", 0),
                         "reason": prediction_data.get("brief_reason", ""),
                         "execution_time": execution_time,
-                        "full_output": output
+                        "full_output": output,
                     }
                 else:
                     print(f"JSON 파싱 실패 ({race_id})")
@@ -201,7 +197,7 @@ class PredictionTester:
             "predicted_horses": [],
             "prediction_strategy": "",
             "confidence_level": "",
-            "execution_time": prediction["execution_time"]
+            "execution_time": prediction["execution_time"],
         }
 
         # 예측한 말들의 정보 수집
@@ -213,28 +209,43 @@ class PredictionTester:
 
                 # 배당률 순위 계산
                 sorted_horses = sorted(race_data["horses"], key=lambda x: x["winOdds"])
-                odds_rank = next((i+1 for i, h in enumerate(sorted_horses) if h["chulNo"] == chul_no), 0)
+                odds_rank = next(
+                    (
+                        i + 1
+                        for i, h in enumerate(sorted_horses)
+                        if h["chulNo"] == chul_no
+                    ),
+                    0,
+                )
 
                 horse_info = {
                     "chulNo": chul_no,
                     "hrName": horse["hrName"],
                     "winOdds": horse["winOdds"],
                     "oddsRank": odds_rank,
-                    "jkName": horse["jkName"]
+                    "jkName": horse["jkName"],
                 }
 
                 # 기수 승률 추가
                 if "jkDetail" in horse:
                     jk = horse["jkDetail"]
                     if jk.get("rcCntT", 0) > 0:
-                        horse_info["jkWinRate"] = round((jk.get("ord1CntT", 0) / jk["rcCntT"]) * 100, 1)
+                        horse_info["jkWinRate"] = round(
+                            (jk.get("ord1CntT", 0) / jk["rcCntT"]) * 100, 1
+                        )
 
                 # 말 입상률 추가
                 if "hrDetail" in horse:
                     hr = horse["hrDetail"]
                     if hr.get("rcCntT", 0) > 0:
-                        place_cnt = hr.get("ord1CntT", 0) + hr.get("ord2CntT", 0) + hr.get("ord3CntT", 0)
-                        horse_info["hrPlaceRate"] = round((place_cnt / hr["rcCntT"]) * 100, 1)
+                        place_cnt = (
+                            hr.get("ord1CntT", 0)
+                            + hr.get("ord2CntT", 0)
+                            + hr.get("ord3CntT", 0)
+                        )
+                        horse_info["hrPlaceRate"] = round(
+                            (place_cnt / hr["rcCntT"]) * 100, 1
+                        )
 
                 analysis["predicted_horses"].append(horse_info)
 
@@ -313,7 +324,9 @@ class PredictionTester:
             print("  - 예측 말 정보:")
             for horse in analysis["predicted_horses"]:
                 info_parts = [f"{horse["chulNo"]}번 {horse["hrName"]}"]
-                info_parts.append(f"배당률 {horse["oddsRank"]}위({horse["winOdds"]:.1f})")
+                info_parts.append(
+                    f"배당률 {horse["oddsRank"]}위({horse["winOdds"]:.1f})"
+                )
                 if "jkWinRate" in horse:
                     info_parts.append(f"기수승률 {horse["jkWinRate"]}%")
                 if "hrPlaceRate" in horse:
@@ -338,7 +351,9 @@ class PredictionTester:
 
         print("\n📊 기본 통계:")
         print(f"- 총 예측 수: {len(predictions)}개")
-        avg_execution_time = sum(p["execution_time"] for p in predictions) / len(predictions)
+        avg_execution_time = sum(p["execution_time"] for p in predictions) / len(
+            predictions
+        )
         print(f"- 평균 실행 시간: {avg_execution_time:.1f}초")
 
         # 신뢰도 분포
@@ -366,7 +381,9 @@ class PredictionTester:
             strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
 
         print("\n🎯 예측 전략 분포:")
-        for strategy, count in sorted(strategy_counts.items(), key=lambda x: x[1], reverse=True):
+        for strategy, count in sorted(
+            strategy_counts.items(), key=lambda x: x[1], reverse=True
+        ):
             percentage = (count / len(analyses)) * 100
             print(f"- {strategy}: {count}개 ({percentage:.1f}%)")
 
@@ -380,10 +397,14 @@ class PredictionTester:
             avg_odds_rank = sum(all_odds_ranks) / len(all_odds_ranks)
             print(f"\n💰 평균 선택 배당률 순위: {avg_odds_rank:.1f}위")
 
-    def save_results(self, predictions: list[dict], analyses: list[dict], date_filter: str | None):
+    def save_results(
+        self, predictions: list[dict], analyses: list[dict], date_filter: str | None
+    ):
         """예측 결과 저장"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"prediction_test_{date_filter if date_filter else "all"}_{timestamp}.json"
+        filename = (
+            f"prediction_test_{date_filter if date_filter else "all"}_{timestamp}.json"
+        )
         filepath = self.predictions_dir / filename
 
         results = {
@@ -391,10 +412,10 @@ class PredictionTester:
                 "prompt_path": str(self.prompt_path),
                 "test_date": datetime.now().isoformat(),
                 "date_filter": date_filter,
-                "total_predictions": len(predictions)
+                "total_predictions": len(predictions),
             },
             "predictions": predictions,
-            "analyses": analyses
+            "analyses": analyses,
         }
 
         with open(filepath, "w", encoding="utf-8") as f:
@@ -408,8 +429,12 @@ def main():
         print("Usage: python predict_only_test.py <prompt_file> [date_filter] [limit]")
         print("\nExamples:")
         print("  모든 경주: python predict_only_test.py prompts/base-prompt-v1.0.md")
-        print("  특정 날짜: python predict_only_test.py prompts/base-prompt-v1.0.md 20250601")
-        print("  개수 제한: python predict_only_test.py prompts/base-prompt-v1.0.md all 10")
+        print(
+            "  특정 날짜: python predict_only_test.py prompts/base-prompt-v1.0.md 20250601"
+        )
+        print(
+            "  개수 제한: python predict_only_test.py prompts/base-prompt-v1.0.md all 10"
+        )
         sys.exit(1)
 
     prompt_file = sys.argv[1]

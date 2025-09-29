@@ -10,6 +10,7 @@ from datetime import datetime
 @dataclass
 class Change:
     """개별 변경사항을 표현하는 클래스"""
+
     change_type: str  # "modify", "add", "remove"
     target_section: str
     description: str

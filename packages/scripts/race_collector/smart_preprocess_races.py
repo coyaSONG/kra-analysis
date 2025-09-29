@@ -87,15 +87,20 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> dict[str
             if "temp_" in os.path.basename(input_path):
                 # 임시 파일인 경우, 원래 경로 구성
                 import re
+
                 match = re.search(r"race_(\d)_(\d{8})_(\d+)", input_path)
                 if match:
                     meet, date, race_no = match.groups()
                     year = date[:4]
                     month = date[4:6]
-                    meet_folder = {"1": "seoul", "2": "jeju", "3": "busan"}.get(meet, f"meet{meet}")
+                    meet_folder = {"1": "seoul", "2": "jeju", "3": "busan"}.get(
+                        meet, f"meet{meet}"
+                    )
                     output_dir = f"data/races/{year}/{month}/{date}/{meet_folder}"
                     os.makedirs(output_dir, exist_ok=True)
-                    output_path = f"{output_dir}/race_{meet}_{date}_{race_no}_prerace.json"
+                    output_path = (
+                        f"{output_dir}/race_{meet}_{date}_{race_no}_prerace.json"
+                    )
                 else:
                     # 기본값
                     output_path = input_path.replace(".json", "_prerace.json")
@@ -107,7 +112,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> dict[str
             "file": os.path.basename(input_path),
             "status": status_msg,
             "processed": False,
-            "output": os.path.basename(output_path)
+            "output": os.path.basename(output_path),
         }
 
         if is_completed:
@@ -137,7 +142,9 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> dict[str
 
         if horses and horses[0]:
             sample = horses[0]
-            print(f"   경주: {sample.get('rcDate')} {sample.get('meet')} {sample.get('rcNo')}R")
+            print(
+                f"   경주: {sample.get('rcDate')} {sample.get('meet')} {sample.get('rcNo')}R"
+            )
             print(f"   출전: {len(horses)}두")
 
         return result
@@ -148,7 +155,7 @@ def smart_process_race_file(input_path: str, output_dir: str = None) -> dict[str
             "file": os.path.basename(input_path),
             "status": "오류",
             "processed": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -163,7 +170,7 @@ def batch_smart_process(pattern: str, output_dir: str = None):
     # 매칭되는 파일 찾기
     files = sorted(glob.glob(pattern))
     print(f"\n📁 {len(files)}개 파일 발견")
-    print("="*60)
+    print("=" * 60)
 
     results = []
     stats = {
@@ -171,7 +178,7 @@ def batch_smart_process(pattern: str, output_dir: str = None):
         "completed": 0,
         "not_started": 0,
         "waiting": 0,
-        "error": 0
+        "error": 0,
     }
 
     for file_path in files:
@@ -201,10 +208,9 @@ def batch_smart_process(pattern: str, output_dir: str = None):
     if output_dir:
         summary_path = os.path.join(output_dir, "_processing_summary.json")
         with open(summary_path, "w", encoding="utf-8") as f:
-            json.dump({
-                "stats": stats,
-                "details": results
-            }, f, ensure_ascii=False, indent=2)
+            json.dump(
+                {"stats": stats, "details": results}, f, ensure_ascii=False, indent=2
+            )
 
         print(f"\n📄 상세 결과: {summary_path}")
 
@@ -227,7 +233,7 @@ def compare_files(file1: str, file2: str):
     print("\n📊 파일 비교")
     print(f"파일1: {os.path.basename(file1)}")
     print(f"파일2: {os.path.basename(file2)}")
-    print("-"*40)
+    print("-" * 40)
 
     fields = ["ord", "rcTime", "winOdds", "plcOdds", "wgHr"]
     for field in fields:

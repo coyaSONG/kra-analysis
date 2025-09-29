@@ -83,18 +83,24 @@ def analyze_race_data(race_id, status):
         # 5. 체중 형식 이상
         weight = horse.get("weight", "")
         if weight and not weight[-1].isdigit() and weight[-1] != ")":
-            analysis["special_cases"].append(f"체중 형식: {horse['chul_no']}번 {weight}")
+            analysis["special_cases"].append(
+                f"체중 형식: {horse['chul_no']}번 {weight}"
+            )
 
         # 6. 배당률 특이값
         win_odds = horse.get("win_odds", 999)
         if win_odds == 0 or win_odds > 100:
-            analysis["special_cases"].append(f"배당률 특이: {horse['chul_no']}번 {win_odds}")
+            analysis["special_cases"].append(
+                f"배당률 특이: {horse['chul_no']}번 {win_odds}"
+            )
 
         # 7. 누락된 필드
         required_fields = ["hr_name", "jockey", "trainer", "chul_no"]
         for field in required_fields:
             if field not in horse:
-                analysis["special_cases"].append(f"필드 누락: {horse.get('chul_no', '?')}번 {field} 없음")
+                analysis["special_cases"].append(
+                    f"필드 누락: {horse.get('chul_no', '?')}번 {field} 없음"
+                )
 
     return analysis
 
@@ -107,7 +113,6 @@ def main():
         ("race_1_20250511_5", "성공-1마리"),
         ("race_1_20250531_8", "성공-2마리"),
         ("race_3_20250504_6", "성공-2마리"),
-
         # 실패 케이스
         ("race_1_20250524_7", "실패-파싱오류"),
         ("race_1_20250517_10", "실패-Execution"),
@@ -154,7 +159,9 @@ def main():
             fail_patterns[pattern_type] = fail_patterns.get(pattern_type, 0) + 1
 
     print("\n실패 케이스의 특수 패턴 빈도:")
-    for pattern, count in sorted(fail_patterns.items(), key=lambda x: x[1], reverse=True):
+    for pattern, count in sorted(
+        fail_patterns.items(), key=lambda x: x[1], reverse=True
+    ):
         print(f"- {pattern}: {count}회")
 
 

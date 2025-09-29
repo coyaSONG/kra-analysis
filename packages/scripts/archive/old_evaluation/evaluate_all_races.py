@@ -36,10 +36,7 @@ class FullEvaluator:
                 data = json.load(f)
 
             # 결과 정보 제거
-            prediction_data = {
-                "race_info": data["race_info"].copy(),
-                "horses": []
-            }
+            prediction_data = {"race_info": data["race_info"].copy(), "horses": []}
 
             # 결과 필드 제거
             for horse in data["horses"]:
@@ -67,7 +64,9 @@ class FullEvaluator:
 
         # 진행 상황 파일
         progress_file = self.results_dir / f"progress_{timestamp}.json"
-        results_file = self.results_dir / f"full_evaluation_{self.prompt_version}_{timestamp}.json"
+        results_file = (
+            self.results_dir / f"full_evaluation_{self.prompt_version}_{timestamp}.json"
+        )
 
         all_results = []
 
@@ -79,16 +78,20 @@ class FullEvaluator:
         print("=" * 60)
 
         for i in range(0, len(race_files), batch_size):
-            batch = race_files[i:i+batch_size]
+            batch = race_files[i : i + batch_size]
             batch_results = []
 
-            print(f"\n배치 {i//batch_size + 1}/{(len(race_files)-1)//batch_size + 1} 처리 중...")
+            print(
+                f"\n배치 {i//batch_size + 1}/{(len(race_files)-1)//batch_size + 1} 처리 중..."
+            )
 
             for j, result_file in enumerate(batch):
                 race_id = result_file.stem
                 current_idx = i + j + 1
 
-                print(f"[{current_idx}/{len(race_files)}] {race_id} ", end="", flush=True)
+                print(
+                    f"[{current_idx}/{len(race_files)}] {race_id} ", end="", flush=True
+                )
 
                 # 예측용 데이터 준비
                 race_data = self.prepare_race_data(result_file)
@@ -118,10 +121,9 @@ class FullEvaluator:
                 try:
                     # Claude CLI 실행
                     cmd = ["claude", "-p", prompt]
-                    result = subprocess.run(cmd,
-                                          capture_output=True,
-                                          text=True,
-                                          timeout=120)
+                    result = subprocess.run(
+                        cmd, capture_output=True, text=True, timeout=120
+                    )
 
                     if result.returncode != 0:
                         print("❌ (CLI 오류)")
@@ -132,7 +134,9 @@ class FullEvaluator:
                     import re
 
                     # 패턴 1: 코드블록 내 JSON
-                    code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
+                    code_block_match = re.search(
+                        r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
+                    )
                     if code_block_match:
                         try:
                             prediction = json.loads(code_block_match.group(1))
@@ -159,12 +163,16 @@ class FullEvaluator:
                     actual_result = []
                     for horse in full_data["horses"]:
                         if "result" in horse and 1 <= horse["result"]["ord"] <= 3:
-                            actual_result.append((horse["result"]["ord"], horse["chul_no"]))
+                            actual_result.append(
+                                (horse["result"]["ord"], horse["chul_no"])
+                            )
                     actual_result.sort()
                     actual_nums = [x[1] for x in actual_result[:3]]
 
                     # 예측 결과 추출
-                    predicted_horses = [h["chul_no"] for h in prediction["selected_horses"]]
+                    predicted_horses = [
+                        h["chul_no"] for h in prediction["selected_horses"]
+                    ]
 
                     # 평가
                     correct_count = len(set(predicted_horses) & set(actual_nums))
@@ -184,13 +192,15 @@ class FullEvaluator:
                         print("❌ (0/3)")
 
                     # 결과 저장
-                    batch_results.append({
-                        "race_id": race_id,
-                        "predicted": predicted_horses,
-                        "actual": actual_nums,
-                        "correct_count": correct_count,
-                        "confidence": prediction.get("confidence", 0)
-                    })
+                    batch_results.append(
+                        {
+                            "race_id": race_id,
+                            "predicted": predicted_horses,
+                            "actual": actual_nums,
+                            "correct_count": correct_count,
+                            "confidence": prediction.get("confidence", 0),
+                        }
+                    )
 
                 except subprocess.TimeoutExpired:
                     print("⏱️  (타임아웃)")
@@ -205,19 +215,23 @@ class FullEvaluator:
 
             # 중간 진행 상황 저장
             progress = {
-                "current_batch": i//batch_size + 1,
-                "total_batches": (len(race_files)-1)//batch_size + 1,
+                "current_batch": i // batch_size + 1,
+                "total_batches": (len(race_files) - 1) // batch_size + 1,
                 "processed_races": total_races,
                 "successful_predictions": successful_predictions,
                 "partial_2": partial_correct_2,
                 "partial_1": partial_correct_1,
-                "current_success_rate": successful_predictions / total_races * 100 if total_races > 0 else 0
+                "current_success_rate": (
+                    successful_predictions / total_races * 100 if total_races > 0 else 0
+                ),
             }
 
             with open(progress_file, "w", encoding="utf-8") as f:
                 json.dump(progress, f, ensure_ascii=False, indent=2)
 
-            print(f"\n현재까지: {total_races}경주 처리, {successful_predictions}회 완전적중 ({progress['current_success_rate']:.1f}%)")
+            print(
+                f"\n현재까지: {total_races}경주 처리, {successful_predictions}회 완전적중 ({progress['current_success_rate']:.1f}%)"
+            )
 
             # 배치 간 휴식
             if i + batch_size < len(race_files):
@@ -233,11 +247,18 @@ class FullEvaluator:
             "successful_predictions": successful_predictions,
             "partial_correct_2": partial_correct_2,
             "partial_correct_1": partial_correct_1,
-            "no_correct": total_races - successful_predictions - partial_correct_2 - partial_correct_1,
-            "success_rate": successful_predictions / total_races * 100 if total_races > 0 else 0,
-            "average_correct_horses": total_correct_horses / total_races if total_races > 0 else 0,
+            "no_correct": total_races
+            - successful_predictions
+            - partial_correct_2
+            - partial_correct_1,
+            "success_rate": (
+                successful_predictions / total_races * 100 if total_races > 0 else 0
+            ),
+            "average_correct_horses": (
+                total_correct_horses / total_races if total_races > 0 else 0
+            ),
             "total_correct_horses": total_correct_horses,
-            "detailed_results": all_results
+            "detailed_results": all_results,
         }
 
         # 결과 저장
@@ -248,18 +269,30 @@ class FullEvaluator:
         report_file = self.results_dir / f"summary_report_{timestamp}.md"
         with open(report_file, "w", encoding="utf-8") as f:
             f.write("# 전체 경주 평가 보고서\n\n")
-            f.write(f"- **평가 일시**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(
+                f"- **평가 일시**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            )
             f.write(f"- **프롬프트 버전**: {self.prompt_version}\n")
             f.write(f"- **전체 경주 파일**: {len(race_files)}개\n")
             f.write(f"- **성공적으로 처리**: {total_races}개\n\n")
             f.write("## 적중 통계\n\n")
             f.write("| 구분 | 경주 수 | 비율 |\n")
             f.write("|------|---------|------|\n")
-            f.write(f"| 완전 적중 (3/3) | {successful_predictions} | {successful_predictions/total_races*100:.1f}% |\n")
-            f.write(f"| 2마리 적중 (2/3) | {partial_correct_2} | {partial_correct_2/total_races*100:.1f}% |\n")
-            f.write(f"| 1마리 적중 (1/3) | {partial_correct_1} | {partial_correct_1/total_races*100:.1f}% |\n")
-            f.write(f"| 미적중 (0/3) | {total_races - successful_predictions - partial_correct_2 - partial_correct_1} | {(total_races - successful_predictions - partial_correct_2 - partial_correct_1)/total_races*100:.1f}% |\n")
-            f.write(f"\n**평균 적중 말 수**: {summary['average_correct_horses']:.2f}/3\n")
+            f.write(
+                f"| 완전 적중 (3/3) | {successful_predictions} | {successful_predictions/total_races*100:.1f}% |\n"
+            )
+            f.write(
+                f"| 2마리 적중 (2/3) | {partial_correct_2} | {partial_correct_2/total_races*100:.1f}% |\n"
+            )
+            f.write(
+                f"| 1마리 적중 (1/3) | {partial_correct_1} | {partial_correct_1/total_races*100:.1f}% |\n"
+            )
+            f.write(
+                f"| 미적중 (0/3) | {total_races - successful_predictions - partial_correct_2 - partial_correct_1} | {(total_races - successful_predictions - partial_correct_2 - partial_correct_1)/total_races*100:.1f}% |\n"
+            )
+            f.write(
+                f"\n**평균 적중 말 수**: {summary['average_correct_horses']:.2f}/3\n"
+            )
 
         print("\n" + "=" * 60)
         print("전체 평가 완료!")
@@ -272,7 +305,9 @@ class FullEvaluator:
 def main():
     if len(sys.argv) < 3:
         print("Usage: python evaluate_all_races.py <prompt_version> <prompt_file>")
-        print("Example: python evaluate_all_races.py v2.1-optimized prompts/prediction-template-optimized.md")
+        print(
+            "Example: python evaluate_all_races.py v2.1-optimized prompts/prediction-template-optimized.md"
+        )
         sys.exit(1)
 
     prompt_version = sys.argv[1]

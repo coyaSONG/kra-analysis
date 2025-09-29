@@ -35,7 +35,7 @@ class PromptEvaluatorV3:
             "BASH_DEFAULT_TIMEOUT_MS": "120000",
             "BASH_MAX_TIMEOUT_MS": "300000",
             "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-            "DISABLE_INTERLEAVED_THINKING": "true"  # 더 빠른 응답
+            "DISABLE_INTERLEAVED_THINKING": "true",  # 더 빠른 응답
         }
 
     def find_test_races(self, limit: int = None) -> list[dict[str, any]]:
@@ -58,13 +58,15 @@ class PromptEvaluatorV3:
             meet = path_parts[-2]  # seoul, jeju, busan 등
             meet_map = {"seoul": "서울", "jeju": "제주", "busan": "부산경남"}
 
-            race_files.append({
-                "enriched_file": Path(enriched_file),
-                "race_id": f"{race_prefix}_{race_date}_{race_no}",
-                "race_date": race_date,
-                "race_no": race_no,
-                "meet": meet_map.get(meet, "서울")
-            })
+            race_files.append(
+                {
+                    "enriched_file": Path(enriched_file),
+                    "race_id": f"{race_prefix}_{race_date}_{race_no}",
+                    "race_date": race_date,
+                    "race_no": race_no,
+                    "meet": meet_map.get(meet, "서울"),
+                }
+            )
 
         if limit:
             race_files = race_files[:limit]
@@ -107,7 +109,7 @@ class PromptEvaluatorV3:
                         # 보강된 데이터
                         "hrDetail": item.get("hrDetail", {}),
                         "jkDetail": item.get("jkDetail", {}),
-                        "trDetail": item.get("trDetail", {})
+                        "trDetail": item.get("trDetail", {}),
                     }
 
                     horses.append(horse)
@@ -121,9 +123,9 @@ class PromptEvaluatorV3:
                         "rcDist": items[0]["rcDist"],
                         "track": items[0].get("track", ""),
                         "weather": items[0].get("weather", ""),
-                        "meet": items[0]["meet"]
+                        "meet": items[0]["meet"],
                     },
-                    "horses": horses
+                    "horses": horses,
                 }
 
                 return race_data
@@ -134,7 +136,9 @@ class PromptEvaluatorV3:
             print(f"데이터 로드 오류: {e}")
             return None
 
-    def run_claude_prediction(self, race_data: dict, race_id: str) -> tuple[dict | None, str]:
+    def run_claude_prediction(
+        self, race_data: dict, race_id: str
+    ) -> tuple[dict | None, str]:
         """Claude Code CLI를 통한 예측 실행 (stream-json 사용)"""
         error_type = "success"
         start_time = time.time()
@@ -165,18 +169,14 @@ class PromptEvaluatorV3:
         try:
             # Claude Code 실행 (stream-json 형식)
             with self.api_lock:
-                cmd = [
-                    "claude",
-                    "-p",
-                    prompt
-                ]
+                cmd = ["claude", "-p", prompt]
 
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
                     timeout=3000,
-                    env=self.claude_env
+                    env=self.claude_env,
                 )
 
             execution_time = time.time() - start_time
@@ -230,7 +230,9 @@ class PromptEvaluatorV3:
                             data["execution_time"] = execution_time
                             # predicted를 selected_horses로 변환
                             if "predicted" in data and "selected_horses" not in data:
-                                data["selected_horses"] = [{"chulNo": no} for no in data["predicted"]]
+                                data["selected_horses"] = [
+                                    {"chulNo": no} for no in data["predicted"]
+                                ]
                             return data
 
                         # stream 형식인 경우
@@ -243,13 +245,22 @@ class PromptEvaluatorV3:
 
                     if content:
                         # content에서 JSON 추출 (selected_horses 또는 predicted)
-                        json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', content, re.DOTALL)
+                        json_match = re.search(
+                            r'\{.*"(?:selected_horses|predicted)".*?\}',
+                            content,
+                            re.DOTALL,
+                        )
                         if json_match:
                             prediction = json.loads(json_match.group())
                             prediction["execution_time"] = execution_time
                             # predicted를 selected_horses로 변환
-                            if "predicted" in prediction and "selected_horses" not in prediction:
-                                prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
+                            if (
+                                "predicted" in prediction
+                                and "selected_horses" not in prediction
+                            ):
+                                prediction["selected_horses"] = [
+                                    {"chulNo": no} for no in prediction["predicted"]
+                                ]
                             return prediction
 
                 except json.JSONDecodeError:
@@ -264,27 +275,41 @@ class PromptEvaluatorV3:
         """일반 출력 파싱 (폴백)"""
         try:
             # 코드블록 내 JSON
-            code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
+            code_block_match = re.search(
+                r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
+            )
             if code_block_match:
                 try:
                     prediction = json.loads(code_block_match.group(1))
                     prediction["execution_time"] = execution_time
                     # predicted를 selected_horses로 변환
-                    if "predicted" in prediction and "selected_horses" not in prediction:
-                        prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
+                    if (
+                        "predicted" in prediction
+                        and "selected_horses" not in prediction
+                    ):
+                        prediction["selected_horses"] = [
+                            {"chulNo": no} for no in prediction["predicted"]
+                        ]
                     return prediction
                 except Exception:
                     pass
 
             # 일반 JSON (selected_horses 또는 predicted)
-            json_match = re.search(r'\{.*"(?:selected_horses|predicted)".*?\}', output, re.DOTALL)
+            json_match = re.search(
+                r'\{.*"(?:selected_horses|predicted)".*?\}', output, re.DOTALL
+            )
             if json_match:
                 try:
                     prediction = json.loads(json_match.group())
                     prediction["execution_time"] = execution_time
                     # predicted를 selected_horses로 변환
-                    if "predicted" in prediction and "selected_horses" not in prediction:
-                        prediction["selected_horses"] = [{"chulNo": no} for no in prediction["predicted"]]
+                    if (
+                        "predicted" in prediction
+                        and "selected_horses" not in prediction
+                    ):
+                        prediction["selected_horses"] = [
+                            {"chulNo": no} for no in prediction["predicted"]
+                        ]
                     return prediction
                 except Exception:
                     pass
@@ -294,7 +319,9 @@ class PromptEvaluatorV3:
 
         return None
 
-    def run_prediction_with_retry(self, race_data: dict, race_id: str, max_retries: int = 1) -> tuple[dict | None, str]:
+    def run_prediction_with_retry(
+        self, race_data: dict, race_id: str, max_retries: int = 1
+    ) -> tuple[dict | None, str]:
         """재시도 기능이 있는 예측 실행"""
         for attempt in range(max_retries + 1):
             result, error_type = self.run_claude_prediction(race_data, race_id)
@@ -325,7 +352,13 @@ class PromptEvaluatorV3:
 
             # 캐시가 없으면 API를 통해 가져오기
             print(f"  결과 캐시 없음. API로 가져오기: {meet} {rc_date} {rc_no}경주")
-            cmd = ["node", "scripts/fetch_and_save_results.js", meet, rc_date, str(rc_no)]
+            cmd = [
+                "node",
+                "scripts/fetch_and_save_results.js",
+                meet,
+                rc_date,
+                str(rc_no),
+            ]
 
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
@@ -351,7 +384,7 @@ class PromptEvaluatorV3:
                 "bonus": 0,
                 "total_score": 0,
                 "hit_rate": 0,
-                "status": "no_result"
+                "status": "no_result",
             }
 
         # 적중 개수
@@ -371,7 +404,7 @@ class PromptEvaluatorV3:
             "bonus": bonus,
             "total_score": total_score,
             "hit_rate": correct_count / 3 * 100,
-            "status": "evaluated"
+            "status": "evaluated",
         }
 
     def process_single_race(self, race_info: dict, race_data: dict) -> dict | None:
@@ -386,7 +419,7 @@ class PromptEvaluatorV3:
                 "race_id": race_id,
                 "prediction": None,
                 "error_type": error_type,
-                "reward": {"status": "error"}
+                "reward": {"status": "error"},
             }
 
         # 예측 결과 추출
@@ -407,7 +440,7 @@ class PromptEvaluatorV3:
             "reasoning": prediction.get("reasoning", ""),
             "execution_time": prediction.get("execution_time", 0),
             "prediction": prediction,
-            "error_type": error_type
+            "error_type": error_type,
         }
 
     def evaluate_all_parallel(self, test_limit: int = 10, max_workers: int = 3):
@@ -439,9 +472,7 @@ class PromptEvaluatorV3:
                 race_data = self.load_race_data(race_info)
                 if race_data:
                     future = executor.submit(
-                        self.process_single_race,
-                        race_info,
-                        race_data
+                        self.process_single_race, race_info, race_data
                     )
                     future_to_race[future] = race_info
 
@@ -472,12 +503,22 @@ class PromptEvaluatorV3:
                             actual = result.get("actual", [])
 
                             # 예측과 실제 결과를 문자열로 포맷
-                            pred_str = f"[{",".join(map(str, predicted))}]" if predicted else "[?]"
-                            actual_str = f"[{",".join(map(str, actual))}]" if actual else "[?]"
+                            pred_str = (
+                                f"[{",".join(map(str, predicted))}]"
+                                if predicted
+                                else "[?]"
+                            )
+                            actual_str = (
+                                f"[{",".join(map(str, actual))}]" if actual else "[?]"
+                            )
 
-                            print(f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초")
+                            print(
+                                f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초"
+                            )
                         else:
-                            print(f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 에러: {result.get("error_type", "unknown")} | 진행률: {completed_count/total_races*100:.1f}%")
+                            print(
+                                f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 에러: {result.get("error_type", "unknown")} | 진행률: {completed_count/total_races*100:.1f}%"
+                            )
 
                 except Exception as e:
                     print(f"Error processing {race_info["race_id"]}: {e}")
@@ -490,16 +531,28 @@ class PromptEvaluatorV3:
             "total_races": total_races,
             "valid_predictions": len(valid_results),
             "successful_predictions": successful_predictions,
-            "success_rate": successful_predictions / len(valid_results) * 100 if valid_results else 0,
-            "average_correct_horses": total_correct_horses / len(valid_results) if valid_results else 0,
+            "success_rate": (
+                successful_predictions / len(valid_results) * 100
+                if valid_results
+                else 0
+            ),
+            "average_correct_horses": (
+                total_correct_horses / len(valid_results) if valid_results else 0
+            ),
             "total_correct_horses": total_correct_horses,
             "error_stats": dict(self.error_stats),
-            "avg_execution_time": sum(r["execution_time"] for r in valid_results) / len(valid_results) if valid_results else 0,
-            "detailed_results": results
+            "avg_execution_time": (
+                sum(r["execution_time"] for r in valid_results) / len(valid_results)
+                if valid_results
+                else 0
+            ),
+            "detailed_results": results,
         }
 
         # 결과 저장
-        output_file = self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
+        output_file = (
+            self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
+        )
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)
 
@@ -517,7 +570,9 @@ class PromptEvaluatorV3:
         print(f"유효 예측: {summary["valid_predictions"]}")
 
         if summary["valid_predictions"] > 0:
-            print(f"완전 적중: {summary["successful_predictions"]} ({summary["success_rate"]:.1f}%)")
+            print(
+                f"완전 적중: {summary["successful_predictions"]} ({summary["success_rate"]:.1f}%)"
+            )
             print(f"평균 적중 말 수: {summary["average_correct_horses"]:.2f}")
             print(f"평균 실행 시간: {summary["avg_execution_time"]:.1f}초")
 
@@ -530,8 +585,12 @@ class PromptEvaluatorV3:
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python evaluate_prompt_v3.py <prompt_version> <prompt_file> [test_limit] [max_workers]")
-        print("Example: python evaluate_prompt_v3.py v10.0 prompts/prediction-template-v10.0.md 30 3")
+        print(
+            "Usage: python evaluate_prompt_v3.py <prompt_version> <prompt_file> [test_limit] [max_workers]"
+        )
+        print(
+            "Example: python evaluate_prompt_v3.py v10.0 prompts/prediction-template-v10.0.md 30 3"
+        )
         sys.exit(1)
 
     prompt_version = sys.argv[1]
@@ -541,7 +600,9 @@ def main():
 
     # 평가 실행
     evaluator = PromptEvaluatorV3(prompt_version, prompt_file)
-    _results = evaluator.evaluate_all_parallel(test_limit=test_limit, max_workers=max_workers)
+    _results = evaluator.evaluate_all_parallel(
+        test_limit=test_limit, max_workers=max_workers
+    )
 
 
 if __name__ == "__main__":

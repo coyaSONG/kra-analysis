@@ -27,7 +27,7 @@ def setup_logger(name: str, level: int = logging.INFO) -> logging.Logger:
         # 포맷터
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
         console_handler.setFormatter(formatter)
 
@@ -164,7 +164,7 @@ def parse_version_string(version: str) -> dict[str, str]:
         "base": parts[0] if parts else "",
         "date": parts[1] if len(parts) > 1 else "",
         "time": parts[2] if len(parts) > 2 else "",
-        "full": version
+        "full": version,
     }
 
     # 버전 번호 추출 (예: v2.1 -> 2.1)
@@ -200,14 +200,12 @@ def increment_version(version: str) -> str:
 
 
 # 성능 계산
-def calculate_success_metrics(evaluation_results: list[dict[str, Any]]) -> dict[str, float]:
+def calculate_success_metrics(
+    evaluation_results: list[dict[str, Any]],
+) -> dict[str, float]:
     """평가 결과에서 성능 지표 계산"""
     if not evaluation_results:
-        return {
-            "success_rate": 0.0,
-            "avg_correct": 0.0,
-            "total_races": 0
-        }
+        return {"success_rate": 0.0, "avg_correct": 0.0, "total_races": 0}
 
     total_races = 0
     successful_races = 0
@@ -224,19 +222,18 @@ def calculate_success_metrics(evaluation_results: list[dict[str, Any]]) -> dict[
                 successful_races += 1
 
     return {
-        "success_rate": (successful_races / total_races * 100) if total_races > 0 else 0,
+        "success_rate": (
+            (successful_races / total_races * 100) if total_races > 0 else 0
+        ),
         "avg_correct": total_correct / total_races if total_races > 0 else 0,
-        "total_races": total_races
+        "total_races": total_races,
     }
 
 
 # 데이터 필터링
 def filter_valid_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """유효한 출주마만 필터링 (win_odds > 0)"""
-    return [
-        entry for entry in entries
-        if entry.get("win_odds", 0) > 0
-    ]
+    return [entry for entry in entries if entry.get("win_odds", 0) > 0]
 
 
 def get_odds_rankings(entries: list[dict[str, Any]]) -> dict[int, int]:
@@ -330,6 +327,7 @@ def get_timestamp() -> str:
 # 에러 처리
 class V5SystemError(Exception):
     """v5 시스템 전용 예외"""
+
     pass
 
 
@@ -343,7 +341,9 @@ def safe_execute(func, *args, default=None, **kwargs):
 
 
 # 데이터 변환
-def flatten_dict(d: dict[str, Any], parent_key: str = "", sep: str = ".") -> dict[str, Any]:
+def flatten_dict(
+    d: dict[str, Any], parent_key: str = "", sep: str = "."
+) -> dict[str, Any]:
     """중첩된 딕셔너리를 평탄화"""
     items = []
 

@@ -13,6 +13,7 @@ from typing import Any
 @dataclass
 class PromptSection:
     """프롬프트의 개별 섹션을 표현하는 클래스"""
+
     tag: str  # "context", "role", "task" 등
     content: str  # 섹션 내용
     attributes: dict[str, Any] = field(default_factory=dict)  # 추가 속성
@@ -25,6 +26,7 @@ class PromptSection:
 @dataclass
 class PromptStructure:
     """파싱된 프롬프트 전체 구조를 표현하는 클래스"""
+
     title: str = ""  # 프롬프트 제목
     version: str = ""  # 버전 정보
     sections: dict[str, PromptSection] = field(default_factory=dict)  # 태그별 섹션
@@ -65,10 +67,7 @@ class PromptStructure:
             lines.append("")
 
         # 섹션들을 순서대로 정렬
-        sorted_sections = sorted(
-            self.sections.values(),
-            key=lambda s: s.order
-        )
+        sorted_sections = sorted(self.sections.values(), key=lambda s: s.order)
 
         # 각 섹션 추가
         for section in sorted_sections:
@@ -90,7 +89,7 @@ class PromptParser:
         "analysis_steps",
         "output_format",
         "examples",
-        "important_notes"
+        "important_notes",
     ]
 
     def __init__(self):
@@ -165,7 +164,7 @@ class PromptParser:
             metadata["weights"] = {
                 "odds": int(weight_match.group(1)) / 100,
                 "jockey": int(weight_match.group(2)) / 100,
-                "horse": int(weight_match.group(3)) / 100
+                "horse": int(weight_match.group(3)) / 100,
             }
 
         return metadata
@@ -198,9 +197,7 @@ class RequirementsEditor:
             requirements.insert(position, requirement)
 
         # 다시 번호를 매겨서 저장
-        new_content = "\n".join(
-            f"{i+1}. {req}" for i, req in enumerate(requirements)
-        )
+        new_content = "\n".join(f"{i+1}. {req}" for i, req in enumerate(requirements))
         self.structure.update_section("requirements", new_content)
 
     def remove_requirement(self, index: int) -> bool:
@@ -251,9 +248,7 @@ class AnalysisStepsEditor:
         steps.insert(position, step)
 
         # 다시 번호를 매겨서 저장
-        new_content = "\n".join(
-            f"{i+1}. {step}" for i, step in enumerate(steps)
-        )
+        new_content = "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
         self.structure.update_section("analysis_steps", new_content)
 
     def modify_step(self, index: int, new_step: str) -> bool:
@@ -261,9 +256,7 @@ class AnalysisStepsEditor:
         steps = self.get_steps()
         if 0 <= index < len(steps):
             steps[index] = new_step
-            new_content = "\n".join(
-                f"{i+1}. {step}" for i, step in enumerate(steps)
-            )
+            new_content = "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
             self.structure.update_section("analysis_steps", new_content)
             return True
         return False

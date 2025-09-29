@@ -73,7 +73,9 @@ def collect_race_data(meet: str, rc_date: str, rc_no: int) -> dict[str, Any]:
         return None
 
 
-def collect_all_races_for_day(meet: str, rc_date: str, max_races: int = 15) -> list[dict[str, Any]]:
+def collect_all_races_for_day(
+    meet: str, rc_date: str, max_races: int = 15
+) -> list[dict[str, Any]]:
     """
     특정 날짜의 모든 경주 수집
 
@@ -112,13 +114,15 @@ def collect_all_races_for_day(meet: str, rc_date: str, max_races: int = 15) -> l
             # 스마트 전처리 적용
             result = smart_process_race_file(raw_filename, "data/processed/pre-race")
 
-            races.append({
-                "race_no": rc_no,
-                "horses": len(items),
-                "status": result.get("status", "Unknown"),
-                "raw_file": raw_filename,
-                "processed_file": result.get("output", "")
-            })
+            races.append(
+                {
+                    "race_no": rc_no,
+                    "horses": len(items),
+                    "status": result.get("status", "Unknown"),
+                    "raw_file": raw_filename,
+                    "processed_file": result.get("output", ""),
+                }
+            )
 
         else:
             print("❌ 데이터 없음 (경주 종료)")
@@ -152,11 +156,7 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
             for meet in meets:
                 races = collect_all_races_for_day(meet, date_str)
                 if races:
-                    all_results.append({
-                        "date": date_str,
-                        "meet": meet,
-                        "races": races
-                    })
+                    all_results.append({"date": date_str, "meet": meet, "races": races})
 
         current_date += timedelta(days=1)
 
@@ -179,8 +179,10 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
         total_waiting += waiting
 
         meet_names = {"1": "서울", "2": "제주", "3": "부산"}
-        print(f"{result['date']} {meet_names[result['meet']]}: "
-              f"{date_races}개 경주 (완료: {completed}, 대기: {waiting})")
+        print(
+            f"{result['date']} {meet_names[result['meet']]}: "
+            f"{date_races}개 경주 (완료: {completed}, 대기: {waiting})"
+        )
 
     print(f"\n총계: {total_races}개 경주")
     print(f"  - 완료 (전처리): {total_completed}개")
@@ -189,14 +191,19 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
     # 요약 파일 저장
     summary_path = "data/collection_summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "collection_date": datetime.now().isoformat(),
-            "days_collected": days_back,
-            "total_races": total_races,
-            "completed": total_completed,
-            "waiting": total_waiting,
-            "details": all_results
-        }, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {
+                "collection_date": datetime.now().isoformat(),
+                "days_collected": days_back,
+                "total_races": total_races,
+                "completed": total_completed,
+                "waiting": total_waiting,
+                "details": all_results,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     print(f"\n📄 수집 요약: {summary_path}")
 

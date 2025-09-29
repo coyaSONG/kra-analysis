@@ -20,14 +20,11 @@ load_dotenv()
 API_KEY = os.getenv("KRA_SERVICE_KEY", "your_api_key_here")
 BASE_URL = "https://apis.data.go.kr/B551015/API299/entryRacingResult"
 
+
 def fetch_race_result(meet: str, rc_date: str, rc_no: int) -> dict | None:
     """API299를 통해 경주 결과 가져오기"""
     # meet 코드 매핑
-    meet_codes = {
-        "서울": "1",
-        "제주": "2",
-        "부산경남": "3"
-    }
+    meet_codes = {"서울": "1", "제주": "2", "부산경남": "3"}
 
     meet_code = meet_codes.get(meet, "1")
 
@@ -37,7 +34,7 @@ def fetch_race_result(meet: str, rc_date: str, rc_no: int) -> dict | None:
         "meet": meet_code,
         "rcDate": rc_date,
         "rcNo": str(rc_no),
-        "_type": "json"
+        "_type": "json",
     }
 
     try:
@@ -57,6 +54,7 @@ def fetch_race_result(meet: str, rc_date: str, rc_no: int) -> dict | None:
     except Exception as e:
         print(f"결과 가져오기 실패 ({meet} {rc_date} {rc_no}경주): {e}")
         return None
+
 
 def extract_top3(result_data: dict) -> list[int]:
     """결과 데이터에서 1-3위 말 번호 추출"""
@@ -81,6 +79,7 @@ def extract_top3(result_data: dict) -> list[int]:
         print(f"결과 추출 오류: {e}")
         return []
 
+
 def save_result_cache(result_data: dict, cache_dir: Path = Path("data/cache/results")):
     """결과를 캐시에 저장"""
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -102,7 +101,10 @@ def save_result_cache(result_data: dict, cache_dir: Path = Path("data/cache/resu
 
     return None
 
-def load_result_cache(meet: str, rc_date: str, rc_no: int, cache_dir: Path = Path("data/cache/results")) -> dict | None:
+
+def load_result_cache(
+    meet: str, rc_date: str, rc_no: int, cache_dir: Path = Path("data/cache/results")
+) -> dict | None:
     """캐시에서 결과 로드"""
     meet_codes = {"서울": "1", "제주": "2", "부산경남": "3"}
     meet_code = meet_codes.get(meet, "1")
@@ -119,6 +121,7 @@ def load_result_cache(meet: str, rc_date: str, rc_no: int, cache_dir: Path = Pat
 
     return None
 
+
 def get_race_result_with_cache(meet: str, rc_date: str, rc_no: int) -> list[int] | None:
     """캐시를 활용하여 경주 결과의 1-3위 가져오기"""
     # 캐시 확인
@@ -134,6 +137,7 @@ def get_race_result_with_cache(meet: str, rc_date: str, rc_no: int) -> list[int]
         return extract_top3(result_data)
 
     return None
+
 
 if __name__ == "__main__":
     # 테스트
