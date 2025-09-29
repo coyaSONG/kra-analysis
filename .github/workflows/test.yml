@@ -91,7 +91,7 @@ jobs:
         ENVIRONMENT: test
         RATE_LIMIT_ENABLED: "false"
       run: |
-        uv run pytest -v -m integration --tb=short --timeout=60
+        uv run pytest -v -m integration --tb=short --timeout=60 -o addopts=""
     
     - name: Run unit tests with coverage (80% fail-under via .coveragerc)
       working-directory: ./apps/api
