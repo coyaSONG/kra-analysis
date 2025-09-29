@@ -159,7 +159,7 @@ def create_race_summary(prerace_dir: str = "data/processed/pre-race"):
         date_val = str(race["date"]) if race["date"] else ""
         date_str = date_val[:4] + "-" + date_val[4:6] + "-" + date_val[6:] if date_val else "N/A"
         odds_str = "있음" if race["has_odds"] else "없음"
-        print(f"{date_str}  {race["meet"]:<4}  {race["race_no"]:>2}  {race["distance"]:>4}m  {race["horses"]:>4}  {odds_str}")
+        print(f"{date_str}  {race['meet']:<4}  {race['race_no']:>2}  {race['distance']:>4}m  {race['horses']:>4}  {odds_str}")
 
     # 요약 파일 저장
     with open(os.path.join(prerace_dir, "_summary.json"), "w", encoding="utf-8") as f:

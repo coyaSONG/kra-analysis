@@ -161,9 +161,9 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
         current_date += timedelta(days=1)
 
     # 수집 결과 요약
-    print(f"\n{"="*60}")
+    print(f"\n{'='*60}")
     print("📊 전체 수집 결과")
-    print(f"{"="*60}")
+    print(f"{'='*60}")
 
     total_races = 0
     total_completed = 0
@@ -179,7 +179,7 @@ def collect_recent_races(days_back: int = 7, meets: list[str] = None):
         total_waiting += waiting
 
         meet_names = {"1": "서울", "2": "제주", "3": "부산"}
-        print(f"{result["date"]} {meet_names[result["meet"]]}: "
+        print(f"{result['date']} {meet_names[result['meet']]}: "
               f"{date_races}개 경주 (완료: {completed}, 대기: {waiting})")
 
     print(f"\n총계: {total_races}개 경주")
