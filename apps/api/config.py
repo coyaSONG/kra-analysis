@@ -32,10 +32,10 @@ class Settings(BaseSettings):
     database_max_overflow: int = 40
 
     # Supabase
-    supabase_url: str = Field(default="your_supabase_url", env="SUPABASE_URL")
-    supabase_key: str = Field(default="your_supabase_anon_key", env="SUPABASE_ANON_KEY")
+    supabase_url: str = Field(default="your_supabase_url")
+    supabase_key: str = Field(default="your_supabase_anon_key", alias="SUPABASE_ANON_KEY")
     supabase_service_role_key: str | None = Field(
-        default=None, env="SUPABASE_SERVICE_ROLE_KEY"
+        default=None, alias="SUPABASE_SERVICE_ROLE_KEY"
     )
 
     # Redis
@@ -123,21 +123,12 @@ class Settings(BaseSettings):
             # Development/test mode - add a default test key
             self.valid_api_keys = ["test-api-key-123456789"]
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        extra = "ignore"  # 추가 필드 무시
-
-        # 환경 변수 매핑
-        fields = {
-            "database_url": {"env": "DATABASE_URL"},
-            "redis_url": {"env": "REDIS_URL"},
-            "celery_broker_url": {"env": "CELERY_BROKER_URL"},
-            "celery_result_backend": {"env": "CELERY_RESULT_BACKEND"},
-            "kra_api_key": {"env": "KRA_API_KEY"},
-            "secret_key": {"env": "SECRET_KEY"},
-        }
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "extra": "ignore",  # 추가 필드 무시
+    }
 
 
 @lru_cache
@@ -155,11 +146,30 @@ if settings.environment == "production":
     # Ensure critical settings are configured
     if (
         not settings.secret_key
-        or settings.secret_key == "your-secret-key-here-change-in-production"
+        or settings.secret_key == "dev-secret-key-change-in-production"
     ):
         raise ValueError("SECRET_KEY must be set in production environment")
     if not settings.valid_api_keys:
         raise ValueError("VALID_API_KEYS must be set in production environment")
+
+    # Database validation
+    if settings.database_url.startswith("postgresql+asyncpg://kra_user:kra_password@localhost"):
+        raise ValueError(
+            "Production environment must use remote Supabase database, not localhost. "
+            "Configure DATABASE_URL in .env file."
+        )
+
+    # Supabase validation
+    if settings.supabase_url == "your_supabase_url":
+        raise ValueError(
+            "Production environment must configure Supabase URL. "
+            "Set SUPABASE_URL in .env file."
+        )
+    if settings.supabase_key == "your_supabase_anon_key":
+        raise ValueError(
+            "Production environment must configure Supabase API key. "
+            "Set SUPABASE_ANON_KEY in .env file."
+        )
 
 
 # Note: Directory creation has been moved to application startup
