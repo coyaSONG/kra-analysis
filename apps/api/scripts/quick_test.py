@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 async def main():
     try:
         # Test 1: Config loading
@@ -13,6 +14,7 @@ async def main():
         print("Test 1: Configuration Loading")
         print("=" * 60)
         from config import settings
+
         print("✅ Config loaded")
         print(f"   Database URL: {settings.database_url[:70]}...")
         print(f"   Supabase URL: {settings.supabase_url}")
@@ -24,14 +26,14 @@ async def main():
         print("=" * 60)
 
         import asyncpg
-        db_url = settings.database_url.replace("postgresql+asyncpg://", "postgresql://").split("?")[0]
+
+        db_url = settings.database_url.replace(
+            "postgresql+asyncpg://", "postgresql://"
+        ).split("?")[0]
         print(f"Connecting to: {db_url[:60]}...")
 
         conn = await asyncpg.connect(
-            db_url,
-            statement_cache_size=0,
-            server_settings={"jit": "off"},
-            timeout=10
+            db_url, statement_cache_size=0, server_settings={"jit": "off"}, timeout=10
         )
 
         version = await conn.fetchval("SELECT version()")
@@ -46,6 +48,7 @@ async def main():
         print("=" * 60)
 
         from infrastructure.supabase_client import get_supabase_client
+
         client = get_supabase_client()
 
         if client:
@@ -61,8 +64,10 @@ async def main():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(asyncio.run(main()))

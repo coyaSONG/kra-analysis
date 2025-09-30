@@ -273,9 +273,7 @@ async def main():
         elif success_count == len(migration_files):
             print("\n🎉 모든 마이그레이션이 성공적으로 적용되었습니다!")
         elif success_count > 0:
-            print(
-                "\n⚠️  일부 마이그레이션이 적용되었습니다. 위 메시지를 확인하세요."
-            )
+            print("\n⚠️  일부 마이그레이션이 적용되었습니다. 위 메시지를 확인하세요.")
         else:
             print("\n❌ 마이그레이션 적용 실패")
 

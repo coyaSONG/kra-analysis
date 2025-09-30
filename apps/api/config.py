@@ -33,7 +33,9 @@ class Settings(BaseSettings):
 
     # Supabase
     supabase_url: str = Field(default="your_supabase_url")
-    supabase_key: str = Field(default="your_supabase_anon_key", alias="SUPABASE_ANON_KEY")
+    supabase_key: str = Field(
+        default="your_supabase_anon_key", alias="SUPABASE_ANON_KEY"
+    )
     supabase_service_role_key: str | None = Field(
         default=None, alias="SUPABASE_SERVICE_ROLE_KEY"
     )
@@ -153,7 +155,9 @@ if settings.environment == "production":
         raise ValueError("VALID_API_KEYS must be set in production environment")
 
     # Database validation
-    if settings.database_url.startswith("postgresql+asyncpg://kra_user:kra_password@localhost"):
+    if settings.database_url.startswith(
+        "postgresql+asyncpg://kra_user:kra_password@localhost"
+    ):
         raise ValueError(
             "Production environment must use remote Supabase database, not localhost. "
             "Configure DATABASE_URL in .env file."
