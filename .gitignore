@@ -2,7 +2,12 @@
 .env
 .env.local
 .env.*.local
+.mcp.json
 data/
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude.json
 
 # Dependencies
 node_modules/
