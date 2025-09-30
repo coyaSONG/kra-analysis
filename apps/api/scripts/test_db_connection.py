@@ -78,7 +78,7 @@ async def test_asyncpg_connection():
         print("2. Supabase Dashboard에서 정확한 connection string 복사")
         return False
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         print("❌ 연결 시간 초과 (10초)")
         print("\n확인 사항:")
         print("1. 네트워크 연결 확인")

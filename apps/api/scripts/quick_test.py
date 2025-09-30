@@ -13,7 +13,7 @@ async def main():
         print("Test 1: Configuration Loading")
         print("=" * 60)
         from config import settings
-        print(f"✅ Config loaded")
+        print("✅ Config loaded")
         print(f"   Database URL: {settings.database_url[:70]}...")
         print(f"   Supabase URL: {settings.supabase_url}")
         print(f"   Anon Key configured: {len(settings.supabase_key) > 50}")
@@ -35,7 +35,7 @@ async def main():
         )
 
         version = await conn.fetchval("SELECT version()")
-        print(f"✅ Connected!")
+        print("✅ Connected!")
         print(f"   PostgreSQL: {version[:60]}...")
 
         await conn.close()

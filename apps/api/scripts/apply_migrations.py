@@ -251,7 +251,7 @@ async def main():
                 if success:
                     success_count += 1
             except Exception as e:
-                print(f"\n❌ 마이그레이션 적용 중 오류 발생")
+                print("\n❌ 마이그레이션 적용 중 오류 발생")
                 print(f"   파일: {migration_file.name}")
                 print(f"   오류: {e}")
                 break
