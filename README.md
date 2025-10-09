@@ -58,7 +58,7 @@ kra-analysis/
 - 🔄 **의존성 그래프**: 패키지 간 의존성 자동 추적 및 병렬 실행
 - 📊 **변경 감지**: 파일 변경 시에만 해당 패키지 빌드/테스트 실행
 
-참고: API 서버 실행 시 `./data`, `./logs`, `./prompts` 등 런타임 디렉터리는 애플리케이션 시작 시 자동 생성됩니다.
+참고: API 서버 실행 시 `./data`, `./logs`, `./prompts` 등 런타임 디렉터리는 애플리케이션 시작 시 자동 생성됩니다(경로 기준: `apps/api`).
 
 ## 🔐 환경 변수 준비
 
@@ -162,17 +162,17 @@ pnpm test --filter=...@apps/api
 # 캐시 관리
 pnpm build --force                    # 캐시 무효화 실행
 turbo prune @apps/api --docker        # Docker용 프루닝
-pnpm turbo run build --dry           # 실행 계획 미리보기
+pnpm turbo run build --dry-run        # 실행 계획 미리보기
 ```
 
 ### 3.1) 개발 시 유용한 명령어
 
 ```bash
 # 파일 변경 감지 모드 (권장)
-turbo watch dev
+pnpm turbo run dev --watch
 
 # 특정 앱만 워치 모드
-turbo watch dev --filter=@apps/collector
+pnpm turbo run dev --watch --filter=@apps/collector
 
 # 캐시 상태 확인
 turbo run build --summarize
@@ -198,6 +198,8 @@ pnpm --filter=@repo/scripts run collect:result 20250608 서울 1
 ```
 
 ### 5) 예측 실행
+
+주의: 프롬프트 파일은 저장소에 포함되어 있지 않습니다. 실행 전 `prompts/` 디렉터리를 만들고 필요한 프롬프트 파일(예: `base-prompt-v1.0.md`, `prediction-template-v10.3.md`)을 준비하세요.
 
 ```bash
 # 도움말 보기
@@ -233,8 +235,8 @@ pnpm --filter=@repo/scripts run improve:analyze
 
 ## 🛠 기술 스택
 
-- Python 3.11+ (FastAPI, AI 예측)
-- Node.js 18+ (데이터 수집, ESM)
+- Python 3.13+ (FastAPI, AI 예측)
+- Node.js 20+ (데이터 수집, ESM)
 - Claude API/CLI, KRA 공공 데이터 API
 
 ## 🏗️ 아키텍처
@@ -254,18 +256,17 @@ pnpm --filter=@repo/scripts run improve:analyze
 ## 📚 문서
 
 - KRA 공공 API 가이드: `apps/collector/KRA_PUBLIC_API_GUIDE.md`
-- 통합 문서 인덱스: `docs/README.md`
-  - 1) 시스템 개요/아키텍처: `docs/01-overview-architecture.md`
-  - 2) API v2 가이드: `docs/02-api-v2-guide.md`
-  - 3) 데이터 모델/구조: `docs/03-data-models.md`
-  - 4) 프롬프트/평가: `docs/04-prompt-and-evaluation.md`
-  - 5) 로드맵/개발 표준: `docs/05-roadmap-and-standards.md`
+- 시스템 개요: `docs/project-overview.md`
+- 통합 API v2 설계: `docs/unified-collection-api-design.md`
+- 데이터 구조(경주 전): `docs/data-structure.md`
+- 보강 데이터 구조: `docs/enriched-data-structure.md`
+- 프롬프트/개선 가이드: `docs/recursive-improvement-guide.md`
 
 ### API v2 엔드포인트 예시
 
 ```bash
 # 수집 작업 트리거(예: 특정 날짜/경마장)
-POST http://localhost:8000/api/v2/collection/collect
+POST http://localhost:8000/api/v2/collection
 
 # 작업 상태 조회
 GET  http://localhost:8000/api/v2/jobs/{job_id}
@@ -285,7 +286,7 @@ GET  http://localhost:8000/api/v2/jobs/{job_id}
 - 시크릿 스캔: 루트 `.gitleaks.toml` 구성 + Gitleaks 액션으로 PR 차단
 - 환경 변수 요약
   - API: `SECRET_KEY`, `DATABASE_URL`, `REDIS_URL`, `PORT(기본 8000)`, `VALID_API_KEYS`, `KRA_API_KEY`
-  - Collector: `PORT(기본 3001)`, `KRA_SERVICE_KEY` 등
+  - Collector: `PORT(기본 3001)`, `KRA_API_KEY` (또는 `KRA_SERVICE_KEY` 지원) 등
 - 레이트리밋: API 기본 100req/분(`RateLimitMiddleware`), 필요 시 env로 비활성화/조정 가능
 
 ## 🔑 핵심 발견사항
