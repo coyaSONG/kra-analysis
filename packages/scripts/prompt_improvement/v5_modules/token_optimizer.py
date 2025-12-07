@@ -302,7 +302,7 @@ class TokenOptimizationEngine:
                             modified = True
 
             if modified:
-                structure.update_section(section.name, content)
+                structure.update_section(section.tag, content)
                 changes.append(
                     Change(
                         change_type="modify",

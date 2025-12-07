@@ -199,7 +199,7 @@ pnpm --filter=@repo/scripts run collect:result 20250608 서울 1
 
 ### 5) 예측 실행
 
-주의: 프롬프트 파일은 저장소에 포함되어 있지 않습니다. 실행 전 `prompts/` 디렉터리를 만들고 필요한 프롬프트 파일(예: `base-prompt-v1.0.md`, `prediction-template-v10.3.md`)을 준비하세요.
+주의: 프롬프트 파일은 저장소에 포함되어 있지 않습니다. 실행 전 `prompts/` 디렉터리를 만들고 필요한 프롬프트 파일을 준비하세요.
 
 ```bash
 # 도움말 보기

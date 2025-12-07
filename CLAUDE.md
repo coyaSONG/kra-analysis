@@ -8,7 +8,6 @@ Claude Code 작업 시 필수 지침입니다.
 ## 핵심 원칙
 
 ### 1. 프롬프트 작성
-- **필수**: `docs/prompt-engineering-guide.md` 준수
 - XML 태그 구조화, Chain of Thought, Few-shot 예시 사용
 
 ### 2. 데이터 처리
@@ -67,30 +66,23 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 ```
 
 ## 현재 상태
-- 기본 프롬프트: base-prompt-v1.0.md (50% 적중률 - 2경주 테스트)
-- 목표: 70% 이상
+- 목표: 70% 이상 적중률
 - v5 재귀 개선 시스템 구현 완료 (2025-06-22)
   - 프롬프트 파싱 시스템 (XML 태그 기반)
   - 인사이트 분석 엔진 (다차원 분석)
   - 동적 재구성 시스템 (실제 프롬프트 개선)
   - 예시 관리 시스템 (성과 추적 및 최적화)
-  - **고급 기법 통합 (NEW):**
+  - **고급 기법 통합:**
     - Extended Thinking Mode (ultrathink) - 저성과 시 적용
     - 강화된 자가 검증 - 다단계 검증 프로세스
     - 토큰 최적화 - 효율적인 프롬프트 압축
-    - 프롬프트 엔지니어링 가이드 기반 개선
 
 ## 참조 문서
 - 프로젝트 상세: `docs/project-overview.md`
-- API 가이드: `KRA_PUBLIC_API_GUIDE.md`
+- API 가이드: `apps/collector/KRA_PUBLIC_API_GUIDE.md`
 - Git 규칙: `docs/git-commit-convention.md`
 - 재귀 개선: `docs/recursive-improvement-guide.md`
-- 성능 개선 분석: `docs/performance-improvement-analysis.md`
-- v5 설계 문서:
-  - `docs/prompt-parsing-system-design.md`
-  - `docs/insight-analysis-engine-design.md`
-  - `docs/dynamic-prompt-reconstruction-design.md`
-- v5 시스템: `scripts/prompt_improvement/recursive_prompt_improvement_v5.py`
+- v5 시스템: `packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py`
 
 ## 중요 규칙
 - Python 실행: 항상 `python3` 사용

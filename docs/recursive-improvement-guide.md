@@ -65,17 +65,17 @@
 
 ```bash
 # v3 평가 시스템 (최신)
-python3 scripts/evaluation/evaluate_prompt_v3.py v1.0 prompts/base-prompt-v1.0.md 10 3
+python3 packages/scripts/evaluation/evaluate_prompt_v3.py v1.0 prompts/your-prompt.md 10 3
 
 # base-prompt용 전용 평가
-python3 scripts/evaluation/evaluate_prompt_v3_base.py v1.0 prompts/base-prompt-v1.0.md 10 3
+python3 packages/scripts/evaluation/evaluate_prompt_v3_base.py v1.0 prompts/your-prompt.md 10 3
 ```
 
 ### 2. v5 재귀 개선 실행
 
 ```bash
 # v5 재귀 개선 시스템 (최신)
-python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py prompts/base-prompt-v1.0.md all -i 5 -p 3 -r 20
+python3 packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py prompts/your-prompt.md all -i 5 -p 3 -r 20
 
 # 파라미터 설명:
 # all: 모든 날짜 데이터 사용
@@ -88,7 +88,7 @@ python3 scripts/prompt_improvement/recursive_prompt_improvement_v5.py prompts/ba
 
 ```bash
 # 개별 경주 결과 수집 (평가 전 필수)
-node scripts/race_collector/get_race_result.js 20250622 서울 1
+node packages/scripts/race_collector/get_race_result.js 20250622 서울 1
 ```
 
 ## 평가 메트릭
@@ -178,7 +178,7 @@ data/recursive_improvement/
 
 ### 초기 실행
 ```bash
-$ python scripts/recursive_prompt_improvement.py prompts/prediction-template-v2.0.md 10 5
+$ python packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py prompts/your-prompt.md all -i 5 -p 3
 
 재귀적 프롬프트 개선 시작
 최대 반복: 5회
@@ -232,4 +232,4 @@ $ python scripts/recursive_prompt_improvement.py prompts/prediction-template-v2.
 
 ---
 
-*최종 업데이트: 2025년 6월 7일*
+*최종 업데이트: 2025년 6월 22일*

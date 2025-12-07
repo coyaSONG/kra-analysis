@@ -67,7 +67,7 @@ async function collectAndPreprocessDay(meet, rcDate) {
             try {
                 // Python 스크립트로 개별 파일 전처리
                 const { stdout } = await execPromise(
-                    `python3 scripts/race_collector/smart_preprocess_races.py "${tempFilePath}"`
+                    `python3 race_collector/smart_preprocess_races.py "${tempFilePath}"`
                 );
                 
                 // 임시 파일 삭제

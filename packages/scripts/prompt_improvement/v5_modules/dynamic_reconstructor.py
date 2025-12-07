@@ -460,15 +460,23 @@ class DynamicReconstructor:
         """변경사항 검증"""
         issues = []
 
-        # 필수 섹션 확인
-        required_sections = [
-            "context",
-            "role",
-            "task",
-            "requirements",
-            "analysis_steps",
-            "output_format",
-        ]
+        # 필수 섹션 확인 (실제 프롬프트에서 사용하는 태그 포함)
+        # 두 가지 태그 세트 중 하나라도 있으면 유효
+        required_sections_set1 = ["context", "role", "task", "requirements", "analysis_steps"]
+        required_sections_set2 = ["system_role", "data_spec", "analysis_protocol", "reasoning_rules"]
+
+        # Set 1 또는 Set 2 중 하나라도 충족하면 OK
+        set1_present = any(structure.get_section(s) for s in required_sections_set1)
+        set2_present = any(structure.get_section(s) for s in required_sections_set2)
+
+        # output_format은 공통 필수
+        required_sections = ["output_format"]
+
+        # 어느 세트도 없으면 경고
+        if not set1_present and not set2_present:
+            for section in required_sections_set2:  # 새 형식 기준 경고
+                if not structure.get_section(section):
+                    issues.append(f"필수 섹션 누락: {section}")
         for section in required_sections:
             if not structure.get_section(section):
                 issues.append(f"필수 섹션 누락: {section}")

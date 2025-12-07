@@ -80,8 +80,9 @@ class PromptStructure:
 class PromptParser:
     """프롬프트 파싱 엔진"""
 
-    # 인식 가능한 XML 태그들
+    # 인식 가능한 XML 태그들 (실제 프롬프트에서 사용되는 태그 포함)
     RECOGNIZED_TAGS = [
+        # 기존 태그
         "context",
         "role",
         "task",
@@ -90,6 +91,14 @@ class PromptParser:
         "output_format",
         "examples",
         "important_notes",
+        # 실제 프롬프트에서 사용되는 태그
+        "system_role",
+        "data_spec",
+        "analysis_protocol",
+        "reasoning_rules",
+        "scoring_caps",
+        "few_shot_example",
+        "user_input_placeholder",
     ]
 
     def __init__(self):
