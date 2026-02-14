@@ -254,23 +254,31 @@ def get_odds_rankings(entries: list[dict[str, Any]]) -> dict[int, int]:
 
 # 파일 경로 관리
 def get_project_root() -> Path:
-    """프로젝트 루트 경로 반환"""
+    """프로젝트 루트 경로 반환 (kra-analysis)"""
     # 현재 파일 기준으로 상위 디렉토리 탐색
     current = Path(__file__).resolve()
 
     # scripts/prompt_improvement/v5_modules/utils.py
-    # -> 3단계 상위가 scripts, 4단계 상위가 프로젝트 루트
-    return current.parent.parent.parent.parent
+    # -> 3단계 상위가 scripts, 4단계 상위가 packages, 5단계가 프로젝트 루트
+    return current.parent.parent.parent.parent.parent
+
+
+def get_scripts_dir() -> Path:
+    """스크립트 디렉토리 경로 반환 (packages/scripts)"""
+    current = Path(__file__).resolve()
+    # v5_modules -> prompt_improvement -> scripts
+    return current.parent.parent.parent
 
 
 def get_data_dir() -> Path:
-    """데이터 디렉토리 경로 반환"""
-    return get_project_root() / "data"
+    """데이터 디렉토리 경로 반환 (packages/scripts/data)"""
+    # evaluate_prompt_v3.py와 동일한 경로 사용
+    return get_scripts_dir() / "data"
 
 
 def get_prompts_dir() -> Path:
-    """프롬프트 디렉토리 경로 반환"""
-    return get_project_root() / "prompts"
+    """프롬프트 디렉토리 경로 반환 (packages/prompts)"""
+    return get_project_root() / "packages" / "prompts"
 
 
 def ensure_directory(directory: str | Path) -> Path:

@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import settings
+from infrastructure.background_tasks import shutdown_all as shutdown_background_tasks
 from infrastructure.database import (
     check_database_connection,
     close_db,
@@ -29,14 +30,6 @@ from infrastructure.redis_client import (
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
 from routers import collection_v2, jobs_v2
-
-# Celery는 선택적으로 로드
-try:
-    from infrastructure.celery_app import celery_app
-
-    CELERY_AVAILABLE = True
-except Exception:
-    CELERY_AVAILABLE = False
 
 # 구조화된 로깅 설정
 structlog.configure(
@@ -98,23 +91,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Redis initialization failed, running without Redis: {e}")
 
-    # Celery 워커 상태 확인 (선택적)
-    if CELERY_AVAILABLE:
-        try:
-            celery_status = celery_app.control.inspect().active()
-            if celery_status:
-                logger.info(f"Celery workers active: {len(celery_status)} nodes")
-            else:
-                logger.warning("No active Celery workers detected")
-        except Exception as e:
-            logger.warning(f"Could not check Celery status: {e}")
-    else:
-        logger.info("Running without Celery workers")
+    logger.info("Background task runner ready (in-process asyncio)")
 
     yield
 
     # 종료
     logger.info("Shutting down KRA Unified API Server")
+    await shutdown_background_tasks()
     await close_db()
     await close_redis()
 
@@ -213,7 +196,7 @@ async def detailed_health_check(redis=Depends(get_redis), db=Depends(get_db)):
         "status": "healthy" if (db_ok and redis_ok) else status,
         "database": "healthy" if db_ok else "unhealthy",
         "redis": "healthy" if redis_ok else "unhealthy",
-        "celery": "unknown",  # 테스트 환경에서 워커가 없을 수 있음
+        "background_tasks": "healthy",
         "timestamp": time.time(),
         "version": settings.version,
     }

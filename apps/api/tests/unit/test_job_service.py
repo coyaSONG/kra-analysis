@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -38,12 +39,8 @@ async def test_start_job_queues_task(monkeypatch, db_session):
     await db_session.commit()
     await db_session.refresh(job)
 
-    class StubResult:
-        def __init__(self):
-            self.id = "stub-task-id"
-
     async def fake_dispatch(_self, _job):
-        return StubResult()
+        return "stub-task-id"
 
     monkeypatch.setattr(JobService, "_dispatch_task", fake_dispatch)
 
@@ -61,7 +58,7 @@ async def test_start_job_queues_task(monkeypatch, db_session):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_job_status_with_celery(monkeypatch, db_session):
+async def test_get_job_status_with_task(monkeypatch, db_session):
     service = JobService()
     job = Job(
         type=JobType.COLLECTION,
@@ -75,38 +72,26 @@ async def test_get_job_status_with_celery(monkeypatch, db_session):
     await db_session.commit()
     await db_session.refresh(job)
 
-    class DummyAsyncResult:
-        def __init__(self, *_args, **_kwargs):
-            self._state = "SUCCESS"
-            self._info = {"ok": True}
+    fake_status = {
+        "task_id": "task-123",
+        "state": "completed",
+        "result": {"ok": True},
+        "error": None,
+        "alive": False,
+    }
 
-        @property
-        def state(self):
-            return self._state
-
-        @property
-        def info(self):
-            return self._info
-
-        def ready(self):
-            return True
-
-        def successful(self):
-            return True
-
-    # Patch where AsyncResult is referenced in the service module
-    import services.job_service as js
-
-    monkeypatch.setattr(js, "AsyncResult", DummyAsyncResult)
-
-    status = await service.get_job_status(job.job_id, db_session)
-    assert status["celery_status"]["state"] == "SUCCESS"
-    assert status["celery_status"]["successful"] is True
+    with patch(
+        "services.job_service.get_task_status",
+        new_callable=AsyncMock,
+        return_value=fake_status,
+    ):
+        status = await service.get_job_status(job.job_id, db_session)
+        assert status["task_status"]["state"] == "completed"
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cancel_job_revokes_task(monkeypatch, db_session):
+async def test_cancel_job_cancels_task(monkeypatch, db_session):
     service = JobService()
     job = Job(
         type=JobType.COLLECTION,
@@ -119,18 +104,14 @@ async def test_cancel_job_revokes_task(monkeypatch, db_session):
     await db_session.commit()
     await db_session.refresh(job)
 
-    calls = {"revoked": []}
-
-    from infrastructure import celery_app as cap
-
-    def fake_revoke(task_id, terminate=False):
-        calls["revoked"].append((task_id, terminate))
-
-    monkeypatch.setattr(cap.celery_app.control, "revoke", fake_revoke)
-
-    ok = await service.cancel_job(job.job_id, db_session)
-    assert ok is True
-    assert calls["revoked"][0] == ("to-cancel", True)
+    with patch(
+        "services.job_service.cancel_task",
+        new_callable=AsyncMock,
+        return_value=True,
+    ) as mock_cancel:
+        ok = await service.cancel_job(job.job_id, db_session)
+        assert ok is True
+        mock_cancel.assert_awaited_once_with("to-cancel")
 
 
 @pytest.mark.unit
@@ -165,131 +146,30 @@ async def test_cleanup_old_jobs(db_session):
 
 
 @pytest.mark.unit
-def test_get_celery_components_prefers_injected(monkeypatch):
-    import services.job_service as js
-
-    dummy_app = object()
-    dummy_async_result = object()
-
-    original_app = js.celery_app
-    original_async_result = js.AsyncResult
-
-    js.celery_app = dummy_app
-    js.AsyncResult = dummy_async_result
-
-    try:
-        app, async_result = JobService._get_celery_components()
-        assert app is dummy_app
-        assert async_result is dummy_async_result
-    finally:
-        js.celery_app = original_app
-        js.AsyncResult = original_async_result
-
-
-@pytest.mark.unit
-def test_get_celery_components_handles_missing(monkeypatch):
-    import services.job_service as js
-
-    original_app = js.celery_app
-    original_async_result = js.AsyncResult
-
-    js.celery_app = None
-    js.AsyncResult = None
-
-    def fake_import(name: str):
-        raise ImportError(f"missing {name}")
-
-    monkeypatch.setattr(js.importlib, "import_module", fake_import)
-
-    try:
-        app, async_result = JobService._get_celery_components()
-        assert app is None
-        assert async_result is None
-    finally:
-        js.celery_app = original_app
-        js.AsyncResult = original_async_result
-
-
-@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_dispatch_task_collect_race(monkeypatch):
     service = JobService()
 
-    class DummyTask:
-        def __init__(self):
-            self.calls: list[tuple[Any, ...]] = []
+    with patch(
+        "services.job_service.submit_task",
+        return_value="task-id",
+    ) as mock_submit:
+        job = SimpleNamespace(
+            type="collect_race",
+            parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
+            job_id="job-1",
+        )
 
-        def delay(self, *args: Any):
-            self.calls.append(args)
-            return SimpleNamespace(id="task-id")
+        result = await service._dispatch_task(job)
 
-    task = DummyTask()
-
-    tasks_module = SimpleNamespace(
-        collect_race_data_task=task,
-        preprocess_race_data_task=task,
-        enrich_race_data_task=task,
-        batch_collect_races_task=task,
-        full_pipeline_task=task,
-    )
-
-    monkeypatch.setattr(
-        JobService, "_get_collection_tasks_module", lambda _self: tasks_module
-    )
-    monkeypatch.setattr(
-        JobService, "_get_celery_components", lambda _self: (object(), object())
-    )
-
-    job = SimpleNamespace(
-        type="collect_race",
-        parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
-        job_id="job-1",
-    )
-
-    result = await service._dispatch_task(job)
-
-    assert task.calls[0] == ("20240719", 1, 3, "job-1")
-    assert result.id == "task-id"
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_dispatch_task_requires_celery(monkeypatch):
-    service = JobService()
-    job = SimpleNamespace(type="collect_race", parameters={}, job_id="job-1")
-
-    monkeypatch.setattr(JobService, "_get_collection_tasks_module", lambda _self: None)
-    monkeypatch.setattr(
-        JobService, "_get_celery_components", lambda _self: (None, None)
-    )
-
-    with pytest.raises(RuntimeError):
-        await service._dispatch_task(job)
+        assert result == "task-id"
+        assert mock_submit.called
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_dispatch_task_unknown_type(monkeypatch):
     service = JobService()
-
-    class DummyTask:
-        def delay(self, *args: Any):
-            return SimpleNamespace(id="task-id")
-
-    tasks_module = SimpleNamespace(
-        collect_race_data_task=DummyTask(),
-        preprocess_race_data_task=DummyTask(),
-        enrich_race_data_task=DummyTask(),
-        batch_collect_races_task=DummyTask(),
-        full_pipeline_task=DummyTask(),
-    )
-
-    monkeypatch.setattr(
-        JobService, "_get_collection_tasks_module", lambda _self: tasks_module
-    )
-    monkeypatch.setattr(
-        JobService, "_get_celery_components", lambda _self: (object(), object())
-    )
 
     job = SimpleNamespace(type="unknown", parameters={}, job_id="job-1")
 
@@ -308,8 +188,8 @@ async def test_get_job_status_missing_returns_none(db_session):
 def test_calculate_progress_full_pipeline_steps():
     service = JobService()
     job = SimpleNamespace(status="processing", type="full_pipeline")
-    celery_status = {
-        "info": {
+    task_status = {
+        "result": {
             "steps": {
                 "collect": "completed",
                 "enrich": "completed",
@@ -318,24 +198,7 @@ def test_calculate_progress_full_pipeline_steps():
         }
     }
 
-    assert service._calculate_progress(job, celery_status) == 10 + 2 * 30
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_get_collection_tasks_module_import_error(monkeypatch):
-    """Test _get_collection_tasks_module when import fails"""
-    service = JobService()
-
-    import importlib
-
-    def fake_import(name):
-        raise ImportError("Module not found")
-
-    monkeypatch.setattr(importlib, "import_module", fake_import)
-
-    result = service._get_collection_tasks_module()
-    assert result is None
+    assert service._calculate_progress(job, task_status) == 10 + 2 * 30
 
 
 @pytest.mark.unit
@@ -352,5 +215,3 @@ def test_job_service_methods_exist():
     assert hasattr(service, "start_job")
     assert hasattr(service, "_calculate_progress")
     assert hasattr(service, "_dispatch_task")
-    assert hasattr(service, "_get_celery_components")
-    assert hasattr(service, "_get_collection_tasks_module")

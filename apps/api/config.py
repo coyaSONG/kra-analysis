@@ -44,13 +44,6 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     cache_ttl: int = 3600  # 1 hour
 
-    # Celery
-    celery_broker_url: str = "redis://localhost:6379/1"
-    celery_result_backend: str = "redis://localhost:6379/2"
-    celery_task_default_queue: str = "kra_tasks"
-    celery_task_acks_late: bool = True
-    celery_worker_prefetch_multiplier: int = 1
-
     # KRA API
     kra_api_base_url: str = "http://apis.data.go.kr/B551015"
     kra_api_key: str | None = None  # 환경변수: KRA_API_KEY

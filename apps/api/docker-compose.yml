@@ -38,26 +38,6 @@ services:
     networks:
       - kra-network
 
-  # RabbitMQ (Celery 브로커)
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    container_name: kra-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-kra_rabbit}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-kra_rabbit_password}
-    ports:
-      - "5672:5672"
-      - "15672:15672"  # Management UI
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - kra-network
-
   # FastAPI 애플리케이션
   api:
     build:
@@ -67,8 +47,6 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
-      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
       - KRA_API_KEY=${KRA_API_KEY}
       - SECRET_KEY=${SECRET_KEY:-supersecretkey}
       - ENVIRONMENT=development
@@ -78,8 +56,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
     volumes:
       - ./logs:/app/logs
@@ -93,70 +69,6 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
-    restart: unless-stopped
-
-  # Celery 워커
-  celery-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kra-celery-worker
-    command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=4
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
-      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
-      - KRA_API_KEY=${KRA_API_KEY}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    volumes:
-      - ./logs:/app/logs
-    networks:
-      - kra-network
-    restart: unless-stopped
-
-  # Celery Beat (스케줄러)
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kra-celery-beat
-    command: celery -A infrastructure.celery_app beat --loglevel=info
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-kra_user}:${POSTGRES_PASSWORD:-kra_password}@postgres:5432/${POSTGRES_DB:-kra_analysis}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
-      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
-    depends_on:
-      - celery-worker
-    volumes:
-      - ./logs:/app/logs
-    networks:
-      - kra-network
-    restart: unless-stopped
-
-  # Flower (Celery 모니터링)
-  flower:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kra-flower
-    command: celery -A infrastructure.celery_app flower --port=5555
-    environment:
-      - CELERY_BROKER_URL=amqp://${RABBITMQ_USER:-kra_rabbit}:${RABBITMQ_PASSWORD:-kra_rabbit_password}@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
-    ports:
-      - "5555:5555"
-    depends_on:
-      - celery-worker
-    networks:
-      - kra-network
     restart: unless-stopped
 
   # pgAdmin (PostgreSQL 관리 도구 - 선택적)
@@ -178,7 +90,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  rabbitmq_data:
 
 networks:
   kra-network:

@@ -1,0 +1,23 @@
+name: CodeQL Analysis
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly Monday 9:00 UTC
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, python
+          queries: security-and-quality
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3

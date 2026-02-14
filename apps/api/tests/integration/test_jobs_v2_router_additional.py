@@ -1,8 +1,7 @@
-from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import services.job_service as job_service_module
 from models.database_models import Job, JobStatus, JobType
 
 
@@ -57,18 +56,17 @@ async def test_jobs_v2_cancel_endpoint_updates_status(authenticated_client, db_s
     await db_session.commit()
     await db_session.refresh(job)
 
-    original_celery_app = job_service_module.celery_app
-    job_service_module.celery_app = SimpleNamespace(
-        control=SimpleNamespace(revoke=lambda *_args, **_kwargs: None)
-    )
-
-    try:
+    with patch(
+        "services.job_service.cancel_task",
+        new_callable=AsyncMock,
+        return_value=True,
+    ):
         response = await authenticated_client.post(f"/api/v2/jobs/{job.job_id}/cancel")
         assert response.status_code == 200
         data = response.json()
         assert data["message"]
-    finally:
-        job_service_module.celery_app = original_celery_app
 
-    updated = await job_service_module.JobService().get_job(str(job.job_id), db_session)
+    from services.job_service import JobService
+
+    updated = await JobService().get_job(str(job.job_id), db_session)
     assert str(updated.status) in ("cancelled", JobStatus.CANCELLED.value)

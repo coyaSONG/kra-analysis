@@ -205,33 +205,3 @@ class MockRedisClient:
         """Return remaining TTL; mock as full window when not tracked"""
         # Not tracking real TTL; return a positive number to simulate active key
         return 60
-
-
-class MockCeleryTask:
-    """Mock Celery task for testing"""
-
-    def __init__(self, task_id: str = "test-task-id"):
-        self.id = task_id
-        self.status = "PENDING"
-        self.result = None
-        self.info = {}
-
-    def get(self, timeout: int | None = None):
-        """Mock get result"""
-        if self.status == "SUCCESS":
-            return self.result
-        elif self.status == "FAILURE":
-            raise Exception("Task failed")
-        return None
-
-    @property
-    def state(self):
-        """Get task state"""
-        return self.status
-
-
-def create_mock_celery_app():
-    """Create mock Celery app"""
-    mock_app = Mock()
-    mock_app.send_task = Mock(return_value=MockCeleryTask())
-    return mock_app

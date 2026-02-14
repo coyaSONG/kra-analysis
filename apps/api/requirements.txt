@@ -16,12 +16,6 @@ aiosqlite==0.20.0
 redis==5.0.1
 aioredis==2.0.1
 
-# Celery 및 메시지 큐
-celery==5.4.0
-flower==2.0.1
-amqp==5.2.0
-kombu==5.3.4
-
 # HTTP 클라이언트
 httpx==0.26.0
 aiofiles==23.2.1
@@ -50,7 +44,7 @@ pytz==2023.3
 pytest==7.4.4
 pytest-asyncio==0.23.3
 pytest-cov==4.1.0
-black==23.12.1
+ruff==0.8.0
 mypy==1.8.0
 pre-commit==3.6.0
 requests==2.31.0

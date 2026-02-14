@@ -62,10 +62,6 @@ restart:
 	$(MAKE) up
 
 # 모니터링 명령
-monitor-celery:
-	@echo "Flower UI: http://localhost:5555"
-	@echo "RabbitMQ UI: http://localhost:15672"
-
 monitor-db:
 	@echo "pgAdmin: http://localhost:5050"
 	@echo "Use the credentials configured in your environment variables or docker-compose file"

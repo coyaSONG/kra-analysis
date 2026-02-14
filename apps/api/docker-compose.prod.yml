@@ -21,21 +21,6 @@ services:
         delay: 5s
         max_attempts: 3
 
-  celery-worker:
-    environment:
-      - ENVIRONMENT=production
-      - LOG_LEVEL=INFO
-    command: celery -A infrastructure.celery_app worker --loglevel=info --concurrency=4
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '1'
-          memory: 1G
-
   # Nginx 리버스 프록시
   nginx:
     image: nginx:alpine

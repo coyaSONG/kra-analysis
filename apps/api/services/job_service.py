@@ -1,9 +1,9 @@
 """
 작업 관리 서비스
 비동기 작업 생성, 모니터링, 관리
+Uses in-process background task runner (infrastructure.background_tasks).
 """
 
-import importlib
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -11,67 +11,18 @@ import structlog
 from sqlalchemy import and_, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from infrastructure.background_tasks import (
+    cancel_task,
+    get_task_status,
+    submit_task,
+)
 from models.database_models import Job, JobLog
-
-# Optional globals for test-time injection
-AsyncResult = None  # type: ignore
-celery_app = None  # type: ignore
 
 logger = structlog.get_logger()
 
 
 class JobService:
     """작업 관리 서비스"""
-
-    @staticmethod
-    def _get_celery_components():
-        """
-        Celery 사용 컴포넌트를 지연 임포트합니다.
-        Celery 미설치/미구성 환경에서도 ImportError로 모듈 로드가 실패하지 않도록 가드합니다.
-
-        Returns:
-            tuple(celery_app | None, AsyncResult | None)
-        """
-        # 우선 모듈 전역으로 주입된 값 사용(테스트 호환)
-        injected_app = globals().get("celery_app")
-        injected_async_result = globals().get("AsyncResult")
-
-        app = None
-        ar = None
-
-        if injected_app is not None:
-            app = injected_app
-        else:
-            try:
-                infra = importlib.import_module("infrastructure.celery_app")
-                app = getattr(infra, "celery_app", None)
-            except Exception as e:
-                logger.debug("Celery app unavailable", error=str(e))
-                app = None
-
-        if injected_async_result is not None:
-            ar = injected_async_result
-        else:
-            try:
-                celery_result_mod = importlib.import_module("celery.result")
-                ar = getattr(celery_result_mod, "AsyncResult", None)
-            except Exception as e:
-                logger.debug("Celery AsyncResult unavailable", error=str(e))
-                ar = None
-
-        return app, ar
-
-    @staticmethod
-    def _get_collection_tasks_module():
-        """
-        Celery 태스크 모듈(tasks.collection_tasks)을 지연 임포트합니다.
-        Celery가 설치되지 않았거나 설정되지 않은 경우 None을 반환합니다.
-        """
-        try:
-            return importlib.import_module("tasks.collection_tasks")
-        except Exception as e:
-            logger.debug("collection_tasks module unavailable", error=str(e))
-            return None
 
     async def create_job(
         self, job_type: str, parameters: dict[str, Any], user_id: str, db: AsyncSession
@@ -121,7 +72,7 @@ class JobService:
             db: 데이터베이스 세션
 
         Returns:
-            Celery 태스크 ID
+            Background task ID
         """
         try:
             # 작업 조회
@@ -134,62 +85,82 @@ class JobService:
             if job.status != "pending":
                 raise ValueError(f"Job already started: {job.status}")
 
-            # 작업 유형에 따라 Celery 태스크 실행
-            task_result = await self._dispatch_task(job)
+            # 작업 유형에 따라 background task 실행
+            task_id = await self._dispatch_task(job)
 
             # 상태 업데이트
             job.status = "queued"
-            job.task_id = task_result.id
+            job.task_id = task_id
             job.started_at = datetime.utcnow()
 
             await db.commit()
 
             # 로그 추가
             await self.add_job_log(
-                job_id, "info", "Job started", {"task_id": task_result.id}, db
+                job_id, "info", "Job started", {"task_id": task_id}, db
             )
 
-            logger.info("Job started", job_id=job_id, task_id=task_result.id)
+            logger.info("Job started", job_id=job_id, task_id=task_id)
 
-            return task_result.id
+            return task_id
 
         except Exception as e:
             logger.error("Failed to start job", job_id=job_id, error=str(e))
             await db.rollback()
             raise
 
-    async def _dispatch_task(self, job: Job) -> AsyncResult:
-        """작업 유형에 따라 Celery 태스크 디스패치"""
+    async def _dispatch_task(self, job: Job) -> str:
+        """작업 유형에 따라 background task 디스패치. Returns task_id."""
+        from tasks.async_tasks import (
+            batch_collect,
+            collect_race_data,
+            enrich_race_data,
+            full_pipeline,
+            preprocess_race_data,
+        )
+
         params = job.parameters
 
-        celery_app, _ = self._get_celery_components()
-        tasks_mod = self._get_collection_tasks_module()
-        if not celery_app or not tasks_mod:
-            raise RuntimeError(
-                "Celery가 설치/구성되지 않아 작업을 큐에 넣을 수 없습니다. "
-                "환경 변수 및 브로커 설정을 확인하세요."
-            )
-
         if job.type == "collect_race":
-            return tasks_mod.collect_race_data_task.delay(
-                params["race_date"], params["meet"], params["race_no"], job.job_id
+            task_id = submit_task(
+                collect_race_data,
+                params["race_date"],
+                params["meet"],
+                params["race_no"],
+                job.job_id,
             )
         elif job.type == "preprocess_race":
-            return tasks_mod.preprocess_race_data_task.delay(
-                params["race_id"], job.job_id
+            task_id = submit_task(
+                preprocess_race_data,
+                params["race_id"],
+                job.job_id,
             )
         elif job.type == "enrich_race":
-            return tasks_mod.enrich_race_data_task.delay(params["race_id"], job.job_id)
+            task_id = submit_task(
+                enrich_race_data,
+                params["race_id"],
+                job.job_id,
+            )
         elif job.type == "batch_collect":
-            return tasks_mod.batch_collect_races_task.delay(
-                params["race_date"], params["meet"], params["race_numbers"], job.job_id
+            task_id = submit_task(
+                batch_collect,
+                params["race_date"],
+                params["meet"],
+                params["race_numbers"],
+                job.job_id,
             )
         elif job.type == "full_pipeline":
-            return tasks_mod.full_pipeline_task.delay(
-                params["race_date"], params["meet"], params["race_no"], job.job_id
+            task_id = submit_task(
+                full_pipeline,
+                params["race_date"],
+                params["meet"],
+                params["race_no"],
+                job.job_id,
             )
         else:
             raise ValueError(f"Unknown job type: {job.type}")
+
+        return task_id
 
     async def get_job(self, job_id: str, db: AsyncSession) -> Job | None:
         """작업 조회"""
@@ -212,32 +183,16 @@ class JobService:
         if not job:
             return None
 
-        # Celery 태스크 상태 확인 (선택적)
-        celery_status: dict[str, Any] | None = None
+        # Background task 상태 확인 (선택적)
+        bg_status: dict[str, Any] | None = None
         if job.task_id:
-            celery_app, AsyncResult = self._get_celery_components()
-            if celery_app and AsyncResult:
-                try:
-                    task_result = AsyncResult(job.task_id, app=celery_app)
-                    celery_status = {
-                        "state": task_result.state,
-                        "info": (
-                            task_result.info
-                            if isinstance(task_result.info, dict)
-                            else str(task_result.info)
-                        ),
-                        "ready": task_result.ready(),
-                        "successful": (
-                            task_result.successful() if task_result.ready() else None
-                        ),
-                    }
-                except Exception as e:
-                    logger.warning(f"Failed to get Celery status: {e}")
-            else:
-                logger.debug("Celery not available; skipping status fetch")
+            try:
+                bg_status = await get_task_status(job.task_id)
+            except Exception as e:
+                logger.warning("Failed to get background task status", error=str(e))
 
         # 작업 진행률 계산
-        progress = self._calculate_progress(job, celery_status)
+        progress = self._calculate_progress(job, bg_status)
 
         return {
             "job_id": job.job_id,
@@ -248,12 +203,12 @@ class JobService:
             "started_at": job.started_at.isoformat() if job.started_at else None,
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "error": getattr(job, "error_message", None),
-            "celery_status": celery_status,
+            "task_status": bg_status,
             "parameters": job.parameters,
         }
 
     def _calculate_progress(
-        self, job: Job, celery_status: dict[str, Any] | None
+        self, job: Job, task_status: dict[str, Any] | None
     ) -> int:
         """작업 진행률 계산 (0-100)"""
         if job.status == "completed":
@@ -268,8 +223,8 @@ class JobService:
             # 작업 유형에 따라 진행률 계산
             if job.type == "full_pipeline":
                 # 3단계 파이프라인
-                if celery_status and "info" in celery_status:
-                    info = celery_status["info"]
+                if task_status and "result" in task_status:
+                    info = task_status["result"]
                     if isinstance(info, dict) and "steps" in info:
                         completed = sum(
                             1 for v in info["steps"].values() if v == "completed"
@@ -381,17 +336,13 @@ class JobService:
             ):
                 return False
 
-            # Celery 태스크 취소
+            # Background task 취소
             task_id = getattr(job, "task_id", None)
             if task_id:
-                celery_app, _ = self._get_celery_components()
-                if celery_app:
-                    try:
-                        celery_app.control.revoke(task_id, terminate=True)
-                    except Exception as e:
-                        logger.warning(f"Failed to revoke Celery task: {e}")
-                else:
-                    logger.debug("Celery not available; skipping revoke")
+                try:
+                    await cancel_task(task_id)
+                except Exception as e:
+                    logger.warning("Failed to cancel background task", error=str(e))
 
             # 상태 업데이트
             job.status = "cancelled"
@@ -442,7 +393,7 @@ class JobService:
 
             await db.commit()
 
-            logger.info(f"Cleaned up {count} old jobs")
+            logger.info("Cleaned up old jobs", count=count)
 
             return count
 

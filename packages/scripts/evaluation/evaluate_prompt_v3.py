@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
 프롬프트 재귀 개선을 위한 평가 시스템 v3
-- Claude Code CLI를 더 효율적으로 활용
-- stream-json 출력 형식 사용
+- Anthropic Python SDK를 통한 직접 API 호출
+- JSON 응답 파싱 (코드블록 + regex fallback)
 - 향상된 안정성
 """
 
 import glob
 import json
-import os
 import re
 import subprocess
 import sys
@@ -18,6 +17,12 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
+# shared 모듈 경로 추가
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from evaluation.mlflow_tracker import ExperimentTracker
+from feature_engineering import compute_race_features
+from shared.claude_client import ClaudeClient
 
 
 class PromptEvaluatorV3:
@@ -29,14 +34,11 @@ class PromptEvaluatorV3:
         self.api_lock = threading.Semaphore(3)  # API 동시 호출 제한
         self.error_stats = defaultdict(int)  # 에러 통계
 
-        # Claude Code 환경 설정
-        self.claude_env = {
-            **os.environ,
-            "BASH_DEFAULT_TIMEOUT_MS": "120000",
-            "BASH_MAX_TIMEOUT_MS": "300000",
-            "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-            "DISABLE_INTERLEAVED_THINKING": "true",  # 더 빠른 응답
-        }
+        # Anthropic SDK 클라이언트
+        self.client = ClaudeClient()
+
+        # MLflow experiment tracker
+        self.tracker = ExperimentTracker()
 
     def find_test_races(self, limit: int = None) -> list[dict[str, any]]:
         """테스트할 경주 파일 찾기 (enriched 또는 prerace 데이터)"""
@@ -127,6 +129,9 @@ class PromptEvaluatorV3:
 
                     horses.append(horse)
 
+                # Feature Engineering: 파생 피처 계산
+                horses = compute_race_features(horses)
+
                 # 경주 정보 구성
                 race_data = {
                     "raceInfo": {
@@ -152,7 +157,7 @@ class PromptEvaluatorV3:
     def run_claude_prediction(
         self, race_data: dict, race_id: str
     ) -> tuple[dict | None, str]:
-        """Claude Code CLI를 통한 예측 실행 (stream-json 사용)"""
+        """Anthropic SDK를 통한 예측 실행"""
         error_type = "success"
         start_time = time.time()
 
@@ -180,39 +185,30 @@ class PromptEvaluatorV3:
 }}"""
 
         try:
-            # Claude Code 실행 (Opus 4.5 모델, JSON 출력)
+            # Anthropic SDK를 통한 예측 호출 (Opus 모델)
             with self.api_lock:
-                cmd = [
-                    "claude",
-                    "-p", prompt,
-                    "--model", "opus",           # Opus 4.5 사용 (최고 성능)
-                    "--output-format", "json",   # 구조화된 JSON 출력
-                    "--max-turns", "1",          # 단일 턴으로 제한 (예측 작업)
-                ]
-
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=3000,
-                    env=self.claude_env,
+                response_text = self.client.predict_sync(
+                    prompt,
+                    model="claude-opus-4-20250918",
+                    max_tokens=4096,
+                    timeout=300,
                 )
 
             execution_time = time.time() - start_time
 
-            if result.returncode != 0:
+            if response_text is None:
                 error_type = "claude_error"
                 self.error_stats[error_type] += 1
-                print(f"Claude 오류: {result.stderr[:200]}")
+                print(f"Claude API 호출 실패 (race {race_id})")
                 return None, error_type
 
-            # stream-json 출력 파싱
-            prediction = self._parse_stream_json(result.stdout, execution_time)
+            # 응답 텍스트에서 JSON 파싱
+            prediction = self._parse_stream_json(response_text, execution_time)
             if prediction:
                 return prediction, error_type
 
             # 파싱 실패 시 일반 출력으로 시도
-            prediction = self._parse_regular_output(result.stdout, execution_time)
+            prediction = self._parse_regular_output(response_text, execution_time)
             if prediction:
                 return prediction, error_type
 
@@ -220,11 +216,6 @@ class PromptEvaluatorV3:
             self.error_stats[error_type] += 1
             return None, error_type
 
-        except subprocess.TimeoutExpired:
-            error_type = "timeout"
-            self.error_stats[error_type] += 1
-            print(f"Timeout for race {race_id}")
-            return None, error_type
         except Exception as e:
             error_type = "unknown_error"
             self.error_stats[error_type] += 1
@@ -232,96 +223,73 @@ class PromptEvaluatorV3:
             return None, error_type
 
     def _parse_stream_json(self, output: str, execution_time: float) -> dict | None:
-        """stream-json 형식 파싱 (Claude CLI --output-format json 지원)"""
+        """SDK 응답 텍스트에서 JSON 파싱 (직접 JSON 또는 코드블록)"""
         try:
-            for line in output.strip().split("\n"):
-                if not line:
-                    continue
+            # 1. 응답 전체가 직접 JSON인 경우
+            try:
+                data = json.loads(output.strip())
+                if isinstance(data, dict):
+                    if "selected_horses" in data or "predicted" in data:
+                        data["execution_time"] = execution_time
+                        if "predicted" in data and "selected_horses" not in data:
+                            data["selected_horses"] = [
+                                {"chulNo": no} for no in data["predicted"]
+                            ]
+                        return data
+            except json.JSONDecodeError:
+                pass
 
+            # 2. 코드블록 내 JSON 추출 시도
+            code_block_match = re.search(
+                r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
+            )
+            if code_block_match:
                 try:
-                    data = json.loads(line)
-                    # 다양한 형식 처리
-                    content = None
-
-                    if isinstance(data, dict):
-                        # Claude CLI --output-format json 형식: {"type":"result","result":"..."}
-                        if data.get("type") == "result" and "result" in data:
-                            content = data["result"]
-                        # 직접 JSON 응답인 경우
-                        elif "selected_horses" in data or "predicted" in data:
-                            data["execution_time"] = execution_time
-                            # predicted를 selected_horses로 변환
-                            if "predicted" in data and "selected_horses" not in data:
-                                data["selected_horses"] = [
-                                    {"chulNo": no} for no in data["predicted"]
-                                ]
-                            return data
-
-                        # stream 형식인 경우
-                        elif "type" in data and data["type"] == "message":
-                            content = data.get("content", "")
-                        elif "content" in data:
-                            content = data["content"]
-                        elif "text" in data:
-                            content = data["text"]
-
-                    if content:
-                        # 1. 먼저 코드블록 내 JSON 추출 시도
-                        code_block_match = re.search(
-                            r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL
-                        )
-                        if code_block_match:
-                            try:
-                                prediction = json.loads(code_block_match.group(1))
-                                prediction["execution_time"] = execution_time
-                                # predicted 또는 prediction 필드를 selected_horses로 변환
-                                if "selected_horses" not in prediction:
-                                    if "predicted" in prediction:
-                                        prediction["selected_horses"] = [
-                                            {"chulNo": no} for no in prediction["predicted"]
-                                        ]
-                                    elif "prediction" in prediction:
-                                        prediction["selected_horses"] = [
-                                            {"chulNo": no} for no in prediction["prediction"]
-                                        ]
-                                return prediction
-                            except json.JSONDecodeError:
-                                pass
-
-                        # 2. 코드블록 없으면 직접 JSON 추출 시도
-                        json_match = re.search(
-                            r'\{[^{}]*"(?:selected_horses|predicted|prediction)"[^{}]*\}',
-                            content,
-                            re.DOTALL,
-                        )
-                        if json_match:
-                            try:
-                                prediction = json.loads(json_match.group())
-                                prediction["execution_time"] = execution_time
-                                # predicted 또는 prediction 필드를 selected_horses로 변환
-                                if "selected_horses" not in prediction:
-                                    if "predicted" in prediction:
-                                        prediction["selected_horses"] = [
-                                            {"chulNo": no} for no in prediction["predicted"]
-                                        ]
-                                    elif "prediction" in prediction:
-                                        prediction["selected_horses"] = [
-                                            {"chulNo": no} for no in prediction["prediction"]
-                                        ]
-                                return prediction
-                            except json.JSONDecodeError:
-                                pass
-
+                    prediction = json.loads(code_block_match.group(1))
+                    prediction["execution_time"] = execution_time
+                    if "selected_horses" not in prediction:
+                        if "predicted" in prediction:
+                            prediction["selected_horses"] = [
+                                {"chulNo": no} for no in prediction["predicted"]
+                            ]
+                        elif "prediction" in prediction:
+                            prediction["selected_horses"] = [
+                                {"chulNo": no} for no in prediction["prediction"]
+                            ]
+                    return prediction
                 except json.JSONDecodeError:
-                    continue
+                    pass
+
+            # 3. 코드블록 없으면 직접 JSON 추출 시도
+            json_match = re.search(
+                r'\{[^{}]*"(?:selected_horses|predicted|prediction)"[^{}]*\}',
+                output,
+                re.DOTALL,
+            )
+            if json_match:
+                try:
+                    prediction = json.loads(json_match.group())
+                    prediction["execution_time"] = execution_time
+                    if "selected_horses" not in prediction:
+                        if "predicted" in prediction:
+                            prediction["selected_horses"] = [
+                                {"chulNo": no} for no in prediction["predicted"]
+                            ]
+                        elif "prediction" in prediction:
+                            prediction["selected_horses"] = [
+                                {"chulNo": no} for no in prediction["prediction"]
+                            ]
+                    return prediction
+                except json.JSONDecodeError:
+                    pass
 
         except Exception as e:
-            print(f"Stream JSON 파싱 오류: {e}")
+            print(f"JSON 파싱 오류: {e}")
 
         return None
 
     def _parse_regular_output(self, output: str, execution_time: float) -> dict | None:
-        """일반 출력 파싱 (폴백)"""
+        """일반 텍스트 출력 파싱 (폴백) - 가장 바깥쪽 JSON 매칭"""
         try:
             # 코드블록 내 JSON
             code_block_match = re.search(
@@ -542,7 +510,7 @@ class PromptEvaluatorV3:
         successful_predictions = 0
         total_correct_horses = 0
 
-        print(f"\n{self.prompt_version} 평가 시작 (Claude Code CLI + stream-json)...")
+        print(f"\n{self.prompt_version} 평가 시작 (Anthropic SDK)...")
         print(f"테스트 경주 수: {total_races}")
         print(f"동시 실행 수: {max_workers}")
         print("-" * 60)
@@ -635,6 +603,43 @@ class PromptEvaluatorV3:
             ),
             "detailed_results": results,
         }
+
+        # MLflow experiment tracking
+        try:
+            self.tracker.start_run(
+                run_name=f"{self.prompt_version}_{timestamp}",
+                tags={"prompt_version": self.prompt_version},
+            )
+
+            self.tracker.log_params(
+                {
+                    "prompt_version": self.prompt_version,
+                    "prompt_path": str(self.prompt_path),
+                    "total_races": total_races,
+                    "max_workers": max_workers,
+                    "model": "claude-opus-4-20250918",
+                }
+            )
+
+            self.tracker.log_metrics(
+                {
+                    "success_rate": summary["success_rate"],
+                    "average_correct_horses": summary["average_correct_horses"],
+                    "total_races": float(summary["total_races"]),
+                    "valid_predictions": float(summary["valid_predictions"]),
+                    "successful_predictions": float(
+                        summary["successful_predictions"]
+                    ),
+                    "total_correct_horses": float(
+                        summary["total_correct_horses"]
+                    ),
+                    "avg_execution_time": summary["avg_execution_time"],
+                }
+            )
+
+            self.tracker.log_artifact(str(self.prompt_path))
+        finally:
+            self.tracker.end_run()
 
         # 결과 저장
         output_file = (

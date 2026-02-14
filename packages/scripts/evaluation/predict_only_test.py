@@ -5,16 +5,20 @@
 - enriched 데이터를 사용하여 예측 수행
 - 예측 결과와 분석 정보만 출력
 """
+from __future__ import annotations
 
 import glob
 import json
-import os
 import re
-import subprocess
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
+# shared 모듈 경로 추가
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from feature_engineering import compute_race_features
+from shared.claude_client import ClaudeClient
 
 
 class PredictionTester:
@@ -23,14 +27,8 @@ class PredictionTester:
         self.predictions_dir = Path("data/prediction_tests")
         self.predictions_dir.mkdir(parents=True, exist_ok=True)
 
-        # Claude Code 환경 설정
-        self.claude_env = {
-            **os.environ,
-            "BASH_DEFAULT_TIMEOUT_MS": "120000",
-            "BASH_MAX_TIMEOUT_MS": "300000",
-            "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "true",
-            "DISABLE_INTERLEAVED_THINKING": "true",
-        }
+        # Anthropic SDK 클라이언트
+        self.client = ClaudeClient()
 
     def find_enriched_files(
         self, date_filter: str | None = None
@@ -87,6 +85,11 @@ class PredictionTester:
                     if item.get("winOdds", 999) == 0:
                         continue
 
+                    # wgHr 파싱: "470(+5)" 형태에서 숫자만 추출
+                    wgHr_str = item.get("wgHr", "")
+                    wgHr_match = re.match(r"(\d+)", wgHr_str)
+                    wgHr_value = int(wgHr_match.group(1)) if wgHr_match else None
+
                     horse = {
                         "chulNo": item["chulNo"],
                         "hrName": item["hrName"],
@@ -96,14 +99,25 @@ class PredictionTester:
                         "trName": item["trName"],
                         "trNo": item["trNo"],
                         "winOdds": item["winOdds"],
-                        "budam": item.get("budam", 0),
-                        "age": item.get("age", ""),
+                        "plcOdds": item.get("plcOdds"),
+                        "budam": item.get("budam", ""), # '핸디캡' 등의 문자열
+                        "wgBudam": item.get("wgBudam"), # 숫자 값 (52.0 등)
+                        "wgHr": wgHr_value, # 파싱된 숫자 값
+                        "age": item.get("age"),
                         "sex": item.get("sex", ""),
-                        "rank": item.get("rank", ""),
-                        "rating": item.get("rating", ""),
-                        "jkWeight": item.get("jkWeight", ""),
-                        "diffUnit": item.get("diffUnit", ""),
-                        "prizeCond": item.get("prizeCond", ""),
+                        "rank": item.get("rank", ""), # '국5등급' 등
+                        "rating": item.get("rating"),
+                        "rcDist": item.get("rcDist"), # 경주거리 추가
+                        "ilsu": item.get("ilsu"), # 장기휴양 리스크 계산을 위한 일수 추가
+                        # 기타 필요한 데이터 추가 (예: 구간 기록 등)
+                        "se_3cAccTime": item.get("se_3cAccTime"),
+                        "se_4cAccTime": item.get("se_4cAccTime"),
+                        "sj_3cOrd": item.get("sj_3cOrd"),
+                        "sj_4cOrd": item.get("sjS1fOrd"),
+                        "seS1fAccTime": item.get("seS1fAccTime"),
+                        "sjS1fOrd": item.get("sjS1fOrd"),
+                        "seG1fAccTime": item.get("seG1fAccTime"),
+                        "sjG1fOrd": item.get("sjG1fOrd"),
                     }
 
                     # enriched 데이터 추가
@@ -116,15 +130,24 @@ class PredictionTester:
 
                     horses.append(horse)
 
+                # Feature Engineering: 파생 피처 계산
+                horses = compute_race_features(horses)
+
+                # raceInfo 추출 (첫 번째 말의 공통 정보 사용)
+                first_horse_item = items[0] if items else {}
+                race_distance = first_horse_item.get("rcDist") # rcDist에서 경주거리 가져오기
+
                 return {
                     "meet": file_info["meet"],
                     "rcDate": file_info["race_date"],
                     "rcNo": file_info["race_no"],
                     "horses": horses,
                     "raceInfo": {
-                        "distance": items[0].get("distance", "") if horses else "",
-                        "grade": items[0].get("grade", "") if horses else "",
-                        "track": items[0].get("track", "") if horses else "",
+                        "distance": race_distance,
+                        "grade": first_horse_item.get("rank", ""), # 등급 추가
+                        "track": first_horse_item.get("track", ""),
+                        "weather": first_horse_item.get("weather", ""),
+                        "budam": first_horse_item.get("budam", ""), # 부담조건 추가
                     },
                 }
 
@@ -141,51 +164,61 @@ class PredictionTester:
                 prompt_template = f.read()
 
             # 데이터를 프롬프트에 포함
-            prompt = f"{prompt_template}\n\n제공된 경주 데이터:\n```json\n{json.dumps(race_data, ensure_ascii=False, indent=2)}\n```"
-
-            # Claude Code CLI 명령 구성
-            cmd = ["claude", "-p", prompt]
+            # {{RACE_DATA}} 플레이스홀더가 있으면 대체하고, 없으면 뒤에 추가
+            race_data_json_str = json.dumps(race_data, ensure_ascii=False, indent=2)
+            
+            if "{{RACE_DATA}}" in prompt_template:
+                prompt = prompt_template.replace("{{RACE_DATA}}", race_data_json_str)
+            else:
+                prompt = f"{prompt_template}\n\n<race_data>\n{race_data_json_str}\n</race_data>"
+            
+            # 클로드에게 명확하게 JSON만 출력하도록 지시 (프롬프트 최하단에 배치)
+            prompt += "\n\nIMPORTANT: You must act as a prediction API. Do not analyze the prompt itself. Analyze the race data provided above and Output ONLY the JSON object as specified in <output_format>. Do not output any markdown code block markers (```json), introductory text, or explanations. Just the raw JSON string."
 
             start_time = time.time()
 
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=180, env=self.claude_env
-            )
+            # Anthropic SDK를 통한 예측 호출
+            output = self.client.predict_sync(prompt)
 
             execution_time = time.time() - start_time
 
-            if result.returncode != 0:
-                print(f"예측 오류 ({race_id}): {result.stderr[:200]}")
+            if output is None:
+                print(f"예측 오류 ({race_id}): API 호출 실패 또는 타임아웃")
                 return None
 
             # 응답 파싱
             try:
-                # JSON 블록 추출
-                output = result.stdout
+                # JSON 블록 추출 시도 (유연하게)
+                # 1. 마크다운 코드 블록 확인
                 json_match = re.search(r"```json\s*(\{.*?\})\s*```", output, re.DOTALL)
 
+                # 2. 코드 블록 없으면 가장 바깥쪽 중괄호 쌍 찾기
+                if not json_match:
+                    json_match = re.search(r"(\{.*\})", output, re.DOTALL)
+
                 if json_match:
-                    prediction_data = json.loads(json_match.group(1))
+                    json_str = json_match.group(1)
+                    prediction_data = json.loads(json_str)
+
+                    # `predicted` 필드가 최상위에 없으면 trifecta_picks.primary에서 가져옴 (하위 호환성)
+                    predicted_list = prediction_data.get("predicted", prediction_data.get("trifecta_picks", {}).get("primary", []))
 
                     return {
                         "race_id": race_id,
-                        "predicted": prediction_data.get("predicted", []),
-                        "confidence": prediction_data.get("confidence", 0),
-                        "reason": prediction_data.get("brief_reason", ""),
+                        "predicted": predicted_list,
+                        "confidence": prediction_data.get("trifecta_picks", {}).get("confidence", 0),
+                        "reason": prediction_data.get("analysis_summary", ""),
                         "execution_time": execution_time,
                         "full_output": output,
                     }
                 else:
-                    print(f"JSON 파싱 실패 ({race_id})")
+                    print(f"JSON 파싱 실패 ({race_id}). JSON 구조를 찾을 수 없습니다.")
                     return None
 
             except json.JSONDecodeError as e:
                 print(f"JSON 디코딩 오류 ({race_id}): {e}")
                 return None
 
-        except subprocess.TimeoutExpired:
-            print(f"예측 타임아웃 ({race_id})")
-            return None
         except Exception as e:
             print(f"예측 중 오류 ({race_id}): {e}")
             return None
@@ -318,20 +351,20 @@ class PredictionTester:
             print(f"  - 예측: {prediction['predicted']}")
             print(f"  - 신뢰도: {prediction['confidence']}%")
             print(f"  - 이유: {prediction['reason']}")
-            print(f"  - 전략: {analysis["prediction_strategy"]}")
+            print(f"  - 전략: {analysis['prediction_strategy']}")
 
             # 예측한 말들 정보
             print("  - 예측 말 정보:")
             for horse in analysis["predicted_horses"]:
-                info_parts = [f"{horse["chulNo"]}번 {horse["hrName"]}"]
+                info_parts = [f"{horse['chulNo']}번 {horse['hrName']}"]
                 info_parts.append(
-                    f"배당률 {horse["oddsRank"]}위({horse["winOdds"]:.1f})"
+                    f"배당률 {horse['oddsRank']}위({horse['winOdds']:.1f})"
                 )
                 if "jkWinRate" in horse:
-                    info_parts.append(f"기수승률 {horse["jkWinRate"]}%")
+                    info_parts.append(f"기수승률 {horse['jkWinRate']}%")
                 if "hrPlaceRate" in horse:
-                    info_parts.append(f"말입상률 {horse["hrPlaceRate"]}%")
-                print(f"    • {" / ".join(info_parts)}")
+                    info_parts.append(f"말입상률 {horse['hrPlaceRate']}%")
+                print(f"    • {' / '.join(info_parts)}")
 
         # 전체 통계
         self.print_summary(predictions, analyses)
@@ -345,9 +378,9 @@ class PredictionTester:
             print("\n예측 결과가 없습니다.")
             return
 
-        print(f"\n\n{"="*60}")
+        print(f"\n\n{'='*60}")
         print("예측 테스트 요약")
-        print(f"{"="*60}")
+        print(f"{'='*60}")
 
         print("\n📊 기본 통계:")
         print(f"- 총 예측 수: {len(predictions)}개")
@@ -403,7 +436,7 @@ class PredictionTester:
         """예측 결과 저장"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = (
-            f"prediction_test_{date_filter if date_filter else "all"}_{timestamp}.json"
+            f"prediction_test_{date_filter if date_filter else 'all'}_{timestamp}.json"
         )
         filepath = self.predictions_dir / filename
 

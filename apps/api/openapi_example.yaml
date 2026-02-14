@@ -405,7 +405,7 @@ components:
               type: string
             redis:
               type: string
-            celery:
+            background_tasks:
               type: string
         metrics:
           type: object

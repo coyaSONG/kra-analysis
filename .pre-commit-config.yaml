@@ -8,11 +8,10 @@ repos:
         language: system
         types_or: [python, pyi]
         files: "^(.+/)?(apps|packages)/.*\.(py|pyi)$|^.*\.(py|pyi)$"
-      - id: black
-        name: black (format)
-        entry: uvx --from black==24.10.0 black
+      - id: ruff-format
+        name: ruff format
+        entry: uvx --from ruff==0.13.0 ruff format --force-exclude
         language: system
         types_or: [python, pyi]
-        files: "^(.+/)?(apps|packages)/.*\.(py|pyi)$|^.*\.(py|pyi)$"
-        args: ["--line-length=88"]
+        files: "^(.+/)?(apps|packages)/.*\\.(py|pyi)$|^.*\\.(py|pyi)$"
 

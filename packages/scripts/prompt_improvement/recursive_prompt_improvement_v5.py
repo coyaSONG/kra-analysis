@@ -13,6 +13,7 @@ v4의 문제점을 해결하여 실제로 프롬프트 내용을 개선하는
 """
 
 import argparse
+import os
 import subprocess
 import sys
 import time
@@ -313,13 +314,12 @@ class RecursivePromptImprovementV5:
                 else:
                     race_count = "100"  # 대규모 평가
 
+            # uv를 통해 실행 (가상환경 의존성 사용)
             cmd = [
+                "uv",
+                "run",
                 "python3",
-                str(
-                    Path(__file__).parent.parent
-                    / "evaluation"
-                    / "evaluate_prompt_v3.py"
-                ),
+                "evaluation/evaluate_prompt_v3.py",  # scripts_dir 기준 상대 경로
                 version,
                 str(prompt_path),
                 race_count,  # 평가할 경주 수
@@ -336,12 +336,19 @@ class RecursivePromptImprovementV5:
             else:
                 self.logger.info(f"평가할 경주 수: {race_count}개")
 
-            # 실행
+            # 실행 (packages/scripts 디렉토리에서)
+            scripts_dir = Path(__file__).parent.parent  # prompt_improvement -> scripts
+
+            # 환경 변수 설정 (CLAUDE_CODE=1로 zoxide 충돌 방지)
+            env = os.environ.copy()
+            env["CLAUDE_CODE"] = "1"
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                cwd=str(Path(__file__).parent.parent.parent),
+                cwd=str(scripts_dir),
+                env=env,
             )
 
             if result.returncode != 0:

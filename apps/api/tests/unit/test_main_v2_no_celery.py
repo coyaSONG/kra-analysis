@@ -6,10 +6,8 @@ import main_v2
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_lifespan_without_celery_workers(monkeypatch):
-    # Force CELERY_AVAILABLE to False to cover branch
-    monkeypatch.setattr(main_v2, "CELERY_AVAILABLE", False)
+async def test_lifespan_without_background_tasks():
+    """Verify the app starts fine with background task runner."""
     transport = ASGITransport(app=main_v2.app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         r = await ac.get("/health")

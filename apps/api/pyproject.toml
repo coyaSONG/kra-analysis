@@ -11,7 +11,6 @@ dependencies = [
     "supabase>=2.11.0",
     "httpx>=0.28.0",
     "aiofiles>=24.1.0",
-    "celery>=5.4.0",
     "redis>=5.2.1",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
@@ -36,7 +35,6 @@ dev = [
     "pytest-cov>=6.0.0",
     "requests>=2.32.3",
     "aiosqlite>=0.20.0",
-    "black>=24.10.0",
     "mypy>=1.13.0",
     "pre-commit>=4.0.1",
 ]
@@ -49,7 +47,6 @@ dev = [
     "pytest-timeout>=2.3.1",
     "requests>=2.32.3",
     "aiosqlite>=0.20.0",
-    "black>=24.10.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "pre-commit>=4.0.1",
@@ -64,11 +61,6 @@ packages = ["."]
 
 [tool.uv]
 package = true  # API는 패키지로 배포 가능
-
-[tool.black]
-line-length = 88
-target-version = ['py313']
-include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
@@ -86,7 +78,7 @@ select = [
     "UP",  # pyupgrade
 ]
 ignore = [
-    "E501",  # line too long handled by Black
+    "E501",  # line too long handled by Ruff formatter
     "B008",  # allow function calls in argument defaults
     "C901",  # too complex (info only)
     "W191",  # indentation contains tabs
