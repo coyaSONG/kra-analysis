@@ -27,7 +27,7 @@ class PredictionTester:
         self.predictions_dir = Path("data/prediction_tests")
         self.predictions_dir.mkdir(parents=True, exist_ok=True)
 
-        # Anthropic SDK 클라이언트
+        # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
 
     def find_enriched_files(
@@ -177,7 +177,7 @@ class PredictionTester:
 
             start_time = time.time()
 
-            # Anthropic SDK를 통한 예측 호출
+            # Claude CLI를 통한 예측 호출 (구독 플랜)
             output = self.client.predict_sync(prompt)
 
             execution_time = time.time() - start_time

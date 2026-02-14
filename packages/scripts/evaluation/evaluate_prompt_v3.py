@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 프롬프트 재귀 개선을 위한 평가 시스템 v3
-- Anthropic Python SDK를 통한 직접 API 호출
+- Claude CLI 헤드리스 모드 (구독 플랜 활용)
 - JSON 응답 파싱 (코드블록 + regex fallback)
 - 향상된 안정성
 """
@@ -34,7 +34,7 @@ class PromptEvaluatorV3:
         self.api_lock = threading.Semaphore(3)  # API 동시 호출 제한
         self.error_stats = defaultdict(int)  # 에러 통계
 
-        # Anthropic SDK 클라이언트
+        # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
 
         # MLflow experiment tracker
@@ -185,13 +185,13 @@ class PromptEvaluatorV3:
 }}"""
 
         try:
-            # Anthropic SDK를 통한 예측 호출 (Opus 모델)
+            # Claude CLI를 통한 예측 호출 (Opus 모델, 구독 플랜)
             with self.api_lock:
                 response_text = self.client.predict_sync(
                     prompt,
-                    model="claude-opus-4-20250918",
+                    model="opus",
                     max_tokens=4096,
-                    timeout=300,
+                    timeout=3000,
                 )
 
             execution_time = time.time() - start_time
@@ -223,7 +223,7 @@ class PromptEvaluatorV3:
             return None, error_type
 
     def _parse_stream_json(self, output: str, execution_time: float) -> dict | None:
-        """SDK 응답 텍스트에서 JSON 파싱 (직접 JSON 또는 코드블록)"""
+        """CLI 응답 텍스트에서 JSON 파싱 (직접 JSON 또는 코드블록)"""
         try:
             # 1. 응답 전체가 직접 JSON인 경우
             try:

@@ -1,68 +1,90 @@
 """
-Anthropic SDK 기반 Claude 클라이언트
-- subprocess.run(["claude", ...]) 대신 anthropic Python SDK 직접 사용
+Claude CLI 기반 클라이언트 (구독 플랜 활용)
+- subprocess를 통한 claude -p 헤드리스 모드 호출
+- Max 구독 플랜 사용량 소비 (API KEY 불필요)
 - 동시성 제한 (Semaphore)
-- JSON 응답 파싱 (regex fallback 포함)
+- JSON 응답 파싱 (코드블록 + regex fallback)
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import subprocess
 import threading
-
-import anthropic
-from dotenv import load_dotenv
-
-# 프로젝트 루트 및 scripts 디렉토리의 .env 파일 로드
-load_dotenv()
-load_dotenv(
-    os.path.join(os.path.dirname(__file__), os.pardir, ".env"),
-    override=True,
-)
 
 
 class ClaudeClient:
-    """Anthropic Messages API 래퍼 클라이언트"""
+    """Claude CLI 헤드리스 모드 래퍼 클라이언트 (구독 플랜 전용)"""
 
     def __init__(self, max_concurrency: int = 3):
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise RuntimeError(
-                "ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다. "
-                ".env 파일 또는 환경변수를 확인하세요."
-            )
-        self._client = anthropic.Anthropic(api_key=api_key)
         self._semaphore = threading.Semaphore(max_concurrency)
+        # Claude CLI 환경 설정
+        self._env = {
+            **os.environ,
+            "DISABLE_INTERLEAVED_THINKING": "true",
+        }
 
-    # ------------------------------------------------------------------
-    # public API
-    # ------------------------------------------------------------------
     def predict_sync(
         self,
         prompt: str,
-        model: str = "claude-sonnet-4-5-20250929",
+        model: str = "opus",
         max_tokens: int = 8192,
-        timeout: float = 300.0,
+        timeout: float = 3000,
     ) -> str | None:
-        """동기 예측 호출. 성공 시 응답 텍스트, 실패 시 None 반환."""
+        """동기 예측 호출. 성공 시 응답 텍스트, 실패 시 None 반환.
+
+        Claude CLI 헤드리스 모드를 사용하여 구독 플랜 사용량을 소비합니다.
+        """
+        cmd = [
+            "claude",
+            "-p",
+            prompt,
+            "--model",
+            model,
+            "--output-format",
+            "json",
+            "--max-turns",
+            "1",
+        ]
+
         with self._semaphore:
             try:
-                response = self._client.messages.create(
-                    model=model,
-                    max_tokens=max_tokens,
-                    messages=[{"role": "user", "content": prompt}],
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
                     timeout=timeout,
+                    env=self._env,
                 )
-                return response.content[0].text
-            except anthropic.APITimeoutError:
-                print(f"[ClaudeClient] API 타임아웃 ({timeout}s)")
+
+                if result.returncode != 0:
+                    stderr_preview = result.stderr[:300] if result.stderr else "N/A"
+                    print(f"[ClaudeClient] CLI 오류 (code={result.returncode}): {stderr_preview}")
+                    return None
+
+                # --output-format json의 경우 {"type":"result","result":"..."} 형태
+                output = result.stdout
+                if not output or not output.strip():
+                    print("[ClaudeClient] 빈 응답")
+                    return None
+
+                # Claude CLI JSON 출력에서 실제 텍스트 추출
+                try:
+                    cli_response = json.loads(output)
+                    if isinstance(cli_response, dict) and "result" in cli_response:
+                        return cli_response["result"]
+                except json.JSONDecodeError:
+                    pass
+
+                # JSON 래핑이 아닌 경우 원시 출력 반환
+                return output
+
+            except subprocess.TimeoutExpired:
+                print(f"[ClaudeClient] 타임아웃 ({timeout}s)")
                 return None
-            except anthropic.APIStatusError as e:
-                print(f"[ClaudeClient] API 오류: {e.status_code} - {e.message}")
-                return None
-            except anthropic.APIError as e:
-                print(f"[ClaudeClient] API 오류: {e}")
+            except FileNotFoundError:
+                print("[ClaudeClient] 'claude' CLI를 찾을 수 없습니다. Claude Code가 설치되어 있는지 확인하세요.")
                 return None
             except Exception as e:
                 print(f"[ClaudeClient] 예기치 않은 오류: {e}")
