@@ -98,9 +98,11 @@ def fetch_with_retry(
 
 def _is_success(data: dict) -> bool:
     """Check if KRA API response indicates success."""
+    items = data.get("response", {}).get("body", {}).get("items")
     return (
         data.get("response", {}).get("header", {}).get("resultCode") == "00"
-        and data.get("response", {}).get("body", {}).get("items") is not None
+        and isinstance(items, dict)
+        and items.get("item") is not None
     )
 
 
