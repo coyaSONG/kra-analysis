@@ -13,6 +13,7 @@ v4의 문제점을 해결하여 실제로 프롬프트 내용을 개선하는
 """
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -43,6 +44,71 @@ from v5_modules.utils import (
 )
 
 
+def should_promote_challenger(
+    champion_metrics: dict[str, Any] | None,
+    challenger_metrics: dict[str, Any] | None,
+    leakage_passed: bool,
+    selection_gate: str = "strict",
+) -> dict[str, Any]:
+    """챔피언-챌린저 승격 게이트 판단."""
+
+    if champion_metrics is None:
+        return {"promote": True, "reason": "initial_champion", "checks": {}}
+
+    if not leakage_passed:
+        return {
+            "promote": False,
+            "reason": "leakage_check_failed",
+            "checks": {"leakage_passed": False},
+        }
+
+    champion_metrics = champion_metrics or {}
+    challenger_metrics = challenger_metrics or {}
+
+    champion_log_loss = float(champion_metrics.get("log_loss", float("inf")))
+    challenger_log_loss = float(challenger_metrics.get("log_loss", float("inf")))
+    champion_ece = float(champion_metrics.get("ece", float("inf")))
+    challenger_ece = float(challenger_metrics.get("ece", float("inf")))
+
+    champion_top3 = float(champion_metrics.get("topk", {}).get("top_3", 0.0))
+    challenger_top3 = float(challenger_metrics.get("topk", {}).get("top_3", 0.0))
+    champion_roi = float(champion_metrics.get("roi", {}).get("avg_roi", 0.0))
+    challenger_roi = float(challenger_metrics.get("roi", {}).get("avg_roi", 0.0))
+
+    checks = {
+        "log_loss_improved": challenger_log_loss < champion_log_loss,
+        "ece_not_worse": challenger_ece <= champion_ece,
+        "top3_improved": challenger_top3 > champion_top3,
+        "roi_improved": challenger_roi > champion_roi,
+    }
+
+    if selection_gate == "balanced":
+        required_count = 2
+        score = sum(
+            [
+                int(checks["log_loss_improved"]),
+                int(checks["ece_not_worse"]),
+                int(checks["top3_improved"] or checks["roi_improved"]),
+            ]
+        )
+        if score >= required_count:
+            return {"promote": True, "reason": "balanced_gate_passed", "checks": checks}
+        return {"promote": False, "reason": "balanced_gate_failed", "checks": checks}
+
+    if not checks["log_loss_improved"]:
+        return {"promote": False, "reason": "log_loss_not_improved", "checks": checks}
+    if not checks["ece_not_worse"]:
+        return {"promote": False, "reason": "ece_regressed", "checks": checks}
+    if not (checks["top3_improved"] or checks["roi_improved"]):
+        return {
+            "promote": False,
+            "reason": "no_top3_or_roi_improvement",
+            "checks": checks,
+        }
+
+    return {"promote": True, "reason": "gate_passed", "checks": checks}
+
+
 class RecursivePromptImprovementV5:
     """재귀 프롬프트 개선 시스템 v5"""
 
@@ -53,6 +119,11 @@ class RecursivePromptImprovementV5:
         max_iterations: int = 5,
         parallel_count: int = 5,
         race_limit: str = None,
+        metrics_profile: str = "rpi_v1",
+        selection_gate: str = "strict",
+        time_split: str = "rolling",
+        defer_policy: str = "threshold",
+        asof_check: str = "on",
     ):
 
         self.initial_prompt_path = initial_prompt_path
@@ -60,6 +131,11 @@ class RecursivePromptImprovementV5:
         self.max_iterations = max_iterations
         self.parallel_count = parallel_count
         self.race_limit = race_limit
+        self.metrics_profile = metrics_profile
+        self.selection_gate = selection_gate
+        self.time_split = time_split
+        self.defer_policy = defer_policy
+        self.asof_check = asof_check
 
         # 작업 디렉토리 설정
         self.working_dir = (
@@ -81,6 +157,18 @@ class RecursivePromptImprovementV5:
         self.iteration_history = []
         self.best_performance = 0.0
         self.best_prompt_path = None
+        self.champion_metrics: dict[str, Any] | None = None
+        self.champion_prompt_path: Path | None = None
+        self.champion_structure = None
+        self.champion_history_file = (
+            get_data_dir() / "prompt_evaluation" / "champion_history.jsonl"
+        )
+        ensure_directory(self.champion_history_file.parent)
+
+    def _append_champion_history(self, payload: dict[str, Any]) -> None:
+        """승격/롤백 이력을 jsonl로 저장."""
+        with open(self.champion_history_file, "a", encoding="utf-8") as fp:
+            fp.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
     def run(self) -> dict[str, Any]:
         """재귀 개선 프로세스 실행"""
@@ -118,13 +206,37 @@ class RecursivePromptImprovementV5:
                 break
 
             # 성능 계산
-            metrics = calculate_success_metrics(evaluation_results["detailed_results"])
+            detailed_results = evaluation_results.get("detailed_results", [])
+            metrics = calculate_success_metrics(detailed_results)
             current_performance = metrics["success_rate"]
+            challenger_metrics = evaluation_results.get("metrics_v2", {})
+            leakage_check = evaluation_results.get(
+                "leakage_check", {"passed": True, "issues": []}
+            )
+            promotion_decision = should_promote_challenger(
+                champion_metrics=self.champion_metrics,
+                challenger_metrics=challenger_metrics,
+                leakage_passed=bool(leakage_check.get("passed", True)),
+                selection_gate=self.selection_gate,
+            )
 
             self.logger.info("평가 완료:")
             self.logger.info(f"  - 성공률: {current_performance:.1f}%")
             self.logger.info(f"  - 평균 적중: {metrics['avg_correct']:.2f}마리")
             self.logger.info(f"  - 평가 경주 수: {metrics['total_races']}개")
+            if challenger_metrics:
+                self.logger.info(
+                    "  - 품질 지표: "
+                    f"log_loss={challenger_metrics.get('log_loss', 0):.4f}, "
+                    f"ece={challenger_metrics.get('ece', 0):.4f}, "
+                    f"top3={challenger_metrics.get('topk', {}).get('top_3', 0):.4f}, "
+                    f"roi={challenger_metrics.get('roi', {}).get('avg_roi', 0):.4f}"
+                )
+            self.logger.info(
+                "  - 승격 판단: "
+                f"{'승격' if promotion_decision['promote'] else '유지'} "
+                f"({promotion_decision['reason']})"
+            )
 
             # 이력 저장
             iteration_data = {
@@ -132,12 +244,32 @@ class RecursivePromptImprovementV5:
                 "version": current_structure.version,
                 "performance": current_performance,
                 "metrics": metrics,
+                "metrics_v2": challenger_metrics,
+                "leakage_check": leakage_check,
+                "promotion_decision": promotion_decision,
                 "prompt_path": str(current_prompt_path),
             }
             self.iteration_history.append(iteration_data)
+            self._append_champion_history(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "iteration": iteration,
+                    "version": current_structure.version,
+                    "prompt_path": str(current_prompt_path),
+                    "promotion_decision": promotion_decision,
+                    "metrics_v2": challenger_metrics,
+                    "leakage_check": leakage_check,
+                }
+            )
 
-            # 최고 성능 업데이트
-            if current_performance > self.best_performance:
+            # 챔피언 상태 업데이트
+            if promotion_decision["promote"]:
+                self.champion_metrics = challenger_metrics
+                self.champion_prompt_path = current_prompt_path
+                self.champion_structure = current_structure
+
+            # 최고 성능 업데이트 (승격된 후보 기준)
+            if promotion_decision["promote"] and current_performance > self.best_performance:
                 self.best_performance = current_performance
                 self.best_prompt_path = current_prompt_path
                 self.logger.info(f"🎯 새로운 최고 성능: {current_performance:.1f}%")
@@ -157,14 +289,12 @@ class RecursivePromptImprovementV5:
 
             # 예시 추가 (최대 20개)
             added_count = self.examples_manager.add_examples_from_evaluation(
-                evaluation_results["detailed_results"], limit=20
+                detailed_results, limit=20
             )
             self.logger.info(f"  - 예시 풀에 {added_count}개 추가")
 
             # 인사이트 분석
-            insight_analysis = self.insight_analyzer.analyze(
-                evaluation_results["detailed_results"]
-            )
+            insight_analysis = self.insight_analyzer.analyze(detailed_results)
 
             # 분석 보고서 저장
             analysis_report = self.insight_analyzer.generate_report(insight_analysis)
@@ -179,12 +309,20 @@ class RecursivePromptImprovementV5:
             # 3. 프롬프트 개선
             self.logger.info("\n[3단계] 프롬프트 개선 중...")
 
+            if not promotion_decision["promote"] and self.champion_structure:
+                self.logger.info(
+                    "  - 이전 챔피언 기준으로 롤백 후 다음 후보를 생성합니다."
+                )
+                base_structure = self.champion_structure
+            else:
+                base_structure = current_structure
+
             # 새 버전 번호 생성
-            new_version = increment_version(current_structure.version)
+            new_version = increment_version(base_structure.version)
 
             # 프롬프트 재구성
             new_structure, changes = self.reconstructor.reconstruct_prompt(
-                current_structure, insight_analysis, new_version, metrics
+                base_structure, insight_analysis, new_version, metrics
             )
 
             # 고급 기법 적용 상태 로깅
@@ -324,13 +462,23 @@ class RecursivePromptImprovementV5:
                 str(prompt_path),
                 race_count,  # 평가할 경주 수
                 str(self.parallel_count),
+                "--report-format",
+                "v2",
+                "--metrics-profile",
+                self.metrics_profile,
+                "--asof-check",
+                self.asof_check,
+                "--topk",
+                "1,3",
             ]
+            if self.defer_policy == "threshold":
+                cmd.extend(["--defer-threshold", "0.7"])
 
             if self.target_date != "all":
                 # 특정 날짜만 평가하도록 수정 필요
                 pass
 
-            self.logger.info(f"평가 명령: {" ".join(cmd)}")
+            self.logger.info(f"평가 명령: {' '.join(cmd)}")
             if race_count == "999999":
                 self.logger.info("평가할 경주 수: 전체 (제한 없음)")
             else:
@@ -402,14 +550,20 @@ class RecursivePromptImprovementV5:
 
         # 성능 추이
         report.append("\n## 성능 추이")
-        report.append("| 반복 | 버전 | 성공률 | 평균 적중 |")
-        report.append("|------|------|--------|-----------|")
+        report.append("| 반복 | 버전 | 성공률 | 평균 적중 | 승격 |")
+        report.append("|------|------|--------|-----------|------|")
 
         for item in self.iteration_history:
+            promoted = (
+                "Y"
+                if item.get("promotion_decision", {}).get("promote")
+                else "N"
+            )
             report.append(
                 f"| {item["iteration"]} | {item["version"]} | "
                 f"{item["performance"]:.1f}% | "
-                f"{item["metrics"]["avg_correct"]:.2f}마리 |"
+                f"{item["metrics"]["avg_correct"]:.2f}마리 | "
+                f"{promoted} |"
             )
 
         # 개선 내역
@@ -536,6 +690,36 @@ def main():
         default=None,
         help="평가할 경주 수 (기본값: 자동 - 반복수에 따라 5/50/100, 'all': 전체 경주)",
     )
+    parser.add_argument(
+        "--metrics-profile",
+        choices=["rpi_v1"],
+        default="rpi_v1",
+        help="평가 지표 프로파일 (기본값: rpi_v1)",
+    )
+    parser.add_argument(
+        "--selection-gate",
+        choices=["strict", "balanced"],
+        default="strict",
+        help="챔피언 승격 게이트 (기본값: strict)",
+    )
+    parser.add_argument(
+        "--time-split",
+        choices=["rolling", "holdout"],
+        default="rolling",
+        help="시계열 분할 전략 메타 정보 (기본값: rolling)",
+    )
+    parser.add_argument(
+        "--defer-policy",
+        choices=["off", "threshold", "conformal-lite"],
+        default="threshold",
+        help="디퍼 정책 메타 정보 (기본값: threshold)",
+    )
+    parser.add_argument(
+        "--asof-check",
+        choices=["on", "off"],
+        default="on",
+        help="누수(as-of) 검사 on/off (기본값: on)",
+    )
 
     args = parser.parse_args()
 
@@ -552,6 +736,11 @@ def main():
         max_iterations=args.iterations,
         parallel_count=args.parallel,
         race_limit=args.races,
+        metrics_profile=args.metrics_profile,
+        selection_gate=args.selection_gate,
+        time_split=args.time_split,
+        defer_policy=args.defer_policy,
+        asof_check=args.asof_check,
     )
 
     try:

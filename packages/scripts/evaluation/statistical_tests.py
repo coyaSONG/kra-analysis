@@ -120,6 +120,35 @@ def mcnemar_test(
     }
 
 
+def paired_bootstrap_mean_diff(
+    series_a: list[float],
+    series_b: list[float],
+    confidence: float = 0.95,
+    n_bootstrap: int = 10_000,
+) -> dict[str, float]:
+    """Paired bootstrap CI for mean(B - A) on aligned series."""
+    n = min(len(series_a), len(series_b))
+    if n == 0:
+        return {"mean_diff": 0.0, "lower": 0.0, "upper": 0.0}
+
+    a = np.asarray(series_a[:n], dtype=np.float64)
+    b = np.asarray(series_b[:n], dtype=np.float64)
+    rng = np.random.default_rng(seed=42)
+
+    diffs = np.empty(n_bootstrap)
+    indices = np.arange(n)
+    for i in range(n_bootstrap):
+        sampled_idx = rng.choice(indices, size=n, replace=True)
+        diffs[i] = np.mean(b[sampled_idx] - a[sampled_idx])
+
+    alpha = 1 - confidence
+    return {
+        "mean_diff": float(np.mean(diffs)),
+        "lower": float(np.percentile(diffs, 100 * alpha / 2)),
+        "upper": float(np.percentile(diffs, 100 * (1 - alpha / 2))),
+    }
+
+
 def compute_expected_value(
     predictions: list[dict],
     odds: list[float],
@@ -249,6 +278,13 @@ def evaluation_report(
                 lines.append(f"  => System {winner} is significantly better.")
             else:
                 lines.append("  => No statistically significant difference.")
+
+            paired_ci = paired_bootstrap_mean_diff(rates_a[:min_len], rates_b[:min_len])
+            lines.append(
+                "  Paired bootstrap CI (B-A): "
+                f"{paired_ci['mean_diff'] * 100:+.2f}pp "
+                f"[{paired_ci['lower'] * 100:+.2f}, {paired_ci['upper'] * 100:+.2f}]"
+            )
 
     lines.append("\n" + "=" * 60)
     return "\n".join(lines)

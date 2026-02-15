@@ -1,27 +1,36 @@
-# Environment variables
+# Local environment & secrets
 .env
 .env.local
 .env.*.local
 .mcp.json
-data/
 
-# Claude Code local settings
+# Local tool state
 .claude/settings.local.json
 .claude.json
+.omc/
+.serena/
+
+# Generated data
+data/
 
 # Dependencies
 node_modules/
+package-lock.json
+yarn.lock
+
+# Package manager logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
+.DS_Store
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Python
 __pycache__/
@@ -29,15 +38,16 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
+.venv/
 venv/
+env/
 ENV/
-.venv
+.ruff_cache/
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints
 
-# Testing
+# Test / coverage
 .coverage
 .pytest_cache/
 htmlcov/
@@ -46,21 +56,17 @@ coverage.xml
 **/coverage.xml
 apps/collector/coverage/
 
-# Build
+# Build / compiler output
 dist/
 build/
 *.egg-info/
 **/*.tsbuildinfo
+.turbo/
+turbo-*.log
 
-# Logs
+# Runtime logs
 logs/
 *.log
-apps/collector/logs/
-
-# Local data (optional - uncomment if you want to exclude data)
-# data/raw/
-# data/processed/
-# data/predictions/results/
 
 # Temporary files
 *.tmp
@@ -68,21 +74,3 @@ apps/collector/logs/
 .cache/
 apps/collector/cache/
 apps/collector/tmp/
-
-# Package files
-package-lock.json
-yarn.lock
-
-# API server logs
-api/server.log
-collector/*.log
-
-# Serena local configuration
-.serena/
-
-# Turborepo
-.turbo/
-turbo-*.log
-
-# pnpm
-pnpm-lock.yaml

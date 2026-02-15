@@ -13,26 +13,47 @@ import subprocess
 import sys
 import threading
 import time
+import argparse
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # shared 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from evaluation.leakage_checks import check_detailed_results_for_leakage
 from evaluation.mlflow_tracker import ExperimentTracker
+from evaluation.metrics import compute_prediction_quality_metrics
+from evaluation.report_schema import build_report_v2, validate_report_v2
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
 
 
 class PromptEvaluatorV3:
-    def __init__(self, prompt_version: str, prompt_path: str):
+    def __init__(
+        self,
+        prompt_version: str,
+        prompt_path: str,
+        topk_values: tuple[int, ...] = (1, 3),
+        ece_bins: int = 10,
+        asof_check: str = "on",
+        report_format: str = "v2",
+        metrics_profile: str = "rpi_v1",
+        defer_threshold: float | None = None,
+    ):
         self.prompt_version = prompt_version
         self.prompt_path = prompt_path
         self.results_dir = Path("data/prompt_evaluation")
         self.results_dir.mkdir(parents=True, exist_ok=True)
         self.api_lock = threading.Semaphore(3)  # API 동시 호출 제한
         self.error_stats = defaultdict(int)  # 에러 통계
+        self.topk_values = topk_values
+        self.ece_bins = ece_bins
+        self.asof_check = asof_check
+        self.report_format = report_format
+        self.metrics_profile = metrics_profile
+        self.defer_threshold = defer_threshold
 
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
@@ -40,7 +61,7 @@ class PromptEvaluatorV3:
         # MLflow experiment tracker
         self.tracker = ExperimentTracker()
 
-    def find_test_races(self, limit: int = None) -> list[dict[str, any]]:
+    def find_test_races(self, limit: int = None) -> list[dict[str, Any]]:
         """테스트할 경주 파일 찾기 (enriched 또는 prerace 데이터)"""
         race_files = []
 
@@ -580,7 +601,7 @@ class PromptEvaluatorV3:
 
         # 전체 요약
         valid_results = [r for r in results if r["prediction"] is not None]
-        summary = {
+        summary: dict[str, Any] = {
             "prompt_version": self.prompt_version,
             "test_date": timestamp,
             "total_races": total_races,
@@ -603,6 +624,35 @@ class PromptEvaluatorV3:
             ),
             "detailed_results": results,
         }
+
+        metrics_v2 = compute_prediction_quality_metrics(
+            detailed_results=results,
+            topk_values=self.topk_values,
+            ece_bins=self.ece_bins,
+            defer_threshold=self.defer_threshold,
+        )
+        metrics_v2["json_valid_rate"] = (
+            len(valid_results) / total_races if total_races > 0 else 0.0
+        )
+
+        if self.asof_check == "on":
+            leakage_check = check_detailed_results_for_leakage(results)
+        else:
+            leakage_check = {"passed": True, "issues": [], "checked_races": len(results)}
+
+        report_v2 = build_report_v2(
+            prompt_version=self.prompt_version,
+            summary=summary,
+            metrics=metrics_v2,
+            leakage=leakage_check,
+            promotion_context={
+                "selection_gate": "strict",
+                "metrics_profile": self.metrics_profile,
+            },
+        )
+        schema_valid, schema_errors = validate_report_v2(report_v2)
+        report_v2["schema_valid"] = schema_valid
+        report_v2["schema_errors"] = schema_errors
 
         # MLflow experiment tracking
         try:
@@ -634,6 +684,12 @@ class PromptEvaluatorV3:
                         summary["total_correct_horses"]
                     ),
                     "avg_execution_time": summary["avg_execution_time"],
+                    "log_loss": metrics_v2["log_loss"],
+                    "brier": metrics_v2["brier"],
+                    "ece": metrics_v2["ece"],
+                    "top3": metrics_v2["topk"].get("top_3", 0.0),
+                    "avg_roi": metrics_v2["roi"].get("avg_roi", 0.0),
+                    "coverage": metrics_v2["coverage"],
                 }
             )
 
@@ -646,12 +702,15 @@ class PromptEvaluatorV3:
             self.results_dir / f"evaluation_{self.prompt_version}_{timestamp}.json"
         )
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(summary, f, ensure_ascii=False, indent=2)
+            if self.report_format == "v2":
+                json.dump(report_v2, f, ensure_ascii=False, indent=2)
+            else:
+                json.dump(summary, f, ensure_ascii=False, indent=2)
 
         # 결과 출력
-        self.print_summary(summary, output_file)
+        self.print_summary(report_v2 if self.report_format == "v2" else summary, output_file)
 
-        return summary
+        return report_v2 if self.report_format == "v2" else summary
 
     def print_summary(self, summary: dict, output_file: Path):
         """요약 결과 출력"""
@@ -672,28 +731,109 @@ class PromptEvaluatorV3:
         for error_type, count in summary["error_stats"].items():
             print(f"  - {error_type}: {count}건")
 
+        metrics_v2 = summary.get("metrics_v2")
+        if metrics_v2:
+            print("\n품질 지표(v2):")
+            print(f"  - log_loss: {metrics_v2.get("log_loss", 0.0):.4f}")
+            print(f"  - brier: {metrics_v2.get("brier", 0.0):.4f}")
+            print(f"  - ece: {metrics_v2.get("ece", 0.0):.4f}")
+            print(
+                f"  - top3: {metrics_v2.get("topk", {}).get("top_3", 0.0):.4f}"
+            )
+            print(
+                f"  - avg_roi: {metrics_v2.get("roi", {}).get("avg_roi", 0.0):.4f}"
+            )
+            print(f"  - coverage: {metrics_v2.get("coverage", 0.0):.4f}")
+
+        leakage_check = summary.get("leakage_check")
+        if leakage_check:
+            print(
+                "\n누수 검사: "
+                f"{'PASS' if leakage_check.get('passed') else 'FAIL'}"
+            )
+            if leakage_check.get("issues"):
+                print(f"  - issues: {len(leakage_check['issues'])}")
+
         print(f"\n결과 저장: {output_file}")
 
 
 def main():
-    if len(sys.argv) < 3:
-        print(
-            "Usage: python evaluate_prompt_v3.py <prompt_version> <prompt_file> [test_limit] [max_workers]"
-        )
-        print(
-            "Example: python evaluate_prompt_v3.py v10.0 prompts/prediction-template-v10.0.md 30 3"
-        )
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="프롬프트 평가 시스템 v3",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Example:
+  python evaluate_prompt_v3.py v10.0 prompts/prediction-template-v10.0.md 30 3 --report-format v2 --asof-check on --topk 1,3
+        """,
+    )
+    parser.add_argument("prompt_version", help="프롬프트 버전")
+    parser.add_argument("prompt_file", help="프롬프트 파일 경로")
+    parser.add_argument(
+        "test_limit",
+        nargs="?",
+        default=10,
+        type=int,
+        help="평가 경주 수 (기본값: 10)",
+    )
+    parser.add_argument(
+        "max_workers",
+        nargs="?",
+        default=3,
+        type=int,
+        help="병렬 작업 수 (기본값: 3)",
+    )
+    parser.add_argument(
+        "--report-format",
+        choices=["v1", "v2"],
+        default="v2",
+        help="결과 리포트 포맷 (기본값: v2)",
+    )
+    parser.add_argument(
+        "--asof-check",
+        choices=["on", "off"],
+        default="on",
+        help="누수(as-of) 검사 on/off (기본값: on)",
+    )
+    parser.add_argument(
+        "--topk",
+        default="1,3",
+        help="Top-k 지표 목록 (예: 1,3,5)",
+    )
+    parser.add_argument(
+        "--metrics-profile",
+        choices=["rpi_v1"],
+        default="rpi_v1",
+        help="지표 프로파일 (기본값: rpi_v1)",
+    )
+    parser.add_argument(
+        "--defer-threshold",
+        type=float,
+        default=None,
+        help="디퍼 임계값 (0~1, 미지정 시 비활성)",
+    )
 
-    prompt_version = sys.argv[1]
-    prompt_file = sys.argv[2]
-    test_limit = int(sys.argv[3]) if len(sys.argv) > 3 else 10
-    max_workers = int(sys.argv[4]) if len(sys.argv) > 4 else 3
+    args = parser.parse_args()
 
-    # 평가 실행
-    evaluator = PromptEvaluatorV3(prompt_version, prompt_file)
+    topk_values = tuple(
+        int(token.strip())
+        for token in args.topk.split(",")
+        if token.strip()
+    )
+    if not topk_values:
+        topk_values = (1, 3)
+
+    evaluator = PromptEvaluatorV3(
+        prompt_version=args.prompt_version,
+        prompt_path=args.prompt_file,
+        topk_values=topk_values,
+        asof_check=args.asof_check,
+        report_format=args.report_format,
+        metrics_profile=args.metrics_profile,
+        defer_threshold=args.defer_threshold,
+    )
     _results = evaluator.evaluate_all_parallel(
-        test_limit=test_limit, max_workers=max_workers
+        test_limit=args.test_limit,
+        max_workers=args.max_workers,
     )
 
 
