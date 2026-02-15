@@ -66,7 +66,9 @@ def should_promote_challenger(
 
     # coverage=0 (모든 예측이 deferred)인 경우 무의미한 지표 방지
     champion_coverage = float(champion_metrics.get("coverage", 1.0))
-    challenger_coverage = float(challenger_metrics.get("coverage", 1.0) if challenger_metrics else 1.0)
+    challenger_coverage = float(
+        challenger_metrics.get("coverage", 1.0) if challenger_metrics else 1.0
+    )
     if champion_coverage == 0.0 and challenger_coverage == 0.0:
         # 둘 다 coverage 0이면 success_rate 기준으로만 비교할 수 없으므로 승격 불가
         return {"promote": False, "reason": "both_zero_coverage", "checks": {}}
@@ -148,6 +150,8 @@ class RecursivePromptImprovementV5:
         asof_check: str = "on",
         patience: int = 3,
         min_improvement: float = 0.005,
+        jury_enabled: bool = False,
+        jury_models: list[str] | None = None,
     ):
         self.initial_prompt_path = initial_prompt_path
         self.target_date = target_date
@@ -164,6 +168,11 @@ class RecursivePromptImprovementV5:
         self.patience = patience
         self.patience_counter = 0
         self.min_improvement = min_improvement  # 0.5%p minimum improvement
+
+        # LLM Jury 설정
+        self.jury_enabled = jury_enabled
+        self.jury_models = jury_models or ["claude", "codex", "gemini"]
+        self.jury_improver = None
 
         # 작업 디렉토리 설정
         self.working_dir = (
@@ -183,6 +192,10 @@ class RecursivePromptImprovementV5:
         self.data_splitter = TemporalDataSplitter()
         self.calibrator = ConfidenceCalibrator()
 
+        # Jury 프롬프트 개선기 초기화
+        if jury_enabled:
+            self._init_jury_improver()
+
         # 상태 관리
         self.iteration_history = []
         self.best_performance = 0.0
@@ -194,6 +207,30 @@ class RecursivePromptImprovementV5:
             get_data_dir() / "prompt_evaluation" / "champion_history.jsonl"
         )
         ensure_directory(self.champion_history_file.parent)
+
+    def _init_jury_improver(self) -> None:
+        """LLM Jury 프롬프트 개선기 초기화"""
+        from prompt_improvement.jury_prompt_improver import JuryPromptImprover
+        from shared.claude_client import ClaudeClient
+        from shared.llm_client import CodexClient, GeminiClient, LLMClient
+        from shared.llm_jury import LLMJury
+
+        clients: list[LLMClient] = []
+        for name in self.jury_models:
+            if name == "claude":
+                clients.append(ClaudeClient())
+            elif name == "codex":
+                clients.append(CodexClient())
+            elif name == "gemini":
+                clients.append(GeminiClient())
+
+        if clients:
+            jury = LLMJury(clients)
+            self.jury_improver = JuryPromptImprover(
+                jury=jury,
+                fallback_reconstructor=self.reconstructor,
+            )
+            self.logger.info(f"[Jury] 프롬프트 개선기 초기화 완료: {self.jury_models}")
 
     def _append_champion_history(self, payload: dict[str, Any]) -> None:
         """승격/롤백 이력을 jsonl로 저장."""
@@ -400,10 +437,20 @@ class RecursivePromptImprovementV5:
             # 새 버전 번호 생성
             new_version = increment_version(base_structure.version)
 
-            # 프롬프트 재구성
-            new_structure, changes = self.reconstructor.reconstruct_prompt(
-                base_structure, insight_analysis, new_version, metrics
-            )
+            # 프롬프트 재구성 (Jury 또는 규칙 기반)
+            if self.jury_enabled and self.jury_improver:
+                self.logger.info("  - LLM Jury 합의 기반 개선 모드")
+                new_structure, changes = self.jury_improver.improve_prompt(
+                    base_structure,
+                    detailed_results,
+                    metrics,
+                    new_version,
+                    insight_analysis=insight_analysis,
+                )
+            else:
+                new_structure, changes = self.reconstructor.reconstruct_prompt(
+                    base_structure, insight_analysis, new_version, metrics
+                )
 
             # 고급 기법 적용 상태 로깅
             advanced_status = self.reconstructor.get_advanced_techniques_status(
@@ -829,6 +876,18 @@ def main():
         default=0.005,
         help="최소 유의미한 개선폭 (비율, 기본값: 0.005 = 0.5%%p)",
     )
+    parser.add_argument(
+        "--jury",
+        action="store_true",
+        default=False,
+        help="LLM Jury 모드 활성화 (Claude + Codex + Gemini 합의 기반 개선)",
+    )
+    parser.add_argument(
+        "--jury-models",
+        type=str,
+        default="claude,codex,gemini",
+        help="Jury에 참여할 모델 목록 (쉼표 구분, 기본값: claude,codex,gemini)",
+    )
 
     args = parser.parse_args()
 
@@ -837,6 +896,9 @@ def main():
     if not prompt_path.exists():
         print(f"오류: 프롬프트 파일을 찾을 수 없습니다: {prompt_path}")
         sys.exit(1)
+
+    # Jury 모델 목록 파싱
+    jury_models = [m.strip() for m in args.jury_models.split(",") if m.strip()]
 
     # v5 시스템 실행
     system = RecursivePromptImprovementV5(
@@ -852,6 +914,8 @@ def main():
         asof_check=args.asof_check,
         patience=args.patience,
         min_improvement=args.min_improvement,
+        jury_enabled=args.jury,
+        jury_models=jury_models,
     )
 
     try:

@@ -29,6 +29,7 @@ from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.report_schema import build_report_v2, validate_report_v2
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
+from shared.llm_client import LLMClient
 
 
 class PromptEvaluatorV3:
@@ -43,6 +44,9 @@ class PromptEvaluatorV3:
         metrics_profile: str = "rpi_v1",
         defer_threshold: float | None = None,
         ensemble_k: int = 1,
+        jury_enabled: bool = False,
+        jury_models: list[str] | None = None,
+        jury_weights: dict[str, float] | None = None,
     ):
         self.prompt_version = prompt_version
         self.prompt_path = prompt_path
@@ -66,6 +70,35 @@ class PromptEvaluatorV3:
 
         # MLflow experiment tracker
         self.tracker = ExperimentTracker()
+
+        # LLM Jury 설정
+        self.jury_enabled = jury_enabled
+        self.jury = None
+        self.jury_ensemble = None
+
+        if jury_enabled:
+            self._init_jury(jury_models or ["claude", "codex", "gemini"], jury_weights)
+
+    def _init_jury(
+        self, model_names: list[str], weights: dict[str, float] | None = None
+    ) -> None:
+        """LLM Jury 초기화: 지정된 모델 클라이언트 생성 + Jury + Ensemble"""
+        from evaluation.jury_ensemble import JuryEnsemble
+        from shared.llm_client import CodexClient, GeminiClient
+        from shared.llm_jury import LLMJury
+
+        clients: list[LLMClient] = []
+        for name in model_names:
+            if name == "claude":
+                clients.append(self.client)  # 기존 ClaudeClient 재사용
+            elif name == "codex":
+                clients.append(CodexClient())
+            elif name == "gemini":
+                clients.append(GeminiClient())
+
+        if clients:
+            self.jury = LLMJury(clients)
+            self.jury_ensemble = JuryEnsemble(model_weights=weights)
 
     def find_test_races(self, limit: int = None) -> list[dict[str, Any]]:
         """테스트할 경주 파일 찾기 (enriched 또는 prerace 데이터)"""
@@ -216,7 +249,7 @@ class PromptEvaluatorV3:
         try:
             # Claude CLI를 통한 예측 호출 (Opus 모델, 구독 플랜)
             with self.api_lock:
-                response_text = self.client.predict_sync(
+                response_text = self.client.predict_sync_compat(
                     prompt,
                     model="opus",
                     max_tokens=4096,
@@ -423,12 +456,130 @@ class PromptEvaluatorV3:
 
         return None
 
+    def run_jury_prediction(
+        self, race_data: dict, race_id: str
+    ) -> tuple[dict | None, str]:
+        """LLM Jury를 통한 예측 실행: 3개 모델 병렬 호출 → 가중 투표 집계"""
+        if not self.jury or not self.jury_ensemble:
+            return self.run_claude_prediction(race_data, race_id)
+
+        start_time = time.time()
+
+        # 프롬프트 읽기
+        with open(self.prompt_path, encoding="utf-8") as f:
+            prompt_template = f.read()
+
+        prompt = f"""{prompt_template}
+
+경주 데이터:
+```json
+{json.dumps(race_data, ensure_ascii=False, indent=2)}
+```
+
+다음 JSON 형식으로 예측 결과를 제공하세요:
+{{
+  "selected_horses": [
+    {{"chulNo": 번호, "hrName": "말이름"}},
+    {{"chulNo": 번호, "hrName": "말이름"}},
+    {{"chulNo": 번호, "hrName": "말이름"}}
+  ],
+  "confidence": 70,
+  "reasoning": "1위 인기마 포함, 기수 성적 우수"
+}}"""
+
+        # Jury 심의: 모든 모델에 동일 프롬프트 병렬 전송
+        verdict = self.jury.deliberate(prompt, timeout=3000)
+
+        if not verdict.quorum_reached:
+            print(
+                f"[Jury] quorum 미달 ({len(verdict.successful_responses)}/{len(verdict.responses)}) for {race_id}"
+            )
+            # fallback: 성공한 응답이 1개라도 있으면 단독 사용
+            if verdict.successful_responses:
+                resp = verdict.successful_responses[0]
+                parsed = LLMClient.parse_json(resp.text) if resp.text else None
+                if parsed:
+                    execution_time = time.time() - start_time
+                    parsed["execution_time"] = execution_time
+                    if "selected_horses" not in parsed and "predicted" in parsed:
+                        parsed["selected_horses"] = [
+                            {"chulNo": no} for no in parsed["predicted"]
+                        ]
+                    if "selected_horses" in parsed:
+                        return parsed, "success"
+            return None, "jury_quorum_failed"
+
+        # 각 성공 응답에서 예측 JSON 파싱
+        model_predictions: dict[str, dict] = {}
+        for resp in verdict.successful_responses:
+            if not resp.text:
+                continue
+
+            parsed = LLMClient.parse_json(resp.text)
+            if not parsed:
+                # 기존 파싱 폴백
+                parsed = self._parse_stream_json(resp.text, 0)
+
+            if parsed:
+                predicted = []
+                if "selected_horses" in parsed:
+                    predicted = [h["chulNo"] for h in parsed["selected_horses"]]
+                elif "predicted" in parsed:
+                    predicted = parsed["predicted"]
+                elif "prediction" in parsed:
+                    predicted = parsed["prediction"]
+
+                if predicted:
+                    model_predictions[resp.model_name] = {
+                        "predicted": predicted[:3],
+                        "confidence": parsed.get("confidence", 50),
+                    }
+
+        if len(model_predictions) < 2:
+            # 파싱 가능한 응답이 2개 미만
+            if model_predictions:
+                # 1개만 성공한 경우 단독 사용
+                single = next(iter(model_predictions.values()))
+                execution_time = time.time() - start_time
+                result = {
+                    "selected_horses": [{"chulNo": no} for no in single["predicted"]],
+                    "predicted": single["predicted"],
+                    "confidence": single["confidence"],
+                    "execution_time": execution_time,
+                }
+                return result, "success"
+            return None, "jury_parse_failed"
+
+        # 앙상블 집계
+        aggregation = self.jury_ensemble.aggregate(model_predictions)
+        execution_time = time.time() - start_time
+
+        result = {
+            "selected_horses": [{"chulNo": no} for no in aggregation.predicted],
+            "predicted": aggregation.predicted,
+            "confidence": aggregation.confidence,
+            "execution_time": execution_time,
+            "jury_meta": {
+                "model_predictions": aggregation.model_predictions,
+                "vote_counts": aggregation.vote_counts,
+                "agreement_level": aggregation.agreement_level,
+                "agreement_score": aggregation.agreement_score,
+                "consistency_score": aggregation.consistency_score,
+            },
+        }
+
+        return result, "success"
+
     def run_prediction_with_retry(
         self, race_data: dict, race_id: str, max_retries: int = 1
     ) -> tuple[dict | None, str]:
         """재시도 기능이 있는 예측 실행"""
         for attempt in range(max_retries + 1):
-            result, error_type = self.run_ensemble_prediction(race_data, race_id)
+            if self.jury_enabled:
+                result, error_type = self.run_jury_prediction(race_data, race_id)
+            else:
+                result, error_type = self.run_ensemble_prediction(race_data, race_id)
+
             if result is not None:
                 return result, error_type
 
@@ -884,6 +1035,24 @@ Example:
         default=1,
         help="앙상블 예측 수 (1=단일 예측, 기본값: 1)",
     )
+    parser.add_argument(
+        "--jury",
+        action="store_true",
+        default=False,
+        help="LLM Jury 모드 활성화 (Claude + Codex + Gemini 앙상블)",
+    )
+    parser.add_argument(
+        "--jury-models",
+        type=str,
+        default="claude,codex,gemini",
+        help="Jury에 참여할 모델 목록 (쉼표 구분, 기본값: claude,codex,gemini)",
+    )
+    parser.add_argument(
+        "--jury-weights",
+        type=str,
+        default=None,
+        help="Jury 모델별 가중치 (예: claude=1.0,codex=0.8,gemini=0.9)",
+    )
 
     args = parser.parse_args()
 
@@ -892,6 +1061,17 @@ Example:
     )
     if not topk_values:
         topk_values = (1, 3)
+
+    # Jury 가중치 파싱
+    jury_weights = None
+    if args.jury_weights:
+        jury_weights = {}
+        for pair in args.jury_weights.split(","):
+            k, v = pair.split("=")
+            jury_weights[k.strip()] = float(v.strip())
+
+    # Jury 모델 목록 파싱
+    jury_models = [m.strip() for m in args.jury_models.split(",") if m.strip()]
 
     evaluator = PromptEvaluatorV3(
         prompt_version=args.prompt_version,
@@ -902,6 +1082,9 @@ Example:
         metrics_profile=args.metrics_profile,
         defer_threshold=args.defer_threshold,
         ensemble_k=args.ensemble_k,
+        jury_enabled=args.jury,
+        jury_models=jury_models,
+        jury_weights=jury_weights,
     )
     _results = evaluator.evaluate_all_parallel(
         test_limit=args.test_limit,
