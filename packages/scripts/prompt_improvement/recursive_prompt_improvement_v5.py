@@ -58,6 +58,25 @@ def should_promote_challenger(
     if champion_metrics is None:
         return {"promote": True, "reason": "initial_champion", "checks": {}}
 
+    # 챔피언이 0 샘플이면 실질적 챔피언 없음으로 취급
+    # (log_loss=0.0 등 무의미한 값이 "완벽"으로 해석되는 것을 방지)
+    champion_samples = int(champion_metrics.get("samples", 0))
+    if champion_samples == 0:
+        return {"promote": True, "reason": "champion_no_samples", "checks": {}}
+
+    # coverage=0 (모든 예측이 deferred)인 경우 무의미한 지표 방지
+    champion_coverage = float(champion_metrics.get("coverage", 1.0))
+    challenger_coverage = float(challenger_metrics.get("coverage", 1.0) if challenger_metrics else 1.0)
+    if champion_coverage == 0.0 and challenger_coverage == 0.0:
+        # 둘 다 coverage 0이면 success_rate 기준으로만 비교할 수 없으므로 승격 불가
+        return {"promote": False, "reason": "both_zero_coverage", "checks": {}}
+    if champion_coverage == 0.0:
+        # 챔피언의 coverage가 0이면 무의미하므로 챌린저 승격
+        return {"promote": True, "reason": "champion_zero_coverage", "checks": {}}
+    if challenger_coverage == 0.0:
+        # 챌린저의 coverage가 0이면 지표 비교 불가 → 승격 거부
+        return {"promote": False, "reason": "challenger_zero_coverage", "checks": {}}
+
     if not leakage_passed:
         return {
             "promote": False,
@@ -229,7 +248,9 @@ class RecursivePromptImprovementV5:
 
             # 1. 프롬프트 평가
             self.logger.info("\n[1단계] 프롬프트 평가 중...")
-            evaluation_results = self._evaluate_prompt(current_prompt_path)
+            evaluation_results = self._evaluate_prompt(
+                current_prompt_path, version=current_structure.version
+            )
 
             if not evaluation_results:
                 self.logger.error("평가 실패 - 중단")
@@ -484,13 +505,16 @@ class RecursivePromptImprovementV5:
             "report_path": str(report_path),
         }
 
-    def _evaluate_prompt(self, prompt_path: Path) -> dict[str, Any] | None:
+    def _evaluate_prompt(
+        self, prompt_path: Path, version: str | None = None
+    ) -> dict[str, Any] | None:
         """프롬프트 평가 실행"""
         try:
-            # 버전 추출
-            prompt_content = read_text_file(prompt_path)
-            structure = self.prompt_parser.parse(prompt_content)
-            version = structure.version or "unknown"
+            # 버전 추출 (명시적 전달 우선, 없으면 파싱)
+            if not version:
+                prompt_content = read_text_file(prompt_path)
+                structure = self.prompt_parser.parse(prompt_content)
+                version = structure.version or "unknown"
 
             # evaluate_prompt_v3.py 실행
             # 사용자가 지정한 경주 수 또는 자동 설정
@@ -512,13 +536,15 @@ class RecursivePromptImprovementV5:
                     race_count = "100"  # 대규모 평가
 
             # uv를 통해 실행 (가상환경 의존성 사용)
+            # 프롬프트 경로를 절대 경로로 변환 (subprocess cwd가 다르므로)
+            absolute_prompt_path = str(Path(prompt_path).resolve())
             cmd = [
                 "uv",
                 "run",
                 "python3",
                 "evaluation/evaluate_prompt_v3.py",  # scripts_dir 기준 상대 경로
                 version,
-                str(prompt_path),
+                absolute_prompt_path,
                 race_count,  # 평가할 경주 수
                 str(self.parallel_count),
                 "--report-format",
@@ -531,7 +557,9 @@ class RecursivePromptImprovementV5:
                 "1,3",
             ]
             if self.defer_policy == "threshold":
-                cmd.extend(["--defer-threshold", "0.7"])
+                # 0.4로 낮춤: Claude 예측 confidence가 보통 50-65% (정규화 후 0.5-0.65)
+                # 0.7은 거의 모든 예측을 deferred 처리하여 metrics_v2가 0이 됨
+                cmd.extend(["--defer-threshold", "0.4"])
 
             if self.target_date != "all":
                 # 특정 날짜만 평가하도록 수정 필요
@@ -562,12 +590,16 @@ class RecursivePromptImprovementV5:
                 self.logger.error(f"평가 실패: {result.stderr}")
                 return None
 
+            # subprocess 출력 로그 (디버깅용)
+            if result.stderr:
+                for line in result.stderr.strip().split("\n")[-5:]:
+                    self.logger.debug(f"  평가 stderr: {line}")
+
             # 잠시 대기 (파일 생성 시간)
             time.sleep(2)
 
-            # 결과 파일 찾기
+            # 결과 파일 찾기 - 이번 실행에서 생성된 파일만 사용
             eval_dir = get_data_dir() / "prompt_evaluation"
-            # v2.3 형식도 지원
             eval_files = list(eval_dir.glob(f"evaluation_{version}_*.json"))
 
             self.logger.info(f"평가 디렉토리: {eval_dir}")
@@ -587,7 +619,17 @@ class RecursivePromptImprovementV5:
 
             # 가장 최근 파일 읽기
             latest_file = max(eval_files, key=lambda p: p.stat().st_mtime)
-            return read_json_file(latest_file)
+            eval_data = read_json_file(latest_file)
+
+            # 0 샘플 결과 검증 - 유효 예측이 없으면 재시도 또는 실패 처리
+            valid_predictions = eval_data.get("valid_predictions", 0)
+            if valid_predictions == 0:
+                self.logger.warning(
+                    f"⚠️ 평가 결과에 유효 예측이 0건입니다 (파일: {latest_file.name}). "
+                    "프롬프트 경로 또는 Claude CLI 연결을 확인하세요."
+                )
+
+            return eval_data
 
         except Exception as e:
             self.logger.error(f"평가 중 오류: {e}")
