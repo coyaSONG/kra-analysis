@@ -320,7 +320,9 @@ class TestAsyncCollectionEndpoints:
     @pytest.mark.integration
     async def test_async_collect_races(self, authenticated_client: AsyncClient):
         """Test async race collection"""
-        with patch("infrastructure.background_tasks.submit_task", return_value="test-task-id"):
+        with patch(
+            "infrastructure.background_tasks.submit_task", return_value="test-task-id"
+        ):
             response = await authenticated_client.post(
                 "/api/v2/collection/async",
                 json={"date": "20240719", "meet": 1, "race_numbers": [1, 2, 3]},

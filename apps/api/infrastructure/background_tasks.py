@@ -63,7 +63,9 @@ async def _get_redis():
     return redis_client
 
 
-async def _save_state(task_id: str, state: TaskState, result: Any = None, error: str | None = None) -> None:
+async def _save_state(
+    task_id: str, state: TaskState, result: Any = None, error: str | None = None
+) -> None:
     """Persist task state to Redis."""
     redis = await _get_redis()
     if redis is None:
@@ -78,9 +80,13 @@ async def _save_state(task_id: str, state: TaskState, result: Any = None, error:
         "updated_at": datetime.utcnow().isoformat(),
     }
     try:
-        await redis.setex(_redis_key(task_id), _TASK_STATE_TTL, json.dumps(payload, default=str))
+        await redis.setex(
+            _redis_key(task_id), _TASK_STATE_TTL, json.dumps(payload, default=str)
+        )
     except Exception as exc:
-        logger.warning("Failed to save task state to Redis", task_id=task_id, error=str(exc))
+        logger.warning(
+            "Failed to save task state to Redis", task_id=task_id, error=str(exc)
+        )
 
 
 async def _load_state(task_id: str) -> dict[str, Any] | None:
@@ -93,7 +99,9 @@ async def _load_state(task_id: str) -> dict[str, Any] | None:
         if raw:
             return json.loads(raw)
     except Exception as exc:
-        logger.warning("Failed to load task state from Redis", task_id=task_id, error=str(exc))
+        logger.warning(
+            "Failed to load task state from Redis", task_id=task_id, error=str(exc)
+        )
     return None
 
 
@@ -212,7 +220,9 @@ async def get_task_status(task_id: str) -> dict[str, Any] | None:
     if asyncio_task is not None:
         return {
             "task_id": task_id,
-            "state": TaskState.PROCESSING.value if not asyncio_task.done() else TaskState.COMPLETED.value,
+            "state": TaskState.PROCESSING.value
+            if not asyncio_task.done()
+            else TaskState.COMPLETED.value,
             "result": None,
             "error": None,
             "alive": not asyncio_task.done(),

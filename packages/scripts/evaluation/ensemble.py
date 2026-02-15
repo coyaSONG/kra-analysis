@@ -16,7 +16,9 @@ class SelfConsistencyEnsemble:
         self.k = k
         self.temperature = temperature
 
-    def aggregate_predictions(self, predictions: list[dict[str, Any]]) -> dict[str, Any]:
+    def aggregate_predictions(
+        self, predictions: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Aggregate K predictions using Borda count.
 
         Each prediction's predicted=[h1, h2, h3]:

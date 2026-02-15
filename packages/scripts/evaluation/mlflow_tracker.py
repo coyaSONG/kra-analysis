@@ -16,9 +16,9 @@ class ExperimentTracker:
     """Tracks prompt evaluation experiments with MLflow."""
 
     def __init__(self, experiment_name: str = "kra-prompt-evaluation"):
-        self.enabled = MLFLOW_AVAILABLE and os.getenv(
-            "MLFLOW_TRACKING_URI", ""
-        ) != "disabled"
+        self.enabled = (
+            MLFLOW_AVAILABLE and os.getenv("MLFLOW_TRACKING_URI", "") != "disabled"
+        )
         if not self.enabled:
             return
 

@@ -5,6 +5,7 @@
 - enriched 데이터를 사용하여 예측 수행
 - 예측 결과와 분석 정보만 출력
 """
+
 from __future__ import annotations
 
 import glob
@@ -100,15 +101,17 @@ class PredictionTester:
                         "trNo": item["trNo"],
                         "winOdds": item["winOdds"],
                         "plcOdds": item.get("plcOdds"),
-                        "budam": item.get("budam", ""), # '핸디캡' 등의 문자열
-                        "wgBudam": item.get("wgBudam"), # 숫자 값 (52.0 등)
-                        "wgHr": wgHr_value, # 파싱된 숫자 값
+                        "budam": item.get("budam", ""),  # '핸디캡' 등의 문자열
+                        "wgBudam": item.get("wgBudam"),  # 숫자 값 (52.0 등)
+                        "wgHr": wgHr_value,  # 파싱된 숫자 값
                         "age": item.get("age"),
                         "sex": item.get("sex", ""),
-                        "rank": item.get("rank", ""), # '국5등급' 등
+                        "rank": item.get("rank", ""),  # '국5등급' 등
                         "rating": item.get("rating"),
-                        "rcDist": item.get("rcDist"), # 경주거리 추가
-                        "ilsu": item.get("ilsu"), # 장기휴양 리스크 계산을 위한 일수 추가
+                        "rcDist": item.get("rcDist"),  # 경주거리 추가
+                        "ilsu": item.get(
+                            "ilsu"
+                        ),  # 장기휴양 리스크 계산을 위한 일수 추가
                         # 기타 필요한 데이터 추가 (예: 구간 기록 등)
                         "se_3cAccTime": item.get("se_3cAccTime"),
                         "se_4cAccTime": item.get("se_4cAccTime"),
@@ -135,7 +138,9 @@ class PredictionTester:
 
                 # raceInfo 추출 (첫 번째 말의 공통 정보 사용)
                 first_horse_item = items[0] if items else {}
-                race_distance = first_horse_item.get("rcDist") # rcDist에서 경주거리 가져오기
+                race_distance = first_horse_item.get(
+                    "rcDist"
+                )  # rcDist에서 경주거리 가져오기
 
                 return {
                     "meet": file_info["meet"],
@@ -144,10 +149,10 @@ class PredictionTester:
                     "horses": horses,
                     "raceInfo": {
                         "distance": race_distance,
-                        "grade": first_horse_item.get("rank", ""), # 등급 추가
+                        "grade": first_horse_item.get("rank", ""),  # 등급 추가
                         "track": first_horse_item.get("track", ""),
                         "weather": first_horse_item.get("weather", ""),
-                        "budam": first_horse_item.get("budam", ""), # 부담조건 추가
+                        "budam": first_horse_item.get("budam", ""),  # 부담조건 추가
                     },
                 }
 
@@ -201,12 +206,17 @@ class PredictionTester:
                     prediction_data = json.loads(json_str)
 
                     # `predicted` 필드가 최상위에 없으면 trifecta_picks.primary에서 가져옴 (하위 호환성)
-                    predicted_list = prediction_data.get("predicted", prediction_data.get("trifecta_picks", {}).get("primary", []))
+                    predicted_list = prediction_data.get(
+                        "predicted",
+                        prediction_data.get("trifecta_picks", {}).get("primary", []),
+                    )
 
                     return {
                         "race_id": race_id,
                         "predicted": predicted_list,
-                        "confidence": prediction_data.get("trifecta_picks", {}).get("confidence", 0),
+                        "confidence": prediction_data.get("trifecta_picks", {}).get(
+                            "confidence", 0
+                        ),
                         "reason": prediction_data.get("analysis_summary", ""),
                         "execution_time": execution_time,
                         "full_output": output,
@@ -306,11 +316,11 @@ class PredictionTester:
 
     def run_test(self, date_filter: str | None = None, limit: int | None = None):
         """예측 테스트 실행"""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("경주 예측 테스트 시작")
         print(f"프롬프트: {self.prompt_path}")
         print(f"날짜 필터: {date_filter if date_filter else '전체'}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # enriched 파일 찾기
         enriched_files = self.find_enriched_files(date_filter)
@@ -324,7 +334,9 @@ class PredictionTester:
         analyses = []
 
         for i, file_info in enumerate(enriched_files):
-            print(f"\n[{i+1}/{len(enriched_files)}] {file_info['race_id']} 예측 중...")
+            print(
+                f"\n[{i + 1}/{len(enriched_files)}] {file_info['race_id']} 예측 중..."
+            )
 
             # 경주 데이터 로드
             race_data = self.load_race_data(file_info)
@@ -378,9 +390,9 @@ class PredictionTester:
             print("\n예측 결과가 없습니다.")
             return
 
-        print(f"\n\n{'='*60}")
+        print(f"\n\n{'=' * 60}")
         print("예측 테스트 요약")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         print("\n📊 기본 통계:")
         print(f"- 총 예측 수: {len(predictions)}개")

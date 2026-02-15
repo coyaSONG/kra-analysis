@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """JSON 파싱 로직 테스트 - prediction 필드 지원 확인"""
+
 import json
 import re
 
@@ -8,15 +9,15 @@ test_output = {
     "type": "result",
     "result": """```json
 {"prediction": [4, 6, 3], "confidence": 0.72, "reasoning": "test"}
-```"""
+```""",
 }
 
 print("=== Testing prediction field parsing ===")
-content = test_output['result']
+content = test_output["result"]
 print(f"Content: {content}")
 
 # 코드블록 내 JSON 추출
-code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+code_block_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", content, re.DOTALL)
 if code_block_match:
     print(f"\nCode block found: {code_block_match.group(1)}")
     prediction = json.loads(code_block_match.group(1))

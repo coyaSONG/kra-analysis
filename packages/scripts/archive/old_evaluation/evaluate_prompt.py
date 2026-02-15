@@ -271,7 +271,7 @@ class PromptEvaluator:
         for i, result_file in enumerate(test_races):
             # 경주 ID 생성
             race_id = result_file.stem
-            print(f"\n[{i+1}/{total_races}] {race_id} 처리 중...")
+            print(f"\n[{i + 1}/{total_races}] {race_id} 처리 중...")
 
             # 예측용 데이터 준비
             race_data = self.prepare_race_data(result_file)

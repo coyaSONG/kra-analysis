@@ -7,6 +7,7 @@ enriched 경주 데이터와 결과를 결합하여 이진 분류 모델(is_top3
 - Feature importance 분석
 - Per-race top-3 정확도 평가
 """
+
 from __future__ import annotations
 
 import argparse
@@ -65,6 +66,7 @@ DEFAULT_PARAMS = {
 # Data loading helpers
 # ===================================================================
 
+
 def _parse_enriched_filename(filepath: str) -> dict | None:
     """enriched 파일 경로에서 날짜/경마장/경주번호 메타데이터를 추출합니다.
 
@@ -99,9 +101,13 @@ def _parse_enriched_filename(filepath: str) -> dict | None:
         return None
 
 
-def _load_result(data_dir: Path, rc_date: str, meet_name: str, rc_no: str) -> list[int] | None:
+def _load_result(
+    data_dir: Path, rc_date: str, meet_name: str, rc_no: str
+) -> list[int] | None:
     """캐시된 결과 파일(top3_{date}_{meet}_{raceNo}.json)을 로드합니다."""
-    result_file = data_dir / "cache" / "results" / f"top3_{rc_date}_{meet_name}_{rc_no}.json"
+    result_file = (
+        data_dir / "cache" / "results" / f"top3_{rc_date}_{meet_name}_{rc_no}.json"
+    )
     if not result_file.exists():
         return None
     try:
@@ -180,7 +186,10 @@ def _horse_to_feature_row(horse: dict, race_id: str) -> dict:
 # Dataset building
 # ===================================================================
 
-def build_dataset(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
+
+def build_dataset(
+    data_dir: Path,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str]]:
     """enriched 파일 + 결과 파일에서 (X, y, groups, race_ids) 데이터셋을 구축합니다.
 
     Returns:
@@ -189,7 +198,9 @@ def build_dataset(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, l
         groups: (N,) 경주 그룹 ID (정수)
         race_ids: 고유 경주 ID 문자열 목록
     """
-    enriched_pattern = str(data_dir / "races" / "*" / "*" / "*" / "*" / "*_enriched.json")
+    enriched_pattern = str(
+        data_dir / "races" / "*" / "*" / "*" / "*" / "*_enriched.json"
+    )
     enriched_files = sorted(glob.glob(enriched_pattern))
 
     if not enriched_files:
@@ -238,13 +249,17 @@ def build_dataset(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, l
         group_counter += 1
         matched += 1
 
-    print(f"데이터셋 구축 완료: {matched}개 경주, {len(rows)}개 샘플 (결과 없음: {skipped_no_result}개 스킵)")
+    print(
+        f"데이터셋 구축 완료: {matched}개 경주, {len(rows)}개 샘플 (결과 없음: {skipped_no_result}개 스킵)"
+    )
 
     if not rows:
         return np.array([]), np.array([]), np.array([]), []
 
     # dict -> numpy 배열 변환
-    X = np.array([[row.get(col) for col in FEATURE_COLUMNS] for row in rows], dtype=np.float64)
+    X = np.array(
+        [[row.get(col) for col in FEATURE_COLUMNS] for row in rows], dtype=np.float64
+    )
 
     # NaN 처리: 열별 중앙값으로 대체, 중앙값 없으면 -1
     for col_idx in range(X.shape[1]):
@@ -266,6 +281,7 @@ def build_dataset(data_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, l
 # ===================================================================
 # Evaluation helpers
 # ===================================================================
+
 
 def evaluate_per_race_top3(
     y_true: np.ndarray,
@@ -315,6 +331,7 @@ def evaluate_per_race_top3(
 # Training pipeline
 # ===================================================================
 
+
 def train(data_dir: Path, output_dir: Path) -> None:
     """메인 학습 파이프라인을 실행합니다."""
     print("=" * 60)
@@ -327,14 +344,18 @@ def train(data_dir: Path, output_dir: Path) -> None:
 
     if X.size == 0:
         print("[ERROR] 데이터가 없습니다. enriched 파일과 결과 파일을 확인하세요.")
-        print(f"  - enriched 파일 경로: {data_dir / 'races' / '*' / '*' / '*' / '*' / '*_enriched.json'}")
+        print(
+            f"  - enriched 파일 경로: {data_dir / 'races' / '*' / '*' / '*' / '*' / '*_enriched.json'}"
+        )
         print(f"  - 결과 파일 경로: {data_dir / 'cache' / 'results' / 'top3_*.json'}")
         sys.exit(1)
 
     n_samples, n_features = X.shape
     n_positive = int(y.sum())
     n_races = len(np.unique(groups))
-    print(f"  샘플 수: {n_samples} ({n_positive} positive, {n_samples - n_positive} negative)")
+    print(
+        f"  샘플 수: {n_samples} ({n_positive} positive, {n_samples - n_positive} negative)"
+    )
     print(f"  피처 수: {n_features}")
     print(f"  경주 수: {n_races}")
     print(f"  양성 비율: {n_positive / n_samples * 100:.1f}%")
@@ -410,7 +431,9 @@ def train(data_dir: Path, output_dir: Path) -> None:
 
     importances = final_model.feature_importances_
     importance_pairs = sorted(
-        zip(FEATURE_COLUMNS, importances, strict=False), key=lambda x: x[1], reverse=True
+        zip(FEATURE_COLUMNS, importances, strict=False),
+        key=lambda x: x[1],
+        reverse=True,
     )
 
     print(f"  {'Feature':<25} {'Importance':>10}")
@@ -453,15 +476,19 @@ def train(data_dir: Path, output_dir: Path) -> None:
         print("\n[5/5] MLflow 로깅...")
         tracker.start_run(run_name=f"lgbm_v1_n{n_races}")
         tracker.log_params(DEFAULT_PARAMS)
-        tracker.log_params({"n_samples": n_samples, "n_races": n_races, "n_features": n_features})
-        tracker.log_metrics({
-            "cv_mean_auc": float(mean_auc),
-            "cv_std_auc": float(std_auc),
-            "cv_mean_precision": float(mean_precision),
-            "cv_mean_recall": float(mean_recall),
-            "cv_top3_exact_match_rate": float(mean_exact),
-            "cv_avg_correct_per_race": float(mean_correct),
-        })
+        tracker.log_params(
+            {"n_samples": n_samples, "n_races": n_races, "n_features": n_features}
+        )
+        tracker.log_metrics(
+            {
+                "cv_mean_auc": float(mean_auc),
+                "cv_std_auc": float(std_auc),
+                "cv_mean_precision": float(mean_precision),
+                "cv_mean_recall": float(mean_recall),
+                "cv_top3_exact_match_rate": float(mean_exact),
+                "cv_avg_correct_per_race": float(mean_correct),
+            }
+        )
         tracker.log_artifact(str(model_path))
         tracker.end_run()
         print("  MLflow 로깅 완료")
@@ -480,6 +507,7 @@ def train(data_dir: Path, output_dir: Path) -> None:
 # ===================================================================
 # CLI
 # ===================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(

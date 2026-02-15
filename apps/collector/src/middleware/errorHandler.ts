@@ -190,7 +190,10 @@ export const errorHandler = (err: Error, req: Request, res: Response, _next: Nex
   }
 
   // Handle payload too large errors
-  if (('type' in err && (err as any).type === 'entity.too.large') || err.message?.includes('request entity too large')) {
+  if (
+    ('type' in err && (err as any).type === 'entity.too.large') ||
+    err.message?.includes('request entity too large')
+  ) {
     res.status(413).json({
       success: false,
       error: {

@@ -207,9 +207,7 @@ class JobService:
             "parameters": job.parameters,
         }
 
-    def _calculate_progress(
-        self, job: Job, task_status: dict[str, Any] | None
-    ) -> int:
+    def _calculate_progress(self, job: Job, task_status: dict[str, Any] | None) -> int:
         """작업 진행률 계산 (0-100)"""
         if job.status == "completed":
             return 100

@@ -24,9 +24,9 @@ def compare_race_data(file1, file2, label1="File 1", label2="File 2"):
     if isinstance(horse2, list):
         horse2 = horse2[0] if horse2 else {}
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("경주 데이터 형식 비교")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # 기본 정보
     print("\n📋 기본 정보")

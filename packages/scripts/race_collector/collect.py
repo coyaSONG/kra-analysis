@@ -4,6 +4,7 @@ Collect race data from KRA API214_1 and run smart preprocessing.
 Replaces collect_and_preprocess.js.
 CLI: python3 collect.py <date> [race_no] [--meet CODE]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,9 +21,7 @@ MEET_NAMES = {"1": "seoul", "2": "jeju", "3": "busan"}
 MEET_LABELS = {"1": "Seoul", "2": "Jeju", "3": "Busan"}
 
 
-def collect_and_preprocess_race(
-    meet: str, rc_date: str, rc_no: int
-) -> dict | None:
+def collect_and_preprocess_race(meet: str, rc_date: str, rc_no: int) -> dict | None:
     """Collect a single race and run preprocessing."""
     print(f"\n{rc_no}R collecting... ", end="", flush=True)
 
@@ -53,7 +52,11 @@ def collect_and_preprocess_race(
 
     try:
         subprocess.run(
-            [sys.executable, "race_collector/smart_preprocess_races.py", str(temp_path)],
+            [
+                sys.executable,
+                "race_collector/smart_preprocess_races.py",
+                str(temp_path),
+            ],
             check=True,
             capture_output=True,
             text=True,
@@ -77,7 +80,9 @@ def collect_and_preprocess_race(
 def collect_and_preprocess_day(meet: str, rc_date: str) -> list[dict]:
     """Collect all races for a given day and venue, then preprocess."""
     print(f"\n{'=' * 60}")
-    print(f"  {rc_date} {MEET_LABELS.get(meet, meet)} race data collection & preprocessing")
+    print(
+        f"  {rc_date} {MEET_LABELS.get(meet, meet)} race data collection & preprocessing"
+    )
     print(f"{'=' * 60}")
 
     results: list[dict] = []

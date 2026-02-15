@@ -109,9 +109,9 @@ class ExtendedThinkingEngine:
             # 작업 설명에 추가
             lines = content.strip().split("\n")
             if lines:
-                lines[
-                    0
-                ] += f" Please {thinking_level.keyword} about all aspects of this prediction task."
+                lines[0] += (
+                    f" Please {thinking_level.keyword} about all aspects of this prediction task."
+                )
             return "\n".join(lines)
 
         elif section_name == "analysis_steps":

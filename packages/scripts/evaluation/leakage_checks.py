@@ -40,7 +40,9 @@ def _scan_forbidden_fields(obj: Any, path: str, issues: set[str]) -> None:
             _scan_forbidden_fields(item, f"{path}[{idx}]", issues)
 
 
-def check_detailed_results_for_leakage(detailed_results: list[dict[str, Any]]) -> dict[str, Any]:
+def check_detailed_results_for_leakage(
+    detailed_results: list[dict[str, Any]],
+) -> dict[str, Any]:
     """Check detailed evaluation records for post-race leakage fields."""
 
     issues: set[str] = set()

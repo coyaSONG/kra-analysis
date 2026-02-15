@@ -5,6 +5,7 @@ Claude CLI 기반 클라이언트 (구독 플랜 활용)
 - 동시성 제한 (Semaphore)
 - JSON 응답 파싱 (코드블록 + regex fallback)
 """
+
 from __future__ import annotations
 
 import json
@@ -60,7 +61,9 @@ class ClaudeClient:
 
                 if result.returncode != 0:
                     stderr_preview = result.stderr[:300] if result.stderr else "N/A"
-                    print(f"[ClaudeClient] CLI 오류 (code={result.returncode}): {stderr_preview}")
+                    print(
+                        f"[ClaudeClient] CLI 오류 (code={result.returncode}): {stderr_preview}"
+                    )
                     return None
 
                 # --output-format json의 경우 {"type":"result","result":"..."} 형태
@@ -84,7 +87,9 @@ class ClaudeClient:
                 print(f"[ClaudeClient] 타임아웃 ({timeout}s)")
                 return None
             except FileNotFoundError:
-                print("[ClaudeClient] 'claude' CLI를 찾을 수 없습니다. Claude Code가 설치되어 있는지 확인하세요.")
+                print(
+                    "[ClaudeClient] 'claude' CLI를 찾을 수 없습니다. Claude Code가 설치되어 있는지 확인하세요."
+                )
                 return None
             except Exception as e:
                 print(f"[ClaudeClient] 예기치 않은 오류: {e}")

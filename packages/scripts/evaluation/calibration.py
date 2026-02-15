@@ -74,9 +74,7 @@ class ConfidenceCalibrator:
                 if span == 0:
                     return self._bin_actuals[i]
                 t = (confidence - self._bin_means[i]) / span
-                return (
-                    self._bin_actuals[i] * (1 - t) + self._bin_actuals[i + 1] * t
-                )
+                return self._bin_actuals[i] * (1 - t) + self._bin_actuals[i + 1] * t
 
         return confidence
 

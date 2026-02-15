@@ -108,10 +108,10 @@ class DataValidator:
 
     async def test_multiple_races(self, date: str, meet: int, race_count: int = 5):
         """여러 경주의 데이터를 검증합니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("다중 경주 데이터 검증 테스트")
         print(f"날짜: {date}, 경마장: {meet}, 경주 수: {race_count}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         all_valid = True
         total_horses = 0
@@ -151,24 +151,24 @@ class DataValidator:
                 print(f"❌ 오류 발생: {e}")
                 all_valid = False
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("검증 결과 요약")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"전체 결과: {'✅ 모두 유효' if all_valid else '❌ 일부 오류 발생'}")
         print(f"총 말 수: {total_horses}마리")
 
     async def test_api_consistency(self, date: str, meet: int, race_no: int):
         """동일한 API를 여러 번 호출하여 일관성을 검증합니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("API 일관성 테스트")
         print(f"날짜: {date}, 경마장: {meet}, 경주: {race_no}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         results = []
 
         print("동일한 경주를 3번 조회합니다...")
         for i in range(3):
-            print(f"\n[시도 {i+1}]")
+            print(f"\n[시도 {i + 1}]")
             data = await self.api_client.get_race_detail(date, meet, race_no)
 
             if data:
@@ -214,9 +214,9 @@ class DataValidator:
 
     async def test_special_cases(self):
         """특수한 경우를 테스트합니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("특수 케이스 테스트")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # 1. 존재하지 않는 날짜
         print("[1. 미래 날짜 테스트]")

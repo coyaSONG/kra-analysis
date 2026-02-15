@@ -57,7 +57,9 @@ class PromptEvaluatorV3:
         self.metrics_profile = metrics_profile
         self.defer_threshold = defer_threshold
         self.ensemble_k = ensemble_k
-        self.ensemble = SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
+        self.ensemble = (
+            SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
+        )
 
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
@@ -89,8 +91,10 @@ class PromptEvaluatorV3:
             race_prefix = "_".join(filename.split("_")[0:2])
             race_date = filename.split("_")[2]
             # _enriched.json 또는 _prerace.json 제거
-            race_no = filename.split("_")[3].replace("_enriched.json", "").replace(
-                "_prerace.json", ""
+            race_no = (
+                filename.split("_")[3]
+                .replace("_enriched.json", "")
+                .replace("_prerace.json", "")
             )
 
             # meet 정보 추출
@@ -271,10 +275,12 @@ class PromptEvaluatorV3:
         pred_dicts = []
         for p in predictions:
             predicted = [h["chulNo"] for h in p.get("selected_horses", [])]
-            pred_dicts.append({
-                "predicted": predicted,
-                "confidence": p.get("confidence", 50),
-            })
+            pred_dicts.append(
+                {
+                    "predicted": predicted,
+                    "confidence": p.get("confidence", 50),
+                }
+            )
 
         # Aggregate
         aggregated = self.ensemble.aggregate_predictions(pred_dicts)
@@ -390,7 +396,9 @@ class PromptEvaluatorV3:
 
             # 일반 JSON (selected_horses, predicted 또는 prediction)
             json_match = re.search(
-                r'\{.*"(?:selected_horses|predicted|prediction)".*?\}', output, re.DOTALL
+                r'\{.*"(?:selected_horses|predicted|prediction)".*?\}',
+                output,
+                re.DOTALL,
             )
             if json_match:
                 try:
@@ -439,7 +447,13 @@ class PromptEvaluatorV3:
 
             # 1-3위 결과 파일 경로 (스크립트 위치 기준)
             script_dir = Path(__file__).parent.parent
-            cache_file = script_dir / "data" / "cache" / "results" / f"top3_{rc_date}_{meet}_{rc_no}.json"
+            cache_file = (
+                script_dir
+                / "data"
+                / "cache"
+                / "results"
+                / f"top3_{rc_date}_{meet}_{rc_no}.json"
+            )
 
             # 캐시 파일이 있으면 읽기
             if cache_file.exists():
@@ -466,14 +480,16 @@ class PromptEvaluatorV3:
                     capture_output=True,
                     text=True,
                     timeout=30,
-                    cwd=script_dir  # packages/scripts 디렉토리에서 실행
+                    cwd=script_dir,  # packages/scripts 디렉토리에서 실행
                 )
                 if result.returncode == 0 and cache_file.exists():
                     with open(cache_file, encoding="utf-8") as f:
                         top3 = json.load(f)
                     return top3
                 elif result.returncode != 0:
-                    print(f"  결과 수집 실패: {result.stderr[:100] if result.stderr else 'unknown'}")
+                    print(
+                        f"  결과 수집 실패: {result.stderr[:100] if result.stderr else 'unknown'}"
+                    )
             except Exception as e:
                 print(f"  결과 수집 예외: {e}")
 
@@ -519,14 +535,16 @@ class PromptEvaluatorV3:
         """v5 insight_analyzer 호환 형식으로 race_data 변환"""
         entries = []
         for horse in race_data.get("horses", []):
-            entries.append({
-                "horse_no": horse.get("chulNo"),
-                "win_odds": horse.get("winOdds", 0),
-                "jockey_name": horse.get("jkName", ""),
-                "jockey_winrate": horse.get("jkDetail", {}).get("winRate", 0),
-                "horse_name": horse.get("hrName", ""),
-                "horse_record": horse.get("hrDetail", {}),
-            })
+            entries.append(
+                {
+                    "horse_no": horse.get("chulNo"),
+                    "win_odds": horse.get("winOdds", 0),
+                    "jockey_name": horse.get("jkName", ""),
+                    "jockey_winrate": horse.get("jkDetail", {}).get("winRate", 0),
+                    "horse_name": horse.get("hrName", ""),
+                    "horse_record": horse.get("hrDetail", {}),
+                }
+            )
         return {
             "entries": entries,
             "race_info": race_data.get("raceInfo", {}),
@@ -634,24 +652,24 @@ class PromptEvaluatorV3:
 
                             # 예측과 실제 결과를 문자열로 포맷
                             pred_str = (
-                                f"[{",".join(map(str, predicted))}]"
+                                f"[{','.join(map(str, predicted))}]"
                                 if predicted
                                 else "[?]"
                             )
                             actual_str = (
-                                f"[{",".join(map(str, actual))}]" if actual else "[?]"
+                                f"[{','.join(map(str, actual))}]" if actual else "[?]"
                             )
 
                             print(
-                                f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count/total_races*100:.1f}% | ETA: {eta:.0f}초"
+                                f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str} | 진행률: {completed_count / total_races * 100:.1f}% | ETA: {eta:.0f}초"
                             )
                         else:
                             print(
-                                f"[{completed_count}/{total_races}] {status} {race_info["race_id"]} - 에러: {result.get("error_type", "unknown")} | 진행률: {completed_count/total_races*100:.1f}%"
+                                f"[{completed_count}/{total_races}] {status} {race_info['race_id']} - 에러: {result.get('error_type', 'unknown')} | 진행률: {completed_count / total_races * 100:.1f}%"
                             )
 
                 except Exception as e:
-                    print(f"Error processing {race_info["race_id"]}: {e}")
+                    print(f"Error processing {race_info['race_id']}: {e}")
 
         # 전체 요약
         valid_results = [r for r in results if r["prediction"] is not None]
@@ -692,7 +710,11 @@ class PromptEvaluatorV3:
         if self.asof_check == "on":
             leakage_check = check_detailed_results_for_leakage(results)
         else:
-            leakage_check = {"passed": True, "issues": [], "checked_races": len(results)}
+            leakage_check = {
+                "passed": True,
+                "issues": [],
+                "checked_races": len(results),
+            }
 
         report_v2 = build_report_v2(
             prompt_version=self.prompt_version,
@@ -731,12 +753,8 @@ class PromptEvaluatorV3:
                     "average_correct_horses": summary["average_correct_horses"],
                     "total_races": float(summary["total_races"]),
                     "valid_predictions": float(summary["valid_predictions"]),
-                    "successful_predictions": float(
-                        summary["successful_predictions"]
-                    ),
-                    "total_correct_horses": float(
-                        summary["total_correct_horses"]
-                    ),
+                    "successful_predictions": float(summary["successful_predictions"]),
+                    "total_correct_horses": float(summary["total_correct_horses"]),
                     "avg_execution_time": summary["avg_execution_time"],
                     "log_loss": metrics_v2["log_loss"],
                     "brier": metrics_v2["brier"],
@@ -762,7 +780,9 @@ class PromptEvaluatorV3:
                 json.dump(summary, f, ensure_ascii=False, indent=2)
 
         # 결과 출력
-        self.print_summary(report_v2 if self.report_format == "v2" else summary, output_file)
+        self.print_summary(
+            report_v2 if self.report_format == "v2" else summary, output_file
+        )
 
         return report_v2 if self.report_format == "v2" else summary
 
@@ -770,16 +790,16 @@ class PromptEvaluatorV3:
         """요약 결과 출력"""
         print("\n" + "=" * 60)
         print("평가 완료!")
-        print(f"프롬프트 버전: {summary["prompt_version"]}")
-        print(f"전체 경주: {summary["total_races"]}")
-        print(f"유효 예측: {summary["valid_predictions"]}")
+        print(f"프롬프트 버전: {summary['prompt_version']}")
+        print(f"전체 경주: {summary['total_races']}")
+        print(f"유효 예측: {summary['valid_predictions']}")
 
         if summary["valid_predictions"] > 0:
             print(
-                f"완전 적중: {summary["successful_predictions"]} ({summary["success_rate"]:.1f}%)"
+                f"완전 적중: {summary['successful_predictions']} ({summary['success_rate']:.1f}%)"
             )
-            print(f"평균 적중 말 수: {summary["average_correct_horses"]:.2f}")
-            print(f"평균 실행 시간: {summary["avg_execution_time"]:.1f}초")
+            print(f"평균 적중 말 수: {summary['average_correct_horses']:.2f}")
+            print(f"평균 실행 시간: {summary['avg_execution_time']:.1f}초")
 
         print("\n에러 통계:")
         for error_type, count in summary["error_stats"].items():
@@ -788,23 +808,16 @@ class PromptEvaluatorV3:
         metrics_v2 = summary.get("metrics_v2")
         if metrics_v2:
             print("\n품질 지표(v2):")
-            print(f"  - log_loss: {metrics_v2.get("log_loss", 0.0):.4f}")
-            print(f"  - brier: {metrics_v2.get("brier", 0.0):.4f}")
-            print(f"  - ece: {metrics_v2.get("ece", 0.0):.4f}")
-            print(
-                f"  - top3: {metrics_v2.get("topk", {}).get("top_3", 0.0):.4f}"
-            )
-            print(
-                f"  - avg_roi: {metrics_v2.get("roi", {}).get("avg_roi", 0.0):.4f}"
-            )
-            print(f"  - coverage: {metrics_v2.get("coverage", 0.0):.4f}")
+            print(f"  - log_loss: {metrics_v2.get('log_loss', 0.0):.4f}")
+            print(f"  - brier: {metrics_v2.get('brier', 0.0):.4f}")
+            print(f"  - ece: {metrics_v2.get('ece', 0.0):.4f}")
+            print(f"  - top3: {metrics_v2.get('topk', {}).get('top_3', 0.0):.4f}")
+            print(f"  - avg_roi: {metrics_v2.get('roi', {}).get('avg_roi', 0.0):.4f}")
+            print(f"  - coverage: {metrics_v2.get('coverage', 0.0):.4f}")
 
         leakage_check = summary.get("leakage_check")
         if leakage_check:
-            print(
-                "\n누수 검사: "
-                f"{'PASS' if leakage_check.get('passed') else 'FAIL'}"
-            )
+            print(f"\n누수 검사: {'PASS' if leakage_check.get('passed') else 'FAIL'}")
             if leakage_check.get("issues"):
                 print(f"  - issues: {len(leakage_check['issues'])}")
 
@@ -875,9 +888,7 @@ Example:
     args = parser.parse_args()
 
     topk_values = tuple(
-        int(token.strip())
-        for token in args.topk.split(",")
-        if token.strip()
+        int(token.strip()) for token in args.topk.split(",") if token.strip()
     )
     if not topk_values:
         topk_values = (1, 3)

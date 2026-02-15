@@ -8,6 +8,7 @@ enriched 경주 데이터에서 파생 피처를 계산합니다.
 - 휴양 리스크
 - 배당률/레이팅 순위
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,7 +21,9 @@ def _safe_get(d: dict | None, key: str, default: Any = None) -> Any:
     return d.get(key, default)
 
 
-def _safe_div(numerator: float | int | None, denominator: float | int | None) -> float | None:
+def _safe_div(
+    numerator: float | int | None, denominator: float | int | None
+) -> float | None:
     """안전한 나눗셈. None이거나 0으로 나누면 None 반환."""
     if numerator is None or denominator is None:
         return None
@@ -63,11 +66,18 @@ def compute_features(horse: dict) -> dict:
     jk_win = _safe_div(jk_ord1, jk_rc)
     features["jockey_win_rate"] = round(jk_win * 100, 2) if jk_win is not None else None
 
-    if jk_rc is not None and jk_ord1 is not None and jk_ord2 is not None and jk_ord3 is not None:
+    if (
+        jk_rc is not None
+        and jk_ord1 is not None
+        and jk_ord2 is not None
+        and jk_ord3 is not None
+    ):
         try:
             jk_place_sum = float(jk_ord1) + float(jk_ord2) + float(jk_ord3)
             jk_place = _safe_div(jk_place_sum, jk_rc)
-            features["jockey_place_rate"] = round(jk_place * 100, 2) if jk_place is not None else None
+            features["jockey_place_rate"] = (
+                round(jk_place * 100, 2) if jk_place is not None else None
+            )
         except (TypeError, ValueError):
             features["jockey_place_rate"] = None
     else:
@@ -82,7 +92,9 @@ def compute_features(horse: dict) -> dict:
     jk_rc_y = _safe_get(jk, "rcCntY")
     jk_ord1_y = _safe_get(jk, "ord1CntY")
     jk_recent_win = _safe_div(jk_ord1_y, jk_rc_y)
-    features["jockey_recent_win_rate"] = round(jk_recent_win * 100, 2) if jk_recent_win is not None else None
+    features["jockey_recent_win_rate"] = (
+        round(jk_recent_win * 100, 2) if jk_recent_win is not None else None
+    )
 
     # --- 4-5. 말 승률 / 입상률 ---
     hr = horse.get("hrDetail")
@@ -94,11 +106,18 @@ def compute_features(horse: dict) -> dict:
     hr_win = _safe_div(hr_ord1, hr_rc)
     features["horse_win_rate"] = round(hr_win * 100, 2) if hr_win is not None else None
 
-    if hr_rc is not None and hr_ord1 is not None and hr_ord2 is not None and hr_ord3 is not None:
+    if (
+        hr_rc is not None
+        and hr_ord1 is not None
+        and hr_ord2 is not None
+        and hr_ord3 is not None
+    ):
         try:
             hr_place_sum = float(hr_ord1) + float(hr_ord2) + float(hr_ord3)
             hr_place = _safe_div(hr_place_sum, hr_rc)
-            features["horse_place_rate"] = round(hr_place * 100, 2) if hr_place is not None else None
+            features["horse_place_rate"] = (
+                round(hr_place * 100, 2) if hr_place is not None else None
+            )
         except (TypeError, ValueError):
             features["horse_place_rate"] = None
     else:
@@ -122,13 +141,22 @@ def compute_features(horse: dict) -> dict:
     tr_ord3 = _safe_get(tr, "ord3CntT")
 
     tr_win = _safe_div(tr_ord1, tr_rc)
-    features["trainer_win_rate"] = round(tr_win * 100, 2) if tr_win is not None else None
+    features["trainer_win_rate"] = (
+        round(tr_win * 100, 2) if tr_win is not None else None
+    )
 
-    if tr_rc is not None and tr_ord1 is not None and tr_ord2 is not None and tr_ord3 is not None:
+    if (
+        tr_rc is not None
+        and tr_ord1 is not None
+        and tr_ord2 is not None
+        and tr_ord3 is not None
+    ):
         try:
             tr_place_sum = float(tr_ord1) + float(tr_ord2) + float(tr_ord3)
             tr_place = _safe_div(tr_place_sum, tr_rc)
-            features["trainer_place_rate"] = round(tr_place * 100, 2) if tr_place is not None else None
+            features["trainer_place_rate"] = (
+                round(tr_place * 100, 2) if tr_place is not None else None
+            )
         except (TypeError, ValueError):
             features["trainer_place_rate"] = None
     else:

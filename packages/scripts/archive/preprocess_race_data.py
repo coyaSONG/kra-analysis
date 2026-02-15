@@ -120,7 +120,7 @@ def clean_race_data(race_data: dict[str, Any]) -> dict[str, Any]:
                 win_odds = horse.get("winOdds")
                 if win_odds == 0:  # 명확히 0인 경우만 기권/제외
                     print(
-                        f"⚠️  기권/제외: {horse.get("hrName")} (출주번호: {horse.get("chulNo")})"
+                        f"⚠️  기권/제외: {horse.get('hrName')} (출주번호: {horse.get('chulNo')})"
                     )
                     continue
 
@@ -212,8 +212,8 @@ def compare_before_after(original_path: str, cleaned_path: str) -> None:
         orig_horse = orig_items[0] if isinstance(orig_items, list) else orig_items
         clean_horse = clean_items[0] if isinstance(clean_items, list) else clean_items
 
-        print(f"말 이름: {orig_horse.get("hrName")}")
-        print(f"출주번호: {orig_horse.get("chulNo")}")
+        print(f"말 이름: {orig_horse.get('hrName')}")
+        print(f"출주번호: {orig_horse.get('chulNo')}")
         print("\n제거된 필드:")
 
         removed_fields = []

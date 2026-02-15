@@ -81,7 +81,9 @@ def _ece(y_true: list[int], y_prob: list[float], bins: int = 10) -> float:
     return error
 
 
-def _topk_metrics(results: list[dict[str, Any]], topk_values: tuple[int, ...]) -> dict[str, float]:
+def _topk_metrics(
+    results: list[dict[str, Any]], topk_values: tuple[int, ...]
+) -> dict[str, float]:
     metrics: dict[str, float] = {}
     if not results:
         for k in topk_values:
@@ -302,7 +304,9 @@ def compute_prediction_quality_metrics(
         "coverage": coverage,
         "deferred_count": deferred_count,
         "samples": len(usable_results),
-        "set_match_rate": sum(set_match_scores) / len(set_match_scores) if set_match_scores else 0.0,
+        "set_match_rate": sum(set_match_scores) / len(set_match_scores)
+        if set_match_scores
+        else 0.0,
         "ndcg3": sum(ndcg_scores) / len(ndcg_scores) if ndcg_scores else 0.0,
         "brier_set": _brier_set_match(filtered_results),
     }
@@ -376,9 +380,13 @@ def compute_stratified_metrics(
             full_match = sum(1 for s in sm_scores if s >= 1.0)
             dim_metrics[group_key] = {
                 "count": len(group_results),
-                "success_rate": (full_match / len(sm_scores) * 100) if sm_scores else 0.0,
+                "success_rate": (full_match / len(sm_scores) * 100)
+                if sm_scores
+                else 0.0,
                 "set_match_rate": sum(sm_scores) / len(sm_scores) if sm_scores else 0.0,
-                "ndcg3": sum(ndcg_scores_g) / len(ndcg_scores_g) if ndcg_scores_g else 0.0,
+                "ndcg3": sum(ndcg_scores_g) / len(ndcg_scores_g)
+                if ndcg_scores_g
+                else 0.0,
             }
 
         stratified[dim] = dim_metrics

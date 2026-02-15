@@ -196,7 +196,7 @@ def batch_smart_process(pattern: str, output_dir: str = None):
             stats["waiting"] += 1
 
     # 최종 통계
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("📊 처리 결과 요약")
     print(f"  - 전체: {stats['total']}개")
     print(f"  - 경주 완료 (전처리): {stats['completed']}개")

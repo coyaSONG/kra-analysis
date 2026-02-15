@@ -28,10 +28,9 @@ def retry_failed_enrichment(file_path: str) -> dict:
 
         # Find items array (support multiple data structures)
         horse_array: list[dict] | None = None
-        if (
-            isinstance(race_data, dict)
-            and race_data.get("response", {}).get("body", {}).get("items", {}).get("item")
-        ):
+        if isinstance(race_data, dict) and race_data.get("response", {}).get(
+            "body", {}
+        ).get("items", {}).get("item"):
             items = race_data["response"]["body"]["items"]["item"]
             horse_array = items if isinstance(items, list) else [items]
         elif isinstance(race_data, list):
@@ -50,7 +49,9 @@ def retry_failed_enrichment(file_path: str) -> dict:
         print("\n  Retrying missing horse details...")
         for horse in horses:
             if "hrDetail" not in horse:
-                print(f"    Retry: {horse.get('hrName', '?')} ({horse.get('hrNo', '?')})")
+                print(
+                    f"    Retry: {horse.get('hrName', '?')} ({horse.get('hrNo', '?')})"
+                )
                 detail = get_horse_detail(horse["hrNo"], horse["hrName"])
                 if detail:
                     horse["hrDetail"] = detail
@@ -61,7 +62,9 @@ def retry_failed_enrichment(file_path: str) -> dict:
         print("\n  Retrying missing jockey details...")
         for horse in horses:
             if "jkDetail" not in horse:
-                print(f"    Retry: {horse.get('jkName', '?')} ({horse.get('jkNo', '?')})")
+                print(
+                    f"    Retry: {horse.get('jkName', '?')} ({horse.get('jkNo', '?')})"
+                )
                 detail = get_jockey_detail(horse["jkNo"], horse["jkName"])
                 if detail:
                     horse["jkDetail"] = detail
@@ -72,7 +75,9 @@ def retry_failed_enrichment(file_path: str) -> dict:
         print("\n  Retrying missing trainer details...")
         for horse in horses:
             if "trDetail" not in horse:
-                print(f"    Retry: {horse.get('trName', '?')} ({horse.get('trNo', '?')})")
+                print(
+                    f"    Retry: {horse.get('trName', '?')} ({horse.get('trNo', '?')})"
+                )
                 detail = get_trainer_detail(horse["trNo"], horse["trName"])
                 if detail:
                     horse["trDetail"] = detail

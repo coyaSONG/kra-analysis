@@ -6,6 +6,7 @@ horse, jockey, trainer details, and race info from KRA public data APIs.
 
 Cache: file-based in data/cache/{horses,jockeys,trainers}/ with 7-day expiry.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -53,7 +54,9 @@ def save_to_cache(cache_type: str, cache_id: str, data: dict | list) -> None:
     """Save data to file cache."""
     cache_path = CACHE_DIR / cache_type / f"{cache_id}.json"
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    cache_path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    cache_path.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -258,9 +261,7 @@ def _extract_horse_detail(horse: dict) -> dict:
         "hrLastAmt": horse.get("hrLastAmt") or "",
         "winRateT": round(ord1_cnt_t / rc_cnt_t * 100, 1) if rc_cnt_t > 0 else 0,
         "plcRateT": (
-            round((ord1_cnt_t + ord2_cnt_t) / rc_cnt_t * 100, 1)
-            if rc_cnt_t > 0
-            else 0
+            round((ord1_cnt_t + ord2_cnt_t) / rc_cnt_t * 100, 1) if rc_cnt_t > 0 else 0
         ),
         "winRateY": round(ord1_cnt_y / rc_cnt_y * 100, 1) if rc_cnt_y > 0 else 0,
     }
@@ -289,9 +290,7 @@ def _extract_jockey_detail(jockey: dict) -> dict:
         "rcCntY": rc_cnt_y,
         "winRateT": round(ord1_cnt_t / rc_cnt_t * 100, 1) if rc_cnt_t > 0 else 0,
         "plcRateT": (
-            round((ord1_cnt_t + ord2_cnt_t) / rc_cnt_t * 100, 1)
-            if rc_cnt_t > 0
-            else 0
+            round((ord1_cnt_t + ord2_cnt_t) / rc_cnt_t * 100, 1) if rc_cnt_t > 0 else 0
         ),
         "winRateY": round(ord1_cnt_y / rc_cnt_y * 100, 1) if rc_cnt_y > 0 else 0,
     }
@@ -381,9 +380,7 @@ class AsyncKRAClient:
 
         raise last_error  # type: ignore[misc]
 
-    async def get_race_info(
-        self, meet: str, rc_date: str, rc_no: int
-    ) -> dict | None:
+    async def get_race_info(self, meet: str, rc_date: str, rc_no: int) -> dict | None:
         """Async version of get_race_info."""
         url = (
             f"{BASE_URL}/API214_1/RaceDetailResult_1"

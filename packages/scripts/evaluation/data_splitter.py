@@ -60,14 +60,20 @@ class TemporalDataSplitter:
                 continue
 
             val_size = max(1, len(available) // 4)
-            train_data = available[:-val_size] if len(available) > val_size else available[:1]
-            val_data = available[-val_size:] if len(available) > val_size else available[1:]
+            train_data = (
+                available[:-val_size] if len(available) > val_size else available[:1]
+            )
+            val_data = (
+                available[-val_size:] if len(available) > val_size else available[1:]
+            )
             test_data = sorted_files[test_start:test_end]
 
-            splits.append({
-                "train": train_data,
-                "val": val_data,
-                "test": test_data,
-            })
+            splits.append(
+                {
+                    "train": train_data,
+                    "val": val_data,
+                    "test": test_data,
+                }
+            )
 
         return splits

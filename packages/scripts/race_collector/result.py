@@ -4,6 +4,7 @@ Fetch race results and extract top-3 finishers.
 Replaces get_race_result.js.
 CLI: python3 result.py <date> <venue> <race_no>
 """
+
 from __future__ import annotations
 
 import argparse

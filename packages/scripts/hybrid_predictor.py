@@ -16,6 +16,7 @@ Architecture:
 Usage:
     uv run python3 hybrid_predictor.py <prompt_file> <date_or_race_file> [--model haiku]
 """
+
 from __future__ import annotations
 
 import glob
@@ -146,12 +147,14 @@ def get_ml_predictions(horses: list[dict], artifact: dict) -> list[dict]:
 
     results = []
     for i, horse in enumerate(horses):
-        results.append({
-            "chulNo": int(horse.get("chulNo", 0)),
-            "hrName": horse.get("hrName", ""),
-            "winOdds": horse.get("winOdds", 0),
-            "probability": float(probabilities[i]),
-        })
+        results.append(
+            {
+                "chulNo": int(horse.get("chulNo", 0)),
+                "hrName": horse.get("hrName", ""),
+                "winOdds": horse.get("winOdds", 0),
+                "probability": float(probabilities[i]),
+            }
+        )
 
     # Sort by probability descending
     results.sort(key=lambda x: x["probability"], reverse=True)
@@ -296,7 +299,9 @@ def hybrid_predict(
         ml_top3 = [p["chulNo"] for p in ml_predictions[:3]]
         print(f"  ML Top-3: {ml_top3}")
     else:
-        print(f"  [WARN] ML model not found at {ml_model_path}, skipping ML predictions")
+        print(
+            f"  [WARN] ML model not found at {ml_model_path}, skipping ML predictions"
+        )
         ml_predictions = []
         ml_top3 = []
 
@@ -319,7 +324,9 @@ def hybrid_predict(
 
     llm_top3 = llm_result.get("predicted", [])
     print(f"  LLM Top-3: {llm_top3}")
-    print(f"  LLM time: {llm_result['execution_time']:.1f}s ({llm_result['claude_model']})")
+    print(
+        f"  LLM time: {llm_result['execution_time']:.1f}s ({llm_result['claude_model']})"
+    )
 
     return {
         "source": "hybrid",
@@ -350,13 +357,15 @@ def find_enriched_files(date_filter: str | None = None) -> list[dict]:
         path = Path(f)
         parts = path.name.replace("_enriched.json", "").split("_")
         if len(parts) >= 4:
-            results.append({
-                "file_path": path,
-                "race_id": f"{parts[1]}_{parts[2]}_{parts[3]}",
-                "race_date": parts[2],
-                "race_no": parts[3],
-                "venue": path.parent.name,
-            })
+            results.append(
+                {
+                    "file_path": path,
+                    "race_id": f"{parts[1]}_{parts[2]}_{parts[3]}",
+                    "race_date": parts[2],
+                    "race_no": parts[3],
+                    "venue": path.parent.name,
+                }
+            )
     return results
 
 

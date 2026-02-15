@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """KRA API 직접 테스트"""
+
 import os
 from urllib.parse import unquote
 

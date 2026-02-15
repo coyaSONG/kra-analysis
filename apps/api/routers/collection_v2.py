@@ -62,7 +62,10 @@ async def collect_race_data(
         for race_no in race_numbers:
             try:
                 result = await collection_service.collect_race_data(
-                    request.date, request.meet, race_no, db  # Pass as integer
+                    request.date,
+                    request.meet,
+                    race_no,
+                    db,  # Pass as integer
                 )
                 results.append(result)
                 logger.info(f"Successfully collected race {race_no}")

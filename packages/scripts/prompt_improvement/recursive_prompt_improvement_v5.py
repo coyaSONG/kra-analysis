@@ -130,7 +130,6 @@ class RecursivePromptImprovementV5:
         patience: int = 3,
         min_improvement: float = 0.005,
     ):
-
         self.initial_prompt_path = initial_prompt_path
         self.target_date = target_date
         self.max_iterations = max_iterations
@@ -222,7 +221,7 @@ class RecursivePromptImprovementV5:
         start_time = time.time()
 
         for iteration in range(1, self.max_iterations + 1):
-            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"\n{'=' * 60}")
             self.logger.info(f"반복 {iteration}/{self.max_iterations} 시작")
             self.logger.info(f"현재 프롬프트: {current_structure.version}")
 
@@ -300,12 +299,19 @@ class RecursivePromptImprovementV5:
                 self.champion_structure = current_structure
 
             # 최고 성능 업데이트 (승격된 후보 기준)
-            if promotion_decision["promote"] and current_performance > self.best_performance + self.min_improvement * 100:
+            if (
+                promotion_decision["promote"]
+                and current_performance
+                > self.best_performance + self.min_improvement * 100
+            ):
                 self.best_performance = current_performance
                 self.best_prompt_path = current_prompt_path
                 self.patience_counter = 0
                 self.logger.info(f"🎯 새로운 최고 성능: {current_performance:.1f}%")
-            elif promotion_decision["promote"] and current_performance > self.best_performance:
+            elif (
+                promotion_decision["promote"]
+                and current_performance > self.best_performance
+            ):
                 self.best_performance = current_performance
                 self.best_prompt_path = current_prompt_path
                 self.patience_counter += 1
@@ -355,7 +361,7 @@ class RecursivePromptImprovementV5:
             write_text_file(analysis_report, analysis_path)
 
             self.logger.info(
-                f"  - 주요 발견사항: {len(insight_analysis.summary.get("key_findings", []))}개"
+                f"  - 주요 발견사항: {len(insight_analysis.summary.get('key_findings', []))}개"
             )
             self.logger.info(f"  - 권고사항: {len(insight_analysis.recommendations)}개")
 
@@ -387,7 +393,7 @@ class RecursivePromptImprovementV5:
             ]
             if applied_techniques:
                 self.logger.info(
-                    f"  - 적용된 고급 기법: {", ".join(applied_techniques)}"
+                    f"  - 적용된 고급 기법: {', '.join(applied_techniques)}"
                 )
 
             # 예시 업데이트
@@ -592,7 +598,7 @@ class RecursivePromptImprovementV5:
         report = []
 
         report.append("# 재귀 프롬프트 개선 v5 최종 보고서\n")
-        report.append(f"생성일시: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n")
+        report.append(f"생성일시: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
         # 요약
         report.append("## 요약")
@@ -607,15 +613,11 @@ class RecursivePromptImprovementV5:
         report.append("|------|------|--------|-----------|------|")
 
         for item in self.iteration_history:
-            promoted = (
-                "Y"
-                if item.get("promotion_decision", {}).get("promote")
-                else "N"
-            )
+            promoted = "Y" if item.get("promotion_decision", {}).get("promote") else "N"
             report.append(
-                f"| {item["iteration"]} | {item["version"]} | "
-                f"{item["performance"]:.1f}% | "
-                f"{item["metrics"]["avg_correct"]:.2f}마리 | "
+                f"| {item['iteration']} | {item['version']} | "
+                f"{item['performance']:.1f}% | "
+                f"{item['metrics']['avg_correct']:.2f}마리 | "
                 f"{promoted} |"
             )
 
@@ -629,10 +631,10 @@ class RecursivePromptImprovementV5:
         # 예시 통계
         report.append("\n## 예시 관리 통계")
         stats = self.examples_manager.get_statistics()
-        report.append(f"- 총 예시 수: {stats["total_examples"]}")
-        report.append(f"- 성공 예시: {stats["success_examples"]}")
-        report.append(f"- 실패 예시: {stats["failure_examples"]}")
-        report.append(f"- 평균 성과: {stats["avg_performance"]:.1f}%")
+        report.append(f"- 총 예시 수: {stats['total_examples']}")
+        report.append(f"- 성공 예시: {stats['success_examples']}")
+        report.append(f"- 실패 예시: {stats['failure_examples']}")
+        report.append(f"- 평균 성과: {stats['avg_performance']:.1f}%")
 
         # 결론
         report.append("\n## 결론")
@@ -645,7 +647,7 @@ class RecursivePromptImprovementV5:
             )
             report.append(f"📈 **개선 성과**: {improvement:+.1f}% 향상")
             report.append(
-                f"   (초기: {self.iteration_history[0]["performance"]:.1f}% → 최종: {self.best_performance:.1f}%)"
+                f"   (초기: {self.iteration_history[0]['performance']:.1f}% → 최종: {self.best_performance:.1f}%)"
             )
 
         # v4와의 차이점
@@ -815,9 +817,9 @@ def main():
 
         if result["success"]:
             print("\n✅ 재귀 개선 완료!")
-            print(f"   최고 성능: {result["best_performance"]:.1f}%")
-            print(f"   최고 성능 프롬프트: {result["best_prompt_path"]}")
-            print(f"   보고서: {result["report_path"]}")
+            print(f"   최고 성능: {result['best_performance']:.1f}%")
+            print(f"   최고 성능 프롬프트: {result['best_prompt_path']}")
+            print(f"   보고서: {result['report_path']}")
         else:
             print("\n❌ 재귀 개선 실패")
             sys.exit(1)

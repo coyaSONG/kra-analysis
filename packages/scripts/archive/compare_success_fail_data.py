@@ -145,11 +145,11 @@ def main():
 
     print("\n성공 케이스 특징:")
     success_special_count = sum(len(r["special_cases"]) for r in success_cases)
-    print(f"- 평균 특수 케이스: {success_special_count/len(success_cases):.1f}개")
+    print(f"- 평균 특수 케이스: {success_special_count / len(success_cases):.1f}개")
 
     print("\n실패 케이스 특징:")
     fail_special_count = sum(len(r["special_cases"]) for r in fail_cases)
-    print(f"- 평균 특수 케이스: {fail_special_count/len(fail_cases):.1f}개")
+    print(f"- 평균 특수 케이스: {fail_special_count / len(fail_cases):.1f}개")
 
     # 실패 케이스의 공통 패턴 찾기
     fail_patterns = {}

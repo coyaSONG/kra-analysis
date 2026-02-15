@@ -58,7 +58,7 @@ class PromptEvaluatorV3Base:
                 # 해당하는 결과 파일 확인
                 result_file = (
                     cache_dir
-                    / f"top3_{race_date}_{meet_map.get(meet, "서울")}_{race_no}.json"
+                    / f"top3_{race_date}_{meet_map.get(meet, '서울')}_{race_no}.json"
                 )
 
                 if result_file.exists():
@@ -323,7 +323,7 @@ class PromptEvaluatorV3Base:
 
             if result.returncode == 0:
                 cache_file = Path(
-                    f"data/cache/results/top3_{race_info["race_date"]}_{race_info["meet"]}_{race_info["race_no"]}.json"
+                    f"data/cache/results/top3_{race_info['race_date']}_{race_info['meet']}_{race_info['race_no']}.json"
                 )
                 if cache_file.exists():
                     with open(cache_file, encoding="utf-8") as f:
@@ -452,36 +452,36 @@ class PromptEvaluatorV3Base:
 
                             # 예측과 실제 결과를 문자열로 포맷
                             pred_str = (
-                                f"[{",".join(map(str, predicted))}]"
+                                f"[{','.join(map(str, predicted))}]"
                                 if predicted
                                 else "[?]"
                             )
                             actual_str = (
-                                f"[{",".join(map(str, actual))}]" if actual else "[?]"
+                                f"[{','.join(map(str, actual))}]" if actual else "[?]"
                             )
 
                             if result["reward"]["correct_count"] == 3:
                                 successful_predictions += 1
                                 print(
-                                    f"[{completed}/{total_races}] ✓ {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}"
+                                    f"[{completed}/{total_races}] ✓ {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}"
                                 )
                             else:
                                 print(
-                                    f"[{completed}/{total_races}] ✗ {race_info["race_id"]} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}"
+                                    f"[{completed}/{total_races}] ✗ {race_info['race_id']} - 적중: {correct}/3 ({hit_rate:.0f}%) | 예측: {pred_str} → 실제: {actual_str}"
                                 )
                             total_correct_horses += result["reward"]["correct_count"]
                         else:
                             print(
-                                f"[{completed}/{total_races}] ? {race_info["race_id"]} (결과 없음)"
+                                f"[{completed}/{total_races}] ? {race_info['race_id']} (결과 없음)"
                             )
                     else:
                         print(
-                            f"[{completed}/{total_races}] ✗ {race_info["race_id"]} 오류"
+                            f"[{completed}/{total_races}] ✗ {race_info['race_id']} 오류"
                         )
 
                 except Exception as e:
                     print(
-                        f"[{completed}/{total_races}] ✗ {race_info["race_id"]} 처리 중 오류: {e}"
+                        f"[{completed}/{total_races}] ✗ {race_info['race_id']} 처리 중 오류: {e}"
                     )
 
         # 최종 통계

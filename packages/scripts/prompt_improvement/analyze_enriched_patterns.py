@@ -187,7 +187,7 @@ class EnrichedDataAnalyzer:
         print("\n디버깅 정보:")
         print(f"- 결과 파일 없음: {no_result_count}개")
         print(f"- 잘못된 결과 형식: {invalid_result_count}개")
-        print(f"- 정상 분석: {self.stats["total_races"]}개")
+        print(f"- 정상 분석: {self.stats['total_races']}개")
 
     def _get_jockey_win_rate(self, horse: dict) -> float:
         """기수 승률 계산"""
@@ -214,18 +214,18 @@ class EnrichedDataAnalyzer:
 
     def print_analysis_results(self):
         """분석 결과 출력"""
-        print(f"\n{"="*60}")
+        print(f"\n{'=' * 60}")
         print("📊 Enriched 데이터 패턴 분석 결과")
-        print(f"{"="*60}")
+        print(f"{'=' * 60}")
 
         print("\n📈 기본 통계:")
-        print(f"- 분석 경주 수: {self.stats["total_races"]}개")
-        print(f"- 전체 말 수: {self.stats["total_horses"]}마리")
-        print(f"- 유효 말 수: {self.stats["valid_horses"]}마리 (기권/제외 제외)")
+        print(f"- 분석 경주 수: {self.stats['total_races']}개")
+        print(f"- 전체 말 수: {self.stats['total_horses']}마리")
+        print(f"- 유효 말 수: {self.stats['valid_horses']}마리 (기권/제외 제외)")
 
         # 배당률 순위별 입상률
         print("\n🏇 배당률 순위별 실제 입상률:")
-        print(f"{"순위":<6} {"출전":<8} {"입상":<8} {"입상률":<10} {"누적입상률":<12}")
+        print(f"{'순위':<6} {'출전':<8} {'입상':<8} {'입상률':<10} {'누적입상률':<12}")
         print("-" * 50)
 
         cumulative_top3 = 0
@@ -252,7 +252,7 @@ class EnrichedDataAnalyzer:
 
         # 기수 승률별 입상률
         print("\n🏆 기수 승률별 말의 입상률:")
-        print(f"{"승률대":<10} {"출전":<8} {"입상":<8} {"입상률":<10}")
+        print(f"{'승률대':<10} {'출전':<8} {'입상':<8} {'입상률':<10}")
         print("-" * 40)
 
         for win_rate in sorted(self.stats["jockey_win_rate_bins"].keys()):
@@ -261,11 +261,11 @@ class EnrichedDataAnalyzer:
             top3 = data["top3"]
             rate = (top3 / total * 100) if total > 0 else 0
 
-            print(f"{win_rate}-{win_rate+5}% {total:<8} {top3:<8} {rate:<10.1f}%")
+            print(f"{win_rate}-{win_rate + 5}% {total:<8} {top3:<8} {rate:<10.1f}%")
 
         # 말 입상률별 입상률
         print("\n🐎 말 과거 입상률별 실제 입상률:")
-        print(f"{"입상률대":<12} {"출전":<8} {"입상":<8} {"입상률":<10}")
+        print(f"{'입상률대':<12} {'출전':<8} {'입상':<8} {'입상률':<10}")
         print("-" * 40)
 
         for place_rate in sorted(self.stats["horse_place_rate_bins"].keys()):
@@ -274,7 +274,9 @@ class EnrichedDataAnalyzer:
             top3 = data["top3"]
             rate = (top3 / total * 100) if total > 0 else 0
 
-            print(f"{place_rate}-{place_rate+10}% {total:<8} {top3:<8} {rate:<10.1f}%")
+            print(
+                f"{place_rate}-{place_rate + 10}% {total:<8} {top3:<8} {rate:<10.1f}%"
+            )
 
         # 부담중량 변화 영향
         print("\n⚖️ 부담중량 변화의 영향:")
@@ -289,13 +291,13 @@ class EnrichedDataAnalyzer:
         total_valid = self.stats["valid_horses"]
         if total_valid > 0:
             print(
-                f"- 말 상세정보 보유율: {self.stats["data_availability"]["has_hr_detail"]/total_valid*100:.1f}%"
+                f"- 말 상세정보 보유율: {self.stats['data_availability']['has_hr_detail'] / total_valid * 100:.1f}%"
             )
             print(
-                f"- 기수 상세정보 보유율: {self.stats["data_availability"]["has_jk_detail"]/total_valid*100:.1f}%"
+                f"- 기수 상세정보 보유율: {self.stats['data_availability']['has_jk_detail'] / total_valid * 100:.1f}%"
             )
             print(
-                f"- 조교사 상세정보 보유율: {self.stats["data_availability"]["has_tr_detail"]/total_valid*100:.1f}%"
+                f"- 조교사 상세정보 보유율: {self.stats['data_availability']['has_tr_detail'] / total_valid * 100:.1f}%"
             )
 
         # 핵심 인사이트
@@ -342,7 +344,7 @@ class EnrichedDataAnalyzer:
             high_horse_rate = high_horse_winners / high_horse_total * 100
             print(f"3. 말 과거 입상률 30% 이상의 실제 입상률: {high_horse_rate:.1f}%")
 
-        print(f"\n{"="*60}")
+        print(f"\n{'=' * 60}")
 
     def save_analysis_report(self, filename: str = None):
         """분석 결과를 파일로 저장"""
@@ -389,7 +391,7 @@ class EnrichedDataAnalyzer:
                 key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0,
             )
             insights["best_jockey_win_rate_range"] = (
-                f"{best_jockey_rate[0]}-{best_jockey_rate[0]+5}%"
+                f"{best_jockey_rate[0]}-{best_jockey_rate[0] + 5}%"
             )
 
         # 최적 말 입상률 구간
@@ -399,7 +401,7 @@ class EnrichedDataAnalyzer:
                 key=lambda x: x[1]["top3"] / x[1]["total"] if x[1]["total"] > 10 else 0,
             )
             insights["best_horse_place_rate_range"] = (
-                f"{best_horse_rate[0]}-{best_horse_rate[0]+10}%"
+                f"{best_horse_rate[0]}-{best_horse_rate[0] + 10}%"
             )
 
         return insights

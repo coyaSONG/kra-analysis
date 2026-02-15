@@ -112,9 +112,7 @@ class FailureClassifier:
         # 7. Default - condition mismatch
         return FailureCategory.CONDITION_MISMATCH
 
-    def classify_batch(
-        self, results: list[dict]
-    ) -> dict[FailureCategory, list[dict]]:
+    def classify_batch(self, results: list[dict]) -> dict[FailureCategory, list[dict]]:
         """Batch classify and group by category."""
         classified: dict[FailureCategory, list[dict]] = defaultdict(list)
         for result in results:
@@ -122,7 +120,9 @@ class FailureClassifier:
             classified[category].append(result)
         return dict(classified)
 
-    def generate_category_report(self, classified: dict[FailureCategory, list[dict]]) -> str:
+    def generate_category_report(
+        self, classified: dict[FailureCategory, list[dict]]
+    ) -> str:
         """Generate markdown report of failure distribution."""
         total = sum(len(v) for v in classified.values())
         if total == 0:

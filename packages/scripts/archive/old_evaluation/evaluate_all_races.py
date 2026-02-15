@@ -82,7 +82,7 @@ class FullEvaluator:
             batch_results = []
 
             print(
-                f"\n배치 {i//batch_size + 1}/{(len(race_files)-1)//batch_size + 1} 처리 중..."
+                f"\n배치 {i // batch_size + 1}/{(len(race_files) - 1) // batch_size + 1} 처리 중..."
             )
 
             for j, result_file in enumerate(batch):
@@ -279,16 +279,16 @@ class FullEvaluator:
             f.write("| 구분 | 경주 수 | 비율 |\n")
             f.write("|------|---------|------|\n")
             f.write(
-                f"| 완전 적중 (3/3) | {successful_predictions} | {successful_predictions/total_races*100:.1f}% |\n"
+                f"| 완전 적중 (3/3) | {successful_predictions} | {successful_predictions / total_races * 100:.1f}% |\n"
             )
             f.write(
-                f"| 2마리 적중 (2/3) | {partial_correct_2} | {partial_correct_2/total_races*100:.1f}% |\n"
+                f"| 2마리 적중 (2/3) | {partial_correct_2} | {partial_correct_2 / total_races * 100:.1f}% |\n"
             )
             f.write(
-                f"| 1마리 적중 (1/3) | {partial_correct_1} | {partial_correct_1/total_races*100:.1f}% |\n"
+                f"| 1마리 적중 (1/3) | {partial_correct_1} | {partial_correct_1 / total_races * 100:.1f}% |\n"
             )
             f.write(
-                f"| 미적중 (0/3) | {total_races - successful_predictions - partial_correct_2 - partial_correct_1} | {(total_races - successful_predictions - partial_correct_2 - partial_correct_1)/total_races*100:.1f}% |\n"
+                f"| 미적중 (0/3) | {total_races - successful_predictions - partial_correct_2 - partial_correct_1} | {(total_races - successful_predictions - partial_correct_2 - partial_correct_1) / total_races * 100:.1f}% |\n"
             )
             f.write(
                 f"\n**평균 적중 말 수**: {summary['average_correct_horses']:.2f}/3\n"

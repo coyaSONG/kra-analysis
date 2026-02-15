@@ -5,6 +5,7 @@ LightGBM 모델을 사용한 경마 Top-3 예측
 학습된 모델을 로드하여 enriched 경주 데이터에 대해
 각 출주마의 is_top3 확률을 예측하고 순위를 매깁니다.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -81,6 +82,7 @@ def _horse_to_feature_row(horse: dict) -> dict:
 # Prediction
 # ===================================================================
 
+
 def load_model(model_path: Path) -> dict:
     """학습된 모델 아티팩트를 로드합니다."""
     if not model_path.exists():
@@ -152,11 +154,13 @@ def predict_race(horses: list[dict], artifact: dict) -> list[dict]:
         feature_vec = [row.get(col) for col in feature_columns]
         feature_rows.append(feature_vec)
 
-        results.append({
-            "chul_no": int(horse.get("chulNo", 0)),
-            "hr_name": horse.get("hrName", ""),
-            "win_odds": horse.get("winOdds", 0),
-        })
+        results.append(
+            {
+                "chul_no": int(horse.get("chulNo", 0)),
+                "hr_name": horse.get("hrName", ""),
+                "win_odds": horse.get("winOdds", 0),
+            }
+        )
 
     X = np.array(feature_rows, dtype=np.float64)
 
@@ -183,7 +187,14 @@ def predict_race(horses: list[dict], artifact: dict) -> list[dict]:
 
 def format_meet_name(meet_code) -> str:
     """경마장 코드를 이름으로 변환합니다."""
-    meet_map = {1: "Seoul", 2: "Jeju", 3: "Busan", "1": "Seoul", "2": "Jeju", "3": "Busan"}
+    meet_map = {
+        1: "Seoul",
+        2: "Jeju",
+        3: "Busan",
+        "1": "Seoul",
+        "2": "Jeju",
+        "3": "Busan",
+    }
     return meet_map.get(meet_code, str(meet_code))
 
 
@@ -210,7 +221,9 @@ def print_predictions(results: list[dict], race_info: dict, enriched_path: str) 
             name = name[:15] + "."
 
         marker = " *" if r["rank"] <= 3 else ""
-        print(f"{r['rank']:<6}{r['chul_no']:<8}{name:<18}{prob_str:<8}{odds_str}{marker}")
+        print(
+            f"{r['rank']:<6}{r['chul_no']:<8}{name:<18}{prob_str:<8}{odds_str}{marker}"
+        )
 
     print("-" * 50)
     print("* = ML Top-3 Pick")
@@ -220,13 +233,16 @@ def print_predictions(results: list[dict], race_info: dict, enriched_path: str) 
     top3 = [r for r in results if r["rank"] <= 3]
     print("Top-3 Picks:")
     for r in top3:
-        print(f"  #{r['chul_no']} {r['hr_name']} (prob={r['probability']:.3f}, odds={r['win_odds']})")
+        print(
+            f"  #{r['chul_no']} {r['hr_name']} (prob={r['probability']:.3f}, odds={r['win_odds']})"
+        )
     print()
 
 
 # ===================================================================
 # CLI
 # ===================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -250,7 +266,9 @@ def main():
     cv = artifact.get("cv_results", {})
     print(f"모델 로드 완료: {args.model}")
     if cv:
-        print(f"  CV AUC: {cv.get('mean_auc', 0):.4f}, Top3 정확도: {cv.get('mean_exact_match_rate', 0):.1f}%")
+        print(
+            f"  CV AUC: {cv.get('mean_auc', 0):.4f}, Top3 정확도: {cv.get('mean_exact_match_rate', 0):.1f}%"
+        )
 
     # 2. 경주 데이터 로드
     horses, race_info = load_enriched_race(args.enriched_json)

@@ -51,7 +51,7 @@ class PromptEvaluator:
         for horse in data["horses"]:
             # 기권/제외 말 스킵 (win_odds가 0인 경우)
             if horse.get("win_odds", 999) == 0:
-                print(f"  - {horse["chul_no"]}번 {horse["hr_name"]} 기권/제외 - 스킵")
+                print(f"  - {horse['chul_no']}번 {horse['hr_name']} 기권/제외 - 스킵")
                 continue
 
             horse_data = horse.copy()
@@ -271,7 +271,7 @@ class PromptEvaluator:
         for i, result_file in enumerate(test_races):
             # 경주 ID 생성
             race_id = result_file.stem
-            print(f"\n[{i+1}/{total_races}] {race_id} 처리 중...")
+            print(f"\n[{i + 1}/{total_races}] {race_id} 처리 중...")
 
             # 예측용 데이터 준비
             race_data = self.prepare_race_data(result_file)
@@ -320,7 +320,7 @@ class PromptEvaluator:
 
             print(f"  예측: {predicted_horses}")
             print(f"  실제: {actual_result}")
-            print(f"  적중: {reward["correct_count"]}/3 ({reward["hit_rate"]:.1f}%)")
+            print(f"  적중: {reward['correct_count']}/3 ({reward['hit_rate']:.1f}%)")
 
             # API 제한 대응
             time.sleep(5)
@@ -351,8 +351,8 @@ class PromptEvaluator:
         print("\n" + "=" * 60)
         print("평가 완료!")
         print(f"전체 경주: {total_races}")
-        print(f"완전 적중: {successful_predictions} ({summary["success_rate"]:.1f}%)")
-        print(f"평균 적중 말 수: {summary["average_correct_horses"]:.2f}")
+        print(f"완전 적중: {successful_predictions} ({summary['success_rate']:.1f}%)")
+        print(f"평균 적중 말 수: {summary['average_correct_horses']:.2f}")
         print(f"결과 저장: {output_file}")
 
         return summary

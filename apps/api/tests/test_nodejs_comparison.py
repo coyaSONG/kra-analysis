@@ -87,10 +87,10 @@ class NodeJsPythonComparison:
         self, date: str = "20250106", meet: int = 1, race_no: int = 1
     ):
         """경주 상세 데이터 수집을 비교 테스트합니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("경주 상세 데이터 수집 테스트")
         print(f"날짜: {date}, 경마장: {meet}, 경주: {race_no}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # 1. Node.js로 데이터 수집
         print("1. Node.js 스크립트 실행...")
@@ -177,9 +177,9 @@ class NodeJsPythonComparison:
 
     async def test_api_endpoints(self):
         """FastAPI 엔드포인트를 테스트합니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("FastAPI 엔드포인트 테스트")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         async with httpx.AsyncClient() as client:
             # 1. 헬스체크
@@ -216,10 +216,10 @@ class NodeJsPythonComparison:
         self, date: str = "20250106", meet: int = 1, race_no: int = 1
     ):
         """데이터 보강(enrichment) 비교 테스트입니다."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("데이터 보강(Enrichment) 비교 테스트")
         print(f"날짜: {date}, 경마장: {meet}, 경주: {race_no}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # 1. Node.js enrichment 실행
         print("1. Node.js enrichment 실행...")

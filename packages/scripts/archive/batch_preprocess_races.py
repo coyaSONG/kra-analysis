@@ -120,7 +120,7 @@ def batch_process_races(pattern: str, output_dir: str = "data/processed/pre-race
             stats["failed"] += 1
 
     # 최종 통계
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("📊 전체 처리 결과")
     print(f"  - 처리 성공: {stats['processed']}개 파일")
     print(f"  - 처리 실패: {stats['failed']}개 파일")

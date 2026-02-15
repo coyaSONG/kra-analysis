@@ -6,6 +6,7 @@ Uses asyncio.gather for parallel fetching with configurable concurrency.
 Replaces enrich_race_data.js.
 CLI: python3 enrich.py <file_or_date> [meet] [--concurrency N]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,25 +49,24 @@ async def enrich_race_data(input_path: str, client: AsyncKRAClient) -> dict:
 
         # Horse details
         horse_tasks = [
-            client.get_horse_detail(h["hrNo"], h["hrName"])
-            for h in horse_array
+            client.get_horse_detail(h["hrNo"], h["hrName"]) for h in horse_array
         ]
         # Jockey details (unique only)
         jk_nos = list(unique_jockeys.keys())
         jockey_tasks = [
-            client.get_jockey_detail(jk_no, unique_jockeys[jk_no])
-            for jk_no in jk_nos
+            client.get_jockey_detail(jk_no, unique_jockeys[jk_no]) for jk_no in jk_nos
         ]
         # Trainer details (unique only)
         tr_nos = list(unique_trainers.keys())
         trainer_tasks = [
-            client.get_trainer_detail(tr_no, unique_trainers[tr_no])
-            for tr_no in tr_nos
+            client.get_trainer_detail(tr_no, unique_trainers[tr_no]) for tr_no in tr_nos
         ]
 
         # Gather all at once
         all_results = await asyncio.gather(
-            *horse_tasks, *jockey_tasks, *trainer_tasks,
+            *horse_tasks,
+            *jockey_tasks,
+            *trainer_tasks,
             return_exceptions=True,
         )
 
@@ -202,6 +202,4 @@ if __name__ == "__main__":
     if args.file_or_date.endswith(".json"):
         asyncio.run(enrich_single_file(args.file_or_date, args.concurrency))
     else:
-        asyncio.run(
-            enrich_day_races(args.file_or_date, args.meet, args.concurrency)
-        )
+        asyncio.run(enrich_day_races(args.file_or_date, args.meet, args.concurrency))

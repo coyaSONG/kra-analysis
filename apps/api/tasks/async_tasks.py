@@ -87,7 +87,9 @@ async def collect_race_data(
             kra_api = KRAAPIService()
             collection_service = CollectionService(kra_api)
 
-            result = await collection_service.collect_race_data(race_date, meet, race_no, db)
+            result = await collection_service.collect_race_data(
+                race_date, meet, race_no, db
+            )
 
             if job_id:
                 await _add_job_log(
@@ -266,7 +268,9 @@ async def full_pipeline(
 
             # 1. Collect
             if job_id:
-                await _add_job_log(job_id, "info", "Starting data collection", {"step": "collect"})
+                await _add_job_log(
+                    job_id, "info", "Starting data collection", {"step": "collect"}
+                )
 
             await collection_service.collect_race_data(race_date, meet, race_no, db)
 
@@ -288,13 +292,17 @@ async def full_pipeline(
 
             # 2. Preprocess
             if job_id:
-                await _add_job_log(job_id, "info", "Starting preprocessing", {"step": "preprocess"})
+                await _add_job_log(
+                    job_id, "info", "Starting preprocessing", {"step": "preprocess"}
+                )
 
             await collection_service.preprocess_race_data(race_id, db)
 
             # 3. Enrich
             if job_id:
-                await _add_job_log(job_id, "info", "Starting enrichment", {"step": "enrich"})
+                await _add_job_log(
+                    job_id, "info", "Starting enrichment", {"step": "enrich"}
+                )
 
             await collection_service.enrich_race_data(race_id, db)
 
@@ -326,5 +334,7 @@ async def full_pipeline(
         except Exception as e:
             logger.error("Full pipeline async failed", error=str(e))
             if job_id:
-                await _add_job_log(job_id, "error", f"Pipeline failed: {str(e)}", {"error": str(e)})
+                await _add_job_log(
+                    job_id, "error", f"Pipeline failed: {str(e)}", {"error": str(e)}
+                )
             raise

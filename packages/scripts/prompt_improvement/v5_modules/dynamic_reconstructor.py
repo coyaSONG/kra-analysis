@@ -388,7 +388,9 @@ class DynamicReconstructor:
                     target_section = notes_section or req_section
 
                     if target_section:
-                        tag_name = "important_notes" if notes_section else "requirements"
+                        tag_name = (
+                            "important_notes" if notes_section else "requirements"
+                        )
                         note = f"\n- [{category_name} 대응] {strategy}"
                         if note.strip() not in target_section.content:
                             new_content = target_section.content.rstrip() + note
@@ -491,10 +493,9 @@ class DynamicReconstructor:
         new_length = len(new_content_str)
         if new_length > initial_length * 2.0:
             import logging
+
             logger = logging.getLogger("v5_main")
-            logger.warning(
-                f"프롬프트 길이 2배 초과: {initial_length} → {new_length}"
-            )
+            logger.warning(f"프롬프트 길이 2배 초과: {initial_length} → {new_length}")
             # 토큰 최적화 강제 적용
             _, token_changes = self.token_optimizer.optimize_prompt(modified_structure)
             all_changes.extend(token_changes)
@@ -524,8 +525,19 @@ class DynamicReconstructor:
 
         # 필수 섹션 확인 (실제 프롬프트에서 사용하는 태그 포함)
         # 두 가지 태그 세트 중 하나라도 있으면 유효
-        required_sections_set1 = ["context", "role", "task", "requirements", "analysis_steps"]
-        required_sections_set2 = ["system_role", "data_spec", "analysis_protocol", "reasoning_rules"]
+        required_sections_set1 = [
+            "context",
+            "role",
+            "task",
+            "requirements",
+            "analysis_steps",
+        ]
+        required_sections_set2 = [
+            "system_role",
+            "data_spec",
+            "analysis_protocol",
+            "reasoning_rules",
+        ]
 
         # Set 1 또는 Set 2 중 하나라도 충족하면 OK
         set1_present = any(structure.get_section(s) for s in required_sections_set1)

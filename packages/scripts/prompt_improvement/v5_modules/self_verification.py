@@ -339,7 +339,10 @@ class SelfVerificationEngine:
 
         # Also check within verification section
         verification_section = structure.get_section("verification")
-        if verification_section and "verification_protocol" in verification_section.content:
+        if (
+            verification_section
+            and "verification_protocol" in verification_section.content
+        ):
             return changes
 
         # Add as new section

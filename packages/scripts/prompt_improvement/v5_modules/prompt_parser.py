@@ -206,7 +206,7 @@ class RequirementsEditor:
             requirements.insert(position, requirement)
 
         # 다시 번호를 매겨서 저장
-        new_content = "\n".join(f"{i+1}. {req}" for i, req in enumerate(requirements))
+        new_content = "\n".join(f"{i + 1}. {req}" for i, req in enumerate(requirements))
         self.structure.update_section("requirements", new_content)
 
     def remove_requirement(self, index: int) -> bool:
@@ -215,7 +215,7 @@ class RequirementsEditor:
         if 0 <= index < len(requirements):
             requirements.pop(index)
             new_content = "\n".join(
-                f"{i+1}. {req}" for i, req in enumerate(requirements)
+                f"{i + 1}. {req}" for i, req in enumerate(requirements)
             )
             self.structure.update_section("requirements", new_content)
             return True
@@ -227,7 +227,7 @@ class RequirementsEditor:
         if 0 <= index < len(requirements):
             requirements[index] = new_text
             new_content = "\n".join(
-                f"{i+1}. {req}" for i, req in enumerate(requirements)
+                f"{i + 1}. {req}" for i, req in enumerate(requirements)
             )
             self.structure.update_section("requirements", new_content)
             return True
@@ -257,7 +257,7 @@ class AnalysisStepsEditor:
         steps.insert(position, step)
 
         # 다시 번호를 매겨서 저장
-        new_content = "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
+        new_content = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(steps))
         self.structure.update_section("analysis_steps", new_content)
 
     def modify_step(self, index: int, new_step: str) -> bool:
@@ -265,7 +265,7 @@ class AnalysisStepsEditor:
         steps = self.get_steps()
         if 0 <= index < len(steps):
             steps[index] = new_step
-            new_content = "\n".join(f"{i+1}. {step}" for i, step in enumerate(steps))
+            new_content = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(steps))
             self.structure.update_section("analysis_steps", new_content)
             return True
         return False
