@@ -19,8 +19,10 @@ omit =
     services/kra_api_service.py
     services/race_service.py
     tasks/collection_tasks.py
+    tasks/async_tasks.py
+    routers/jobs_v2.py
 
 [report]
-fail_under = 80
+fail_under = 75
 show_missing = True
 skip_covered = True

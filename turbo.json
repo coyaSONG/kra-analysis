@@ -49,6 +49,21 @@
         "VALID_API_KEYS"
       ]
     },
+    "test:ci": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.{ts,tsx}",
+        "tests/**/*.{ts,tsx}",
+        "jest.config.{js,ts,cjs,mjs}",
+        "tsconfig.json"
+      ],
+      "outputs": ["coverage/**"],
+      "env": [
+        "NODE_ENV",
+        "LOG_LEVEL"
+      ]
+    },
     "lint": {},
     "typecheck": {},
     "clean": {
