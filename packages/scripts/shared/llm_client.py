@@ -184,43 +184,48 @@ class CodexClient(LLMClient):
         ]
 
     def _extract_text(self, stdout: str) -> str | None:
-        """Codex JSON 출력에서 텍스트 추출.
+        """Codex NDJSON 출력에서 텍스트 추출.
 
-        codex exec --json 출력 형식:
-        {"items": [{"type": "message", "content": "..."}]}
+        codex exec --json은 NDJSON(줄별 JSON)을 출력합니다:
+          {"type":"item.completed","item":{"type":"agent_message","text":"..."}}
+          ...
+        agent_message 타입의 text 필드를 추출합니다.
         """
         if not stdout or not stdout.strip():
             return None
 
+        texts = []
+        for line in stdout.strip().splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            if not isinstance(data, dict):
+                continue
+
+            # NDJSON: {"type":"item.completed","item":{"type":"agent_message","text":"..."}}
+            if data.get("type") == "item.completed":
+                item = data.get("item", {})
+                if item.get("type") == "agent_message":
+                    text = item.get("text", "")
+                    if text:
+                        texts.append(text)
+
+        if texts:
+            return "\n".join(texts)
+
+        # fallback: 단일 JSON 전체 파싱
         try:
             data = json.loads(stdout)
-            # codex exec --json 응답 형식
-            if isinstance(data, dict):
-                # items 배열에서 message 타입의 content 추출
-                items = data.get("items", [])
-                texts = []
-                for item in items:
-                    if item.get("type") == "message":
-                        content = item.get("content", "")
-                        if isinstance(content, list):
-                            for block in content:
-                                if (
-                                    isinstance(block, dict)
-                                    and block.get("type") == "output_text"
-                                ):
-                                    texts.append(block.get("text", ""))
-                        elif isinstance(content, str):
-                            texts.append(content)
-                if texts:
-                    return "\n".join(texts)
-
-                # 단순 result 필드
-                if "result" in data:
-                    return data["result"]
+            if isinstance(data, dict) and "result" in data:
+                return data["result"]
         except json.JSONDecodeError:
             pass
 
-        # JSON 파싱 실패 시 원시 출력
         return stdout.strip() if stdout.strip() else None
 
 

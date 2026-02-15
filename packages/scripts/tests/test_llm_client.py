@@ -73,18 +73,21 @@ class TestCodexClient:
             "--skip-git-repo-check",
         ]
 
-    def test_extract_text_items_format(self):
+    def test_extract_text_ndjson_format(self):
         client = CodexClient()
-        stdout = json.dumps(
-            {
-                "items": [
-                    {
-                        "type": "message",
-                        "content": [{"type": "output_text", "text": "hello world"}],
-                    }
-                ]
-            }
-        )
+        # Codex outputs NDJSON (one JSON per line)
+        lines = [
+            json.dumps({"type": "thread.started", "thread_id": "abc"}),
+            json.dumps({"type": "turn.started"}),
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"type": "agent_message", "text": "hello world"},
+                }
+            ),
+            json.dumps({"type": "turn.completed", "usage": {}}),
+        ]
+        stdout = "\n".join(lines)
         assert client._extract_text(stdout) == "hello world"
 
     def test_extract_text_result_field(self):
@@ -103,9 +106,19 @@ class TestCodexClient:
 
     @patch("subprocess.run")
     def test_predict_sync_success(self, mock_run):
+        ndjson = "\n".join(
+            [
+                json.dumps(
+                    {
+                        "type": "item.completed",
+                        "item": {"type": "agent_message", "text": "prediction text"},
+                    }
+                ),
+            ]
+        )
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout=json.dumps({"result": "prediction text"}),
+            stdout=ndjson,
             stderr="",
         )
         client = CodexClient(max_concurrency=1)
