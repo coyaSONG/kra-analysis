@@ -315,3 +315,47 @@ class SelfVerificationEngine:
                     )
 
         return changes
+
+    def add_cove_verification(self, structure: PromptStructure) -> list[Change]:
+        """Chain-of-Verification (CoVe) 프로토콜 추가"""
+        changes = []
+
+        cove_template = """
+<verification_protocol>
+예측을 확정하기 전에 다음을 검증하세요:
+
+1. 거리 적성 검증: top-3 각 말이 이 거리에서 경험이 있는가?
+2. 조건 적합 검증: 현재 트랙 조건(건조/습윤)에 맞는 말인가?
+3. 인기마 누락 검증: odds 상위 3마리 중 top-3에 없는 말이 있다면, 제외 이유가 명확한가?
+4. 이상치 검증: top-3에 odds rank 10위 이하인 말이 있다면, 선택 근거가 충분한가?
+
+검증 실패 시 순위를 조정하세요.
+</verification_protocol>"""
+
+        # Check if already exists
+        existing = structure.get_section("verification_protocol")
+        if existing:
+            return changes
+
+        # Also check within verification section
+        verification_section = structure.get_section("verification")
+        if verification_section and "verification_protocol" in verification_section.content:
+            return changes
+
+        # Add as new section
+        section = PromptSection(
+            tag="verification_protocol",
+            content=cove_template.strip(),
+        )
+        structure.sections["verification_protocol"] = section
+
+        changes.append(
+            Change(
+                change_type="add",
+                target_section="verification_protocol",
+                description="CoVe 검증 프로토콜 추가",
+                new_value=cove_template.strip(),
+            )
+        )
+
+        return changes

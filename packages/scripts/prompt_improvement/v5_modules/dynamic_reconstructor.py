@@ -19,6 +19,16 @@ from .prompt_parser import (
     RequirementsEditor,
 )
 
+CATEGORY_STRATEGIES: dict[str, str] = {
+    "parsing": "output_format 섹션 강화, JSON 스키마 예시 추가",
+    "favorite_bias": "odds 가중치 조정, 인기마/비인기마 균형 규칙 추가",
+    "distance": "analysis_steps에 거리 적성 체크 단계 삽입",
+    "form_conflict": "requirements에 최근폼/장기능력 가중치 규칙 추가",
+    "field_size": "대규모 필드 전용 주의사항 추가, 신뢰도 하향",
+    "condition": "트랙 조건 교차검증 단계 삽입",
+    "data_gap": "데이터 부족 시 대체 신호(혈통, 기수력) 활용 규칙",
+}
+
 
 @dataclass
 class ChangeRecord:
@@ -362,6 +372,37 @@ class DynamicReconstructor:
         )
         all_changes.extend(rule_changes)
 
+        # 5.5 실패 카테고리별 수정 전략
+        failure_dist = getattr(analysis_results, "failure_distribution", {})
+        if failure_dist:
+            # Top 2 failure categories
+            sorted_failures = sorted(
+                failure_dist.items(), key=lambda x: x[1], reverse=True
+            )
+            for category_name, count in sorted_failures[:2]:
+                strategy = CATEGORY_STRATEGIES.get(category_name, "")
+                if strategy:
+                    # Add as a note to important_notes or requirements
+                    notes_section = modified_structure.get_section("important_notes")
+                    req_section = modified_structure.get_section("requirements")
+                    target_section = notes_section or req_section
+
+                    if target_section:
+                        tag_name = "important_notes" if notes_section else "requirements"
+                        note = f"\n- [{category_name} 대응] {strategy}"
+                        if note.strip() not in target_section.content:
+                            new_content = target_section.content.rstrip() + note
+                            modified_structure.update_section(tag_name, new_content)
+                            all_changes.append(
+                                Change(
+                                    change_type="modify",
+                                    target_section=tag_name,
+                                    description=f"실패 카테고리({category_name}) 대응 전략 추가",
+                                    old_value=target_section.content,
+                                    new_value=new_content,
+                                )
+                            )
+
         # 6. 고급 기법 적용
         current_success_rate = current_performance.get("success_rate", 0)
 
@@ -410,6 +451,12 @@ class DynamicReconstructor:
             )
             all_changes.extend(recovery_changes)
 
+            # 6.2.1 CoVe 검증 프로토콜
+            cove_changes = self.self_verification.add_cove_verification(
+                modified_structure
+            )
+            all_changes.extend(cove_changes)
+
         # 6.3 토큰 최적화 (항상 적용)
         if self.guide_loader.should_apply_technique(
             "token_optimization", current_success_rate
@@ -436,6 +483,21 @@ class DynamicReconstructor:
                 changes=all_changes,
                 performance_before=current_performance.get("success_rate", 0),
             )
+
+        # 9. 프롬프트 길이 모니터링
+        original_content = current_structure.to_prompt()
+        new_content_str = modified_structure.to_prompt()
+        initial_length = len(original_content)
+        new_length = len(new_content_str)
+        if new_length > initial_length * 2.0:
+            import logging
+            logger = logging.getLogger("v5_main")
+            logger.warning(
+                f"프롬프트 길이 2배 초과: {initial_length} → {new_length}"
+            )
+            # 토큰 최적화 강제 적용
+            _, token_changes = self.token_optimizer.optimize_prompt(modified_structure)
+            all_changes.extend(token_changes)
 
         return modified_structure, all_changes
 

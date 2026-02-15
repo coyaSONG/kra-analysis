@@ -24,6 +24,7 @@ from typing import Any
 
 # v5 모듈 임포트
 sys.path.append(str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from v5_modules import (
     DynamicReconstructor,
     ExamplesManager,
@@ -42,6 +43,8 @@ from v5_modules.utils import (
     setup_logger,
     write_text_file,
 )
+from evaluation.data_splitter import TemporalDataSplitter
+from evaluation.calibration import ConfidenceCalibrator
 
 
 def should_promote_challenger(
@@ -124,6 +127,8 @@ class RecursivePromptImprovementV5:
         time_split: str = "rolling",
         defer_policy: str = "threshold",
         asof_check: str = "on",
+        patience: int = 3,
+        min_improvement: float = 0.005,
     ):
 
         self.initial_prompt_path = initial_prompt_path
@@ -136,6 +141,11 @@ class RecursivePromptImprovementV5:
         self.time_split = time_split
         self.defer_policy = defer_policy
         self.asof_check = asof_check
+
+        # Patience-based early stopping (Phase 4)
+        self.patience = patience
+        self.patience_counter = 0
+        self.min_improvement = min_improvement  # 0.5%p minimum improvement
 
         # 작업 디렉토리 설정
         self.working_dir = (
@@ -152,6 +162,8 @@ class RecursivePromptImprovementV5:
         self.insight_analyzer = InsightAnalyzer()
         self.reconstructor = DynamicReconstructor()
         self.examples_manager = ExamplesManager()
+        self.data_splitter = TemporalDataSplitter()
+        self.calibrator = ConfidenceCalibrator()
 
         # 상태 관리
         self.iteration_history = []
@@ -187,6 +199,25 @@ class RecursivePromptImprovementV5:
         # 초기 버전 설정
         if not current_structure.version:
             current_structure.version = "v1.0"
+
+        # Train/Val/Test 시간순 분할 (Phase 4)
+        self.data_splits = None
+        try:
+            from evaluation.evaluate_prompt_v3 import PromptEvaluatorV3
+
+            temp_evaluator = PromptEvaluatorV3(
+                prompt_version="split_check",
+                prompt_path=str(self.initial_prompt_path),
+            )
+            all_races = temp_evaluator.find_test_races()
+            if all_races:
+                self.data_splits = self.data_splitter.split(all_races)
+                self.logger.info("📊 데이터 분할 완료:")
+                self.logger.info(f"  - Train: {len(self.data_splits['train'])}개")
+                self.logger.info(f"  - Val: {len(self.data_splits['val'])}개")
+                self.logger.info(f"  - Test: {len(self.data_splits['test'])}개")
+        except Exception as e:
+            self.logger.warning(f"데이터 분할 실패 (기존 방식 유지): {e}")
 
         start_time = time.time()
 
@@ -269,14 +300,36 @@ class RecursivePromptImprovementV5:
                 self.champion_structure = current_structure
 
             # 최고 성능 업데이트 (승격된 후보 기준)
-            if promotion_decision["promote"] and current_performance > self.best_performance:
+            if promotion_decision["promote"] and current_performance > self.best_performance + self.min_improvement * 100:
                 self.best_performance = current_performance
                 self.best_prompt_path = current_prompt_path
+                self.patience_counter = 0
                 self.logger.info(f"🎯 새로운 최고 성능: {current_performance:.1f}%")
+            elif promotion_decision["promote"] and current_performance > self.best_performance:
+                self.best_performance = current_performance
+                self.best_prompt_path = current_prompt_path
+                self.patience_counter += 1
+                self.logger.info(
+                    f"📈 미미한 개선 ({current_performance:.1f}%), "
+                    f"patience: {self.patience_counter}/{self.patience}"
+                )
+            else:
+                self.patience_counter += 1
+                self.logger.info(
+                    f"📊 미개선, patience: {self.patience_counter}/{self.patience}"
+                )
 
             # 목표 달성 확인
             if current_performance >= 70.0:
                 self.logger.info("🎉 목표 성능(70%) 달성!")
+                break
+
+            # Patience 기반 조기 종료
+            if self.patience_counter >= self.patience:
+                self.logger.info(
+                    f"⏹ 조기 종료: {self.patience}회 연속 유의미한 개선 없음 "
+                    f"(최소 개선 기준: {self.min_improvement * 100:.1f}%p)"
+                )
                 break
 
             # 마지막 반복이면 개선 없이 종료
@@ -720,6 +773,18 @@ def main():
         default="on",
         help="누수(as-of) 검사 on/off (기본값: on)",
     )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        default=3,
+        help="조기 종료 patience (연속 미개선 허용 횟수, 기본값: 3)",
+    )
+    parser.add_argument(
+        "--min-improvement",
+        type=float,
+        default=0.005,
+        help="최소 유의미한 개선폭 (비율, 기본값: 0.005 = 0.5%%p)",
+    )
 
     args = parser.parse_args()
 
@@ -741,6 +806,8 @@ def main():
         time_split=args.time_split,
         defer_policy=args.defer_policy,
         asof_check=args.asof_check,
+        patience=args.patience,
+        min_improvement=args.min_improvement,
     )
 
     try:

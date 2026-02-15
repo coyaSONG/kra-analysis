@@ -9,6 +9,8 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
+from .failure_taxonomy import FailureCategory, FailureClassifier
+
 
 @dataclass
 class Pattern:
@@ -33,6 +35,7 @@ class Recommendation:
     value: Any | None = None
     reason: str | None = None
     expected_improvement: str | None = None
+    failure_category: str | None = None
 
 
 @dataclass
@@ -44,6 +47,7 @@ class InsightAnalysis:
     patterns: dict[str, list[Pattern]] = field(default_factory=dict)
     correlations: dict[str, float] = field(default_factory=dict)
     recommendations: list[Recommendation] = field(default_factory=list)
+    failure_distribution: dict[str, int] = field(default_factory=dict)
 
     def get_recommendations(self) -> list[Recommendation]:
         """우선순위별로 정렬된 권고사항 반환"""
@@ -588,6 +592,7 @@ class InsightAnalyzer:
         self.pattern_miner = PatternMiner()
         self.correlation_analyzer = CorrelationAnalyzer()
         self.recommendation_generator = RecommendationGenerator()
+        self.failure_classifier = FailureClassifier()
 
     def analyze(self, evaluation_results: list[dict]) -> InsightAnalysis:
         """종합적인 인사이트 분석 수행"""
@@ -632,6 +637,15 @@ class InsightAnalyzer:
                     prepared_data["failed_predictions"]
                 )
             )
+
+        # 4.5 실패 분류
+        if prepared_data["failed_predictions"]:
+            classified = self.failure_classifier.classify_batch(
+                prepared_data["failed_predictions"]
+            )
+            analysis.failure_distribution = {
+                cat.value: len(items) for cat, items in classified.items()
+            }
 
         # 5. 상관관계 분석
         analysis.correlations = self.correlation_analyzer.calculate_feature_importance(

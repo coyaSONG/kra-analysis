@@ -22,6 +22,7 @@ from typing import Any
 
 # shared 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from evaluation.ensemble import SelfConsistencyEnsemble
 from evaluation.leakage_checks import check_detailed_results_for_leakage
 from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.metrics import compute_prediction_quality_metrics
@@ -41,6 +42,7 @@ class PromptEvaluatorV3:
         report_format: str = "v2",
         metrics_profile: str = "rpi_v1",
         defer_threshold: float | None = None,
+        ensemble_k: int = 1,
     ):
         self.prompt_version = prompt_version
         self.prompt_path = prompt_path
@@ -54,6 +56,8 @@ class PromptEvaluatorV3:
         self.report_format = report_format
         self.metrics_profile = metrics_profile
         self.defer_threshold = defer_threshold
+        self.ensemble_k = ensemble_k
+        self.ensemble = SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
 
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
@@ -243,6 +247,56 @@ class PromptEvaluatorV3:
             print(f"Error predicting race {race_id}: {e}")
             return None, error_type
 
+    def run_ensemble_prediction(
+        self, race_data: dict, race_id: str
+    ) -> tuple[dict | None, str]:
+        """Run K predictions and aggregate via ensemble."""
+        if self.ensemble is None or self.ensemble_k <= 1:
+            return self.run_claude_prediction(race_data, race_id)
+
+        predictions = []
+        last_error = "success"
+
+        for i in range(self.ensemble_k):
+            result, error_type = self.run_claude_prediction(race_data, race_id)
+            if result is not None:
+                predictions.append(result)
+            else:
+                last_error = error_type
+
+        if not predictions:
+            return None, last_error
+
+        # Extract predicted horse numbers from each prediction for aggregation
+        pred_dicts = []
+        for p in predictions:
+            predicted = [h["chulNo"] for h in p.get("selected_horses", [])]
+            pred_dicts.append({
+                "predicted": predicted,
+                "confidence": p.get("confidence", 50),
+            })
+
+        # Aggregate
+        aggregated = self.ensemble.aggregate_predictions(pred_dicts)
+
+        # Build result dict matching expected format
+        merged = predictions[0].copy()  # Use first as base
+        merged["selected_horses"] = [{"chulNo": no} for no in aggregated["predicted"]]
+        merged["predicted"] = aggregated["predicted"]
+        merged["confidence"] = aggregated["confidence"]
+        merged["ensemble_meta"] = {
+            "k": self.ensemble_k,
+            "collected": len(predictions),
+            "consistency_score": aggregated["consistency_score"],
+            "vote_counts": aggregated["vote_counts"],
+        }
+
+        # Check abstain
+        if self.ensemble.should_abstain(aggregated["consistency_score"]):
+            merged["low_confidence"] = True
+
+        return merged, "success"
+
     def _parse_stream_json(self, output: str, execution_time: float) -> dict | None:
         """CLI 응답 텍스트에서 JSON 파싱 (직접 JSON 또는 코드블록)"""
         try:
@@ -366,7 +420,7 @@ class PromptEvaluatorV3:
     ) -> tuple[dict | None, str]:
         """재시도 기능이 있는 예측 실행"""
         for attempt in range(max_retries + 1):
-            result, error_type = self.run_claude_prediction(race_data, race_id)
+            result, error_type = self.run_ensemble_prediction(race_data, race_id)
             if result is not None:
                 return result, error_type
 
@@ -811,6 +865,12 @@ Example:
         default=None,
         help="디퍼 임계값 (0~1, 미지정 시 비활성)",
     )
+    parser.add_argument(
+        "--ensemble-k",
+        type=int,
+        default=1,
+        help="앙상블 예측 수 (1=단일 예측, 기본값: 1)",
+    )
 
     args = parser.parse_args()
 
@@ -830,6 +890,7 @@ Example:
         report_format=args.report_format,
         metrics_profile=args.metrics_profile,
         defer_threshold=args.defer_threshold,
+        ensemble_k=args.ensemble_k,
     )
     _results = evaluator.evaluate_all_parallel(
         test_limit=args.test_limit,
