@@ -20,10 +20,10 @@ class ClaudeClient:
     def __init__(self, max_concurrency: int = 3):
         self._semaphore = threading.Semaphore(max_concurrency)
         # Claude CLI 환경 설정
-        self._env = {
-            **os.environ,
-            "DISABLE_INTERLEAVED_THINKING": "true",
-        }
+        env = {**os.environ, "DISABLE_INTERLEAVED_THINKING": "true"}
+        # 중첩 세션 차단 우회 (Claude Code 내부에서 실행 시)
+        env.pop("CLAUDECODE", None)
+        self._env = env
 
     def predict_sync(
         self,
