@@ -166,12 +166,12 @@ class PredictionTester:
             # 데이터를 프롬프트에 포함
             # {{RACE_DATA}} 플레이스홀더가 있으면 대체하고, 없으면 뒤에 추가
             race_data_json_str = json.dumps(race_data, ensure_ascii=False, indent=2)
-            
+
             if "{{RACE_DATA}}" in prompt_template:
                 prompt = prompt_template.replace("{{RACE_DATA}}", race_data_json_str)
             else:
                 prompt = f"{prompt_template}\n\n<race_data>\n{race_data_json_str}\n</race_data>"
-            
+
             # 클로드에게 명확하게 JSON만 출력하도록 지시 (프롬프트 최하단에 배치)
             prompt += "\n\nIMPORTANT: You must act as a prediction API. Do not analyze the prompt itself. Analyze the race data provided above and Output ONLY the JSON object as specified in <output_format>. Do not output any markdown code block markers (```json), introductory text, or explanations. Just the raw JSON string."
 

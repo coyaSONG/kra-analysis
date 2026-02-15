@@ -6,6 +6,7 @@
 - 향상된 안정성
 """
 
+import argparse
 import glob
 import json
 import re
@@ -13,7 +14,6 @@ import subprocess
 import sys
 import threading
 import time
-import argparse
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -24,8 +24,8 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from evaluation.ensemble import SelfConsistencyEnsemble
 from evaluation.leakage_checks import check_detailed_results_for_leakage
-from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.metrics import compute_prediction_quality_metrics
+from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.report_schema import build_report_v2, validate_report_v2
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
@@ -257,7 +257,7 @@ class PromptEvaluatorV3:
         predictions = []
         last_error = "success"
 
-        for i in range(self.ensemble_k):
+        for _i in range(self.ensemble_k):
             result, error_type = self.run_claude_prediction(race_data, race_id)
             if result is not None:
                 predictions.append(result)

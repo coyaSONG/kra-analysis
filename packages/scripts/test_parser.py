@@ -33,7 +33,7 @@ if code_block_match:
                 {"chulNo": no} for no in prediction["prediction"]
             ]
 
-    print(f"\nAfter conversion:")
+    print("\nAfter conversion:")
     print(f"selected_horses: {prediction.get('selected_horses')}")
     print(f"confidence: {prediction.get('confidence')}")
     print(f"reasoning: {prediction.get('reasoning')}")

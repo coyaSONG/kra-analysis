@@ -11,7 +11,7 @@ import json
 import sys
 from pathlib import Path
 
-from api_client import ensure_cache_dir, get_race_result, save_to_cache
+from api_client import ensure_cache_dir, get_race_result
 
 MEET_CODES = {
     "seoul": "1",

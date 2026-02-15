@@ -3,7 +3,7 @@ Mock utilities for testing
 """
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 
 class MockKRAAPIService:

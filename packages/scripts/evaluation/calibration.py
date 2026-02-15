@@ -33,7 +33,7 @@ class ConfidenceCalibrator:
         if not confidences or not actuals or len(confidences) != len(actuals):
             return
 
-        pairs = sorted(zip(confidences, actuals))
+        pairs = sorted(zip(confidences, actuals, strict=False))
         n = len(pairs)
         bin_size = max(1, n // self.n_bins)
 

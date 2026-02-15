@@ -410,7 +410,7 @@ def train(data_dir: Path, output_dir: Path) -> None:
 
     importances = final_model.feature_importances_
     importance_pairs = sorted(
-        zip(FEATURE_COLUMNS, importances), key=lambda x: x[1], reverse=True
+        zip(FEATURE_COLUMNS, importances, strict=False), key=lambda x: x[1], reverse=True
     )
 
     print(f"  {'Feature':<25} {'Importance':>10}")

@@ -379,7 +379,7 @@ class DynamicReconstructor:
             sorted_failures = sorted(
                 failure_dist.items(), key=lambda x: x[1], reverse=True
             )
-            for category_name, count in sorted_failures[:2]:
+            for category_name, _count in sorted_failures[:2]:
                 strategy = CATEGORY_STRATEGIES.get(category_name, "")
                 if strategy:
                     # Add as a note to important_notes or requirements

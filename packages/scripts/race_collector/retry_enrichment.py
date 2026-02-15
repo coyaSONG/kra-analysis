@@ -94,7 +94,7 @@ def retry_failed_enrichment(file_path: str) -> dict:
         jockey_details = sum(1 for h in horses if "jkDetail" in h)
         trainer_details = sum(1 for h in horses if "trDetail" in h)
 
-        print(f"\n  Final stats:")
+        print("\n  Final stats:")
         print(f"    - Horse info: {horse_details}/{total_horses}")
         print(f"    - Jockey info: {jockey_details}/{total_horses}")
         print(f"    - Trainer info: {trainer_details}/{total_horses}")

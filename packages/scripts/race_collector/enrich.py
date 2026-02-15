@@ -79,18 +79,18 @@ async def enrich_race_data(input_path: str, client: AsyncKRAClient) -> dict:
         trainer_results = all_results[n_horses + n_jockeys :]
 
         # Attach horse details
-        for horse, detail in zip(horse_array, horse_details):
+        for horse, detail in zip(horse_array, horse_details, strict=False):
             if isinstance(detail, dict):
                 horse["hrDetail"] = detail
 
         # Build jockey/trainer lookup dicts
         jockey_details: dict[str, dict] = {}
-        for jk_no, result in zip(jk_nos, jockey_results):
+        for jk_no, result in zip(jk_nos, jockey_results, strict=False):
             if isinstance(result, dict):
                 jockey_details[jk_no] = result
 
         trainer_details: dict[str, dict] = {}
-        for tr_no, result in zip(tr_nos, trainer_results):
+        for tr_no, result in zip(tr_nos, trainer_results, strict=False):
             if isinstance(result, dict):
                 trainer_details[tr_no] = result
 

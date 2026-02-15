@@ -25,6 +25,8 @@ from typing import Any
 # v5 모듈 임포트
 sys.path.append(str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from evaluation.calibration import ConfidenceCalibrator
+from evaluation.data_splitter import TemporalDataSplitter
 from v5_modules import (
     DynamicReconstructor,
     ExamplesManager,
@@ -43,8 +45,6 @@ from v5_modules.utils import (
     setup_logger,
     write_text_file,
 )
-from evaluation.data_splitter import TemporalDataSplitter
-from evaluation.calibration import ConfidenceCalibrator
 
 
 def should_promote_challenger(

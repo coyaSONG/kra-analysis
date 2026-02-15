@@ -93,7 +93,7 @@ export class HorseController {
       logger.info('Getting horse details, returning mock data', { hrNo, meet });
 
       // Create mock horse data
-      const horseData: HorseDetails = {
+      const horseData = {
         hrNo: hrNo,
         hrName: 'Test Horse',
         age: 4,
@@ -105,11 +105,11 @@ export class HorseController {
           dataSource: 'cache' as const,
           cacheExpiresAt: new Date(Date.now() + 14400 * 1000).toISOString(),
         },
-      } as HorseDetails;
+      } as unknown as HorseDetails;
 
       res.json({
         success: true,
-        data: { horse: horseData as HorseDetails },
+        data: horseData,
         timestamp: new Date().toISOString(),
         message: 'Horse details retrieved successfully',
         meta: {
@@ -162,7 +162,7 @@ export class HorseController {
 
       res.json({
         success: true,
-        data: { history: historyData as HorseRaceHistory[] },
+        data: historyData,
         timestamp: new Date().toISOString(),
         message: 'Horse race history retrieved successfully',
         meta: {
@@ -219,7 +219,7 @@ export class HorseController {
 
       res.json({
         success: true,
-        data: { horses: searchResults as HorseDetails[] },
+        data: searchResults,
         timestamp: new Date().toISOString(),
         message: 'Horse search completed successfully',
         meta: {

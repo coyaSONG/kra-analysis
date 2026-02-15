@@ -24,6 +24,8 @@ export interface ApiResponse<T = any> {
   message?: string;
   /** Error message (present on failure) */
   error?: string;
+  /** ISO timestamp of when the response was generated */
+  timestamp?: string;
   /** Additional metadata */
   meta?: ResponseMetadata;
 }

@@ -64,7 +64,7 @@ export class RaceController {
           logger.info('Returning cached race data', { date, meet });
           res.json({
             success: true,
-            data: { races: Array.isArray(cachedData) ? cachedData : [] },
+            data: Array.isArray(cachedData) ? cachedData : [],
             timestamp: new Date().toISOString(),
             message: 'Races retrieved successfully (cached)',
           });
@@ -81,7 +81,7 @@ export class RaceController {
 
       res.json({
         success: true,
-        data: { races: races },
+        data: races,
         timestamp: new Date().toISOString(),
         message: 'Races retrieved successfully',
         meta: {
@@ -164,7 +164,7 @@ export class RaceController {
 
       res.json({
         success: true,
-        data: { race: raceData as CollectedRaceData | undefined },
+        data: raceData ?? undefined,
         timestamp: new Date().toISOString(),
         message: 'Race details retrieved successfully',
         meta: {
@@ -214,7 +214,7 @@ export class RaceController {
           data: {
             jobId,
             status: 'started',
-          },
+          } as unknown as CollectedRaceData,
           message: 'Race data collection started',
           meta: {
             timestamp: new Date().toISOString(),

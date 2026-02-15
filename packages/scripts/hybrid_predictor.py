@@ -28,11 +28,10 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+import numpy as np
 from feature_engineering import compute_race_features
 from ml.predict import FEATURE_COLUMNS, _horse_to_feature_row, load_model
 from shared.claude_client import ClaudeClient
-
-import numpy as np
 
 # Claude CLI 모델 이름 (구독 플랜 전용, --model 플래그에 전달)
 MODEL_MAP = {

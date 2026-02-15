@@ -161,11 +161,11 @@ export class KraApiService {
             ord: 1,
             winOdds: 3.5,
             wgBudam: 58.0,
-            rcTime: '1:35.2',
-            rcDate: date, // String format YYYYMMDD
+            rcTime: 0, // Mock numeric race time
+            rcDate: Number(date), // Numeric format YYYYMMDD
             rcNo: raceNo, // Race number as number
             meet: meet || '1', // Meet code
-          },
+          } as unknown as Api214Item,
         ];
       }
 
@@ -241,7 +241,7 @@ export class KraApiService {
           rating: 85,
           owName: 'Test Owner',
           country: '한국',
-        } as Api8_2Item;
+        } as unknown as Api8_2Item;
       }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
@@ -312,7 +312,7 @@ export class KraApiService {
             totalBets: 1000000,
             totalPayout: 800000,
           },
-        ] as Api299Item[];
+        ] as unknown as Api299Item[];
       }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
@@ -388,7 +388,7 @@ export class KraApiService {
           ord3CntT: 2,
           rcCntT: 15,
           winRate: 33.3,
-        } as Api12_1Item;
+        } as unknown as Api12_1Item;
       }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {

@@ -49,7 +49,7 @@ def _binary_log_loss(y_true: list[int], y_prob: list[float]) -> float:
         return 0.0
 
     losses = []
-    for y, p in zip(y_true, y_prob):
+    for y, p in zip(y_true, y_prob, strict=False):
         p_clipped = _clip_probability(p)
         losses.append(-(y * math.log(p_clipped) + (1 - y) * math.log(1 - p_clipped)))
     return sum(losses) / len(losses)
@@ -58,7 +58,7 @@ def _binary_log_loss(y_true: list[int], y_prob: list[float]) -> float:
 def _brier_score(y_true: list[int], y_prob: list[float]) -> float:
     if not y_true:
         return 0.0
-    return sum((p - y) ** 2 for y, p in zip(y_true, y_prob)) / len(y_true)
+    return sum((p - y) ** 2 for y, p in zip(y_true, y_prob, strict=False)) / len(y_true)
 
 
 def _ece(y_true: list[int], y_prob: list[float], bins: int = 10) -> float:
@@ -66,7 +66,7 @@ def _ece(y_true: list[int], y_prob: list[float], bins: int = 10) -> float:
         return 0.0
 
     bin_pairs: dict[int, list[tuple[int, float]]] = {i: [] for i in range(bins)}
-    for y, p in zip(y_true, y_prob):
+    for y, p in zip(y_true, y_prob, strict=False):
         idx = min(int(p * bins), bins - 1)
         bin_pairs[idx].append((y, p))
 
@@ -260,7 +260,7 @@ def compute_prediction_quality_metrics(
     if defer_threshold is not None:
         kept = [
             (result, confidence)
-            for result, confidence in zip(usable_results, confidences)
+            for result, confidence in zip(usable_results, confidences, strict=False)
             if confidence >= defer_threshold
         ]
         deferred_count = len(usable_results) - len(kept)
@@ -273,7 +273,7 @@ def compute_prediction_quality_metrics(
 
     y_true: list[int] = []
     y_prob: list[float] = []
-    for result, confidence in zip(filtered_results, filtered_confidences):
+    for result, confidence in zip(filtered_results, filtered_confidences, strict=False):
         winner = _winner_number(result)
         predicted = _predicted_numbers(result)
         if winner is None or not predicted:

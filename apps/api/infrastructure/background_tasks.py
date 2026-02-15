@@ -8,9 +8,10 @@ import asyncio
 import json
 import traceback
 import uuid
+from collections.abc import Callable, Coroutine
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 import structlog
 

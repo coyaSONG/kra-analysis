@@ -9,7 +9,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
-from .failure_taxonomy import FailureCategory, FailureClassifier
+from .failure_taxonomy import FailureClassifier
 
 
 @dataclass

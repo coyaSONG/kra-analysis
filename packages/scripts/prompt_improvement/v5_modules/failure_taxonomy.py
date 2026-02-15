@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from enum import Enum
-from typing import Any
 
 
 class FailureCategory(Enum):
@@ -81,9 +80,8 @@ class FailureClassifier:
             if winner_entry:
                 hr_detail = winner_entry.get("hrDetail", {})
                 race_info = race_data.get("raceInfo", {})
-                rc_dist = 0
                 try:
-                    rc_dist = int(race_info.get("rcDist", 0))
+                    int(race_info.get("rcDist", 0))
                 except (TypeError, ValueError):
                     pass
 
@@ -101,9 +99,6 @@ class FailureClassifier:
 
                 # 4. Form conflict - high long-term ability but low recent form
                 place_rate = float(hr_detail.get("placeRate", 0) or 0)
-                # Check if horse is good long-term but possibly inconsistent
-                win_rate = float(hr_detail.get("winRate", 0) or 0)
-
                 # Use odds rank as proxy for current form assessment
                 winner_odds_rank = odds_ranks.get(int(winner), 99)
                 if place_rate >= 30 and winner_odds_rank > 6:
