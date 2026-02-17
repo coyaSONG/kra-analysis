@@ -89,7 +89,9 @@ class CollectionService:
             and_(filters, Race.result_status == DataStatus.FAILED)
         )
 
-        latest_updated_result = await db.execute(select(func.max(Race.updated_at)).where(filters))
+        latest_updated_result = await db.execute(
+            select(func.max(Race.updated_at)).where(filters)
+        )
         last_updated = latest_updated_result.scalar_one_or_none()
 
         if total_races == 0:

@@ -37,7 +37,9 @@ def _mask_database_url(raw_url: str) -> str:
     auth, host = parsed.netloc.rsplit("@", 1)
     username = auth.split(":", 1)[0]
     safe_netloc = f"{username}:***@{host}"
-    return urlunsplit((parsed.scheme, safe_netloc, parsed.path, parsed.query, parsed.fragment))
+    return urlunsplit(
+        (parsed.scheme, safe_netloc, parsed.path, parsed.query, parsed.fragment)
+    )
 
 
 def _print_section(title: str):
@@ -81,7 +83,10 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--date", type=str, help="점검할 날짜 (YYYYMMDD)")
     parser.add_argument(
-        "--meet", type=int, choices=[1, 2, 3], help="경마장 코드 (1:서울, 2:제주, 3:부산)"
+        "--meet",
+        type=int,
+        choices=[1, 2, 3],
+        help="경마장 코드 (1:서울, 2:제주, 3:부산)",
     )
     return parser.parse_args()
 
