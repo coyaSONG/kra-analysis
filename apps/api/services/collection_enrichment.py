@@ -1,7 +1,8 @@
 """Collection enrichment helpers."""
 
+from collections.abc import Awaitable, Callable
 from datetime import datetime
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import pandas as pd
 import structlog
@@ -19,8 +20,12 @@ logger = structlog.get_logger()
 PastPerformanceFetcher = Callable[
     [str, str, AsyncSession | None], Awaitable[list[dict[str, Any]]]
 ]
-JockeyStatsFetcher = Callable[[str, str, AsyncSession | None], Awaitable[dict[str, Any]]]
-TrainerStatsFetcher = Callable[[str, str, AsyncSession | None], Awaitable[dict[str, Any]]]
+JockeyStatsFetcher = Callable[
+    [str, str, AsyncSession | None], Awaitable[dict[str, Any]]
+]
+TrainerStatsFetcher = Callable[
+    [str, str, AsyncSession | None], Awaitable[dict[str, Any]]
+]
 
 
 async def enrich_data(

@@ -39,17 +39,23 @@ def preprocess_data(raw_data: dict[str, Any]) -> dict[str, Any]:
             for horse in active_horses:
                 if avg_weight > 0:
                     try:
-                        horse["weight_ratio"] = float(horse.get("weight", 0)) / avg_weight
+                        horse["weight_ratio"] = (
+                            float(horse.get("weight", 0)) / avg_weight
+                        )
                     except (ValueError, TypeError):
                         horse["weight_ratio"] = 0
                 if avg_rating > 0:
                     try:
-                        horse["rating_ratio"] = float(horse.get("rating", 0)) / avg_rating
+                        horse["rating_ratio"] = (
+                            float(horse.get("rating", 0)) / avg_rating
+                        )
                     except (ValueError, TypeError):
                         horse["rating_ratio"] = 0
                 if avg_win_odds > 0:
                     try:
-                        horse["odds_ratio"] = float(horse.get("win_odds", 0)) / avg_win_odds
+                        horse["odds_ratio"] = (
+                            float(horse.get("win_odds", 0)) / avg_win_odds
+                        )
                     except (ValueError, TypeError):
                         horse["odds_ratio"] = 0
 

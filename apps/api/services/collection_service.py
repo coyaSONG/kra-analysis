@@ -16,12 +16,26 @@ from infrastructure.redis_client import CacheService
 from models.database_models import DataStatus, Race
 from services.collection_enrichment import (
     analyze_weather_impact as analyze_weather_impact_helper,
+)
+from services.collection_enrichment import (
     calculate_performance_stats as calculate_performance_stats_helper,
+)
+from services.collection_enrichment import (
     calculate_recent_form as calculate_recent_form_helper,
+)
+from services.collection_enrichment import (
     enrich_data as enrich_data_helper,
+)
+from services.collection_enrichment import (
     get_default_stats as get_default_stats_helper,
+)
+from services.collection_enrichment import (
     get_horse_past_performances as get_horse_past_performances_helper,
+)
+from services.collection_enrichment import (
     get_jockey_stats as get_jockey_stats_helper,
+)
+from services.collection_enrichment import (
     get_trainer_stats as get_trainer_stats_helper,
 )
 from services.collection_preprocessing import preprocess_data as preprocess_data_helper
