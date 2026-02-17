@@ -46,41 +46,34 @@ jobs:
         working-directory: ./apps/api
         run: uv sync --all-extras --group dev
       - name: Ruff lint
-        working-directory: ./apps/api
-        run: |
-          uv run ruff check --diff --exit-non-zero-on-fix .
-          uv run ruff check .
+        run: bash apps/api/scripts/run_quality_ci.sh lint
       - name: Ruff format check
-        run: uv run ruff format --check .
+        run: bash apps/api/scripts/run_quality_ci.sh format
       - name: Type check (mypy)
-        working-directory: ./apps/api
         continue-on-error: true
-        run: uv run mypy . --ignore-missing-imports --no-strict-optional --explicit-package-bases || true
+        run: bash apps/api/scripts/run_quality_ci.sh typecheck
       - name: Unit tests
-        working-directory: ./apps/api
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/15
           SECRET_KEY: test-secret-key
           ENVIRONMENT: test
-        run: uv run pytest -v -m unit --tb=short -o addopts=""
+        run: bash apps/api/scripts/run_quality_ci.sh unit
       - name: Integration tests
-        working-directory: ./apps/api
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/15
           SECRET_KEY: test-secret-key
           ENVIRONMENT: test
           RATE_LIMIT_ENABLED: "false"
-        run: uv run pytest -v -m integration --tb=short --timeout=60 -o addopts=""
+        run: bash apps/api/scripts/run_quality_ci.sh integration
       - name: Coverage
-        working-directory: ./apps/api
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/15
           SECRET_KEY: test-secret-key
           ENVIRONMENT: test
-        run: uv run pytest -v -m unit
+        run: bash apps/api/scripts/run_quality_ci.sh coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:
@@ -124,11 +117,11 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-
       - name: Lint
-        run: pnpm turbo run lint
+        run: pnpm run quality:node:lint
       - name: Type check
-        run: pnpm turbo run typecheck
+        run: pnpm run quality:node:typecheck
       - name: Tests
-        run: pnpm turbo run test:ci
+        run: pnpm run quality:node:test
         env:
           NODE_ENV: test
           LOG_LEVEL: error
@@ -155,21 +148,5 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm audit --audit-level=low
         continue-on-error: true
-      - name: API key pattern check
-        run: |
-          if grep -r "serviceKey\s*[:=]\s*[\"'][^$\"']*[\"']" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=data --exclude="KRA_PUBLIC_API_GUIDE.md" | grep -v "process\.env\|getenv\|VITE_\|import\.meta\.env\|\${.*}\|API_KEY"; then
-            echo "Hardcoded API keys found!"
-            exit 1
-          fi
-      - name: .env file check
-        run: |
-          if git ls-files | grep -E "^\.env$|^\.env\."; then
-            echo ".env files committed!"
-            exit 1
-          fi
-      - name: data/ directory check
-        run: |
-          if git ls-files | grep "^data/"; then
-            echo "data/ files committed!"
-            exit 1
-          fi
+      - name: Repository hygiene checks
+        run: bash .github/scripts/security_checks.sh
