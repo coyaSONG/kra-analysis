@@ -46,3 +46,7 @@
 - Framework specifics needed: FastAPI, pytest (asyncio/timeout/coverage), python-jose (JWT), httpx, redis-py.
 - Version/deprecation checks: Actions v3→v4, runner image changes, major lib upgrades.
 - Node CI strategy validation: ESM/ts-jest, pnpm workspaces, cache keys, lockfile behavior.
+
+## ExecPlans
+
+When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.

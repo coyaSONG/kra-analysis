@@ -308,6 +308,15 @@ GET  http://localhost:8000/api/v2/jobs/{job_id}
 ## 참고: 기여자 가이드
 
 프로젝트 구조, 빌드/테스트 명령, 코드 스타일, 보안/설정 팁은 저장소 루트의 AGENTS.md(Repository Guidelines)를 참고하세요.
+
+## ExecPlan 워크플로우
+
+복잡한 기능 추가 또는 큰 리팩터링은 ExecPlan 방식으로 진행합니다.
+
+1. `AGENTS.md`의 `ExecPlans` 섹션을 확인합니다.
+2. `.agent/PLANS.md`를 기준으로 실행 계획(ExecPlan)을 작성/갱신합니다.
+3. 구현 중에는 계획 문서의 `Progress`, `Surprises & Discoveries`, `Decision Log`, `Outcomes & Retrospective`를 계속 업데이트합니다.
+
 ### Pre-commit 훅 (Ruff/Black)
 
 - 설정 파일: `.pre-commit-config.yaml`
