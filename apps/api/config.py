@@ -25,8 +25,9 @@ class Settings(BaseSettings):
     workers: int = 4
 
     # Database
-    database_url: str = (
-        "postgresql+asyncpg://kra_user:kra_password@localhost:5432/kra_analysis"
+    database_url: str = Field(
+        default="postgresql+asyncpg://kra_user:kra_password@localhost:5432/kra_analysis",
+        description="Database connection URL. Set via DATABASE_URL env var for Supabase.",
     )
     database_pool_size: int = 20
     database_max_overflow: int = 40
