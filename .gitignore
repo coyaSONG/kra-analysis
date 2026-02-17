@@ -75,3 +75,4 @@ logs/
 .cache/
 apps/collector/cache/
 apps/collector/tmp/
+.worktrees/
