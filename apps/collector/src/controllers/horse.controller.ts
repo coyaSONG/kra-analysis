@@ -5,11 +5,9 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import type { ApiResponse, HorseQueryParams } from '../types/api.types.js';
 import type { Api8_2Item } from '../types/kra-api.types.js';
-import { ValidationError, NotFoundError } from '../types/index.js';
-import logger from '../utils/logger.js';
+import { handleNotImplemented } from './utils/controllerUtils.js';
 
 /**
  * Enhanced horse data with additional metadata
@@ -67,58 +65,14 @@ export class HorseController {
     res: Response<ApiResponse<HorseDetails>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      // Validate request parameters
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
-
-      const { hrNo } = req.params;
-      const { meet } = req.query;
-
-      logger.info('Getting horse details', { hrNo, meet });
-
-      // For integration tests: throw NotFoundError for specific test cases
-      if (hrNo === '99999999') {
-        throw new NotFoundError(`Horse with ID ${hrNo} not found`);
-      }
-
-      // Mock horse data for testing to prevent timeouts
-      logger.info('Getting horse details, returning mock data', { hrNo, meet });
-
-      // Create mock horse data
-      const horseData = {
-        hrNo: hrNo,
-        hrName: 'Test Horse',
-        age: 4,
-        sex: '수컷',
-        birthDate: '20200315',
-        country: '한국',
-        metadata: {
-          lastUpdated: new Date().toISOString(),
-          dataSource: 'cache' as const,
-          cacheExpiresAt: new Date(Date.now() + 14400 * 1000).toISOString(),
-        },
-      } as unknown as HorseDetails;
-
-      res.json({
-        success: true,
-        data: horseData,
-        timestamp: new Date().toISOString(),
-        message: 'Horse details retrieved successfully',
-        meta: {
-          processingTime: Date.now() - (req.startTime || Date.now()),
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
+    const { hrNo } = req.params;
+    const { meet } = req.query;
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting horse details',
+      logContext: { hrNo, meet },
+      clientMessage: 'Horse details endpoint is not implemented',
+      details: 'The current controller still uses placeholder horse detail logic.',
+    });
   };
 
   /**
@@ -130,52 +84,21 @@ export class HorseController {
     res: Response<ApiResponse<HorseRaceHistory[]>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
-
-      const { hrNo } = req.params;
-      const { meet, page = 1, pageSize = 20, sortBy = 'raceDate', sortOrder = 'desc' } = req.query;
-
-      logger.info('Getting horse race history', {
+    const { hrNo } = req.params;
+    const { meet, page = 1, pageSize = 20, sortBy = 'raceDate', sortOrder = 'desc' } = req.query;
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting horse race history',
+      logContext: {
         hrNo,
         meet,
         page,
         pageSize,
         sortBy,
         sortOrder,
-      });
-
-      // Return mock empty data immediately
-      logger.info('Horse history data, returning empty array', { hrNo });
-      const historyData: HorseRaceHistory[] = [];
-
-      const totalCount = Array.isArray(historyData) ? historyData.length : 0;
-      const totalPages = Math.ceil(totalCount / (pageSize || 20));
-
-      res.json({
-        success: true,
-        data: historyData,
-        timestamp: new Date().toISOString(),
-        message: 'Horse race history retrieved successfully',
-        meta: {
-          totalCount,
-          page: page || 1,
-          pageSize: pageSize || 20,
-          totalPages,
-          processingTime: Date.now() - (req.startTime || Date.now()),
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
+      },
+      clientMessage: 'Horse history endpoint is not implemented',
+      details: 'Race history query and persistence integration are pending.',
+    });
   };
 
   /**
@@ -187,20 +110,10 @@ export class HorseController {
     res: Response<ApiResponse<HorseDetails[]>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
-
-      const { hrName, meet, rank, page = 1, pageSize = 20, sortBy = 'hrName', sortOrder = 'asc' } = req.query;
-
-      logger.info('Searching horses', {
+    const { hrName, meet, rank, page = 1, pageSize = 20, sortBy = 'hrName', sortOrder = 'asc' } = req.query;
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Searching horses',
+      logContext: {
         hrName,
         meet,
         rank,
@@ -208,31 +121,10 @@ export class HorseController {
         pageSize,
         sortBy,
         sortOrder,
-      });
-
-      // For simplicity, return mock data immediately to prevent timeouts
-      logger.info('Horse search executed, returning mock data');
-      const searchResults: HorseDetails[] = [];
-
-      const totalCount = Array.isArray(searchResults) ? searchResults.length : 0;
-      const totalPages = Math.ceil(totalCount / (pageSize || 20));
-
-      res.json({
-        success: true,
-        data: searchResults,
-        timestamp: new Date().toISOString(),
-        message: 'Horse search completed successfully',
-        meta: {
-          totalCount,
-          page: page || 1,
-          pageSize: pageSize || 20,
-          totalPages,
-          processingTime: Date.now() - (req.startTime || Date.now()),
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
+      },
+      clientMessage: 'Horse search endpoint is not implemented',
+      details: 'Search currently has no backing query implementation.',
+    });
   };
 
   /**
@@ -244,23 +136,14 @@ export class HorseController {
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const { hrNo } = req.params;
-
-      logger.info('Getting horse performance', { hrNo });
-
-      // TODO: Implement actual horse performance analytics
-      res.json({
-        success: true,
-        data: {
-          hrNo,
-          message: 'Horse performance endpoint - to be implemented',
-        },
-        message: 'Horse performance retrieved successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
+    const { hrNo } = req.params;
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting horse performance',
+      logContext: { hrNo },
+      clientMessage: 'Horse performance endpoint is not implemented',
+      details: 'Performance analytics logic is not implemented yet.',
+      validate: false,
+    });
   };
 
   /**
@@ -272,20 +155,12 @@ export class HorseController {
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      logger.info('Getting top performing horses');
-
-      // TODO: Implement actual top performers retrieval
-      res.json({
-        success: true,
-        data: {
-          message: 'Top performers endpoint - to be implemented',
-        },
-        message: 'Top performing horses retrieved successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting top performing horses',
+      clientMessage: 'Top horse performers endpoint is not implemented',
+      details: 'Ranking logic for top horses is pending implementation.',
+      validate: false,
+    });
   };
 
   /**
@@ -297,20 +172,12 @@ export class HorseController {
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      logger.info('Getting horse statistics');
-
-      // TODO: Implement actual horse statistics
-      res.json({
-        success: true,
-        data: {
-          message: 'Horse statistics endpoint - to be implemented',
-        },
-        message: 'Horse statistics retrieved successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting horse statistics',
+      clientMessage: 'Horse statistics endpoint is not implemented',
+      details: 'Aggregate horse statistics pipeline is pending.',
+      validate: false,
+    });
   };
 }
 

@@ -13,7 +13,6 @@ import { Server } from 'http';
 import { 
   mockKraApiResponse,
   createTestRaceData,
-  createTestHorseData,
   waitFor
 } from '../setup.js';
 
@@ -24,7 +23,6 @@ global.fetch = mockFetch;
 describe('API Integration Tests', () => {
   let app: Application;
   let server: Server;
-  let baseURL: string;
 
   beforeAll(async () => {
     // Create Express application
@@ -32,9 +30,6 @@ describe('API Integration Tests', () => {
     
     // Start server on random port
     server = app.listen(0);
-    const address = server.address();
-    const port = typeof address === 'string' ? parseInt(address.split(':')[1]) : address?.port;
-    baseURL = `http://localhost:${port}`;
 
     // Wait for server to be ready
     await waitFor(100);
@@ -165,8 +160,7 @@ describe('API Integration Tests', () => {
           .expect(200);
 
         expect(response.body).toMatchKraApiResponse();
-        expect(response.body.data).toHaveProperty('races');
-        expect(Array.isArray(response.body.data.races)).toBe(true);
+        expect(Array.isArray(response.body.data)).toBe(true);
       });
 
       it('should validate date parameter', async () => {
@@ -214,7 +208,8 @@ describe('API Integration Tests', () => {
           .expect(200);
 
         expect(response.body).toMatchKraApiResponse();
-        expect(response.body.data).toHaveProperty('race');
+        expect(response.body.data).toHaveProperty('raceInfo');
+        expect(response.body.data).toHaveProperty('raceResult');
       });
 
       it('should validate race parameters', async () => {
@@ -304,66 +299,61 @@ describe('API Integration Tests', () => {
 
   describe('Horse Endpoints', () => {
     describe('GET /api/v1/horses', () => {
-      it('should search horses with query parameters', async () => {
+      it('should return not implemented contract for horse search', async () => {
         const response = await request(app)
           .get('/api/v1/horses?name=천리마&limit=10')
-          .expect(200);
-
-        expect(response.body).toMatchKraApiResponse();
-        expect(response.body.data).toHaveProperty('horses');
-        expect(Array.isArray(response.body.data.horses)).toBe(true);
-      });
-
-      it('should handle empty search results', async () => {
-        const response = await request(app)
-          .get('/api/v1/horses?name=nonexistent')
-          .expect(200);
-
-        expect(response.body).toMatchKraApiResponse();
-        expect(response.body.data.horses).toHaveLength(0);
-      });
-    });
-
-    describe('GET /api/v1/horses/:hrNo', () => {
-      it('should return horse details', async () => {
-        const mockHorseData = createTestHorseData();
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockKraApiResponse([mockHorseData])),
-          headers: new Headers(),
-        } as Response);
-
-        const response = await request(app)
-          .get('/api/v1/horses/20210001')
-          .expect(200);
-
-        expect(response.body).toMatchKraApiResponse();
-        expect(response.body.data).toHaveProperty('horse');
-      });
-
-      it('should handle not found horse', async () => {
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({
-            response: {
-              header: { resultCode: '03', resultMsg: 'NO DATA' },
-              body: { items: { item: [] }, numOfRows: 0, pageNo: 1, totalCount: 0 }
-            }
-          }),
-          headers: new Headers(),
-        } as Response);
-
-        const response = await request(app)
-          .get('/api/v1/horses/99999999')
-          .expect(404);
+          .expect(501);
 
         expect(response.body).toMatchObject({
           success: false,
           error: {
-            code: 'NOT_FOUND'
-          }
+            code: 'NOT_IMPLEMENTED',
+          },
+          timestamp: expect.any(String),
+        });
+      });
+
+      it('should keep same not implemented contract for any horse search query', async () => {
+        const response = await request(app)
+          .get('/api/v1/horses?name=nonexistent')
+          .expect(501);
+
+        expect(response.body).toMatchObject({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+          },
+          timestamp: expect.any(String),
+        });
+      });
+    });
+
+    describe('GET /api/v1/horses/:hrNo', () => {
+      it('should return not implemented contract for horse details', async () => {
+        const response = await request(app)
+          .get('/api/v1/horses/20210001')
+          .expect(501);
+
+        expect(response.body).toMatchObject({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+          },
+          timestamp: expect.any(String),
+        });
+      });
+
+      it('should keep same not implemented contract regardless horse existence', async () => {
+        const response = await request(app)
+          .get('/api/v1/horses/99999999')
+          .expect(501);
+
+        expect(response.body).toMatchObject({
+          success: false,
+          error: {
+            code: 'NOT_IMPLEMENTED',
+          },
+          timestamp: expect.any(String),
         });
       });
     });

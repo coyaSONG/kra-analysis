@@ -18,7 +18,6 @@ config();
 describe('E2E API Tests - Full KRA Integration', () => {
   let app: Application;
   let server: Server;
-  let baseURL: string;
   
   // Test data matching KRA_PUBLIC_API_GUIDE.md examples
   const TEST_DATA = {
@@ -41,11 +40,6 @@ describe('E2E API Tests - Full KRA Integration', () => {
     // Create and start app
     app = createApp();
     server = app.listen(0);
-    const address = server.address();
-    const port = typeof address === 'string' ? 
-      parseInt(address.split(':')[1]) : 
-      address?.port;
-    baseURL = `http://localhost:${port}`;
     
     // Wait for server to be ready
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -133,45 +127,36 @@ describe('E2E API Tests - Full KRA Integration', () => {
   });
 
   describe('Horse API (API8_2 Integration)', () => {
-    it('should get horse details', async () => {
+    it('should return not implemented contract for horse details', async () => {
       if (!process.env.KRA_SERVICE_KEY) return;
 
       const response = await request(app)
         .get(`/api/v1/horses/${TEST_DATA.horseNo}`)
-        .expect(200);
+        .expect(501);
 
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
-      
-      const horseData = response.body.data;
-      
-      // Verify API8_2 fields
-      expect(horseData).toHaveProperty('hrName');
-      expect(horseData).toHaveProperty('hrNo');
-      expect(horseData.hrNo).toBe(TEST_DATA.horseNo);
-      expect(horseData).toHaveProperty('birthday');
-      expect(horseData).toHaveProperty('sex');
-      expect(horseData).toHaveProperty('rank');
-      expect(horseData).toHaveProperty('rating');
-      expect(horseData).toHaveProperty('owName');
-      expect(horseData).toHaveProperty('owNo');
-      
-      // Statistics fields
-      expect(horseData).toHaveProperty('rcCntT');
-      expect(horseData).toHaveProperty('ord1CntT');
-      expect(horseData).toHaveProperty('ord2CntT');
-      expect(horseData).toHaveProperty('ord3CntT');
+      expect(response.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
     }, 20000);
 
-    it('should return 404 for non-existent horse', async () => {
+    it('should keep same not implemented contract for non-existent horse id', async () => {
       if (!process.env.KRA_SERVICE_KEY) return;
 
       const response = await request(app)
         .get('/api/v1/horses/9999999')
-        .expect(404);
+        .expect(501);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('not found');
+      expect(response.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
     }, 20000);
   });
 
@@ -212,15 +197,20 @@ describe('E2E API Tests - Full KRA Integration', () => {
       }
     }, 20000);
 
-    it('should get jockey statistics', async () => {
+    it('should return not implemented contract for jockey statistics', async () => {
       if (!process.env.KRA_SERVICE_KEY) return;
 
       const response = await request(app)
         .get(`/api/v1/jockeys/${TEST_DATA.jockeyNo}/stats`)
-        .expect(200);
+        .expect(501);
 
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
+      expect(response.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
     }, 20000);
   });
 
@@ -259,48 +249,49 @@ describe('E2E API Tests - Full KRA Integration', () => {
       // expect(trainerData).toHaveProperty('top3RateT');
     }, 20000);
 
-    it('should get trainer statistics', async () => {
+    it('should return not implemented contract for trainer statistics', async () => {
       if (!process.env.KRA_SERVICE_KEY) return;
 
       const response = await request(app)
         .get(`/api/v1/trainers/${TEST_DATA.trainerNo}/stats`)
-        .expect(200);
+        .expect(501);
 
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toBeDefined();
+      expect(response.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
     }, 20000);
   });
 
   describe('Performance and Caching', () => {
-    it('should cache repeated requests', async () => {
+    it('should return stable not implemented contract for repeated horse requests', async () => {
       if (!process.env.KRA_SERVICE_KEY) return;
 
-      // First request - should hit KRA API
-      const start1 = Date.now();
       const response1 = await request(app)
         .get(`/api/v1/horses/${TEST_DATA.horseNo}`)
-        .expect(200);
-      const time1 = Date.now() - start1;
+        .expect(501);
 
-      // Second request - should hit cache
-      const start2 = Date.now();
       const response2 = await request(app)
         .get(`/api/v1/horses/${TEST_DATA.horseNo}`)
-        .expect(200);
-      const time2 = Date.now() - start2;
+        .expect(501);
 
-      // Cache should be faster (but sometimes it's not due to timing)
-      // Just verify both requests succeeded
-      expect(response1.body.success).toBe(true);
-      expect(response2.body.success).toBe(true);
-      
-      // Data should be identical (except metadata timestamps)
-      // Remove metadata before comparison since timestamps may differ by milliseconds
-      const data1 = { ...response1.body.data };
-      const data2 = { ...response2.body.data };
-      delete data1.metadata;
-      delete data2.metadata;
-      expect(data2).toEqual(data1);
+      expect(response1.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
+      expect(response2.body).toMatchObject({
+        success: false,
+        error: {
+          code: 'NOT_IMPLEMENTED',
+        },
+        timestamp: expect.any(String),
+      });
     }, 30000);
   });
 

@@ -5,7 +5,6 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
 import { services } from '../services/index.js';
 import type {
   ApiResponse,
@@ -15,8 +14,8 @@ import type {
   CollectedRaceData,
 } from '../types/api.types.js';
 import type { EnrichedRaceData } from '../types/kra-api.types.js';
-import { ValidationError } from '../types/index.js';
 import logger from '../utils/logger.js';
+import { handleNotImplemented, validateRequest } from './utils/controllerUtils.js';
 
 export class RaceController {
   /**
@@ -29,16 +28,7 @@ export class RaceController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      // Validate request parameters
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
+      validateRequest(req);
 
       const { date } = req.params;
       const { meet, includeEnriched = false } = req.query;
@@ -104,15 +94,7 @@ export class RaceController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
+      validateRequest(req);
 
       const { date, meet, raceNo } = req.params;
       const raceNumber = parseInt(raceNo, 10);
@@ -186,15 +168,7 @@ export class RaceController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
+      validateRequest(req);
 
       const collectionRequest: CollectionRequest = {
         date: req.body.date,
@@ -249,55 +223,20 @@ export class RaceController {
     res: Response<ApiResponse<EnrichedRaceData>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        throw new ValidationError(
-          `Validation failed: ${errors
-            .array()
-            .map((err) => err.msg)
-            .join(', ')}`
-        );
-      }
+    const enrichmentRequest: EnrichmentRequest = {
+      date: req.body.date,
+      raceNo: req.body.raceNo,
+      meet: req.body.meet,
+      enrichmentTypes: req.body.enrichmentTypes || ['horse_info', 'jockey_info', 'trainer_info'],
+      forceRefresh: req.body.forceRefresh || false,
+    };
 
-      const enrichmentRequest: EnrichmentRequest = {
-        date: req.body.date,
-        raceNo: req.body.raceNo,
-        meet: req.body.meet,
-        enrichmentTypes: req.body.enrichmentTypes || ['horse_info', 'jockey_info', 'trainer_info'],
-        forceRefresh: req.body.forceRefresh || false,
-      };
-
-      logger.info('Processing race data enrichment request', enrichmentRequest);
-
-      // First get the race data, then enrich it
-      // This is a simplified implementation - in practice you'd get the race data first
-      // For now, return a mock response indicating the feature is not fully implemented
-      const data: EnrichedRaceData = {
-        raceInfo: {
-          date: enrichmentRequest.date,
-          meet: enrichmentRequest.meet,
-          raceNo: enrichmentRequest.raceNo,
-          rcName: '',
-          rcDist: 0,
-          track: '',
-          weather: '',
-        },
-        horses: [],
-      };
-
-      res.json({
-        success: true,
-        data,
-        message: 'Race data enriched successfully',
-        meta: {
-          timestamp: new Date().toISOString(),
-          processingTime: Date.now() - (req.startTime || Date.now()),
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Processing race data enrichment request',
+      logContext: enrichmentRequest,
+      clientMessage: 'Race enrichment endpoint is not implemented',
+      details: 'Race enrichment orchestration and persistence workflow are pending implementation.',
+    });
   };
 
   /**
@@ -309,25 +248,14 @@ export class RaceController {
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      const { date, meet, raceNo } = req.params;
-
-      logger.info('Getting race result', { date, meet, raceNo });
-
-      // TODO: Implement actual race result retrieval
-      res.json({
-        success: true,
-        data: {
-          date,
-          meet,
-          raceNo,
-          message: 'Race result endpoint - to be implemented',
-        },
-        message: 'Race result retrieved successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
+    const { date, meet, raceNo } = req.params;
+    handleNotImplemented(req, res, next, {
+      logMessage: 'Getting race result',
+      logContext: { date, meet, raceNo },
+      clientMessage: 'Race result endpoint is not implemented',
+      details: 'Result retrieval logic for this endpoint has not been implemented yet.',
+      validate: false,
+    });
   };
 
   /**
@@ -339,21 +267,12 @@ export class RaceController {
     res: Response<ApiResponse<any>>,
     next: NextFunction
   ): Promise<void> => {
-    try {
-      logger.info('Getting race statistics');
-
-      // TODO: Implement actual race statistics
-      res.json({
-        success: true,
-        data: {
-          totalRaces: 0,
-          message: 'Race statistics endpoint - to be implemented',
-        },
-        message: 'Race statistics retrieved successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
+    handleNotImplemented(_req, res, next, {
+      logMessage: 'Getting race statistics',
+      clientMessage: 'Race statistics endpoint is not implemented',
+      details: 'Aggregate race statistics pipeline is pending implementation.',
+      validate: false,
+    });
   };
 }
 
