@@ -397,5 +397,19 @@ William Benter의 Multinomial Logit Model과 최신 Learning-to-Rank 연구(CatB
 </user_input_placeholder>
 
 <examples>
+### 성공 사례
 
+입력: [경주 데이터]
+출력: {'predicted': [7, 1, 4], 'confidence': 62, 'brief_reason': ''}
+결과: ✅ 정답 [4, 7, 1]
+
+입력: [경주 데이터]
+출력: {'predicted': [7, 1, 4], 'confidence': 62, 'brief_reason': ''}
+결과: ✅ 정답 [4, 7, 1]
+
+### 실패 사례 (피해야 할 패턴)
+
+입력: [경주 데이터]
+출력: {'predicted': [], 'confidence': 70, 'brief_reason': ''}
+결과: ❌ 정답 []
 </examples>

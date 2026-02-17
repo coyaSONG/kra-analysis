@@ -12,6 +12,7 @@
 
 # Generated data
 data/
+mlruns/
 
 # Dependencies
 node_modules/
