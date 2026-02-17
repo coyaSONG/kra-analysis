@@ -8,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 import structlog
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.kra_response_adapter import KRAResponseAdapter
@@ -51,6 +51,95 @@ class CollectionService:
     def __init__(self, kra_api_service: KRAAPIService):
         self.kra_api = kra_api_service
         self.cache_service = CacheService()
+
+    @staticmethod
+    async def get_collection_status(
+        db: AsyncSession, race_date: str, meet: int
+    ) -> dict[str, Any]:
+        """특정 날짜/경마장의 수집 상태를 집계한다."""
+        filters = and_(Race.date == race_date, Race.meet == meet)
+
+        async def count_where(condition) -> int:
+            result = await db.execute(
+                select(func.count()).select_from(Race).where(condition)
+            )
+            return int(result.scalar_one() or 0)
+
+        total_races = await count_where(filters)
+        collected_races = await count_where(
+            and_(
+                filters,
+                Race.collection_status.in_([DataStatus.COLLECTED, DataStatus.ENRICHED]),
+            )
+        )
+        enriched_races = await count_where(
+            and_(filters, Race.enrichment_status == DataStatus.ENRICHED)
+        )
+
+        failed_collection = await count_where(
+            and_(filters, Race.collection_status == DataStatus.FAILED)
+        )
+        failed_enrichment = await count_where(
+            and_(filters, Race.enrichment_status == DataStatus.FAILED)
+        )
+        result_collected = await count_where(
+            and_(filters, Race.result_status == DataStatus.COLLECTED)
+        )
+        result_failed = await count_where(
+            and_(filters, Race.result_status == DataStatus.FAILED)
+        )
+
+        latest_updated_result = await db.execute(select(func.max(Race.updated_at)).where(filters))
+        last_updated = latest_updated_result.scalar_one_or_none()
+
+        if total_races == 0:
+            overall_status = "pending"
+        elif enriched_races == total_races:
+            overall_status = "completed"
+        elif collected_races > 0 or enriched_races > 0:
+            overall_status = "running"
+        else:
+            overall_status = "pending"
+
+        if total_races == 0:
+            collection_status = DataStatus.PENDING
+        elif failed_collection == total_races and collected_races == 0:
+            collection_status = DataStatus.FAILED
+        elif collected_races > 0:
+            collection_status = DataStatus.COLLECTED
+        else:
+            collection_status = DataStatus.PENDING
+
+        if total_races == 0:
+            enrichment_status = DataStatus.PENDING
+        elif failed_enrichment == total_races and enriched_races == 0:
+            enrichment_status = DataStatus.FAILED
+        elif enriched_races > 0:
+            enrichment_status = DataStatus.ENRICHED
+        else:
+            enrichment_status = DataStatus.PENDING
+
+        if total_races == 0:
+            result_status = DataStatus.PENDING
+        elif result_failed == total_races and result_collected == 0:
+            result_status = DataStatus.FAILED
+        elif result_collected > 0:
+            result_status = DataStatus.COLLECTED
+        else:
+            result_status = DataStatus.PENDING
+
+        return {
+            "date": race_date,
+            "meet": meet,
+            "total_races": total_races,
+            "collected_races": collected_races,
+            "enriched_races": enriched_races,
+            "status": overall_status,
+            "collection_status": collection_status.value,
+            "enrichment_status": enrichment_status.value,
+            "result_status": result_status.value,
+            "last_updated": last_updated,
+        }
 
     async def collect_race_data(
         self, race_date: str, meet: int, race_no: int, db: AsyncSession

@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from httpx import AsyncClient
 
-from models.database_models import Job, JobStatus, JobType
+from models.database_models import DataStatus, Job, JobStatus, JobType, Race
 
 
 class TestHealthEndpoints:
@@ -168,6 +168,60 @@ class TestCollectionEndpoints:
         assert "meet" in data
         assert "total_races" in data
         assert "status" in data
+
+    @pytest.mark.integration
+    async def test_get_collection_status_counts_from_database(
+        self, authenticated_client: AsyncClient, db_session
+    ):
+        """Status endpoint should aggregate race counts from database rows."""
+        db_session.add_all(
+            [
+                Race(
+                    race_id="20240719_1_1",
+                    date="20240719",
+                    meet=1,
+                    race_number=1,
+                    collection_status=DataStatus.COLLECTED,
+                    enrichment_status=DataStatus.PENDING,
+                ),
+                Race(
+                    race_id="20240719_1_2",
+                    date="20240719",
+                    meet=1,
+                    race_number=2,
+                    collection_status=DataStatus.COLLECTED,
+                    enrichment_status=DataStatus.ENRICHED,
+                ),
+            ]
+        )
+        await db_session.commit()
+
+        response = await authenticated_client.get(
+            "/api/v2/collection/status", params={"date": "20240719", "meet": 1}
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_races"] == 2
+        assert data["collected_races"] == 2
+        assert data["enriched_races"] == 1
+        assert data["status"] == "running"
+
+    @pytest.mark.integration
+    async def test_get_collection_status_pending_when_no_rows(
+        self, authenticated_client: AsyncClient
+    ):
+        """Status endpoint should return pending and zero counts for empty dataset."""
+        response = await authenticated_client.get(
+            "/api/v2/collection/status", params={"date": "20240101", "meet": 1}
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_races"] == 0
+        assert data["collected_races"] == 0
+        assert data["enriched_races"] == 0
+        assert data["status"] == "pending"
 
 
 class TestJobsEndpoints:

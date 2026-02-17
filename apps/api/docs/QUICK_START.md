@@ -12,6 +12,7 @@
 
 # 2. 연결 테스트
 [ ] python3 scripts/test_db_connection.py 성공
+[ ] uv run python scripts/check_collection_status_db.py 성공(또는 원인 메시지 확인)
 
 # 3. 마이그레이션
 [ ] python3 scripts/apply_migrations.py 완료
@@ -54,6 +55,10 @@ KRA_API_KEY=[your-kra-api-key]
 
 ```bash
 python3 scripts/test_db_connection.py
+
+# 수집 상태 집계 점검(선택)
+uv run python scripts/check_collection_status_db.py
+uv run python scripts/check_collection_status_db.py --date 20260214 --meet 1
 ```
 
 **예상 결과**: 모든 테스트 ✅

@@ -158,6 +158,19 @@ Headers: X-API-Key: ...
 
 - `GET /` 기본 정보, `GET /health` 헬스체크, `GET /health/detailed`(DB/Redis 상태 포함)
 
+### 운영 진단 (DB/수집 상태)
+
+```bash
+# DB 연결 + jobs/races 테이블 + 작업 상태 카운트 점검
+uv run python scripts/check_collection_status_db.py
+
+# 특정 날짜/경마장 수집 집계 점검
+uv run python scripts/check_collection_status_db.py --date 20260214 --meet 1
+```
+
+`--date`와 `--meet`를 함께 주면 `/api/v2/collection/status`와 동일한 집계 기준으로
+`total_races`, `collected_races`, `enriched_races`, `status`를 CLI에서 바로 확인할 수 있습니다.
+
 ## 인증 가이드
 
 - 요청 헤더 `X-API-Key` 필요. 개발/테스트 환경에서는 기본 키 `test-api-key-123456789`가 자동 허용됩니다.

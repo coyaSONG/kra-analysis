@@ -138,15 +138,8 @@ async def get_collection_status(
 ):
     """수집 상태 조회"""
     try:
-        # TODO: 실제 상태 조회 구현
-        return CollectionStatus(
-            date=date,
-            meet=meet,
-            total_races=15,
-            collected_races=0,
-            enriched_races=0,
-            status="pending",
-        )
+        status_data = await CollectionService.get_collection_status(db, date, meet)
+        return CollectionStatus(**status_data)
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
