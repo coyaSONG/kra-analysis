@@ -12,7 +12,13 @@ import { config } from 'dotenv';
 // Load environment variables
 config();
 
-describe('KRA API Integration Tests', () => {
+const hasLiveKraConfiguration =
+  Boolean(process.env.KRA_SERVICE_KEY) &&
+  !(process.env.KRA_API_BASE_URL && /mock-kra-api/.test(process.env.KRA_API_BASE_URL));
+
+const describeLiveKraTests = hasLiveKraConfiguration ? describe : describe.skip;
+
+describeLiveKraTests('KRA API Integration Tests', () => {
   let kraApiService: KraApiService;
   
   // Test data - known valid values from KRA
