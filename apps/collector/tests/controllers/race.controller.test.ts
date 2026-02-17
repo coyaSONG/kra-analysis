@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { createApp } from '../../src/app.js';
+import { services } from '../../src/services/index.js';
 
 const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 global.fetch = mockFetch;
@@ -16,15 +17,53 @@ describe('RaceController routes', () => {
     mockFetch.mockReset();
   });
 
-  it('GET /api/v1/races/:date returns empty list with metadata', async () => {
+  it('GET /api/v1/races/:date collects day races on cache miss', async () => {
+    const collectDaySpy = jest
+      .spyOn(services.collectionService, 'collectDay')
+      .mockResolvedValue([
+        {
+          raceInfo: {
+            date,
+            meet,
+            raceNo: 1,
+            rcName: 'Test Race',
+            rcDist: 1200,
+            track: 'Dirt',
+            weather: 'Sunny',
+            totalHorses: 1,
+          },
+          raceResult: [],
+          collectionMeta: {
+            collectedAt: new Date().toISOString(),
+            isEnriched: false,
+            dataSource: 'kra_api',
+          },
+        },
+      ] as any);
+
     const res = await request(app)
       .get(`/api/v1/races/${date}`)
       .expect(200);
 
+    expect(collectDaySpy).toHaveBeenCalledWith(date, undefined, false);
     expect(res.body.success).toBe(true);
     expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data).toHaveLength(1);
     expect(res.body.message).toMatch(/Races retrieved successfully/);
     expect(res.body.meta).toBeDefined();
+    expect(res.body.meta.totalCount).toBe(1);
+  });
+
+  it('GET /api/v1/races/:date passes meet and includeEnriched to collectDay', async () => {
+    const collectDaySpy = jest
+      .spyOn(services.collectionService, 'collectDay')
+      .mockResolvedValue([] as any);
+
+    await request(app)
+      .get(`/api/v1/races/${date}?meet=${encodeURIComponent(meet)}&includeEnriched=true`)
+      .expect(200);
+
+    expect(collectDaySpy).toHaveBeenCalledWith(date, meet, true);
   });
 
   it('GET /api/v1/races/:date/:meet/:raceNo returns cached race when present', async () => {

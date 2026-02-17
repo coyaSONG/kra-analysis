@@ -51,10 +51,16 @@ describe('CacheService (file fallback)', () => {
   });
 
   it('clear removes entries by pattern prefix', async () => {
+    await cache.set('race_result', { date: '20240719', meet: 1, raceNo: '2' }, { ok: 'race' }, { ttl: 60 });
     await cache.set('enriched_race', { date: '20240719', meet: 1, raceNo: '1' }, { ok: true }, { ttl: 60 });
+
     await cache.clear('enriched_race');
+
     const exists = await cache.exists('enriched_race', { date: '20240719', meet: 1, raceNo: '1' });
+    const raceExists = await cache.exists('race_result', { date: '20240719', meet: 1, raceNo: '2' });
+
     expect(exists).toBe(false);
+    expect(raceExists).toBe(true);
   });
 
   it('getStats updates hit/miss/hitRate counters', async () => {
@@ -67,4 +73,3 @@ describe('CacheService (file fallback)', () => {
     expect(stats2.totalOperations).toBeGreaterThanOrEqual(stats1.totalOperations);
   });
 });
-

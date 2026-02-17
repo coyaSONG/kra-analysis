@@ -39,6 +39,8 @@ interface CacheKeyConfig {
  * Cache entry with metadata
  */
 interface CacheEntry<T> {
+  /** Original cache key (used for pattern-safe file cache clear) */
+  key?: string;
   /** Cached data */
   data: T;
   /** Creation timestamp */
@@ -437,6 +439,7 @@ export class CacheService {
     try {
       const filePath = this.getFilePath(key);
       const entry: CacheEntry<T> = {
+        key,
         data,
         createdAt: Date.now(),
         expiresAt: Date.now() + ttl * 1000,
@@ -474,21 +477,20 @@ export class CacheService {
   private async clearFromFile(pattern: string): Promise<void> {
     try {
       const files = await fs.readdir(this.fileCacheDir, { recursive: true });
-
-      // Since we hash the keys, we need to check each file's metadata
-      // This is less efficient but necessary for pattern matching
+      const keyPrefix = pattern.endsWith('*') ? pattern.slice(0, -1) : pattern;
       const filesToDelete: string[] = [];
 
       for (const file of files) {
         if (typeof file === 'string' && file.endsWith('.json')) {
           const fullPath = path.join(this.fileCacheDir, file);
           try {
-            // Since we can't reverse hash, we'll store a metadata file alongside
-            // For now, just delete all files when clearing (aggressive approach)
-            // TODO: Implement proper metadata tracking for pattern matching
-            filesToDelete.push(fullPath);
-          } catch (err) {
-            // Skip files we can't read
+            const raw = await fs.readFile(fullPath, 'utf-8');
+            const entry = JSON.parse(raw) as CacheEntry<unknown>;
+            if (typeof entry.key === 'string' && entry.key.startsWith(keyPrefix)) {
+              filesToDelete.push(fullPath);
+            }
+          } catch {
+            // Skip files we can't read or parse.
           }
         }
       }

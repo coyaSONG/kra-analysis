@@ -323,8 +323,12 @@ export class EnrichmentService {
     useCache: boolean = true,
     forceRefresh: boolean = false
   ): Promise<Api8_2Item | null> {
-    if (!useCache || forceRefresh) {
+    if (!useCache) {
       return await this.kraApiService.getHorseDetail(hrNo);
+    }
+
+    if (forceRefresh) {
+      await this.cacheService.delete('horse_detail', { hrNo });
     }
 
     return await this.cacheService.getOrSet('horse_detail', { hrNo }, () => this.kraApiService.getHorseDetail(hrNo));
@@ -339,8 +343,12 @@ export class EnrichmentService {
     useCache: boolean = true,
     forceRefresh: boolean = false
   ): Promise<Api12_1Item | null> {
-    if (!useCache || forceRefresh) {
+    if (!useCache) {
       return await this.kraApiService.getJockeyDetail(jkNo);
+    }
+
+    if (forceRefresh) {
+      await this.cacheService.delete('jockey_detail', { jkNo });
     }
 
     return await this.cacheService.getOrSet('jockey_detail', { jkNo }, () => this.kraApiService.getJockeyDetail(jkNo));
@@ -355,8 +363,12 @@ export class EnrichmentService {
     useCache: boolean = true,
     forceRefresh: boolean = false
   ): Promise<Api19_1Item | null> {
-    if (!useCache || forceRefresh) {
+    if (!useCache) {
       return await this.kraApiService.getTrainerDetail(trNo);
+    }
+
+    if (forceRefresh) {
+      await this.cacheService.delete('trainer_detail', { trNo });
     }
 
     return await this.cacheService.getOrSet('trainer_detail', { trNo }, () =>

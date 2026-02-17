@@ -239,6 +239,32 @@ describe('KraApiService', () => {
         })
       );
     });
+
+    it('should work when AbortSignal.timeout is unavailable', async () => {
+      const mockResponse = mockKraApiResponse<Api214Item>([{} as Api214Item]);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockResponse),
+        headers: new Headers(),
+      } as Response);
+
+      const abortSignalAny = AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal };
+      const originalTimeout = abortSignalAny.timeout;
+      abortSignalAny.timeout = undefined;
+
+      try {
+        const result = await kraApiService.getRaceResult(testDate, testMeet, testRaceNo, {
+          timeout: 1000,
+          retryAttempts: 1,
+        });
+
+        expect(result).toBeDefined();
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+      } finally {
+        abortSignalAny.timeout = originalTimeout;
+      }
+    });
   });
 
   describe('getHorseDetail', () => {

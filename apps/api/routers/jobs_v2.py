@@ -7,13 +7,18 @@ from datetime import datetime
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies.auth import require_api_key
 from infrastructure.database import get_db
-from models.database_models import Job as SAJob
-from models.job_dto import Job, JobDetailResponse, JobListResponse, JobStatus, JobType
+from models.job_dto import (
+    Job,
+    JobDetailResponse,
+    JobListResponse,
+    JobLog as JobLogDTO,
+    JobStatus,
+    JobType,
+)
 from services.job_service import JobService
 
 logger = structlog.get_logger()
@@ -46,7 +51,7 @@ async def list_jobs(
 ):
     """작업 목록 조회"""
     try:
-        jobs = await job_service.list_jobs(
+        jobs, total_count = await job_service.list_jobs_with_total(
             db=db, status=status, job_type=job_type, limit=limit, offset=offset
         )
 
@@ -73,19 +78,6 @@ async def list_jobs(
             )
             for j in jobs
         ]
-
-        # Total count without pagination
-        filters = []
-        if status:
-            filters.append(SAJob.status == str(status.value))
-        if job_type:
-            filters.append(SAJob.type == str(job_type.value))
-
-        total_query = select(func.count()).select_from(SAJob)
-        if filters:
-            total_query = total_query.where(and_(*filters))
-        total_result = await db.execute(total_query)
-        total_count = total_result.scalar_one()
 
         return JobListResponse(
             jobs=dto_jobs, total=total_count, limit=limit, offset=offset
@@ -115,6 +107,15 @@ async def get_job(
             raise HTTPException(status_code=404, detail="Job not found")
 
         logs = await job_service.get_job_logs(job_id, db)
+        dto_logs = [
+            JobLogDTO(
+                timestamp=log.timestamp or datetime.utcnow(),
+                level=log.level or "INFO",
+                message=log.message or "",
+                metadata=log.log_metadata,
+            )
+            for log in (logs or [])
+        ]
 
         dto_job = Job(
             job_id=job.job_id,
@@ -138,7 +139,7 @@ async def get_job(
             tags=job.tags or [],
         )
 
-        return JobDetailResponse(job=dto_job, logs=logs)
+        return JobDetailResponse(job=dto_job, logs=dto_logs)
     except HTTPException:
         raise
     except Exception as e:

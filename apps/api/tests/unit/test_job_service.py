@@ -184,6 +184,42 @@ async def test_get_job_status_missing_returns_none(db_session):
 
 
 @pytest.mark.unit
+@pytest.mark.asyncio
+async def test_list_jobs_with_total_returns_paginated_jobs_and_total(db_session):
+    service = JobService()
+
+    jobs = [
+        Job(
+            type=JobType.COLLECTION,
+            status=JobStatus.COMPLETED,
+            parameters={"idx": 1},
+            created_by="tester",
+        ),
+        Job(
+            type=JobType.COLLECTION,
+            status=JobStatus.COMPLETED,
+            parameters={"idx": 2},
+            created_by="tester",
+        ),
+        Job(
+            type=JobType.COLLECTION,
+            status=JobStatus.PENDING,
+            parameters={"idx": 3},
+            created_by="tester",
+        ),
+    ]
+    db_session.add_all(jobs)
+    await db_session.commit()
+
+    paged_jobs, total = await service.list_jobs_with_total(
+        db=db_session, status="completed", limit=1, offset=0
+    )
+
+    assert len(paged_jobs) == 1
+    assert total == 2
+
+
+@pytest.mark.unit
 def test_calculate_progress_full_pipeline_steps():
     service = JobService()
     job = SimpleNamespace(status="processing", type="full_pipeline")

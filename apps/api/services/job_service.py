@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
-from sqlalchemy import and_, desc, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.background_tasks import (
@@ -23,6 +23,13 @@ logger = structlog.get_logger()
 
 class JobService:
     """작업 관리 서비스"""
+
+    @staticmethod
+    def _to_filter_value(value: Any) -> str:
+        """Enum/문자열 필터 값을 DB 비교 가능한 문자열로 정규화."""
+        if hasattr(value, "value"):
+            return str(value.value)
+        return str(value)
 
     async def create_job(
         self, job_type: str, parameters: dict[str, Any], user_id: str, db: AsyncSession
@@ -121,7 +128,9 @@ class JobService:
 
         params = job.parameters
 
-        if job.type == "collect_race":
+        job_type = job.type.value if hasattr(job.type, "value") else str(job.type)
+
+        if job_type == "collect_race":
             task_id = submit_task(
                 collect_race_data,
                 params["race_date"],
@@ -129,19 +138,19 @@ class JobService:
                 params["race_no"],
                 job.job_id,
             )
-        elif job.type == "preprocess_race":
+        elif job_type == "preprocess_race":
             task_id = submit_task(
                 preprocess_race_data,
                 params["race_id"],
                 job.job_id,
             )
-        elif job.type == "enrich_race":
+        elif job_type == "enrich_race":
             task_id = submit_task(
                 enrich_race_data,
                 params["race_id"],
                 job.job_id,
             )
-        elif job.type == "batch_collect":
+        elif job_type in ("batch_collect", "batch"):
             task_id = submit_task(
                 batch_collect,
                 params["race_date"],
@@ -149,7 +158,7 @@ class JobService:
                 params["race_numbers"],
                 job.job_id,
             )
-        elif job.type == "full_pipeline":
+        elif job_type == "full_pipeline":
             task_id = submit_task(
                 full_pipeline,
                 params["race_date"],
@@ -158,7 +167,7 @@ class JobService:
                 job.job_id,
             )
         else:
-            raise ValueError(f"Unknown job type: {job.type}")
+            raise ValueError(f"Unknown job type: {job_type}")
 
         return task_id
 
@@ -291,25 +300,48 @@ class JobService:
         Returns:
             작업 목록
         """
-        query = select(Job)
+        jobs, _ = await self.list_jobs_with_total(
+            db=db,
+            user_id=user_id,
+            job_type=job_type,
+            status=status,
+            limit=limit,
+            offset=offset,
+        )
+        return jobs
 
-        # 필터 적용
+    async def list_jobs_with_total(
+        self,
+        db: AsyncSession,
+        user_id: str | None = None,
+        job_type: str | None = None,
+        status: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[list[Job], int]:
+        """작업 목록과 전체 개수를 함께 조회."""
         filters = []
         if user_id:
             filters.append(Job.created_by == user_id)
         if job_type:
-            filters.append(Job.type == job_type)
+            filters.append(Job.type == self._to_filter_value(job_type))
         if status:
-            filters.append(Job.status == status)
+            filters.append(Job.status == self._to_filter_value(status))
+
+        list_query = select(Job)
+        count_query = select(func.count()).select_from(Job)
 
         if filters:
-            query = query.where(and_(*filters))
+            condition = and_(*filters)
+            list_query = list_query.where(condition)
+            count_query = count_query.where(condition)
 
-        # 정렬 및 페이징
-        query = query.order_by(desc(Job.created_at)).limit(limit).offset(offset)
+        list_query = list_query.order_by(desc(Job.created_at)).limit(limit).offset(offset)
 
-        result = await db.execute(query)
-        return result.scalars().all()
+        list_result = await db.execute(list_query)
+        count_result = await db.execute(count_query)
+
+        return list_result.scalars().all(), count_result.scalar_one()
 
     async def cancel_job(self, job_id: str, db: AsyncSession) -> bool:
         """

@@ -4,13 +4,22 @@
 
 ```
 tests/
+├── setup.ts                     # 테스트 공통 유틸/목 데이터
 ├── api-simple.test.ts           # 기본 검증 테스트 (API 키 불필요)
+├── controllers/
+│   ├── race.controller.test.ts  # Race 라우트 단위 테스트
+│   └── horse.controller.test.ts # Horse 라우트 단위 테스트
+├── services/
+│   ├── kra-api.service.test.ts  # KRA API 서비스 테스트
+│   ├── cache.service.test.ts    # 캐시 서비스 테스트
+│   └── enrichment.service.test.ts # 보강 서비스(forceRefresh) 테스트
 ├── middleware/
 │   └── validation.test.ts       # 검증 미들웨어 테스트
 ├── integration/
+│   ├── api.test.ts              # API 통합 시나리오
 │   └── kra-api-integration.test.ts  # KRA API 서비스 직접 테스트
 └── e2e/
-    └── api-e2e.test.ts         # HTTP → KRA API 전체 플로우 테스트
+    └── api-e2e.test.ts          # HTTP → KRA API 전체 플로우 테스트
 ```
 
 ## 🎯 테스트 범위
