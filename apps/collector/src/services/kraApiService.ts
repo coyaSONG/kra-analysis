@@ -145,30 +145,6 @@ export class KraApiService {
     } catch (error) {
       logger.error('Failed to fetch race result', { error, date, meet, raceNo });
 
-      // In test environment, only return mock data for specific integration tests
-      // Unit tests should use mocked fetch and expect proper error handling
-      // Integration tests with JEST_INTEGRATION_TEST should also throw errors properly
-      if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
-        logger.info('Test environment: returning mock race result data');
-        return [
-          {
-            hrNo: '0053587', // 7-digit horse number (matching test data)
-            hrName: 'Test Horse',
-            jkNo: '080476', // 6-digit jockey number (matching test data)
-            jkName: 'Test Jockey',
-            trNo: '070165', // 6-digit trainer number (matching test data)
-            trName: 'Test Trainer',
-            ord: 1,
-            winOdds: 3.5,
-            wgBudam: 58.0,
-            rcTime: 0, // Mock numeric race time
-            rcDate: Number(date), // Numeric format YYYYMMDD
-            rcNo: raceNo, // Race number as number
-            meet: meet || '1', // Meet code
-          } as unknown as Api214Item,
-        ];
-      }
-
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
@@ -221,28 +197,6 @@ export class KraApiService {
       return horseData || null;
     } catch (error) {
       logger.error('Failed to fetch horse detail', { error, hrNo });
-
-      // In test environment, only return mock data for specific integration tests
-      if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
-        logger.info('Test environment: returning mock horse detail data');
-
-        // Return null for specific test cases
-        if (hrNo === '9999999' || hrNo === 'invalid') {
-          return null;
-        }
-
-        return {
-          hrNo: hrNo,
-          hrName: 'Test Horse',
-          birthday: '20200315',
-          age: 4,
-          sex: '수컷',
-          rank: 1,
-          rating: 85,
-          owName: 'Test Owner',
-          country: '한국',
-        } as unknown as Api8_2Item;
-      }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
@@ -301,20 +255,6 @@ export class KraApiService {
     } catch (error) {
       logger.error('Failed to fetch race totals', { error, date, meet });
 
-      // In test environment, only return mock data for specific integration tests
-      if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
-        logger.info('Test environment: returning mock race totals data');
-        return [
-          {
-            rcDate: date,
-            rcNo: 1,
-            meet: meet || '1',
-            totalBets: 1000000,
-            totalPayout: 800000,
-          },
-        ] as unknown as Api299Item[];
-      }
-
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
       }
@@ -366,30 +306,6 @@ export class KraApiService {
       return jockeyData || null;
     } catch (error) {
       logger.error('Failed to fetch jockey detail', { error, jkNo });
-
-      // In test environment, only return mock data for specific integration tests
-      if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
-        logger.info('Test environment: returning mock jockey detail data');
-
-        // Return null for specific test cases
-        if (jkNo === '999999') {
-          return null;
-        }
-
-        return {
-          jkNo: jkNo,
-          jkName: 'Test Jockey',
-          birthday: '19901215',
-          age: 34,
-          debut: '20151201',
-          wgTot: 58.0,
-          ord1CntT: 5,
-          ord2CntT: 3,
-          ord3CntT: 2,
-          rcCntT: 15,
-          winRate: 33.3,
-        } as unknown as Api12_1Item;
-      }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
@@ -443,26 +359,6 @@ export class KraApiService {
       return trainerData || null;
     } catch (error) {
       logger.error('Failed to fetch trainer detail', { error, trNo });
-
-      // In test environment, only return mock data for specific integration tests
-      if (process.env.NODE_ENV === 'test' && !process.env.JEST_UNIT_TEST && !process.env.JEST_INTEGRATION_TEST) {
-        logger.info('Test environment: returning mock trainer detail data');
-
-        // Return null for specific test cases
-        if (trNo === '999999') {
-          return null;
-        }
-
-        return {
-          trNo: trNo,
-          trName: 'Test Trainer',
-          ord1CntT: 8,
-          ord2CntT: 6,
-          ord3CntT: 4,
-          rcCntT: 25,
-          winRateT: 32.0,
-        } as Api19_1Item;
-      }
 
       if (error instanceof ExternalApiError || error instanceof RateLimitError) {
         throw error;
