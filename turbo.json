@@ -21,11 +21,9 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true,
-      "dependsOn": ["^build"]
+      "persistent": true
     },
     "test": {
-      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.{ts,tsx}",
@@ -50,7 +48,6 @@
       ]
     },
     "test:ci": {
-      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.{ts,tsx}",

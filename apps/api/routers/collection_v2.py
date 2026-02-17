@@ -92,16 +92,30 @@ async def collect_race_data_async(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
     api_key: str = Depends(require_api_key),
-    kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
-    """경주 데이터 비동기 수집: 테스트 환경에서는 작업 ID만 반환"""
+    """경주 데이터 비동기 수집"""
     try:
-        job_id = str(uuid.uuid4())
+        _ = str(uuid.uuid4())
+        race_numbers = request.race_numbers or list(range(1, 16))
+        parameters = {
+            "race_date": request.date,
+            "meet": request.meet,
+            "race_numbers": race_numbers,
+        }
+
+        job = await job_service.create_job(
+            job_type="batch",
+            parameters=parameters,
+            user_id=api_key,
+            db=db,
+        )
+        await job_service.start_job(job.job_id, db)
+
         return CollectionResponse(
-            job_id=job_id,
+            job_id=job.job_id,
             status="accepted",
             message="Collection job started",
-            webhook_url=f"/api/v2/jobs/{job_id}",
+            webhook_url=f"/api/v2/jobs/{job.job_id}",
             data=None,
             estimated_time=5,
         )

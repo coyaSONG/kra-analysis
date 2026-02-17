@@ -10,6 +10,7 @@ import request from 'supertest';
 import { Application } from 'express';
 import { createApp } from '../../src/app.js';
 import { Server } from 'http';
+import { services } from '../../src/services/index.js';
 import { 
   mockKraApiResponse,
   createTestRaceData,
@@ -146,19 +147,32 @@ describe('API Integration Tests', () => {
   describe('Race Endpoints', () => {
     describe('GET /api/v1/races/:date', () => {
       it('should return races for a valid date', async () => {
-        // Mock successful KRA API response
-        const mockRaceData = createTestRaceData();
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockKraApiResponse([mockRaceData])),
-          headers: new Headers(),
-        } as Response);
+        const collectDaySpy = jest.spyOn(services.collectionService, 'collectDay').mockResolvedValueOnce([
+          {
+            raceInfo: {
+              date: '20241201',
+              meet: '서울',
+              raceNo: 1,
+              rcName: '테스트 경주',
+              rcDist: 1200,
+              track: '양호',
+              weather: '맑음',
+              totalHorses: 1,
+            },
+            raceResult: [],
+            collectionMeta: {
+              collectedAt: '2024-12-01T00:00:00.000Z',
+              isEnriched: false,
+              dataSource: 'kra_api',
+            },
+          },
+        ]);
 
         const response = await request(app)
           .get('/api/v1/races/20241201')
           .expect(200);
 
+        expect(collectDaySpy).toHaveBeenCalledWith('20241201', undefined, false);
         expect(response.body).toMatchKraApiResponse();
         expect(Array.isArray(response.body.data)).toBe(true);
       });
@@ -178,17 +192,13 @@ describe('API Integration Tests', () => {
       });
 
       it('should handle query parameters', async () => {
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve(mockKraApiResponse([])),
-          headers: new Headers(),
-        } as Response);
+        const collectDaySpy = jest.spyOn(services.collectionService, 'collectDay').mockResolvedValueOnce([]);
 
         const response = await request(app)
           .get('/api/v1/races/20241201?meet=1&limit=5')
           .expect(200);
 
+        expect(collectDaySpy).toHaveBeenCalledWith('20241201', '1', false);
         expect(response.body).toMatchKraApiResponse();
       });
     });

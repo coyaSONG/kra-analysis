@@ -31,7 +31,9 @@ export class RaceController {
       validateRequest(req);
 
       const { date } = req.params;
-      const { meet, includeEnriched = false } = req.query;
+      const { meet } = req.query;
+      const includeEnrichedQuery = req.query.includeEnriched as boolean | string | undefined;
+      const includeEnriched = includeEnrichedQuery === true || includeEnrichedQuery === 'true';
 
       logger.info('Getting races by date', {
         date,
@@ -63,10 +65,7 @@ export class RaceController {
       }
 
       // If no cached data or enriched data requested, collect from API
-      const races: CollectedRaceData[] = [];
-
-      // For now, we'll simulate getting all races for a date
-      // In a real implementation, you'd query your database or call the collection service
+      const races = await services.collectionService.collectDay(date, meet, includeEnriched);
       logger.info('No cached data found or enriched data requested', { date, meet });
 
       res.json({

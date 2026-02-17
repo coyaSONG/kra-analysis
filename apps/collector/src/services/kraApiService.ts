@@ -397,6 +397,7 @@ export class KraApiService {
         await this.checkRateLimit();
 
         const url = this.buildUrl(endpoint, params);
+        const { signal, cleanup } = this.createTimeoutSignal(timeout);
         const requestOptions: RequestInit = {
           method: 'GET',
           headers: {
@@ -404,7 +405,7 @@ export class KraApiService {
             'User-Agent': 'collector/1.0',
             ...headers,
           },
-          signal: AbortSignal.timeout(timeout),
+          signal,
         };
 
         logger.debug('Making API request', {
@@ -413,7 +414,9 @@ export class KraApiService {
           maxAttempts: retryAttempts,
         });
 
-        const response = await fetch(url, requestOptions);
+        const response = await fetch(url, requestOptions).finally(() => {
+          cleanup();
+        });
 
         // Handle rate limiting
         if (response.status === 429) {
@@ -535,6 +538,26 @@ export class KraApiService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Create an abort signal with timeout.
+   * Falls back to AbortController when AbortSignal.timeout is unavailable.
+   * @private
+   */
+  private createTimeoutSignal(timeout: number): { signal: AbortSignal; cleanup: () => void } {
+    const timeoutFactory = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal }).timeout;
+    if (typeof timeoutFactory === 'function') {
+      return { signal: timeoutFactory(timeout), cleanup: () => {} };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    return {
+      signal: controller.signal,
+      cleanup: () => clearTimeout(timeoutId),
+    };
   }
 
   /**

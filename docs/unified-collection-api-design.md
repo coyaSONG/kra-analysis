@@ -808,59 +808,18 @@ spec:
 
 ## API 문서화 (OpenAPI)
 
+현재 활성 FastAPI 진입점은 `apps/api/main_v2.py`이며, OpenAPI 문서는 `GET /docs`와 `GET /openapi.json`으로 제공합니다.
+활성 라우트는 v2 기준(`collection_v2`, `jobs_v2`)이며, 이 문서의 기존 `main.py`/v1 예시는 레거시 설계 참고용입니다.
+
 ```python
-# main.py
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
-
+# main_v2.py (active runtime)
 app = FastAPI(
-    title="KRA 데이터 수집 및 분석 API",
-    description="경마 데이터 수집, 분석, 예측을 위한 통합 API",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    title='KRA Race Prediction API',
+    version='2.0.0',
+    docs_url='/docs',
+    redoc_url='/redoc',
+    openapi_url='/openapi.json',
 )
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    
-    openapi_schema = get_openapi(
-        title="KRA Analysis API",
-        version="1.0.0",
-        description="""
-        ## 개요
-        KRA 경마 데이터 수집 및 분석을 위한 RESTful API
-        
-        ## 인증
-        - API Key: 헤더에 X-API-Key 포함
-        - JWT: Bearer 토큰 사용
-        
-        ## 주요 기능
-        1. 데이터 수집 - 경주, 말, 기수 정보
-        2. 데이터 분석 - 패턴 분석, 성능 평가
-        3. 예측 실행 - AI 기반 삼복연승 예측
-        """,
-        routes=app.routes
-    )
-    
-    # 보안 스키마 추가
-    openapi_schema["components"]["securitySchemes"] = {
-        "ApiKeyAuth": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "X-API-Key"
-        },
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer"
-        }
-    }
-    
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
 ```
 
 ## 성능 목표

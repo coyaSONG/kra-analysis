@@ -183,24 +183,6 @@ async def authenticated_client(client, db_session):
     yield client
 
 
-# Test data fixtures
-@pytest.fixture
-def sample_race_request():
-    """Sample race collection request data"""
-    return {"date": "20240719", "meet": 1, "race_numbers": [1, 2, 3]}
-
-
-@pytest.fixture
-def sample_job_data():
-    """Sample job data"""
-    return {
-        "type": "collection",
-        "status": "pending",
-        "parameters": {"date": "20240719", "meet": 1, "race_numbers": [1]},
-        "created_by": "test-api-key-123",
-    }
-
-
 @pytest.fixture
 def sample_race_data():
     """Sample race data"""

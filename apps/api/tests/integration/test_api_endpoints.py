@@ -320,9 +320,7 @@ class TestAsyncCollectionEndpoints:
     @pytest.mark.integration
     async def test_async_collect_races(self, authenticated_client: AsyncClient):
         """Test async race collection"""
-        with patch(
-            "infrastructure.background_tasks.submit_task", return_value="test-task-id"
-        ):
+        with patch("services.job_service.submit_task", return_value="test-task-id"):
             response = await authenticated_client.post(
                 "/api/v2/collection/async",
                 json={"date": "20240719", "meet": 1, "race_numbers": [1, 2, 3]},
@@ -334,6 +332,12 @@ class TestAsyncCollectionEndpoints:
             assert data["status"] == "accepted"
             assert data["message"] == "Collection job started"
             assert "webhook_url" in data
+
+            job_id = data["job_id"]
+            detail_response = await authenticated_client.get(f"/api/v2/jobs/{job_id}")
+            assert detail_response.status_code == 200
+            detail_data = detail_response.json()
+            assert detail_data["job"]["job_id"] == job_id
 
 
 class TestAuthenticationEndpoints:

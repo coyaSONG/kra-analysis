@@ -109,7 +109,7 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml', '**/package.json') }}
           restore-keys: ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Turbo cache
         uses: actions/cache@v4
         with:
@@ -145,7 +145,7 @@ jobs:
           node-version: '22'
       - name: Node.js audit
         run: |
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
           pnpm audit --audit-level=low
         continue-on-error: true
       - name: Repository hygiene checks
