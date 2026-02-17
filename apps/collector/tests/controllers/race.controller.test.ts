@@ -11,35 +11,32 @@ describe('RaceController routes', () => {
   const date = '20240719';
   const meet = '서울';
   const raceNo = 1;
+  const collectedRace = {
+    raceInfo: {
+      date,
+      meet,
+      raceNo,
+      rcName: '테스트 경주',
+      rcDist: 1200,
+      track: '양호',
+      weather: '맑음',
+      totalHorses: 1,
+    },
+    raceResult: [],
+    collectionMeta: {
+      collectedAt: '2024-07-19T10:00:00.000Z',
+      isEnriched: false,
+      dataSource: 'kra_api',
+    },
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockFetch.mockReset();
   });
 
-  it('GET /api/v1/races/:date collects day races on cache miss', async () => {
-    const collectDaySpy = jest
-      .spyOn(services.collectionService, 'collectDay')
-      .mockResolvedValue([
-        {
-          raceInfo: {
-            date,
-            meet,
-            raceNo: 1,
-            rcName: 'Test Race',
-            rcDist: 1200,
-            track: 'Dirt',
-            weather: 'Sunny',
-            totalHorses: 1,
-          },
-          raceResult: [],
-          collectionMeta: {
-            collectedAt: new Date().toISOString(),
-            isEnriched: false,
-            dataSource: 'kra_api',
-          },
-        },
-      ] as any);
+  it('GET /api/v1/races/:date calls collectDay with undefined meet and returns collected races', async () => {
+    const collectDaySpy = jest.spyOn(services.collectionService, 'collectDay').mockResolvedValueOnce([collectedRace]);
 
     const res = await request(app)
       .get(`/api/v1/races/${date}`)
@@ -47,23 +44,21 @@ describe('RaceController routes', () => {
 
     expect(collectDaySpy).toHaveBeenCalledWith(date, undefined, false);
     expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
-    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data).toEqual([collectedRace]);
     expect(res.body.message).toMatch(/Races retrieved successfully/);
-    expect(res.body.meta).toBeDefined();
-    expect(res.body.meta.totalCount).toBe(1);
+    expect(res.body.meta).toMatchObject({ totalCount: 1 });
   });
 
-  it('GET /api/v1/races/:date passes meet and includeEnriched to collectDay', async () => {
-    const collectDaySpy = jest
-      .spyOn(services.collectionService, 'collectDay')
-      .mockResolvedValue([] as any);
+  it('GET /api/v1/races/:date passes meet/includeEnriched query to collectDay', async () => {
+    const collectDaySpy = jest.spyOn(services.collectionService, 'collectDay').mockResolvedValueOnce([collectedRace]);
 
-    await request(app)
+    const res = await request(app)
       .get(`/api/v1/races/${date}?meet=${encodeURIComponent(meet)}&includeEnriched=true`)
       .expect(200);
 
     expect(collectDaySpy).toHaveBeenCalledWith(date, meet, true);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([collectedRace]);
   });
 
   it('GET /api/v1/races/:date/:meet/:raceNo returns cached race when present', async () => {

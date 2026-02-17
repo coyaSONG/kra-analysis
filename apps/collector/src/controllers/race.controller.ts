@@ -32,14 +32,13 @@ export class RaceController {
 
       const { date } = req.params;
       const { meet } = req.query;
-      const includeEnrichedRaw = req.query.includeEnriched as unknown;
-      const includeEnrichedFlag = includeEnrichedRaw === true || includeEnrichedRaw === 'true';
-      const meetValue = typeof meet === 'string' && meet.length > 0 ? meet : undefined;
+      const includeEnrichedQuery = req.query.includeEnriched as boolean | string | undefined;
+      const includeEnriched = includeEnrichedQuery === true || includeEnrichedQuery === 'true';
 
       logger.info('Getting races by date', {
         date,
-        meet: meetValue,
-        includeEnriched: includeEnrichedFlag,
+        meet,
+        includeEnriched,
       });
 
       const shouldUseCache = process.env.NODE_ENV !== 'test';
@@ -49,37 +48,25 @@ export class RaceController {
         const cacheKeyParams = {
           type: 'races',
           date,
-          meet: meetValue || 'all',
+          meet: meet || 'all',
         };
         const cachedData = await services.cacheService.get('race_result', cacheKeyParams);
 
-        if (cachedData && !includeEnrichedFlag) {
-          const races = Array.isArray(cachedData) ? cachedData : [];
+        if (cachedData && !includeEnriched) {
           logger.info('Returning cached race data', { date, meet });
           res.json({
             success: true,
-            data: races,
+            data: Array.isArray(cachedData) ? cachedData : [],
             timestamp: new Date().toISOString(),
             message: 'Races retrieved successfully (cached)',
-            meta: {
-              totalCount: races.length,
-              processingTime: Date.now() - (req.startTime || Date.now()),
-            },
           });
           return;
         }
       }
 
-      logger.info('No cached data found or enriched data requested', {
-        date,
-        meet: meetValue,
-        includeEnriched: includeEnrichedFlag,
-      });
-      const races: CollectedRaceData[] = await services.collectionService.collectDay(
-        date,
-        meetValue,
-        includeEnrichedFlag
-      );
+      // If no cached data or enriched data requested, collect from API
+      const races = await services.collectionService.collectDay(date, meet, includeEnriched);
+      logger.info('No cached data found or enriched data requested', { date, meet });
 
       res.json({
         success: true,
