@@ -32,8 +32,8 @@ uv python list
 
 ### 2. 가상환경 생성 및 의존성 설치
 ```bash
-# api 디렉토리로 이동
-cd api
+# apps/api 디렉토리로 이동
+cd apps/api
 
 # 가상환경 생성 및 의존성 설치 (pyproject.toml 기반)
 uv sync
@@ -84,10 +84,10 @@ uv python list --all-versions
 ### 스크립트 실행
 ```bash
 # 가상환경 내에서 명령 실행
-uv run python api/main.py
+uv run python main_v2.py
 
 # FastAPI 서버 실행
-uv run uvicorn api.main:app --reload
+uv run uvicorn main_v2:app --reload
 
 # 테스트 실행
 uv run pytest
@@ -142,7 +142,7 @@ COPY pyproject.toml .
 RUN uv sync --no-dev
 
 COPY . .
-CMD ["uv", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0"]
+CMD ["uv", "run", "uvicorn", "main_v2:app", "--host", "0.0.0.0"]
 ```
 
 ## 장점

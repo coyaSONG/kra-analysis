@@ -69,10 +69,10 @@ Supabase 대시보드에서 SQL 에디터를 열고 `migrations/001_initial_sche
 
 ```bash
 # 개발 모드
-python -m uvicorn api.main:app --reload
+uv run uvicorn main_v2:app --reload --port 8000
 
 # 프로덕션 모드
-python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
+uv run uvicorn main_v2:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ## API 엔드포인트 (v2)
@@ -168,38 +168,45 @@ Headers: X-API-Key: ...
 ### 프로젝트 구조 (요약)
 
 ```
-api/
-├── domain/           # 비즈니스 로직
-├── infrastructure/   # 외부 시스템 통합
-│   ├── kra_api/     # KRA API 클라이언트
-│   ├── claude_cli/  # Claude Code CLI 통합
-│   └── supabase_client.py
-├── application/      # 애플리케이션 서비스
-│   ├── services/    # 비즈니스 서비스
-│   └── dto/         # 데이터 전송 객체
-├── presentation/     # API 레이어
-│   ├── routers/     # API 라우터
-│   └── middleware/  # 미들웨어
-├── config.py        # 설정
-└── main.py          # 애플리케이션 진입점
+apps/api/
+├── main_v2.py        # 활성 런타임 진입점
+├── routers/          # API 라우터
+│   ├── collection_v2.py
+│   ├── jobs_v2.py
+│   └── race.py       # legacy v1 (비활성)
+├── services/         # 서비스 계층
+│   ├── collection_service.py
+│   ├── job_service.py
+│   ├── kra_api_service.py
+│   └── race_service.py # legacy v1 (비활성)
+├── infrastructure/   # DB/Redis/외부 연동
+├── middleware/       # 공통 미들웨어
+├── models/           # 스키마/모델
+└── tests/            # 테스트
 ```
 
 ### 새로운 엔드포인트 추가 (가이드)
 
-1. DTO 정의 (`application/dto/`)
-2. 서비스 로직 구현 (`application/services/`)
-3. 라우터 추가 (`presentation/routers/`)
-4. main.py에 라우터 등록
+1. 서비스 로직 구현 (`services/`)
+2. 라우터 추가 (`routers/`)
+3. `main_v2.py`에 라우터 등록
+4. 테스트 추가 (`tests/`)
 
 ### 테스트
 
 ```bash
-# 단위 테스트 실행
-pytest
+# 전체 테스트
+uv run pytest -q
 
 # 커버리지 확인
-pytest --cov=api --cov-report=html
+uv run pytest --cov=. --cov-report=html
 ```
+
+## Legacy v1 정책
+
+- v1 레거시 모듈: `routers/race.py`, `services/race_service.py`
+- 활성 런타임(`main_v2.py`)에는 v1 라우터를 등록하지 않습니다.
+- 상세 정책: `apps/api/docs/LEGACY_V1_POLICY.md`
 
 ## 배포
 
