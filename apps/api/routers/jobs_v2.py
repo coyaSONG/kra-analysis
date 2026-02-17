@@ -15,9 +15,11 @@ from models.job_dto import (
     Job,
     JobDetailResponse,
     JobListResponse,
-    JobLog as JobLogDTO,
     JobStatus,
     JobType,
+)
+from models.job_dto import (
+    JobLog as JobLogDTO,
 )
 from services.job_service import JobService
 

@@ -336,7 +336,9 @@ class JobService:
             list_query = list_query.where(condition)
             count_query = count_query.where(condition)
 
-        list_query = list_query.order_by(desc(Job.created_at)).limit(limit).offset(offset)
+        list_query = (
+            list_query.order_by(desc(Job.created_at)).limit(limit).offset(offset)
+        )
 
         list_result = await db.execute(list_query)
         count_result = await db.execute(count_query)

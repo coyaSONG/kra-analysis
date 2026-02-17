@@ -8,6 +8,5 @@ import asyncio
 
 from tests.test_api import main
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
