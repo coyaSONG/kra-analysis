@@ -14,11 +14,21 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 
+def require_supabase_client(supabase=Depends(get_supabase_client)):
+    """Supabase가 구성되지 않은 경우 명시적으로 503을 반환한다."""
+    if supabase is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Supabase is not configured",
+        )
+    return supabase
+
+
 @router.post("/collect", response_model=CollectRaceResponse)
 async def collect_races(
     request: CollectRaceRequest,
     background_tasks: BackgroundTasks,
-    supabase=Depends(get_supabase_client),
+    supabase=Depends(require_supabase_client),
 ):
     """
     수집 작업을 시작합니다. 백그라운드에서 처리되며 작업 ID를 반환합니다.
@@ -55,7 +65,7 @@ async def collect_races(
 async def enrich_race(
     race_id: str,
     background_tasks: BackgroundTasks,
-    supabase=Depends(get_supabase_client),
+    supabase=Depends(require_supabase_client),
 ):
     """
     특정 경주의 데이터를 보강합니다 (말, 기수, 조교사 상세 정보).
@@ -92,7 +102,7 @@ async def get_race_result(
     date: str,
     meet: int,
     race_no: int,
-    supabase=Depends(get_supabase_client),
+    supabase=Depends(require_supabase_client),
 ):
     """
     특정 경주의 결과를 조회합니다.
@@ -123,7 +133,7 @@ async def get_race_result(
 async def list_races_by_date(
     date: str,
     meet: int | None = None,
-    supabase=Depends(get_supabase_client),
+    supabase=Depends(require_supabase_client),
 ):
     """
     특정 날짜의 경주 목록을 조회합니다.
@@ -142,7 +152,7 @@ async def list_races_by_date(
 @router.get("/{race_id}/status")
 async def get_race_status(
     race_id: str,
-    supabase=Depends(get_supabase_client),
+    supabase=Depends(require_supabase_client),
 ):
     """
     특정 경주의 데이터 수집 상태를 확인합니다.

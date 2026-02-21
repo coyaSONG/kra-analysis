@@ -47,11 +47,16 @@ async def enrich_data(
         for horse in horses:
             horse_no = horse.get("hr_no") or horse.get("horse_no")
 
-            past_performances = await get_horse_past_performances(
-                horse_no, race_date, db
-            )
-            if past_performances:
-                horse["past_stats"] = calculate_performance_stats_fn(past_performances)
+            if horse_no:
+                past_performances = await get_horse_past_performances(
+                    horse_no, race_date, db
+                )
+                if past_performances:
+                    horse["past_stats"] = calculate_performance_stats_fn(
+                        past_performances
+                    )
+                else:
+                    horse["past_stats"] = get_default_stats_fn()
             else:
                 horse["past_stats"] = get_default_stats_fn()
 
