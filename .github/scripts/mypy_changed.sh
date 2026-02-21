@@ -27,7 +27,7 @@ else
   fi
 fi
 
-declare -a TARGETS
+declare -a TARGETS=()
 while IFS= read -r file; do
   [[ -n "${file}" ]] || continue
   [[ -f "${file}" ]] || continue
