@@ -5,3 +5,12 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (apps/api)
+        entry: bash -c 'cd apps/api && uv run mypy . --ignore-missing-imports --explicit-package-bases'
+        language: system
+        types: [python]
+        files: ^apps/api/
+        pass_filenames: false
