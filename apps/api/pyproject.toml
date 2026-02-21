@@ -95,8 +95,9 @@ explicit_package_bases = true
 mypy_path = "."
 namespace_packages = true
 check_untyped_defs = false
-no_implicit_optional = false
+no_implicit_optional = true
 strict_optional = false
+warn_unused_ignores = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
