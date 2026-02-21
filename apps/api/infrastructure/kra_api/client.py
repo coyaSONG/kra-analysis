@@ -58,7 +58,7 @@ class KRAApiClient:
                 result["text"] = element.text.strip()
 
         # 자식 요소 처리
-        children = {}
+        children: dict[str, Any] = {}
         for child in element:
             child_data = self._xml_to_dict(child)
             if child.tag in children:
@@ -70,7 +70,7 @@ class KRAApiClient:
                 children[child.tag] = child_data
 
         result.update(children)
-        return result if result else None
+        return result if result else {}
 
     async def _make_request(
         self, endpoint: str, params: dict[str, Any]
@@ -119,6 +119,8 @@ class KRAApiClient:
                         await asyncio.sleep(2**attempt)  # Exponential backoff
                     else:
                         raise
+
+        raise RuntimeError("All retries exhausted")
 
     async def get_race_detail(
         self, date: str, meet: int, race_no: int

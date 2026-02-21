@@ -79,7 +79,7 @@ def convert_api_to_internal(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         return data
 
-    converted = {}
+    converted: dict[str, Any] = {}
     for key, value in data.items():
         # Use mapping if available, otherwise auto-convert
         new_key = FIELD_MAPPINGS.get(key, camel_to_snake(key))
@@ -112,7 +112,7 @@ def convert_internal_to_api(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         return data
 
-    converted = {}
+    converted: dict[str, Any] = {}
     for key, value in data.items():
         # Use mapping if available, otherwise auto-convert
         new_key = REVERSE_FIELD_MAPPINGS.get(key, snake_to_camel(key))

@@ -4,7 +4,7 @@
 import os
 from urllib.parse import unquote
 
-import requests
+import requests  # type: ignore[import-untyped]
 import urllib3
 from dotenv import load_dotenv
 

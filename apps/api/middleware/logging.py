@@ -7,6 +7,7 @@ import json
 import time
 import uuid
 from contextvars import ContextVar
+from typing import Any
 
 import structlog
 from fastapi import Request
@@ -30,7 +31,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
 
         # 요청 정보 추출
-        request_info = {
+        request_info: dict[str, Any] = {
             "request_id": request_id,
             "method": request.method,
             "path": request.url.path,

@@ -82,7 +82,7 @@ class CollectionResponse(BaseModel):
 class EnrichmentRequest(BaseModel):
     """데이터 보강 요청"""
 
-    race_ids: list[str] = Field(..., min_items=1, description="보강할 경주 ID 리스트")
+    race_ids: list[str] = Field(..., min_length=1, description="보강할 경주 ID 리스트")
     enrich_types: list[str] = Field(
         ["horse", "jockey", "trainer"], description="보강 유형"
     )

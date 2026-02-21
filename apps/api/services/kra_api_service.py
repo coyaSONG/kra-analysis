@@ -335,7 +335,7 @@ class KRAAPIService:
         race_info = await self.get_race_info(race_date, meet, race_no, use_cache)
 
         # 배당률 정보 추출
-        odds_data = {
+        odds_data: dict[str, Any] = {
             "race_date": race_date,
             "meet": meet,
             "race_no": race_no,
@@ -385,7 +385,7 @@ class KRAAPIService:
 
     async def batch_get_race_results(
         self, race_date: str, meet: str, race_numbers: list[int]
-    ) -> dict[int, dict[str, Any]]:
+    ) -> dict[int, dict[str, Any] | None]:
         """
         여러 경주 결과 일괄 조회
 
@@ -404,9 +404,9 @@ class KRAAPIService:
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        race_results = {}
+        race_results: dict[int, dict[str, Any] | None] = {}
         for race_no, result in zip(race_numbers, results, strict=False):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.error(
                     "Failed to get race result", race_no=race_no, error=str(result)
                 )

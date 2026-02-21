@@ -231,7 +231,7 @@ class PipelineOrchestrator:
         # 예외 처리
         processed_results = []
         for i, result in enumerate(results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 # 예외가 발생한 경우 실패 컨텍스트 생성
                 race_request = race_requests[i]
                 context = PipelineContext(

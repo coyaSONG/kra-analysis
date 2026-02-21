@@ -54,7 +54,7 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = Field(
-        default="dev-secret-key-change-in-production", env="SECRET_KEY"
+        default="dev-secret-key-change-in-production",
     )  # Required from environment
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
