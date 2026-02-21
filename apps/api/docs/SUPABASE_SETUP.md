@@ -13,8 +13,8 @@
 ## 📋 사전 준비
 
 ### 필요한 정보
-- Supabase 프로젝트 URL: `https://kwhwqhopxxhcpbcmfdxh.supabase.co`
-- Supabase 프로젝트 ID: `kwhwqhopxxhcpbcmfdxh`
+- Supabase 프로젝트 URL: `https://[YOUR_SUPABASE_PROJECT_ID].supabase.co`
+- Supabase 프로젝트 ID: `[YOUR_SUPABASE_PROJECT_ID]`
 - Database 비밀번호 (Supabase Dashboard에서 확인/재설정)
 
 ### 시스템 요구사항
@@ -45,7 +45,7 @@ Dashboard > Settings > Database에서:
 - **"Connection string"** 섹션
 - **"Pooler"** (Transaction mode) 선택
 - Connection string 복사
-- 형식: `postgresql://postgres.kwhwqhopxxhcpbcmfdxh:[YOUR-PASSWORD]@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres`
+- 형식: `postgresql://postgres.[YOUR_SUPABASE_PROJECT_ID]:[YOUR-PASSWORD]@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres`
 
 #### 1-3. API Keys 확인
 
@@ -78,10 +78,10 @@ nano .env  # 또는 vim, code 등
 ENVIRONMENT=development
 
 # 데이터베이스 (중요: 비밀번호 입력!)
-DATABASE_URL=postgresql+asyncpg://postgres.kwhwqhopxxhcpbcmfdxh:[실제-비밀번호]@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?prepared_statement_cache_size=0
+DATABASE_URL=postgresql+asyncpg://postgres.[YOUR_SUPABASE_PROJECT_ID]:[실제-비밀번호]@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?prepared_statement_cache_size=0
 
 # Supabase API
-SUPABASE_URL=https://kwhwqhopxxhcpbcmfdxh.supabase.co
+SUPABASE_URL=https://[YOUR_SUPABASE_PROJECT_ID].supabase.co
 SUPABASE_ANON_KEY=[실제-anon-key]
 SUPABASE_SERVICE_ROLE_KEY=[실제-service-role-key]
 
@@ -128,15 +128,15 @@ Supabase 데이터베이스 연결 테스트
 현재 설정 요약
 ================================================================================
 환경: development
-데이터베이스 URL: postgresql+asyncpg://postgres.kwhwqhopxxhcpbcmfdxh:...
-Supabase URL: https://kwhwqhopxxhcpbcmfdxh.supabase.co
+데이터베이스 URL: postgresql+asyncpg://postgres.[YOUR_SUPABASE_PROJECT_ID]:...
+Supabase URL: https://[YOUR_SUPABASE_PROJECT_ID].supabase.co
 Supabase Key: 설정됨
 KRA API Key: 설정됨
 
 ================================================================================
 1. asyncpg 직접 연결 테스트
 ================================================================================
-연결 시도: postgresql://postgres.kwhwqhopxxhcpbcmfdxh:...
+연결 시도: postgresql://postgres.[YOUR_SUPABASE_PROJECT_ID]:...
 ✅ 연결 성공!
    PostgreSQL 버전: PostgreSQL 15.1 on x86_64-pc-linux-musl...
    현재 데이터베이스: postgres
@@ -160,7 +160,7 @@ KRA API Key: 설정됨
 4. Supabase Python Client 테스트
 ================================================================================
 ✅ Supabase Client 초기화 성공!
-   URL: https://kwhwqhopxxhcpbcmfdxh.supabase.co
+   URL: https://[YOUR_SUPABASE_PROJECT_ID].supabase.co
 ```
 
 #### 3-3. 문제 해결
@@ -175,7 +175,7 @@ KRA API Key: 설정됨
 → Supabase 프로젝트 상태 확인 (Dashboard에서)
 
 ❌ 인증 오류
-→ 사용자 이름 확인: postgres.kwhwqhopxxhcpbcmfdxh
+→ 사용자 이름 확인: postgres.[YOUR_SUPABASE_PROJECT_ID]
 → Connection string 다시 복사
 ```
 
@@ -359,7 +359,7 @@ curl -X POST http://localhost:8000/api/v2/collection/ \
                         │
             ┌───────────▼──────────┐
             │  Supabase PostgreSQL │
-            │  kwhwqhopxxhcpbcmfdxh│
+            │  [YOUR_SUPABASE_PROJECT_ID]│
             └──────────────────────┘
 ```
 
@@ -421,7 +421,7 @@ tail -f logs/api.log | jq .
 cat .env | grep DATABASE_URL
 
 # 2. 프로젝트 상태 확인 (Dashboard)
-# https://supabase.com/dashboard/project/kwhwqhopxxhcpbcmfdxh
+# https://supabase.com/dashboard/project/[YOUR_SUPABASE_PROJECT_ID]
 
 # 3. 연결 테스트
 python3 scripts/test_db_connection.py

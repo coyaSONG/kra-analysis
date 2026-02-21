@@ -78,6 +78,9 @@ cp apps/collector/.env.example apps/collector/.env
 |  | `SECRET_KEY` | JWT/보안 토큰 서명용 시크릿 |
 |  | `KRA_API_KEY` | KRA 공공데이터 API 키 (외부 연동 필요 시) |
 |  | `VALID_API_KEYS` | API 인증에 사용되는 키 목록(JSON 배열 또는 콤마 구분) |
+|  | `SUPABASE_URL` | Supabase 프로젝트 URL (Supabase 연동 시 필수) |
+|  | `SUPABASE_ANON_KEY` | Supabase anon/public 키 |
+|  | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role 키 (서버 전용, 절대 노출 금지) |
 | `apps/collector` | `KRA_API_KEY` | 수집 시 사용할 KRA 공공데이터 서비스 키 |
 |  | `API_KEY` | Collector 엔드포인트 보호용 클라이언트 키 |
 |  | `JWT_SECRET` | 관리자/내부 인증 토큰 서명용 시크릿 |

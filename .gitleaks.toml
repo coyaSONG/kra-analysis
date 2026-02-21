@@ -5,7 +5,6 @@
 [allowlist]
 paths = [
   "KRA_PUBLIC_API_GUIDE.md",
-  "docs/.*\\.md",
   "apps/api/tests/.*",
   "apps/collector/src/middleware/README\\.md",
   "apps/collector/.env\\.example",

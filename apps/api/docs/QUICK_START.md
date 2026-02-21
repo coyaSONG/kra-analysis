@@ -8,6 +8,7 @@
 [ ] DATABASE_URL 설정됨 (Supabase)
 [ ] SUPABASE_URL 설정됨
 [ ] SUPABASE_ANON_KEY 설정됨
+[ ] SUPABASE_SERVICE_ROLE_KEY 설정됨
 [ ] KRA_API_KEY 설정됨
 
 # 2. 연결 테스트
@@ -35,9 +36,10 @@ cp .env.template .env
 
 `.env` 파일 편집:
 ```env
-DATABASE_URL=postgresql+asyncpg://postgres.kwhwqhopxxhcpbcmfdxh:[비밀번호]@aws-0-ap-northeast-2.pooler.supabase.com:6543/postgres?prepared_statement_cache_size=0
-SUPABASE_URL=https://kwhwqhopxxhcpbcmfdxh.supabase.co
+DATABASE_URL=postgresql+asyncpg://postgres.[YOUR_SUPABASE_PROJECT_ID]:[비밀번호]@[YOUR_POOLER_HOST].pooler.supabase.com:6543/postgres?prepared_statement_cache_size=0
+SUPABASE_URL=https://[YOUR_SUPABASE_PROJECT_ID].supabase.co
 SUPABASE_ANON_KEY=[your-anon-key]
+SUPABASE_SERVICE_ROLE_KEY=[your-service-role-key]
 KRA_API_KEY=[your-kra-api-key]
 ```
 
@@ -100,7 +102,7 @@ open http://localhost:8000/docs
 cat .env | grep DATABASE_URL
 
 # Supabase 프로젝트 상태 확인
-# https://supabase.com/dashboard/project/kwhwqhopxxhcpbcmfdxh
+# https://supabase.com/dashboard/project/[YOUR_SUPABASE_PROJECT_ID]
 ```
 
 ### "Password authentication failed"
