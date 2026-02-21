@@ -23,7 +23,7 @@ logger = structlog.get_logger()
 
 
 async def _update_job_status(
-    job_id: int,
+    job_id: str,
     status: str,
     error: str | None = None,
     task_id: str | None = None,
@@ -31,19 +31,18 @@ async def _update_job_status(
     """Update the Job record in the database."""
     async with async_session_maker() as db:
         try:
-            result = await db.execute(select(Job).where(Job.id == job_id))
+            result = await db.execute(select(Job).where(Job.job_id == job_id))
             job = result.scalar_one_or_none()
 
             if job:
-                job.status = status
-                job.updated_at = datetime.now(UTC)
+                job.status = status  # type: ignore[assignment]
 
                 if error:
-                    job.error = error
-                if task_id:
+                    job.error_message = error  # type: ignore[assignment]
+                if task_id and hasattr(Job, "task_id"):
                     job.task_id = task_id
                 if status == "completed":
-                    job.completed_at = datetime.now(UTC)
+                    job.completed_at = datetime.now(UTC)  # type: ignore[assignment]
 
                 await db.commit()
         except Exception as e:
@@ -51,7 +50,7 @@ async def _update_job_status(
 
 
 async def _add_job_log(
-    job_id: int,
+    job_id: str,
     level: str,
     message: str,
     data: dict[str, Any] | None = None,
@@ -59,7 +58,12 @@ async def _add_job_log(
     """Append a log entry for the given Job."""
     async with async_session_maker() as db:
         try:
-            log = JobLog(job_id=job_id, level=level, message=message, data=data or {})
+            log = JobLog(
+                job_id=job_id,
+                level=level,
+                message=message,
+                log_metadata=data or {},
+            )
             db.add(log)
             await db.commit()
         except Exception as e:
@@ -75,7 +79,7 @@ async def collect_race_data(
     race_date: str,
     meet: int,
     race_no: int,
-    job_id: int | None = None,
+    job_id: str | None = None,
     task_id: str | None = None,
 ) -> dict[str, Any]:
     """Collect basic race data for a single race."""
@@ -134,7 +138,7 @@ async def collect_race_data(
 
 async def preprocess_race_data(
     race_id: str,
-    job_id: int | None = None,
+    job_id: str | None = None,
     task_id: str | None = None,
 ) -> dict[str, Any]:
     """Preprocess previously collected race data."""
@@ -178,7 +182,7 @@ async def preprocess_race_data(
 
 async def enrich_race_data(
     race_id: str,
-    job_id: int | None = None,
+    job_id: str | None = None,
     task_id: str | None = None,
 ) -> dict[str, Any]:
     """Enrich previously collected race data."""
@@ -224,7 +228,7 @@ async def batch_collect(
     race_date: str,
     meet: int,
     race_numbers: list[int],
-    job_id: int | None = None,
+    job_id: str | None = None,
     task_id: str | None = None,
 ) -> dict[str, Any]:
     """Collect data for multiple races sequentially."""
@@ -257,7 +261,7 @@ async def full_pipeline(
     race_date: str,
     meet: int,
     race_no: int,
-    job_id: int | None = None,
+    job_id: str | None = None,
     task_id: str | None = None,
 ) -> dict[str, Any]:
     """Run the complete collection pipeline: collect -> preprocess -> enrich."""
@@ -278,9 +282,9 @@ async def full_pipeline(
             result = await db.execute(
                 select(Race).where(
                     and_(
-                        Race.race_date == race_date,
+                        Race.race_date == race_date,  # type: ignore[arg-type]
                         Race.meet == meet,
-                        Race.race_no == race_no,
+                        Race.race_no == race_no,  # type: ignore[arg-type]
                     )
                 )
             )

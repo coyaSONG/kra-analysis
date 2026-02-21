@@ -55,19 +55,19 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> APIKey | None:
         current_time = datetime.now(UTC)
         previous_last_used = api_key_obj.last_used_at
 
-        api_key_obj.last_used_at = current_time
-        api_key_obj.total_requests = (api_key_obj.total_requests or 0) + 1
+        api_key_obj.last_used_at = current_time  # type: ignore[assignment]
+        api_key_obj.total_requests = (api_key_obj.total_requests or 0) + 1  # type: ignore[assignment]
 
         # 일일 사용량 리셋 확인
         today_requests = api_key_obj.today_requests or 0
         if previous_last_used is None:
-            api_key_obj.today_requests = 1
+            api_key_obj.today_requests = 1  # type: ignore[assignment]
         else:
             today = current_time.date()
             if previous_last_used.date() < today:
-                api_key_obj.today_requests = 1
+                api_key_obj.today_requests = 1  # type: ignore[assignment]
             else:
-                api_key_obj.today_requests = today_requests + 1
+                api_key_obj.today_requests = today_requests + 1  # type: ignore[assignment]
 
         await db.commit()
 
@@ -125,7 +125,7 @@ async def require_permissions(
     # api_key_obj is already validated by require_api_key dependency
 
     # 권한 확인
-    user_permissions = api_key_obj.permissions or []
+    user_permissions: list[str] = api_key_obj.permissions or []  # type: ignore[assignment]
     if not all(perm in user_permissions for perm in required_permissions):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"

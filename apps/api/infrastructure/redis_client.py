@@ -83,15 +83,17 @@ class CacheService:
         self.client = None
         self.default_ttl = settings.cache_ttl
 
-    def _ensure_client(self):
-        """Ensure Redis client is initialized"""
+    def _ensure_client(self) -> bool:
+        """Ensure Redis client is initialized. Returns False in degraded mode."""
         if not self.client:
             if redis_client:
                 self.client = redis_client
             else:
-                raise RuntimeError(
-                    "Redis client not initialized. Call initialize() first."
+                logger.warning(
+                    "CacheService running without Redis client; bypassing cache"
                 )
+                return False
+        return True
 
     async def initialize(self):
         """캐시 서비스 초기화"""
@@ -99,7 +101,8 @@ class CacheService:
 
     async def get(self, key: str) -> Any | None:
         """캐시에서 값 조회"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return None
         try:
             value = await self.client.get(key)
             if value:
@@ -111,7 +114,8 @@ class CacheService:
 
     async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """캐시에 값 저장"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return False
         try:
             ttl = ttl or self.default_ttl
             serialized = json.dumps(value, ensure_ascii=False)
@@ -123,7 +127,8 @@ class CacheService:
 
     async def delete(self, key: str) -> bool:
         """캐시에서 값 삭제"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return False
         try:
             result = await self.client.delete(key)
             return bool(result)
@@ -133,7 +138,8 @@ class CacheService:
 
     async def exists(self, key: str) -> bool:
         """키 존재 여부 확인"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return False
         try:
             return bool(await self.client.exists(key))
         except Exception as e:
@@ -142,7 +148,8 @@ class CacheService:
 
     async def clear_pattern(self, pattern: str) -> int:
         """패턴에 맞는 키 모두 삭제"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return 0
         try:
             deleted_count = 0
             batch_size = 100  # Delete keys in batches to avoid memory issues
@@ -165,7 +172,8 @@ class CacheService:
 
     async def get_ttl(self, key: str) -> int:
         """키의 TTL 확인"""
-        self._ensure_client()
+        if not self._ensure_client():
+            return -1
         try:
             return await self.client.ttl(key)
         except Exception as e:

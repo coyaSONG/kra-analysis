@@ -131,12 +131,12 @@ async def test_rate_limit_redis_required_unavailable(monkeypatch, authenticated_
 
     monkeypatch.setattr(rl, "get_redis", boom)
 
-    # Should yield 503; depending on stack it may raise
+    # Should fail-open and allow request
     try:
         r = await authenticated_client.get("/api/v2/jobs/")
-        assert r.status_code == 503
+        assert r.status_code == 200
     except Exception as e:
-        assert "503" in str(e) or "service unavailable" in str(e).lower()
+        pytest.fail(f"Request should not raise on Redis failure: {e}")
 
     settings.environment = old_env
     settings.rate_limit_enabled = old_flag

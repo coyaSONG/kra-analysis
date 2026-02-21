@@ -17,7 +17,9 @@ class RaceService:
     def __init__(self, supabase: Client | None):
         self.supabase = supabase
         self.kra_client = KRAApiClient()
-        self._cache = {}  # In-memory cache when Supabase is not available
+        self._cache: dict[
+            str, Any
+        ] = {}  # In-memory cache when Supabase is not available
         self.nodejs_api_url = "http://localhost:3001"  # Node.js 수집 서버
 
     async def create_collection_job(self, request) -> str:
@@ -472,6 +474,9 @@ class RaceService:
     async def enrich_race_data(self, race_id: str):
         """경주 데이터를 보강합니다 (말, 기수, 조교사 상세 정보)."""
         try:
+            if not self.supabase:
+                raise RuntimeError("Supabase is not configured")
+
             # 경주 정보 조회
             race = await self.get_race(race_id)
             if not race:
@@ -561,6 +566,9 @@ class RaceService:
     async def _get_cached_data(self, cache_table: str, key: str, fetch_func):
         """캐시된 데이터를 가져오거나 새로 조회합니다."""
         try:
+            if not self.supabase:
+                return await fetch_func()
+
             # 캐시 확인
             cache_key = f"{cache_table.replace('_cache', '_no')}"
             result = (

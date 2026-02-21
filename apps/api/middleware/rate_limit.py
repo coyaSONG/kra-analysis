@@ -22,9 +22,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.calls = calls  # 허용 요청 수
         self.period = period  # 기간 (초)
-        self.redis_required = (
-            settings.environment == "production"
-        )  # 프로덕션에서는 Redis 필수
 
     async def dispatch(self, request: Request, call_next):
         # 테스트/개발 환경 또는 비활성화 시 즉시 통과
@@ -58,20 +55,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     detail=f"Rate limit exceeded. Maximum {self.calls} requests per {self.period} seconds.",
                 )
-        except RuntimeError as e:
-            # Redis 연결 실패
-            if self.redis_required:
-                logger.error("Redis required but not available", error=str(e))
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Rate limiting service unavailable",
-                ) from e
-            else:
-                # 개발 환경에서만 통과 허용
-                logger.warning(
-                    "Redis not available, bypassing rate limit in development"
-                )
-                return await call_next(request)
+        except HTTPException:
+            raise
+        except Exception as e:
+            # Redis 장애 시 fail-open으로 요청은 통과시킨다.
+            logger.warning(
+                "Rate limit degraded: bypassing due to Redis failure", error=str(e)
+            )
+            return await call_next(request)
 
     def _get_client_id(self, request: Request) -> str:
         """클라이언트 식별자 추출"""

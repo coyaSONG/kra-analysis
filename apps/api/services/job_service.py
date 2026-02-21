@@ -96,9 +96,9 @@ class JobService:
             task_id = await self._dispatch_task(job)
 
             # 상태 업데이트
-            job.status = "queued"
-            job.task_id = task_id
-            job.started_at = datetime.now(UTC)
+            job.status = "queued"  # type: ignore[assignment]
+            job.task_id = task_id  # type: ignore[assignment]
+            job.started_at = datetime.now(UTC)  # type: ignore[assignment]
 
             await db.commit()
 
@@ -171,9 +171,14 @@ class JobService:
 
         return task_id
 
-    async def get_job(self, job_id: str, db: AsyncSession) -> Job | None:
+    async def get_job(
+        self, job_id: str, db: AsyncSession, user_id: str | None = None
+    ) -> Job | None:
         """작업 조회"""
-        result = await db.execute(select(Job).where(Job.job_id == job_id))
+        query = select(Job).where(Job.job_id == job_id)
+        if user_id:
+            query = query.where(Job.created_by == user_id)
+        result = await db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_job_status(self, job_id: str, db: AsyncSession) -> dict[str, Any]:
@@ -252,7 +257,7 @@ class JobService:
             .limit(limit)
             .offset(offset)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def add_job_log(
         self,
@@ -343,9 +348,11 @@ class JobService:
         list_result = await db.execute(list_query)
         count_result = await db.execute(count_query)
 
-        return list_result.scalars().all(), count_result.scalar_one()
+        return list(list_result.scalars().all()), count_result.scalar_one()
 
-    async def cancel_job(self, job_id: str, db: AsyncSession) -> bool:
+    async def cancel_job(
+        self, job_id: str, db: AsyncSession, user_id: str | None = None
+    ) -> bool:
         """
         작업 취소
 
@@ -357,7 +364,7 @@ class JobService:
             성공 여부
         """
         try:
-            job = await self.get_job(job_id, db)
+            job = await self.get_job(job_id, db, user_id=user_id)
 
             if not job:
                 return False
@@ -377,8 +384,8 @@ class JobService:
                     logger.warning("Failed to cancel background task", error=str(e))
 
             # 상태 업데이트
-            job.status = "cancelled"
-            job.completed_at = datetime.now(UTC)
+            job.status = "cancelled"  # type: ignore[assignment]
+            job.completed_at = datetime.now(UTC)  # type: ignore[assignment]
 
             await db.commit()
 
@@ -421,7 +428,7 @@ class JobService:
 
             # 삭제
             for job in jobs:
-                db.delete(job)
+                await db.delete(job)
 
             await db.commit()
 

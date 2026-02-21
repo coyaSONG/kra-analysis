@@ -371,8 +371,8 @@ class ValidationStage(PipelineStage):
 
     def _validate_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """데이터 검증 로직"""
-        errors = []
-        warnings = []
+        errors: list[str] = []
+        warnings: list[str] = []
 
         # 기본 구조 검증
         if not data:

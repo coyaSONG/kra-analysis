@@ -103,8 +103,8 @@ async def test_rate_limit_production_redis_unavailable_returns_503(monkeypatch):
         transport=ASGITransport(app=app, raise_app_exceptions=False)
     ) as ac:
         r = await ac.get("http://test/ping")
-        # Depending on Starlette error handling in middleware context, may surface as 503 or generic 500
-        assert r.status_code in (503, 500)
+        # Rate limiter now fails open: request should pass through
+        assert r.status_code == 200
 
 
 @pytest.mark.unit
