@@ -14,7 +14,7 @@ async def test_rate_limit_bypass_in_test_env(authenticated_client):
 
 class FakePipeline:
     def __init__(self, store: dict[str, int]):
-        self.ops = []
+        self.ops: list[tuple] = []
         self.store = store
 
     def zremrangebyscore(self, key, _min, _max):
