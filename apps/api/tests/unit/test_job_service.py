@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -117,7 +117,7 @@ async def test_cancel_job_cancels_task(monkeypatch, db_session):
 @pytest.mark.asyncio
 async def test_cleanup_old_jobs(db_session):
     service = JobService()
-    old_date = datetime.utcnow() - timedelta(days=10)
+    old_date = datetime.now(UTC) - timedelta(days=10)
 
     # create two old completed jobs and one recent
     j1 = Job(

@@ -1,6 +1,6 @@
 """Additional tests to boost coverage to 80%"""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 import pytest
@@ -100,7 +100,7 @@ def test_race_model_basic():
         meet=1,
         race_no=1,
         raw_data={},
-        collected_at=datetime.utcnow(),
+        collected_at=datetime.now(UTC),
     )
 
     assert race.race_id == "20240719_1_1"

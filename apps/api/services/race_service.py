@@ -1,6 +1,6 @@
 import asyncio
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -33,7 +33,7 @@ class RaceService:
                         "meet": request.meet,
                         "race_no": request.race_no,
                         "status": "queued",
-                        "created_at": datetime.utcnow().isoformat(),
+                        "created_at": datetime.now(UTC).isoformat(),
                     }
                 ).execute()
             else:
@@ -46,7 +46,7 @@ class RaceService:
                     "meet": request.meet,
                     "race_no": request.race_no,
                     "status": "queued",
-                    "created_at": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
                 }
 
             return job_id
@@ -65,7 +65,7 @@ class RaceService:
                 self.supabase.table("collection_jobs").update(
                     {
                         "status": "processing",
-                        "started_at": datetime.utcnow().isoformat(),
+                        "started_at": datetime.now(UTC).isoformat(),
                     }
                 ).eq("id", job_id).execute()
             else:
@@ -76,7 +76,7 @@ class RaceService:
                     self._cache["collection_jobs"][job_id].update(
                         {
                             "status": "processing",
-                            "started_at": datetime.utcnow().isoformat(),
+                            "started_at": datetime.now(UTC).isoformat(),
                         }
                     )
 
@@ -124,7 +124,7 @@ class RaceService:
                 self.supabase.table("collection_jobs").update(
                     {
                         "status": "completed",
-                        "completed_at": datetime.utcnow().isoformat(),
+                        "completed_at": datetime.now(UTC).isoformat(),
                         "race_count": saved_count,
                     }
                 ).eq("id", job_id).execute()
@@ -136,7 +136,7 @@ class RaceService:
                     self._cache["collection_jobs"][job_id].update(
                         {
                             "status": "completed",
-                            "completed_at": datetime.utcnow().isoformat(),
+                            "completed_at": datetime.now(UTC).isoformat(),
                             "race_count": saved_count,
                         }
                     )
@@ -154,7 +154,7 @@ class RaceService:
                     {
                         "status": "failed",
                         "error_message": str(e),
-                        "completed_at": datetime.utcnow().isoformat(),
+                        "completed_at": datetime.now(UTC).isoformat(),
                     }
                 ).eq("id", job_id).execute()
             else:
@@ -166,7 +166,7 @@ class RaceService:
                         {
                             "status": "failed",
                             "error_message": str(e),
-                            "completed_at": datetime.utcnow().isoformat(),
+                            "completed_at": datetime.now(UTC).isoformat(),
                         }
                     )
 
@@ -207,7 +207,7 @@ class RaceService:
                     "raw_data": race_data,
                     "horse_count": len(race_data.get("horses", [])),
                     "is_completed": is_completed,
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
                 }
 
                 if existing.data:
@@ -222,7 +222,7 @@ class RaceService:
                 else:
                     # 새로 삽입
                     race_record["id"] = str(uuid.uuid4())
-                    race_record["created_at"] = datetime.utcnow().isoformat()
+                    race_record["created_at"] = datetime.now(UTC).isoformat()
                     result = self.supabase.table("races").insert(race_record).execute()
                     race_id = result.data[0]["id"] if result.data else None
 
@@ -257,8 +257,8 @@ class RaceService:
                     "raw_data": race_data,
                     "horse_count": len(race_data.get("horses", [])),
                     "is_completed": is_completed,
-                    "created_at": datetime.utcnow().isoformat(),
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
                 }
 
                 # 저장 또는 업데이트
@@ -311,7 +311,7 @@ class RaceService:
                             "winner": winner,
                             "second": second,
                             "third": third,
-                            "created_at": datetime.utcnow().isoformat(),
+                            "created_at": datetime.now(UTC).isoformat(),
                         }
 
                         if existing.data:
@@ -336,7 +336,7 @@ class RaceService:
                             "winner": winner,
                             "second": second,
                             "third": third,
-                            "created_at": datetime.utcnow().isoformat(),
+                            "created_at": datetime.now(UTC).isoformat(),
                         }
 
                         self._cache["race_results"][race_id] = result_record
@@ -533,14 +533,14 @@ class RaceService:
             # enriched_data 생성
             enriched_data = raw_data.copy()
             enriched_data["horses"] = enriched_horses
-            enriched_data["enriched_at"] = datetime.utcnow().isoformat()
+            enriched_data["enriched_at"] = datetime.now(UTC).isoformat()
 
             # 데이터베이스 업데이트
             self.supabase.table("races").update(
                 {
                     "enriched_data": enriched_data,
                     "status": RaceStatus.ENRICHED,
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
                 }
             ).eq("id", race_id).execute()
 
@@ -553,7 +553,7 @@ class RaceService:
                 {
                     "status": RaceStatus.FAILED,
                     "error_message": str(e),
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
                 }
             ).eq("id", race_id).execute()
             raise
@@ -582,8 +582,8 @@ class RaceService:
                 cache_record = {
                     cache_key: key,
                     "data": data,
-                    "created_at": datetime.utcnow().isoformat(),
-                    "expires_at": (datetime.utcnow() + timedelta(days=7)).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "expires_at": (datetime.now(UTC) + timedelta(days=7)).isoformat(),
                 }
 
                 self.supabase.table(cache_table).upsert(cache_record).execute()

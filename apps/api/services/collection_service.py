@@ -3,7 +3,7 @@
 경주 데이터 수집, 전처리, 강화 로직
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -196,7 +196,7 @@ class CollectionService:
                 "race_info": race_info,
                 "weather": weather_info,
                 "horses": horses_data,
-                "collected_at": datetime.utcnow().isoformat(),
+                "collected_at": datetime.now(UTC).isoformat(),
             }
 
             # 데이터베이스 저장
@@ -311,9 +311,9 @@ class CollectionService:
             if race:
                 # 업데이트
                 race.basic_data = data
-                race.updated_at = datetime.utcnow()
+                race.updated_at = datetime.now(UTC)
                 race.collection_status = DataStatus.COLLECTED
-                race.collected_at = datetime.utcnow()
+                race.collected_at = datetime.now(UTC)
                 race.status = DataStatus.COLLECTED
                 # keep compatibility columns in sync
                 race.race_date = data["date"]
@@ -330,7 +330,7 @@ class CollectionService:
                     basic_data=data,
                     status=DataStatus.COLLECTED,
                     collection_status=DataStatus.COLLECTED,
-                    collected_at=datetime.utcnow(),
+                    collected_at=datetime.now(UTC),
                 )
                 db.add(race)
 
@@ -370,8 +370,8 @@ class CollectionService:
             # 저장 - basic_data는 유지하고 preprocessed는 enriched_data에 저장
             race.enriched_data = preprocessed
             race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = datetime.utcnow()
-            race.updated_at = datetime.utcnow()
+            race.enriched_at = datetime.now(UTC)
+            race.updated_at = datetime.now(UTC)
 
             await db.commit()
 
@@ -414,8 +414,8 @@ class CollectionService:
             # 저장
             race.enriched_data = enriched
             race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = datetime.utcnow()
-            race.updated_at = datetime.utcnow()
+            race.enriched_at = datetime.now(UTC)
+            race.updated_at = datetime.now(UTC)
 
             await db.commit()
 

@@ -2,7 +2,7 @@
 Integration tests for API endpoints
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
@@ -51,7 +51,7 @@ class TestCollectionEndpoints:
                 "meet": 1,
                 "race_no": 1,
                 "horses": [],
-                "collected_at": datetime.utcnow().isoformat(),
+                "collected_at": datetime.now(UTC).isoformat(),
             }
 
             response = await authenticated_client.post(

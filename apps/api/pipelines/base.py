@@ -5,7 +5,7 @@ Pipeline Base Classes
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -193,7 +193,7 @@ class Pipeline:
             PipelineExecutionError: 파이프라인 실행 실패
         """
         self.status = PipelineStatus.RUNNING
-        context.started_at = datetime.utcnow()
+        context.started_at = datetime.now(UTC)
         context.pipeline_id = (
             f"{self.name}_{context.get_race_id()}_{int(context.started_at.timestamp())}"
         )
@@ -231,12 +231,12 @@ class Pipeline:
 
                 # 단계 실행
                 self.logger.info("Executing stage", stage=stage.name)
-                start_time = datetime.utcnow()
+                start_time = datetime.now(UTC)
 
                 try:
                     result = await stage.execute(context)
                     result.execution_time_ms = int(
-                        (datetime.utcnow() - start_time).total_seconds() * 1000
+                        (datetime.now(UTC) - start_time).total_seconds() * 1000
                     )
 
                     if result.is_failure():
@@ -261,7 +261,7 @@ class Pipeline:
                         status=StageStatus.FAILED,
                         error=error_msg,
                         execution_time_ms=int(
-                            (datetime.utcnow() - start_time).total_seconds() * 1000
+                            (datetime.now(UTC) - start_time).total_seconds() * 1000
                         ),
                     )
                     context.add_stage_result(stage.name, result)
@@ -269,7 +269,7 @@ class Pipeline:
 
             # 성공적 완료
             self.status = PipelineStatus.COMPLETED
-            context.completed_at = datetime.utcnow()
+            context.completed_at = datetime.now(UTC)
 
             self.logger.info(
                 "Pipeline completed successfully",
@@ -283,7 +283,7 @@ class Pipeline:
         except Exception as e:
             # 실패 시 롤백 수행
             self.status = PipelineStatus.FAILED
-            context.completed_at = datetime.utcnow()
+            context.completed_at = datetime.now(UTC)
 
             self.logger.error(
                 "Pipeline failed, performing rollback",

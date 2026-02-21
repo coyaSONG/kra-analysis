@@ -3,7 +3,7 @@ Async background tasks for data collection.
 Pure async functions that replace the former Celery task wrappers.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -36,14 +36,14 @@ async def _update_job_status(
 
             if job:
                 job.status = status
-                job.updated_at = datetime.utcnow()
+                job.updated_at = datetime.now(UTC)
 
                 if error:
                     job.error = error
                 if task_id:
                     job.task_id = task_id
                 if status == "completed":
-                    job.completed_at = datetime.utcnow()
+                    job.completed_at = datetime.now(UTC)
 
                 await db.commit()
         except Exception as e:

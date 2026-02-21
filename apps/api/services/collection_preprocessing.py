@@ -1,6 +1,6 @@
 """Collection preprocessing helpers."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -63,7 +63,7 @@ def preprocess_data(raw_data: dict[str, Any]) -> dict[str, Any]:
             **raw_data,
             "horses": active_horses,
             "excluded_horses": len(horses) - len(active_horses),
-            "preprocessing_timestamp": datetime.utcnow().isoformat(),
+            "preprocessing_timestamp": datetime.now(UTC).isoformat(),
             "statistics": {
                 "avg_weight": avg_weight if "avg_weight" in locals() else 0,
                 "avg_rating": avg_rating if "avg_rating" in locals() else 0,

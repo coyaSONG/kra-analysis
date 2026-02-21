@@ -2,7 +2,7 @@
 Unit tests for authentication and authorization
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import HTTPException, status
@@ -25,7 +25,7 @@ class TestAuthentication:
             key="valid-api-key-123456",
             name="Test Key",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         db_session.add(api_key)
         await db_session.commit()
@@ -68,7 +68,7 @@ class TestAuthentication:
             key="inactive-api-key-123456",
             name="Inactive Key",
             is_active=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         db_session.add(api_key)
         await db_session.commit()
@@ -86,8 +86,8 @@ class TestAuthentication:
             key="expired-api-key-123456",
             name="Expired Key",
             is_active=True,
-            expires_at=datetime.utcnow() - timedelta(days=1),
-            created_at=datetime.utcnow() - timedelta(days=30),
+            expires_at=datetime.now(UTC) - timedelta(days=1),
+            created_at=datetime.now(UTC) - timedelta(days=30),
         )
         db_session.add(api_key)
         await db_session.commit()
@@ -105,7 +105,7 @@ class TestAuthentication:
             key="valid-api-key-123456",
             name="Test Key",
             is_active=True,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
         db_session.add(api_key)
         await db_session.commit()

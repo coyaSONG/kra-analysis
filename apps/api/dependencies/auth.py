@@ -52,7 +52,7 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> APIKey | None:
             return None
 
         # 마지막 사용 시간과 사용량 업데이트 (timezone-naive datetime 유지)
-        current_time = datetime.utcnow()
+        current_time = datetime.now(UTC)
         previous_last_used = api_key_obj.last_used_at
 
         api_key_obj.last_used_at = current_time

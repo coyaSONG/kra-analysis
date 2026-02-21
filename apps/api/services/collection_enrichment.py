@@ -1,7 +1,7 @@
 """Collection enrichment helpers."""
 
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -73,7 +73,7 @@ async def enrich_data(
             **data,
             "horses": horses,
             "weather_impact": weather_impact,
-            "enrichment_timestamp": datetime.utcnow().isoformat(),
+            "enrichment_timestamp": datetime.now(UTC).isoformat(),
         }
     except Exception as exc:
         logger.error("Enrichment logic failed", error=str(exc))

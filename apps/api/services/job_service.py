@@ -4,7 +4,7 @@
 Uses in-process background task runner (infrastructure.background_tasks).
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -98,7 +98,7 @@ class JobService:
             # 상태 업데이트
             job.status = "queued"
             job.task_id = task_id
-            job.started_at = datetime.utcnow()
+            job.started_at = datetime.now(UTC)
 
             await db.commit()
 
@@ -378,7 +378,7 @@ class JobService:
 
             # 상태 업데이트
             job.status = "cancelled"
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(UTC)
 
             await db.commit()
 
@@ -404,7 +404,7 @@ class JobService:
             삭제된 작업 수
         """
         try:
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            cutoff_date = datetime.now(UTC) - timedelta(days=days)
 
             # 완료된 오래된 작업 조회
             result = await db.execute(
@@ -483,7 +483,7 @@ class JobService:
                 type_counts[job_type] = len(result.scalars().all())
 
             # 최근 24시간 작업 수
-            yesterday = datetime.utcnow() - timedelta(days=1)
+            yesterday = datetime.now(UTC) - timedelta(days=1)
             recent_result = await db.execute(
                 base_query.where(Job.created_at >= yesterday)
             )
@@ -494,9 +494,9 @@ class JobService:
                 "status_counts": status_counts,
                 "type_counts": type_counts,
                 "recent_jobs_24h": recent_jobs,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
         except Exception as e:
             logger.error("Failed to get job statistics", error=str(e))
-            return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
+            return {"error": str(e), "timestamp": datetime.now(UTC).isoformat()}

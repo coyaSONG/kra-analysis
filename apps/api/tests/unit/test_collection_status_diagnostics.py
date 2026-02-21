@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 
@@ -45,7 +45,7 @@ async def test_gather_collection_diagnostics_with_rows(db_session):
                 race_number=1,
                 collection_status=DataStatus.COLLECTED,
                 enrichment_status=DataStatus.PENDING,
-                updated_at=datetime.utcnow(),
+                updated_at=datetime.now(UTC),
             ),
             Race(
                 race_id="20240719_1_2",
@@ -54,7 +54,7 @@ async def test_gather_collection_diagnostics_with_rows(db_session):
                 race_number=2,
                 collection_status=DataStatus.COLLECTED,
                 enrichment_status=DataStatus.ENRICHED,
-                updated_at=datetime.utcnow(),
+                updated_at=datetime.now(UTC),
             ),
         ]
     )

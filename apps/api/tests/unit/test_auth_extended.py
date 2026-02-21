@@ -54,8 +54,8 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
         is_active=True,
         daily_limit=5,
         today_requests=5,  # verify_api_key will increment to 6
-        created_at=datetime.utcnow(),
-        last_used_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
+        last_used_at=datetime.now(UTC),
     )
     db_session.add(api_key)
     await db_session.commit()
@@ -72,7 +72,7 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
 @pytest.mark.asyncio
 async def test_verify_api_key_resets_today_requests(db_session):
     key_value = "reset-key-123456"
-    yesterday = datetime.utcnow() - timedelta(days=1, minutes=5)
+    yesterday = datetime.now(UTC) - timedelta(days=1, minutes=5)
 
     api_key = APIKey(
         key=key_value,
@@ -90,7 +90,7 @@ async def test_verify_api_key_resets_today_requests(db_session):
     assert verified is not None
     assert verified.today_requests == 1
     assert verified.total_requests == 43
-    assert verified.last_used_at.date() == datetime.utcnow().date()
+    assert verified.last_used_at.date() == datetime.now(UTC).date()
 
 
 @pytest.mark.unit
@@ -168,7 +168,7 @@ async def test_require_permissions_allow_and_deny(db_session):
         name="PermUser",
         is_active=True,
         permissions=["read"],
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
 
     # When permission is present

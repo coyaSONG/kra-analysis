@@ -4,7 +4,7 @@
 라우터 레이어에서 직접 KRA 응답 파싱/DB 업데이트를 하지 않도록 분리한다.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import structlog
@@ -65,8 +65,8 @@ class ResultCollectionService:
         race_record = cast(Any, race)
         race_record.result_data = top3
         race_record.result_status = DataStatus.COLLECTED
-        race_record.result_collected_at = datetime.utcnow()
-        race_record.updated_at = datetime.utcnow()
+        race_record.result_collected_at = datetime.now(UTC)
+        race_record.updated_at = datetime.now(UTC)
 
         await db.commit()
         logger.info("Race result collected", race_id=race_id, top3=top3)

@@ -3,7 +3,7 @@ pytest configuration and fixtures for KRA API v2 tests
 """
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
@@ -172,7 +172,7 @@ async def authenticated_client(client, db_session):
         key="test-api-key-123",
         name="Test API Key",
         is_active=True,
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
     )
     db_session.add(api_key)
     await db_session.commit()

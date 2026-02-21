@@ -3,7 +3,7 @@ Pipeline Stages Implementation
 구체적인 데이터 처리 단계들의 구현
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -409,7 +409,7 @@ class ValidationStage(PipelineStage):
             "horses_count": horses_count,
             "errors": errors,
             "warnings": warnings,
-            "validated_at": datetime.utcnow().isoformat(),
+            "validated_at": datetime.now(UTC).isoformat(),
         }
 
         return validation_result

@@ -9,7 +9,7 @@ import json
 import traceback
 import uuid
 from collections.abc import Callable, Coroutine
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -77,7 +77,7 @@ async def _save_state(
         "state": state.value,
         "result": result,
         "error": error,
-        "updated_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
     try:
         await redis.setex(
@@ -226,7 +226,7 @@ async def get_task_status(task_id: str) -> dict[str, Any] | None:
             "result": None,
             "error": None,
             "alive": not asyncio_task.done(),
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
     return None

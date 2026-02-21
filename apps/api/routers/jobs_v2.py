@@ -3,7 +3,7 @@
 비동기 작업 모니터링 및 관리
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -65,7 +65,7 @@ async def list_jobs(
                 status=JobStatus(
                     j.status.value if hasattr(j.status, "value") else str(j.status)
                 ),
-                created_at=j.created_at or datetime.utcnow(),
+                created_at=j.created_at or datetime.now(UTC),
                 started_at=j.started_at,
                 completed_at=j.completed_at,
                 progress=j.progress or 0,
@@ -111,7 +111,7 @@ async def get_job(
         logs = await job_service.get_job_logs(job_id, db)
         dto_logs = [
             JobLogDTO(
-                timestamp=log.timestamp or datetime.utcnow(),
+                timestamp=log.timestamp or datetime.now(UTC),
                 level=log.level or "INFO",
                 message=log.message or "",
                 metadata=log.log_metadata,
@@ -127,7 +127,7 @@ async def get_job(
             status=JobStatus(
                 job.status.value if hasattr(job.status, "value") else str(job.status)
             ),
-            created_at=job.created_at or datetime.utcnow(),
+            created_at=job.created_at or datetime.now(UTC),
             started_at=job.started_at,
             completed_at=job.completed_at,
             progress=job.progress or 0,
