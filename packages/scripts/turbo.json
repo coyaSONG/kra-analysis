@@ -1,0 +1,15 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": []
+    },
+    "lint": {
+      "inputs": ["**/*.py", "pyproject.toml", "package.json"]
+    },
+    "test": {
+      "inputs": ["**/*.py", "tests/**", "pyproject.toml", "package.json"],
+      "outputs": []
+    }
+  }
+}

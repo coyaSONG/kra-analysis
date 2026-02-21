@@ -17,8 +17,11 @@
     "quality:node:typecheck": "pnpm -F @repo/shared-types run typecheck",
     "quality:node:test": "pnpm -F @repo/shared-types run test:ci",
     "quality:node:ci": "pnpm run quality:node:lint && pnpm run quality:node:typecheck && pnpm run quality:node:test",
+    "quality:scripts:lint": "pnpm turbo run lint --filter=@repo/scripts",
+    "quality:scripts:test": "pnpm turbo run test --filter=@repo/scripts",
+    "quality:scripts:ci": "pnpm run quality:scripts:lint && pnpm run quality:scripts:test",
     "quality:security": "bash .github/scripts/security_checks.sh",
-    "quality:ci": "pnpm run quality:api:ci && pnpm run quality:node:ci && pnpm run quality:security",
+    "quality:ci": "pnpm run quality:api:ci && pnpm run quality:node:ci && pnpm run quality:scripts:ci && pnpm run quality:security",
     "clean": "turbo run clean"
   },
   "devDependencies": {
