@@ -9,7 +9,7 @@ import asyncpg
 import structlog
 from sqlalchemy import MetaData, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
 
 from config import settings
@@ -27,8 +27,10 @@ metadata = MetaData(
     }
 )
 
+
 # Base 클래스 생성
-Base = declarative_base(metadata=metadata)
+class Base(DeclarativeBase):
+    metadata = metadata
 
 
 # Custom connection creator for pgbouncer

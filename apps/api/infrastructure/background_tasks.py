@@ -152,7 +152,7 @@ async def _run_with_retries(
     error_detail = "".join(tb)
     await _save_state(task_id, TaskState.FAILED, error=error_detail)
     logger.error("Task failed after retries", task_id=task_id, error=str(last_exc))
-    raise last_exc  # type: ignore[misc]
+    raise last_exc
 
 
 # ---------------------------------------------------------------------------

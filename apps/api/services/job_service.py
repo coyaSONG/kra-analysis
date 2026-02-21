@@ -96,9 +96,9 @@ class JobService:
             task_id = await self._dispatch_task(job)
 
             # 상태 업데이트
-            job.status = "queued"  # type: ignore[assignment]
-            job.task_id = task_id  # type: ignore[assignment]
-            job.started_at = datetime.now(UTC)  # type: ignore[assignment]
+            job.status = "queued"
+            job.task_id = task_id
+            job.started_at = datetime.now(UTC)
 
             await db.commit()
 
@@ -384,8 +384,8 @@ class JobService:
                     logger.warning("Failed to cancel background task", error=str(e))
 
             # 상태 업데이트
-            job.status = "cancelled"  # type: ignore[assignment]
-            job.completed_at = datetime.now(UTC)  # type: ignore[assignment]
+            job.status = "cancelled"
+            job.completed_at = datetime.now(UTC)
 
             await db.commit()
 

@@ -35,15 +35,13 @@ async def _update_job_status(
             job = result.scalar_one_or_none()
 
             if job:
-                job.status = status  # type: ignore[assignment]
-
+                job.status = status
                 if error:
-                    job.error_message = error  # type: ignore[assignment]
+                    job.error_message = error
                 if task_id and hasattr(Job, "task_id"):
                     job.task_id = task_id
                 if status == "completed":
-                    job.completed_at = datetime.now(UTC)  # type: ignore[assignment]
-
+                    job.completed_at = datetime.now(UTC)
                 await db.commit()
         except Exception as e:
             logger.error("Failed to update job status", job_id=job_id, error=str(e))
@@ -282,9 +280,9 @@ async def full_pipeline(
             result = await db.execute(
                 select(Race).where(
                     and_(
-                        Race.race_date == race_date,  # type: ignore[arg-type]
+                        Race.date == race_date,
                         Race.meet == meet,
-                        Race.race_no == race_no,  # type: ignore[arg-type]
+                        Race.race_number == race_no,
                     )
                 )
             )

@@ -310,10 +310,10 @@ class CollectionService:
 
             if race:
                 # 업데이트
-                race.basic_data = data  # type: ignore[assignment]
-                race.updated_at = datetime.now(UTC)  # type: ignore[assignment]
-                race.collection_status = DataStatus.COLLECTED  # type: ignore[assignment]
-                race.collected_at = datetime.now(UTC)  # type: ignore[assignment]
+                race.basic_data = data
+                race.updated_at = datetime.now(UTC)
+                race.collection_status = DataStatus.COLLECTED
+                race.collected_at = datetime.now(UTC)
                 race.status = DataStatus.COLLECTED
                 # keep compatibility columns in sync
                 race.race_date = data["date"]
@@ -365,13 +365,13 @@ class CollectionService:
             basic_data = race.basic_data
 
             # 전처리 수행
-            preprocessed = await self._preprocess_data(basic_data)  # type: ignore[arg-type]
+            preprocessed = await self._preprocess_data(basic_data)
 
             # 저장 - basic_data는 유지하고 preprocessed는 enriched_data에 저장
-            race.enriched_data = preprocessed  # type: ignore[assignment]
-            race.enrichment_status = DataStatus.ENRICHED  # type: ignore[assignment]
-            race.enriched_at = datetime.now(UTC)  # type: ignore[assignment]
-            race.updated_at = datetime.now(UTC)  # type: ignore[assignment]
+            race.enriched_data = preprocessed
+            race.enrichment_status = DataStatus.ENRICHED
+            race.enriched_at = datetime.now(UTC)
+            race.updated_at = datetime.now(UTC)
 
             await db.commit()
 
@@ -409,13 +409,13 @@ class CollectionService:
             base_data = race.enriched_data or race.basic_data or race.raw_data
 
             # 강화 수행
-            enriched = await self._enrich_data(base_data, db)  # type: ignore[arg-type]
+            enriched = await self._enrich_data(base_data, db)
 
             # 저장
-            race.enriched_data = enriched  # type: ignore[assignment]
-            race.enrichment_status = DataStatus.ENRICHED  # type: ignore[assignment]
-            race.enriched_at = datetime.now(UTC)  # type: ignore[assignment]
-            race.updated_at = datetime.now(UTC)  # type: ignore[assignment]
+            race.enriched_data = enriched
+            race.enrichment_status = DataStatus.ENRICHED
+            race.enriched_at = datetime.now(UTC)
+            race.updated_at = datetime.now(UTC)
 
             await db.commit()
 

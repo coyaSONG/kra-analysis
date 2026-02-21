@@ -4,7 +4,6 @@
 """
 
 from datetime import UTC, datetime
-from typing import Any, cast
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -64,36 +63,36 @@ async def list_jobs(
         )
 
         # Convert SQLAlchemy models to DTOs
-        # cast to Any to avoid Column[T] vs T type mismatch (SQLAlchemy without Mapped)
         dto_jobs = [
             Job(
-                job_id=j_.job_id,
-                type=JobType(
-                    j_.type.value if hasattr(j_.type, "value") else str(j_.type)
-                ),
+                job_id=j.job_id,
+                type=JobType(j.type.value if hasattr(j.type, "value") else str(j.type)),
                 status=JobStatus(
-                    j_.status.value if hasattr(j_.status, "value") else str(j_.status)
+                    j.status.value if hasattr(j.status, "value") else str(j.status)
                 ),
-                created_at=j_.created_at or datetime.now(UTC),
-                started_at=j_.started_at,
-                completed_at=j_.completed_at,
-                progress=j_.progress or 0,
-                current_step=j_.current_step,
-                total_steps=j_.total_steps,
-                result=j_.result,
-                error_message=j_.error_message,
-                retry_count=j_.retry_count or 0,
-                parameters=j_.parameters,
-                created_by=j_.created_by,
-                tags=j_.tags or [],
+                created_at=j.created_at or datetime.now(UTC),
+                started_at=j.started_at,
+                completed_at=j.completed_at,
+                progress=j.progress or 0,
+                current_step=j.current_step,
+                total_steps=j.total_steps,
+                result=j.result,
+                error_message=j.error_message,
+                retry_count=j.retry_count or 0,
+                parameters=j.parameters,
+                created_by=j.created_by,
+                tags=j.tags or [],
             )
             for j in jobs
-            for j_ in [cast(Any, j)]
         ]
 
         return JobListResponse(
-            jobs=dto_jobs, total=total_count, limit=limit, offset=offset
-        )  # type: ignore[call-arg]
+            jobs=dto_jobs,
+            total=total_count,
+            limit=limit,
+            offset=offset,
+            pagination=None,
+        )
     except Exception as e:
         logger.error(f"Failed to list jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -121,37 +120,43 @@ async def get_job(
         logs = await job_service.get_job_logs(job_id, db)
         dto_logs = [
             JobLogDTO(
-                timestamp=l_.timestamp or datetime.now(UTC),
-                level=l_.level or "INFO",
-                message=l_.message or "",
-                metadata=l_.log_metadata,
+                timestamp=log.timestamp or datetime.now(UTC),
+                level=log.level or "INFO",
+                message=log.message or "",
+                metadata=log.log_metadata,
             )
             for log in (logs or [])
-            for l_ in [cast(Any, log)]
         ]
 
-        j_ = cast(Any, job)
         dto_job = Job(
-            job_id=j_.job_id,
-            type=JobType(j_.type.value if hasattr(j_.type, "value") else str(j_.type)),
-            status=JobStatus(
-                j_.status.value if hasattr(j_.status, "value") else str(j_.status)
+            job_id=job.job_id,
+            type=JobType(
+                job.type.value if hasattr(job.type, "value") else str(job.type)
             ),
-            created_at=j_.created_at or datetime.now(UTC),
-            started_at=j_.started_at,
-            completed_at=j_.completed_at,
-            progress=j_.progress or 0,
-            current_step=j_.current_step,
-            total_steps=j_.total_steps,
-            result=j_.result,
-            error_message=j_.error_message,
-            retry_count=j_.retry_count or 0,
-            parameters=j_.parameters,
-            created_by=j_.created_by,
-            tags=j_.tags or [],
+            status=JobStatus(
+                job.status.value if hasattr(job.status, "value") else str(job.status)
+            ),
+            created_at=job.created_at or datetime.now(UTC),
+            started_at=job.started_at,
+            completed_at=job.completed_at,
+            progress=job.progress or 0,
+            current_step=job.current_step,
+            total_steps=job.total_steps,
+            result=job.result,
+            error_message=job.error_message,
+            retry_count=job.retry_count or 0,
+            parameters=job.parameters,
+            created_by=job.created_by,
+            tags=job.tags or [],
         )
 
-        return JobDetailResponse(job=dto_job, logs=dto_logs)  # type: ignore[call-arg]
+        return JobDetailResponse(
+            job=dto_job,
+            logs=dto_logs,
+            estimated_completion=None,
+            duration_seconds=None,
+            resource_usage=None,
+        )
     except HTTPException:
         raise
     except Exception as e:

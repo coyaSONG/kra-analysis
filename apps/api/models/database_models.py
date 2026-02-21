@@ -5,11 +5,11 @@ SQLAlchemy 데이터베이스 모델
 
 import enum
 import uuid
+from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     JSON,
-    Boolean,
-    Column,
     DateTime,
     Float,
     ForeignKey,
@@ -20,7 +20,7 @@ from sqlalchemy import (
     TypeDecorator,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from infrastructure.database import Base
@@ -126,51 +126,57 @@ class Race(Base):
     __tablename__ = "races"
 
     # 기본 키
-    race_id = Column(String(50), primary_key=True, default=lambda: str(uuid.uuid4()))
+    race_id: Mapped[str] = mapped_column(
+        String(50), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # 핵심 경주 정보 (정규화됨)
-    date = Column(String(8), nullable=False, index=True)  # YYYYMMDD 형식
-    meet = Column(Integer, nullable=False, index=True)  # 경마장 코드
-    race_number = Column(Integer, nullable=False)  # 경주 번호
+    date: Mapped[str] = mapped_column(String(8), index=True)  # YYYYMMDD 형식
+    meet: Mapped[int] = mapped_column(Integer, index=True)  # 경마장 코드
+    race_number: Mapped[int] = mapped_column(Integer)  # 경주 번호
 
     # 경주 세부 정보
-    race_name = Column(String(200))
-    distance = Column(Integer)
-    track = Column(String(50))
-    weather = Column(String(50))
+    race_name: Mapped[str | None] = mapped_column(String(200), default=None)
+    distance: Mapped[int | None] = mapped_column(Integer, default=None)
+    track: Mapped[str | None] = mapped_column(String(50), default=None)
+    weather: Mapped[str | None] = mapped_column(String(50), default=None)
 
     # 통합된 상태 정보
-    collection_status = Column(
+    collection_status: Mapped[str | None] = mapped_column(
         PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING
     )
-    enrichment_status = Column(
+    enrichment_status: Mapped[str | None] = mapped_column(
         PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING
     )
-    result_status = Column(
+    result_status: Mapped[str | None] = mapped_column(
         PostgresEnum(DataStatus, name="data_status"), default=DataStatus.PENDING
     )
 
     # 데이터
-    basic_data = Column(JSON)
-    raw_data = Column(JSON)
-    enriched_data = Column(JSON)
-    result_data = Column(JSON)
+    basic_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+    raw_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+    enriched_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+    result_data: Mapped[Any | None] = mapped_column(JSON, default=None)
 
     # 타임스탬프
-    collected_at = Column(DateTime, nullable=True)
-    enriched_at = Column(DateTime, nullable=True)
-    result_collected_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    collected_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    enriched_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    result_collected_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
 
     # 메타데이터
-    data_quality_score = Column(Float, default=0.0)
-    warnings = Column(JSON, default=list)
-    horse_count = Column(Integer, default=0)
+    data_quality_score: Mapped[float | None] = mapped_column(Float, default=0.0)
+    warnings: Mapped[list[Any] | None] = mapped_column(JSON, default=list)
+    horse_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # 관계
-    predictions = relationship(
-        "Prediction", back_populates="race", cascade="all, delete-orphan"
+    predictions: Mapped[list["Prediction"]] = relationship(
+        back_populates="race", cascade="all, delete-orphan"
     )
 
     # 인덱스
@@ -191,7 +197,7 @@ class Race(Base):
         return self.date
 
     @race_date.setter
-    def race_date(self, value: str):
+    def race_date(self, value: str) -> None:
         """Legacy compatibility: allow setting via race_date"""
         self.date = value
 
@@ -201,17 +207,17 @@ class Race(Base):
         return self.race_number
 
     @race_no.setter
-    def race_no(self, value: int):
+    def race_no(self, value: int) -> None:
         """Legacy compatibility: allow setting via race_no"""
         self.race_number = value
 
     @property
-    def status(self) -> DataStatus:
+    def status(self) -> str | None:
         """Legacy compatibility: general status -> collection_status"""
         return self.collection_status
 
     @status.setter
-    def status(self, value: DataStatus):
+    def status(self, value: str | None) -> None:
         """Legacy compatibility: allow setting general status"""
         self.collection_status = value
 
@@ -222,37 +228,48 @@ class Job(Base):
     __tablename__ = "jobs"
 
     # 기본 키
-    job_id = Column(String(100), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(
+        String(100), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
     # 작업 정보
-    type = Column(PostgresEnum(JobType, name="job_type"), nullable=False, index=True)
-    status = Column(
-        PostgresEnum(JobStatus, name="job_status"), default=JobStatus.QUEUED, index=True
+    type: Mapped[str] = mapped_column(
+        PostgresEnum(JobType, name="job_type"), index=True
+    )
+    status: Mapped[str | None] = mapped_column(
+        PostgresEnum(JobStatus, name="job_status"),
+        default=JobStatus.QUEUED,
+        index=True,
     )
 
     # 시간 정보
-    created_at = Column(DateTime, server_default=func.now(), index=True)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
 
     # 진행 상황
-    progress = Column(Integer, default=0)
-    current_step = Column(String(200))
-    total_steps = Column(Integer)
+    progress: Mapped[int | None] = mapped_column(Integer, default=0)
+    current_step: Mapped[str | None] = mapped_column(String(200), default=None)
+    total_steps: Mapped[int | None] = mapped_column(Integer, default=None)
 
     # 결과 및 에러
-    result = Column(JSON)
-    error_message = Column(Text)
-    retry_count = Column(Integer, default=0)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+    error_message: Mapped[str | None] = mapped_column(Text, default=None)
+    retry_count: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # 메타데이터
-    parameters = Column(JSON)
-    created_by = Column(String(100))
-    tags = Column(JSON, default=list)
+    parameters: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
+    created_by: Mapped[str | None] = mapped_column(String(100), default=None)
+    tags: Mapped[list[Any] | None] = mapped_column(JSON, default=list)
+
+    # 태스크 ID (background task tracking)
+    task_id: Mapped[str | None] = mapped_column(String(200), default=None)
 
     # 관계
-    job_logs = relationship(
-        "JobLog", back_populates="job", cascade="all, delete-orphan"
+    job_logs: Mapped[list["JobLog"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan"
     )
 
     # 인덱스
@@ -268,19 +285,23 @@ class JobLog(Base):
     __tablename__ = "job_logs"
 
     # 기본 키
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # 작업 참조
-    job_id = Column(String(100), ForeignKey("jobs.job_id"), nullable=False, index=True)
+    job_id: Mapped[str] = mapped_column(
+        String(100), ForeignKey("jobs.job_id"), index=True
+    )
 
     # 로그 정보
-    timestamp = Column(DateTime, server_default=func.now())
-    level = Column(String(20))  # INFO, WARNING, ERROR
-    message = Column(Text)
-    log_metadata = Column(JSON)
+    timestamp: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    level: Mapped[str | None] = mapped_column(String(20), default=None)
+    message: Mapped[str | None] = mapped_column(Text, default=None)
+    log_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=None)
 
     # 관계
-    job = relationship("Job", back_populates="job_logs")
+    job: Mapped["Job"] = relationship(back_populates="job_logs")
 
 
 class Prediction(Base):
@@ -289,34 +310,36 @@ class Prediction(Base):
     __tablename__ = "predictions"
 
     # 기본 키
-    prediction_id = Column(String(100), primary_key=True)
+    prediction_id: Mapped[str] = mapped_column(String(100), primary_key=True)
 
     # 경주 참조
-    race_id = Column(
-        String(50), ForeignKey("races.race_id"), nullable=False, index=True
+    race_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("races.race_id"), index=True
     )
 
     # 예측 정보
-    prompt_id = Column(String(50), nullable=False, index=True)
-    prompt_version = Column(String(20))
+    prompt_id: Mapped[str] = mapped_column(String(50), index=True)
+    prompt_version: Mapped[str | None] = mapped_column(String(20), default=None)
 
     # 예측 결과
-    predicted_positions = Column(JSON)  # [1st, 2nd, 3rd]
-    confidence = Column(Integer)
-    reasoning = Column(Text)
+    predicted_positions: Mapped[list[Any] | None] = mapped_column(JSON, default=None)
+    confidence: Mapped[int | None] = mapped_column(Integer, default=None)
+    reasoning: Mapped[str | None] = mapped_column(Text, default=None)
 
     # 평가
-    actual_result = Column(JSON)  # 실제 1, 2, 3위
-    accuracy_score = Column(Float)
-    correct_count = Column(Integer)  # 맞춘 개수
+    actual_result: Mapped[list[Any] | None] = mapped_column(JSON, default=None)
+    accuracy_score: Mapped[float | None] = mapped_column(Float, default=None)
+    correct_count: Mapped[int | None] = mapped_column(Integer, default=None)
 
     # 메타데이터
-    created_at = Column(DateTime, server_default=func.now())
-    execution_time_ms = Column(Integer)
-    model_version = Column(String(50))
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    execution_time_ms: Mapped[int | None] = mapped_column(Integer, default=None)
+    model_version: Mapped[str | None] = mapped_column(String(50), default=None)
 
     # 관계
-    race = relationship("Race", back_populates="predictions")
+    race: Mapped["Race"] = relationship(back_populates="predictions")
 
     # 인덱스
     __table_args__ = (
@@ -331,35 +354,39 @@ class APIKey(Base):
     __tablename__ = "api_keys"
 
     # 기본 키
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # 키 정보
-    key = Column(String(100), unique=True, nullable=False, index=True)
-    name = Column(String(100), nullable=False)
-    description = Column(Text)
+    key: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str | None] = mapped_column(Text, default=None)
 
     # 상태
-    is_active = Column(Boolean, default=True)
+    is_active: Mapped[bool | None] = mapped_column(default=True)
 
     # 사용량 제한
-    rate_limit = Column(Integer, default=100)  # requests per minute
-    daily_limit = Column(Integer, default=10000)
+    rate_limit: Mapped[int | None] = mapped_column(Integer, default=100)
+    daily_limit: Mapped[int | None] = mapped_column(Integer, default=10000)
 
     # 권한
-    permissions = Column(JSON, default=list)  # ["read", "write", "admin"]
+    permissions: Mapped[list[Any] | None] = mapped_column(JSON, default=list)
 
     # 타임스탬프
-    created_at = Column(DateTime, server_default=func.now())
-    last_used_at = Column(DateTime, nullable=True)
-    expires_at = Column(DateTime, nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
 
     # 사용량 추적
-    total_requests = Column(Integer, default=0)
-    today_requests = Column(Integer, default=0)
+    total_requests: Mapped[int | None] = mapped_column(Integer, default=0)
+    today_requests: Mapped[int | None] = mapped_column(Integer, default=0)
 
     # 메타데이터
-    created_by = Column(String(100), index=True)  # Index for filtering by creator
-    key_metadata = Column(JSON, default=dict)
+    created_by: Mapped[str | None] = mapped_column(
+        String(100), index=True, default=None
+    )
+    key_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
 
 
 class PromptTemplate(Base):
@@ -368,30 +395,34 @@ class PromptTemplate(Base):
     __tablename__ = "prompt_templates"
 
     # 기본 키
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # 프롬프트 정보
-    prompt_id = Column(String(50), unique=True, nullable=False, index=True)
-    version = Column(String(20), nullable=False)
-    name = Column(String(200), nullable=False)
-    description = Column(Text)
+    prompt_id: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    version: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str | None] = mapped_column(Text, default=None)
 
     # 내용
-    template_content = Column(Text, nullable=False)
+    template_content: Mapped[str] = mapped_column(Text)
 
     # 성능 지표
-    total_uses = Column(Integer, default=0)
-    success_rate = Column(Float, default=0.0)
-    avg_accuracy = Column(Float, default=0.0)
+    total_uses: Mapped[int | None] = mapped_column(Integer, default=0)
+    success_rate: Mapped[float | None] = mapped_column(Float, default=0.0)
+    avg_accuracy: Mapped[float | None] = mapped_column(Float, default=0.0)
 
     # 상태
-    is_active = Column(Boolean, default=True)
-    is_baseline = Column(Boolean, default=False)  # 기준 프롬프트 여부
+    is_active: Mapped[bool | None] = mapped_column(default=True)
+    is_baseline: Mapped[bool | None] = mapped_column(default=False)
 
     # 타임스탬프
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now(), onupdate=func.now()
+    )
 
     # 메타데이터
-    tags = Column(JSON, default=list)
-    template_metadata = Column(JSON, default=dict)
+    tags: Mapped[list[Any] | None] = mapped_column(JSON, default=list)
+    template_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)

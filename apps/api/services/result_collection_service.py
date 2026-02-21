@@ -5,7 +5,7 @@
 """
 
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -61,12 +61,10 @@ class ResultCollectionService:
         if race is None:
             raise ResultNotFoundError(f"경주를 찾을 수 없습니다: {race_id}")
 
-        # SQLAlchemy 모델 타입 힌트 제약으로 인해 런타임 객체로 취급한다.
-        race_record = cast(Any, race)
-        race_record.result_data = top3
-        race_record.result_status = DataStatus.COLLECTED
-        race_record.result_collected_at = datetime.now(UTC)
-        race_record.updated_at = datetime.now(UTC)
+        race.result_data = top3
+        race.result_status = DataStatus.COLLECTED
+        race.result_collected_at = datetime.now(UTC)
+        race.updated_at = datetime.now(UTC)
 
         await db.commit()
         logger.info("Race result collected", race_id=race_id, top3=top3)
