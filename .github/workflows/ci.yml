@@ -37,6 +37,8 @@ jobs:
           - 6379:6379
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -49,9 +51,8 @@ jobs:
         run: bash apps/api/scripts/run_quality_ci.sh lint
       - name: Ruff format check
         run: bash apps/api/scripts/run_quality_ci.sh format
-      - name: Type check (mypy)
-        continue-on-error: true
-        run: bash apps/api/scripts/run_quality_ci.sh typecheck
+      - name: Type check (mypy changed files)
+        run: bash .github/scripts/mypy_changed.sh
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db

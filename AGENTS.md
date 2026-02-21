@@ -2,19 +2,18 @@
 
 ## Project Structure & Module Organization
 - Monorepo managed by `pnpm` workspaces.
-- `apps/api` — FastAPI (Python 3.11+). Entry: `main_v2.py`; tests in `apps/api/tests/`.
-- `apps/collector` — TypeScript Node (ESM). Source in `src/`; tests in `tests/`.
-- `packages/` — shared configs/types (`shared-types`, `typescript-config`, `eslint-config`) and `scripts` (`race_collector`, `evaluation`).
+- `apps/api` — FastAPI (Python 3.11+). Entry: `main_v2.py`; tests in `apps/api/tests/`. 데이터 수집/강화도 API 엔드포인트로 통합 (Supabase DB 저장).
+- `packages/` — shared configs/types (`shared-types`, `typescript-config`, `eslint-config`) and `scripts` (`evaluation`, `prompt_improvement`).
 - Reference assets: `docs/`, `examples/`, `data/`.
 - Keep domain logic in `services/`; keep I/O and HTTP in the API layer.
 
 ## Build, Test, and Development Commands
 - Install deps (root): `pnpm i`
 - Dev (all apps via Turbo): `pnpm dev`
-- Dev (one app): `pnpm -w -F @apps/collector dev` or `pnpm -w -F @apps/api dev`
-- Build (workspace): `pnpm build`; per app: `pnpm -F @apps/collector build`
+- Dev (API): `pnpm -w -F @apps/api dev`
+- Build (workspace): `pnpm build`
 - Test (workspace): `pnpm test`
-- Test per app: `pnpm -F @apps/collector test`, `pnpm -F @apps/api test`
+- Test API: `pnpm -F @apps/api test`
 - API direct (from `apps/api`): `uv run pytest -q`
 
 ## Coding Style & Naming Conventions
@@ -24,7 +23,6 @@
 - Keep files small and cohesive; colocate tests with each app.
 
 ## Testing Guidelines
-- Node: Jest with ESM (`ts-jest`), 80% global coverage. Place tests under `apps/collector/tests/` mirroring `src/`. Run: `pnpm -F @apps/collector test`.
 - Python: Pytest with asyncio and coverage. Place tests under `apps/api/tests/` (e.g., `tests/services/test_job_service.py`). Run: `uv run pytest -q`.
 
 ## Commit & Pull Request Guidelines
@@ -32,14 +30,14 @@
 - PRs: include a clear description, linked issues, repro steps, and test evidence (logs/coverage). Update docs when behavior changes.
 
 ## Security & Configuration
-- Use `.env` files; never commit real keys. Copy from examples (e.g., `apps/collector/.env.example`, `apps/api/.env.example`).
+- Use `.env` files; never commit real keys. Copy from examples (e.g., `apps/api/.env.template`).
 - Gitleaks (`.gitleaks.toml`) is configured—keep secrets out of code and config.
 
 ## Agent-Specific Instructions
 - When interacting with this repository's owner or contributors, respond in Korean (한국어로 답변). Keep replies concise and professional.
 
 ## API Guide
-- 주요 API URL 및 사용법: [KRA_PUBLIC_API_GUIDE.md](apps/collector/KRA_PUBLIC_API_GUIDE.md)을(를) 참조하세요.
+- 주요 API URL 및 사용법: KRA_PUBLIC_API_GUIDE.md를 참조하세요.
 
 ## Context7 Usage Triggers (short)
 - Action/library options unclear (e.g., `actions/setup-node`, `codecov`, `pnpm/action-setup`, `codeql`, `gitleaks`).

@@ -8,7 +8,6 @@ omit =
     setup.py
     */config.py
     main.py
-    main_v2.py
     run_tests.py
     infrastructure/claude_cli/*
     infrastructure/supabase_client.py
@@ -20,7 +19,6 @@ omit =
     services/race_service.py
     tasks/collection_tasks.py
     tasks/async_tasks.py
-    routers/jobs_v2.py
 
 [report]
 fail_under = 75

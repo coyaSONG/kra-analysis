@@ -18,7 +18,7 @@ run_format() {
 }
 
 run_typecheck() {
-  uv run mypy . --ignore-missing-imports --no-strict-optional --explicit-package-bases || true
+  bash "${API_ROOT}/../../.github/scripts/mypy_changed.sh"
 }
 
 run_unit() {

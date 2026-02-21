@@ -14,7 +14,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint . --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm run test:ci",
+    "test:ci": "eslint . --ext .ts && tsc --noEmit"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
