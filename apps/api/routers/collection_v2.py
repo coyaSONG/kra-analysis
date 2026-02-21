@@ -178,7 +178,9 @@ async def collect_race_result(
         # items에서 top3 추출
         items = KRAResponseAdapter.extract_items(result_response)
         if not items:
-            raise HTTPException(status_code=404, detail="경주 결과 데이터가 비어있습니다")
+            raise HTTPException(
+                status_code=404, detail="경주 결과 데이터가 비어있습니다"
+            )
 
         # ord 필드로 정렬하여 1-3위 추출
         sorted_items = sorted(
