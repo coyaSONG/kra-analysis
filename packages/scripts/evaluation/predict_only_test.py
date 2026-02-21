@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import glob
 import json
 import re
 import sys
@@ -20,6 +19,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
+from shared.data_adapter import convert_basic_data_to_enriched_format
+from shared.db_client import RaceDBClient
 
 
 class PredictionTester:
@@ -28,135 +29,101 @@ class PredictionTester:
         self.predictions_dir = Path("data/prediction_tests")
         self.predictions_dir.mkdir(parents=True, exist_ok=True)
 
+        # DB 클라이언트
+        self.db_client = RaceDBClient()
+
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
 
     def find_enriched_files(
         self, date_filter: str | None = None
     ) -> list[dict[str, any]]:
-        """enriched 파일 찾기"""
-        enriched_files = []
-
-        if date_filter and date_filter != "all":
-            pattern = f"data/races/*/*/{date_filter}/*/*_enriched.json"
-        else:
-            pattern = "data/races/*/*/*/*/*_enriched.json"
-
-        files = sorted(glob.glob(pattern))
-
-        for file in files:
-            path_parts = file.split("/")
-            filename = path_parts[-1]
-
-            # 파일명에서 정보 추출
-            race_prefix = "_".join(filename.split("_")[0:2])
-            race_date = filename.split("_")[2]
-            race_no = filename.split("_")[3].replace("_enriched.json", "")
-
-            # meet 정보 추출
-            meet = path_parts[-2]
-            meet_map = {"seoul": "서울", "jeju": "제주", "busan": "부산경남"}
-
-            enriched_files.append(
-                {
-                    "file_path": Path(file),
-                    "race_id": f"{race_prefix}_{race_date}_{race_no}",
-                    "race_date": race_date,
-                    "race_no": race_no,
-                    "meet": meet_map.get(meet, "서울"),
-                }
-            )
-
-        return enriched_files
+        """DB에서 수집 완료된 경주 찾기"""
+        return self.db_client.find_races(date_filter=date_filter)
 
     def load_race_data(self, file_info: dict) -> dict | None:
-        """enriched 파일에서 경주 데이터 로드"""
+        """DB에서 경주 데이터 로드"""
         try:
-            with open(file_info["file_path"], encoding="utf-8") as f:
-                data = json.load(f)
+            basic_data = self.db_client.load_race_basic_data(file_info["race_id"])
+            if not basic_data:
+                return None
 
-            # API 응답 형식에서 실제 데이터 추출
-            if "response" in data and "body" in data["response"]:
-                items = data["response"]["body"]["items"]["item"]
+            data = convert_basic_data_to_enriched_format(basic_data)
+            if not data:
+                return None
 
-                # 데이터 정리 및 필터링
-                horses = []
-                for item in items:
-                    # 기권/제외 말 필터링
-                    if item.get("winOdds", 999) == 0:
-                        continue
+            items = data["response"]["body"]["items"]["item"]
 
-                    # wgHr 파싱: "470(+5)" 형태에서 숫자만 추출
-                    wgHr_str = item.get("wgHr", "")
-                    wgHr_match = re.match(r"(\d+)", wgHr_str)
-                    wgHr_value = int(wgHr_match.group(1)) if wgHr_match else None
+            # 데이터 정리 및 필터링
+            horses = []
+            for item in items:
+                # 기권/제외 말 필터링
+                if item.get("winOdds", 999) == 0:
+                    continue
 
-                    horse = {
-                        "chulNo": item["chulNo"],
-                        "hrName": item["hrName"],
-                        "hrNo": item["hrNo"],
-                        "jkName": item["jkName"],
-                        "jkNo": item["jkNo"],
-                        "trName": item["trName"],
-                        "trNo": item["trNo"],
-                        "winOdds": item["winOdds"],
-                        "plcOdds": item.get("plcOdds"),
-                        "budam": item.get("budam", ""),  # '핸디캡' 등의 문자열
-                        "wgBudam": item.get("wgBudam"),  # 숫자 값 (52.0 등)
-                        "wgHr": wgHr_value,  # 파싱된 숫자 값
-                        "age": item.get("age"),
-                        "sex": item.get("sex", ""),
-                        "rank": item.get("rank", ""),  # '국5등급' 등
-                        "rating": item.get("rating"),
-                        "rcDist": item.get("rcDist"),  # 경주거리 추가
-                        "ilsu": item.get(
-                            "ilsu"
-                        ),  # 장기휴양 리스크 계산을 위한 일수 추가
-                        # 기타 필요한 데이터 추가 (예: 구간 기록 등)
-                        "se_3cAccTime": item.get("se_3cAccTime"),
-                        "se_4cAccTime": item.get("se_4cAccTime"),
-                        "sj_3cOrd": item.get("sj_3cOrd"),
-                        "sj_4cOrd": item.get("sjS1fOrd"),
-                        "seS1fAccTime": item.get("seS1fAccTime"),
-                        "sjS1fOrd": item.get("sjS1fOrd"),
-                        "seG1fAccTime": item.get("seG1fAccTime"),
-                        "sjG1fOrd": item.get("sjG1fOrd"),
-                    }
+                # wgHr 파싱: "470(+5)" 형태에서 숫자만 추출
+                wgHr_str = str(item.get("wgHr", ""))
+                wgHr_match = re.match(r"(\d+)", wgHr_str)
+                wgHr_value = int(wgHr_match.group(1)) if wgHr_match else None
 
-                    # enriched 데이터 추가
-                    if "hrDetail" in item:
-                        horse["hrDetail"] = item["hrDetail"]
-                    if "jkDetail" in item:
-                        horse["jkDetail"] = item["jkDetail"]
-                    if "trDetail" in item:
-                        horse["trDetail"] = item["trDetail"]
-
-                    horses.append(horse)
-
-                # Feature Engineering: 파생 피처 계산
-                horses = compute_race_features(horses)
-
-                # raceInfo 추출 (첫 번째 말의 공통 정보 사용)
-                first_horse_item = items[0] if items else {}
-                race_distance = first_horse_item.get(
-                    "rcDist"
-                )  # rcDist에서 경주거리 가져오기
-
-                return {
-                    "meet": file_info["meet"],
-                    "rcDate": file_info["race_date"],
-                    "rcNo": file_info["race_no"],
-                    "horses": horses,
-                    "raceInfo": {
-                        "distance": race_distance,
-                        "grade": first_horse_item.get("rank", ""),  # 등급 추가
-                        "track": first_horse_item.get("track", ""),
-                        "weather": first_horse_item.get("weather", ""),
-                        "budam": first_horse_item.get("budam", ""),  # 부담조건 추가
-                    },
+                horse = {
+                    "chulNo": item["chulNo"],
+                    "hrName": item["hrName"],
+                    "hrNo": item["hrNo"],
+                    "jkName": item["jkName"],
+                    "jkNo": item["jkNo"],
+                    "trName": item["trName"],
+                    "trNo": item["trNo"],
+                    "winOdds": item["winOdds"],
+                    "plcOdds": item.get("plcOdds"),
+                    "budam": item.get("budam", ""),
+                    "wgBudam": item.get("wgBudam"),
+                    "wgHr": wgHr_value,
+                    "age": item.get("age"),
+                    "sex": item.get("sex", ""),
+                    "rank": item.get("rank", ""),
+                    "rating": item.get("rating"),
+                    "rcDist": item.get("rcDist"),
+                    "ilsu": item.get("ilsu"),
+                    "se_3cAccTime": item.get("se_3cAccTime"),
+                    "se_4cAccTime": item.get("se_4cAccTime"),
+                    "sj_3cOrd": item.get("sj_3cOrd"),
+                    "sj_4cOrd": item.get("sjS1fOrd"),
+                    "seS1fAccTime": item.get("seS1fAccTime"),
+                    "sjS1fOrd": item.get("sjS1fOrd"),
+                    "seG1fAccTime": item.get("seG1fAccTime"),
+                    "sjG1fOrd": item.get("sjG1fOrd"),
                 }
 
-            return None
+                if "hrDetail" in item:
+                    horse["hrDetail"] = item["hrDetail"]
+                if "jkDetail" in item:
+                    horse["jkDetail"] = item["jkDetail"]
+                if "trDetail" in item:
+                    horse["trDetail"] = item["trDetail"]
+
+                horses.append(horse)
+
+            # Feature Engineering: 파생 피처 계산
+            horses = compute_race_features(horses)
+
+            first_horse_item = items[0] if items else {}
+            race_distance = first_horse_item.get("rcDist")
+
+            return {
+                "meet": file_info["meet"],
+                "rcDate": file_info["race_date"],
+                "rcNo": file_info["race_no"],
+                "horses": horses,
+                "raceInfo": {
+                    "distance": race_distance,
+                    "grade": first_horse_item.get("rank", ""),
+                    "track": first_horse_item.get("track", ""),
+                    "weather": first_horse_item.get("weather", ""),
+                    "budam": first_horse_item.get("budam", ""),
+                },
+            }
+
         except Exception as e:
             print(f"데이터 로드 오류 ({file_info['race_id']}): {e}")
             return None

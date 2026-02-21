@@ -7,10 +7,8 @@
 """
 
 import argparse
-import glob
 import json
 import re
-import subprocess
 import sys
 import threading
 import time
@@ -29,6 +27,8 @@ from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.report_schema import build_report_v2, validate_report_v2
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
+from shared.data_adapter import convert_basic_data_to_enriched_format
+from shared.db_client import RaceDBClient
 from shared.llm_client import LLMClient
 
 
@@ -64,6 +64,9 @@ class PromptEvaluatorV3:
         self.ensemble = (
             SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
         )
+
+        # DB 클라이언트
+        self.db_client = RaceDBClient()
 
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
@@ -101,116 +104,74 @@ class PromptEvaluatorV3:
             self.jury_ensemble = JuryEnsemble(model_weights=weights)
 
     def find_test_races(self, limit: int = None) -> list[dict[str, Any]]:
-        """테스트할 경주 파일 찾기 (enriched 또는 prerace 데이터)"""
-        race_files = []
-
-        # 스크립트 위치 기준 데이터 디렉토리
-        script_dir = Path(__file__).parent.parent
-        data_dir = script_dir / "data" / "races"
-
-        # enriched 파일 먼저 찾기, 없으면 prerace 파일 찾기
-        # 구조: 년도/월/날짜/경마장/파일.json (5단계)
-        enriched_pattern = str(data_dir / "*" / "*" / "*" / "*" / "*_enriched.json")
-        prerace_pattern = str(data_dir / "*" / "*" / "*" / "*" / "*_prerace.json")
-
-        enriched_files = sorted(glob.glob(enriched_pattern))
-        if not enriched_files:
-            enriched_files = sorted(glob.glob(prerace_pattern))
-
-        for enriched_file in enriched_files:
-            path_parts = enriched_file.split("/")
-            # race_1_20250608_1_enriched.json 또는 race_1_20250608_1_prerace.json
-            filename = path_parts[-1]
-            race_prefix = "_".join(filename.split("_")[0:2])
-            race_date = filename.split("_")[2]
-            # _enriched.json 또는 _prerace.json 제거
-            race_no = (
-                filename.split("_")[3]
-                .replace("_enriched.json", "")
-                .replace("_prerace.json", "")
-            )
-
-            # meet 정보 추출
-            meet = path_parts[-2]  # seoul, jeju, busan 등
-            meet_map = {"seoul": "서울", "jeju": "제주", "busan": "부산경남"}
-
-            race_files.append(
-                {
-                    "enriched_file": Path(enriched_file),
-                    "race_id": f"{race_prefix}_{race_date}_{race_no}",
-                    "race_date": race_date,
-                    "race_no": race_no,
-                    "meet": meet_map.get(meet, "서울"),
-                }
-            )
-
-        if limit:
-            race_files = race_files[:limit]
-
-        data_type = "enriched" if "_enriched" in str(enriched_files[0]) else "prerace"
-        print(f"테스트할 경주: {len(race_files)}개 ({data_type} 데이터)")
-        return race_files
+        """DB에서 수집 완료된 경주 찾기"""
+        races = self.db_client.find_races(limit=limit)
+        print(f"테스트할 경주: {len(races)}개 (DB 데이터)")
+        return races
 
     def load_race_data(self, race_info: dict) -> dict | None:
-        """enriched 파일에서 경주 데이터 로드"""
+        """DB에서 경주 데이터 로드"""
         try:
-            with open(race_info["enriched_file"], encoding="utf-8") as f:
-                data = json.load(f)
+            basic_data = self.db_client.load_race_basic_data(race_info["race_id"])
+            if not basic_data:
+                return None
+
+            # DB 데이터를 평가 스크립트 호환 포맷으로 변환
+            data = convert_basic_data_to_enriched_format(basic_data)
+            if not data:
+                return None
 
             # API 응답 형식에서 실제 데이터 추출
-            if "response" in data and "body" in data["response"]:
-                items = data["response"]["body"]["items"]["item"]
+            items = data["response"]["body"]["items"]["item"]
 
-                # 데이터 정리
-                horses = []
-                for item in items:
-                    # 기권/제외 말 필터링
-                    if item.get("winOdds", 999) == 0:
-                        continue
+            # 데이터 정리
+            horses = []
+            for item in items:
+                # 기권/제외 말 필터링
+                if item.get("winOdds", 999) == 0:
+                    continue
 
-                    horse = {
-                        "chulNo": item["chulNo"],
-                        "hrName": item["hrName"],
-                        "hrNo": item["hrNo"],
-                        "jkName": item["jkName"],
-                        "jkNo": item["jkNo"],
-                        "trName": item["trName"],
-                        "trNo": item["trNo"],
-                        "wgBudam": item["wgBudam"],
-                        "winOdds": item["winOdds"],
-                        "plcOdds": item["plcOdds"],
-                        "rating": item.get("rating", 0),
-                        "rank": item.get("rank", ""),
-                        "age": item.get("age", 0),
-                        "sex": item.get("sex", ""),
-                        # 보강된 데이터
-                        "hrDetail": item.get("hrDetail", {}),
-                        "jkDetail": item.get("jkDetail", {}),
-                        "trDetail": item.get("trDetail", {}),
-                    }
-
-                    horses.append(horse)
-
-                # Feature Engineering: 파생 피처 계산
-                horses = compute_race_features(horses)
-
-                # 경주 정보 구성
-                race_data = {
-                    "raceInfo": {
-                        "rcDate": items[0]["rcDate"],
-                        "rcNo": items[0]["rcNo"],
-                        "rcName": items[0].get("rcName", ""),
-                        "rcDist": items[0]["rcDist"],
-                        "track": items[0].get("track", ""),
-                        "weather": items[0].get("weather", ""),
-                        "meet": items[0]["meet"],
-                    },
-                    "horses": horses,
+                horse = {
+                    "chulNo": item["chulNo"],
+                    "hrName": item["hrName"],
+                    "hrNo": item["hrNo"],
+                    "jkName": item["jkName"],
+                    "jkNo": item["jkNo"],
+                    "trName": item["trName"],
+                    "trNo": item["trNo"],
+                    "wgBudam": item.get("wgBudam", 0),
+                    "winOdds": item["winOdds"],
+                    "plcOdds": item.get("plcOdds", 0),
+                    "rating": item.get("rating", 0),
+                    "rank": item.get("rank", ""),
+                    "age": item.get("age", 0),
+                    "sex": item.get("sex", ""),
+                    # 보강된 데이터
+                    "hrDetail": item.get("hrDetail", {}),
+                    "jkDetail": item.get("jkDetail", {}),
+                    "trDetail": item.get("trDetail", {}),
                 }
 
-                return race_data
+                horses.append(horse)
 
-            return None
+            # Feature Engineering: 파생 피처 계산
+            horses = compute_race_features(horses)
+
+            # 경주 정보 구성
+            race_data = {
+                "raceInfo": {
+                    "rcDate": items[0]["rcDate"],
+                    "rcNo": items[0]["rcNo"],
+                    "rcName": items[0].get("rcName", ""),
+                    "rcDist": items[0]["rcDist"],
+                    "track": items[0].get("track", ""),
+                    "weather": items[0].get("weather", ""),
+                    "meet": items[0]["meet"],
+                },
+                "horses": horses,
+            }
+
+            return race_data
 
         except Exception as e:
             print(f"데이터 로드 오류: {e}")
@@ -590,62 +551,12 @@ class PromptEvaluatorV3:
         return None, error_type
 
     def extract_actual_result(self, race_info: dict) -> list[int]:
-        """캐시된 1-3위 결과 파일에서 실제 결과 추출"""
+        """DB에서 경주 결과 (1-3위) 추출"""
         try:
-            meet = race_info.get("meet", "서울")
-            rc_date = race_info["race_date"]
-            rc_no = race_info["race_no"]
-
-            # 1-3위 결과 파일 경로 (스크립트 위치 기준)
-            script_dir = Path(__file__).parent.parent
-            cache_file = (
-                script_dir
-                / "data"
-                / "cache"
-                / "results"
-                / f"top3_{rc_date}_{meet}_{rc_no}.json"
-            )
-
-            # 캐시 파일이 있으면 읽기
-            if cache_file.exists():
-                with open(cache_file, encoding="utf-8") as f:
-                    top3 = json.load(f)
-                return top3
-
-            # 캐시가 없으면 API를 통해 가져오기
-            print(f"  결과 캐시 없음. API로 가져오기: {meet} {rc_date} {rc_no}경주")
-            # 스크립트 경로 (현재 파일과 같은 디렉토리)
-            fetch_script = Path(__file__).parent / "fetch_and_save_results.js"
-            cmd = [
-                "node",
-                str(fetch_script),
-                meet,
-                rc_date,
-                str(rc_no),
-            ]
-
-            try:
-                # Node 스크립트를 scripts 디렉토리에서 실행 (상대 경로 기준)
-                result = subprocess.run(
-                    cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    cwd=script_dir,  # packages/scripts 디렉토리에서 실행
-                )
-                if result.returncode == 0 and cache_file.exists():
-                    with open(cache_file, encoding="utf-8") as f:
-                        top3 = json.load(f)
-                    return top3
-                elif result.returncode != 0:
-                    print(
-                        f"  결과 수집 실패: {result.stderr[:100] if result.stderr else 'unknown'}"
-                    )
-            except Exception as e:
-                print(f"  결과 수집 예외: {e}")
-
-            return []
-
+            result = self.db_client.get_race_result(race_info["race_id"])
+            if not result:
+                print(f"  결과 없음: {race_info['race_id']} (DB에 result_data 미수집)")
+            return result
         except Exception as e:
             print(f"  결과 추출 오류: {e}")
             return []
