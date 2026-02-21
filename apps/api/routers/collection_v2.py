@@ -5,6 +5,7 @@
 
 import uuid
 from datetime import datetime
+from typing import cast
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -78,7 +79,12 @@ async def collect_race_data(
                 logger.error(f"Failed to collect race {race_no}: {e}", exc_info=True)
 
         return CollectionResponse(
-            status="success", message=f"Collected {len(results)} races", data=results
+            job_id=None,
+            status="success",
+            message=f"Collected {len(results)} races",
+            estimated_time=None,
+            webhook_url=None,
+            data=results,
         )
 
     except Exception as e:
@@ -114,13 +120,14 @@ async def collect_race_data_async(
             user_id=api_key,
             db=db,
         )
-        await job_service.start_job(job.job_id, db)
+        job_id = cast(str, job.job_id)
+        await job_service.start_job(job_id, db)
 
         return CollectionResponse(
-            job_id=job.job_id,
+            job_id=job_id,
             status="accepted",
             message="Collection job started",
-            webhook_url=f"/api/v2/jobs/{job.job_id}",
+            webhook_url=f"/api/v2/jobs/{job_id}",
             data=None,
             estimated_time=5,
         )
@@ -206,17 +213,20 @@ async def collect_race_result(
             )
 
         # 결과 저장
-        race.result_data = top3
-        race.result_status = DataStatus.COLLECTED
-        race.result_collected_at = datetime.utcnow()
-        race.updated_at = datetime.utcnow()
+        race.result_data = top3  # type: ignore[assignment]
+        race.result_status = DataStatus.COLLECTED  # type: ignore[assignment]
+        race.result_collected_at = datetime.utcnow()  # type: ignore[assignment]
+        race.updated_at = datetime.utcnow()  # type: ignore[assignment]
         await db.commit()
 
         logger.info(f"Race result collected: {race_id} -> top3={top3}")
 
         return CollectionResponse(
+            job_id=None,
             status="success",
             message=f"결과 수집 완료: {race_id}",
+            estimated_time=None,
+            webhook_url=None,
             data=[{"race_id": race_id, "top3": top3}],
         )
 

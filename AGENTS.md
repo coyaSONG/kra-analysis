@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - Monorepo managed by `pnpm` workspaces.
-- `apps/api` — FastAPI (Python 3.11+). Entry: `main_v2.py`; tests in `apps/api/tests/`. 데이터 수집/강화도 API 엔드포인트로 통합 (Supabase DB 저장).
+- `apps/api` — FastAPI (Python 3.13+). Entry: `main_v2.py`; tests in `apps/api/tests/`. 데이터 수집/강화도 API 엔드포인트로 통합 (Supabase DB 저장).
 - `packages/` — shared configs/types (`shared-types`, `typescript-config`, `eslint-config`) and `scripts` (`evaluation`, `prompt_improvement`).
 - Reference assets: `docs/`, `examples/`, `data/`.
 - Keep domain logic in `services/`; keep I/O and HTTP in the API layer.

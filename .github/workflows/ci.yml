@@ -149,5 +149,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm audit --audit-level=low
         continue-on-error: true
+      - name: Node.js audit gate (critical)
+        run: pnpm audit --audit-level=critical
       - name: Repository hygiene checks
         run: bash .github/scripts/security_checks.sh

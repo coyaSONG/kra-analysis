@@ -115,7 +115,6 @@ addopts = """
   --maxfail=1
   --disable-warnings
   -p no:warnings
-  -k "not test_api.py"
 """
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
