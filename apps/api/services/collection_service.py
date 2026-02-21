@@ -45,6 +45,11 @@ from utils.field_mapping import convert_api_to_internal
 logger = structlog.get_logger()
 
 
+def _utcnow() -> datetime:
+    """Return current UTC time as naive datetime (for TIMESTAMP WITHOUT TIME ZONE columns)."""
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
 class CollectionService:
     """데이터 수집 및 처리 서비스"""
 
@@ -311,9 +316,9 @@ class CollectionService:
             if race:
                 # 업데이트
                 race.basic_data = data
-                race.updated_at = datetime.now(UTC)
+                race.updated_at = _utcnow()
                 race.collection_status = DataStatus.COLLECTED
-                race.collected_at = datetime.now(UTC)
+                race.collected_at = _utcnow()
                 race.status = DataStatus.COLLECTED
                 # keep compatibility columns in sync
                 race.race_date = data["date"]
@@ -330,7 +335,7 @@ class CollectionService:
                     basic_data=data,
                     status=DataStatus.COLLECTED,
                     collection_status=DataStatus.COLLECTED,
-                    collected_at=datetime.now(UTC),
+                    collected_at=_utcnow(),
                 )
                 db.add(race)
 
@@ -370,8 +375,8 @@ class CollectionService:
             # 저장 - basic_data는 유지하고 preprocessed는 enriched_data에 저장
             race.enriched_data = preprocessed
             race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = datetime.now(UTC)
-            race.updated_at = datetime.now(UTC)
+            race.enriched_at = _utcnow()
+            race.updated_at = _utcnow()
 
             await db.commit()
 
@@ -414,8 +419,8 @@ class CollectionService:
             # 저장
             race.enriched_data = enriched
             race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = datetime.now(UTC)
-            race.updated_at = datetime.now(UTC)
+            race.enriched_at = _utcnow()
+            race.updated_at = _utcnow()
 
             await db.commit()
 

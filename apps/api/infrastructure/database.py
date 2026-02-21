@@ -62,21 +62,10 @@ if "sqlite" in database_url:
 else:
     # For Supabase/pgbouncer, use NullPool to avoid connection pooling issues
     if "pooler.supabase.com" in database_url:
-        from sqlalchemy.pool import NullPool
-
-        # Create custom connection function that disables prepared statements
-        async def get_async_connection():
-            return await asyncpg.connect(
-                database_url.replace("postgresql+asyncpg://", "postgresql://"),
-                statement_cache_size=0,
-                server_settings={"jit": "off"},
-            )
-
         engine = create_async_engine(
             database_url,
             echo=settings.debug,
             poolclass=NullPool,
-            async_creator=get_async_connection,
         )
     else:
         # Regular PostgreSQL connection

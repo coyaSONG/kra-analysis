@@ -63,8 +63,8 @@ class ResultCollectionService:
 
         race.result_data = top3
         race.result_status = DataStatus.COLLECTED
-        race.result_collected_at = datetime.now(UTC)
-        race.updated_at = datetime.now(UTC)
+        race.result_collected_at = datetime.now(UTC).replace(tzinfo=None)
+        race.updated_at = datetime.now(UTC).replace(tzinfo=None)
 
         await db.commit()
         logger.info("Race result collected", race_id=race_id, top3=top3)

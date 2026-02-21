@@ -98,7 +98,7 @@ class JobService:
             # 상태 업데이트
             job.status = "queued"
             job.task_id = task_id
-            job.started_at = datetime.now(UTC)
+            job.started_at = datetime.now(UTC).replace(tzinfo=None)
 
             await db.commit()
 
@@ -385,7 +385,7 @@ class JobService:
 
             # 상태 업데이트
             job.status = "cancelled"
-            job.completed_at = datetime.now(UTC)
+            job.completed_at = datetime.now(UTC).replace(tzinfo=None)
 
             await db.commit()
 
