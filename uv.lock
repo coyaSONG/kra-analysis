@@ -1727,6 +1727,7 @@ dev = [
     { name = "pytest-timeout" },
     { name = "requests" },
     { name = "ruff" },
+    { name = "types-python-dateutil" },
 ]
 
 [package.metadata]
@@ -1773,6 +1774,7 @@ dev = [
     { name = "pytest-timeout", specifier = ">=2.3.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "ruff", specifier = ">=0.8.0" },
+    { name = "types-python-dateutil", specifier = ">=2.9.0.20250822" },
 ]
 
 [[package]]
