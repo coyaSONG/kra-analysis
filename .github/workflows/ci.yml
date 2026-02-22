@@ -47,6 +47,13 @@ jobs:
       - name: Install dependencies
         working-directory: ./apps/api
         run: uv sync --all-extras --group dev
+      - name: Apply DB migrations (Alembic)
+        working-directory: ./apps/api
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
+          SECRET_KEY: test-secret-key
+          ENVIRONMENT: test
+        run: uv run alembic upgrade head
       - name: Ruff lint
         run: bash apps/api/scripts/run_quality_ci.sh lint
       - name: Ruff format check
@@ -151,5 +158,17 @@ jobs:
         continue-on-error: true
       - name: Node.js audit gate (critical)
         run: pnpm audit --audit-level=critical
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install Python dependencies (security scan baseline)
+        working-directory: ./apps/api
+        run: uv sync --all-extras --group dev
+      - name: Python security report (pip-audit + bandit)
+        run: bash .github/scripts/python_security_checks.sh report
+      - name: Python security gate (pip-audit baseline + bandit high/high)
+        run: bash .github/scripts/python_security_checks.sh gate
       - name: Repository hygiene checks
         run: bash .github/scripts/security_checks.sh

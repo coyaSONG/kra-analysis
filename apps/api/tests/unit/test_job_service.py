@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -25,8 +25,10 @@ async def test_create_job(db_session):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_start_job_queues_task(monkeypatch, db_session):
-    service = JobService()
+async def test_start_job_queues_task(db_session):
+    runner = Mock()
+    runner.submit.return_value = "stub-task-id"
+    service = JobService(job_runner=runner)
     # prepare job
     job = Job(
         type=JobType.COLLECTION,
@@ -38,13 +40,9 @@ async def test_start_job_queues_task(monkeypatch, db_session):
     await db_session.commit()
     await db_session.refresh(job)
 
-    async def fake_dispatch(_self, _job):
-        return "stub-task-id"
-
-    monkeypatch.setattr(JobService, "_dispatch_task", fake_dispatch)
-
     task_id = await service.start_job(job.job_id, db_session)
     assert task_id == "stub-task-id"
+    runner.submit.assert_called_once()
 
     # reload
     job2 = await service.get_job(job.job_id, db_session)
@@ -57,8 +55,9 @@ async def test_start_job_queues_task(monkeypatch, db_session):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_get_job_status_with_task(monkeypatch, db_session):
-    service = JobService()
+async def test_get_job_status_with_task(db_session):
+    runner = Mock()
+    service = JobService(job_runner=runner)
     job = Job(
         type=JobType.COLLECTION,
         status=JobStatus.PROCESSING,
@@ -79,19 +78,19 @@ async def test_get_job_status_with_task(monkeypatch, db_session):
         "alive": False,
     }
 
-    with patch(
-        "services.job_service.get_task_status",
-        new_callable=AsyncMock,
-        return_value=fake_status,
-    ):
-        status = await service.get_job_status(job.job_id, db_session)
-        assert status["task_status"]["state"] == "completed"
+    runner.status = AsyncMock(return_value=fake_status)
+
+    status = await service.get_job_status(job.job_id, db_session)
+    assert status["task_status"]["state"] == "completed"
+    runner.status.assert_awaited_once_with("task-123")
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cancel_job_cancels_task(monkeypatch, db_session):
-    service = JobService()
+async def test_cancel_job_cancels_task(db_session):
+    runner = Mock()
+    runner.cancel = AsyncMock(return_value=True)
+    service = JobService(job_runner=runner)
     job = Job(
         type=JobType.COLLECTION,
         status=JobStatus.RUNNING,
@@ -103,14 +102,9 @@ async def test_cancel_job_cancels_task(monkeypatch, db_session):
     await db_session.commit()
     await db_session.refresh(job)
 
-    with patch(
-        "services.job_service.cancel_task",
-        new_callable=AsyncMock,
-        return_value=True,
-    ) as mock_cancel:
-        ok = await service.cancel_job(job.job_id, db_session)
-        assert ok is True
-        mock_cancel.assert_awaited_once_with("to-cancel")
+    ok = await service.cancel_job(job.job_id, db_session)
+    assert ok is True
+    runner.cancel.assert_awaited_once_with("to-cancel")
 
 
 @pytest.mark.unit
@@ -139,36 +133,46 @@ async def test_cleanup_old_jobs(db_session):
     )
     db_session.add_all([j1, j2, j3])
     await db_session.commit()
+    await db_session.refresh(j3)
 
     deleted = await service.cleanup_old_jobs(db_session, days=7)
     assert deleted >= 2
-
-
-@pytest.mark.unit
-@pytest.mark.asyncio
-async def test_dispatch_task_collect_race(monkeypatch):
-    service = JobService()
-
-    with patch(
-        "services.job_service.submit_task",
-        return_value="task-id",
-    ) as mock_submit:
-        job = SimpleNamespace(
-            type="collect_race",
-            parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
-            job_id="job-1",
+    pending_job = await service.get_job(j3.job_id, db_session)
+    assert pending_job is not None
+    assert (
+        str(
+            pending_job.status.value
+            if hasattr(pending_job.status, "value")
+            else pending_job.status
         )
-
-        result = await service._dispatch_task(job)
-
-        assert result == "task-id"
-        assert mock_submit.called
+        == JobStatus.PENDING.value
+    )
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_dispatch_task_unknown_type(monkeypatch):
-    service = JobService()
+async def test_dispatch_task_collect_race():
+    runner = Mock()
+    runner.submit.return_value = "task-id"
+    service = JobService(job_runner=runner)
+    job = SimpleNamespace(
+        type="collect_race",
+        parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
+        job_id="job-1",
+    )
+
+    result = await service._dispatch_task(job)
+
+    assert result == "task-id"
+    runner.submit.assert_called_once_with(job)
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_dispatch_task_unknown_type():
+    runner = Mock()
+    runner.submit.side_effect = ValueError("Unknown job type: unknown")
+    service = JobService(job_runner=runner)
 
     job = SimpleNamespace(type="unknown", parameters={}, job_id="job-1")
 
@@ -238,15 +242,25 @@ def test_calculate_progress_full_pipeline_steps():
 
 @pytest.mark.unit
 def test_job_service_methods_exist():
-    """Test that JobService has expected methods"""
+    """Test that JobService exposes expected public contract methods."""
     service = JobService()
 
-    # Check that service has expected methods
-    assert hasattr(service, "create_job")
-    assert hasattr(service, "get_job")
-    assert hasattr(service, "list_jobs")
-    assert hasattr(service, "get_job_status")
-    assert hasattr(service, "cancel_job")
-    assert hasattr(service, "start_job")
-    assert hasattr(service, "_calculate_progress")
-    assert hasattr(service, "_dispatch_task")
+    expected_public_methods = [
+        "create_job",
+        "start_job",
+        "get_job",
+        "get_job_status",
+        "get_job_logs",
+        "add_job_log",
+        "list_jobs",
+        "list_jobs_with_total",
+        "cancel_job",
+        "cleanup_old_jobs",
+        "get_job_statistics",
+    ]
+
+    missing = [
+        method for method in expected_public_methods if not hasattr(service, method)
+    ]
+    assert missing == []
+    assert all(callable(getattr(service, method)) for method in expected_public_methods)

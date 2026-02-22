@@ -57,7 +57,7 @@ async def test_jobs_v2_cancel_endpoint_updates_status(authenticated_client, db_s
     await db_session.refresh(job)
 
     with patch(
-        "services.job_service.cancel_task",
+        "routers.jobs_v2.job_service.job_runner.cancel",
         new_callable=AsyncMock,
         return_value=True,
     ):

@@ -1,7 +1,7 @@
 """
 작업 관리 서비스
 비동기 작업 생성, 모니터링, 관리
-Uses in-process background task runner (infrastructure.background_tasks).
+Uses pluggable job runner abstraction.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -11,11 +11,7 @@ import structlog
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.background_tasks import (
-    cancel_task,
-    get_task_status,
-    submit_task,
-)
+from infrastructure.job_runner import JobRunner, get_job_runner
 from models.database_models import Job, JobLog
 
 logger = structlog.get_logger()
@@ -23,6 +19,9 @@ logger = structlog.get_logger()
 
 class JobService:
     """작업 관리 서비스"""
+
+    def __init__(self, job_runner: JobRunner | None = None):
+        self.job_runner = job_runner or get_job_runner()
 
     @staticmethod
     def _to_filter_value(value: Any) -> str:
@@ -118,58 +117,7 @@ class JobService:
 
     async def _dispatch_task(self, job: Job) -> str:
         """작업 유형에 따라 background task 디스패치. Returns task_id."""
-        from tasks.async_tasks import (
-            batch_collect,
-            collect_race_data,
-            enrich_race_data,
-            full_pipeline,
-            preprocess_race_data,
-        )
-
-        params = job.parameters
-
-        job_type = job.type.value if hasattr(job.type, "value") else str(job.type)
-
-        if job_type == "collect_race":
-            task_id = submit_task(
-                collect_race_data,
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id,
-            )
-        elif job_type == "preprocess_race":
-            task_id = submit_task(
-                preprocess_race_data,
-                params["race_id"],
-                job.job_id,
-            )
-        elif job_type == "enrich_race":
-            task_id = submit_task(
-                enrich_race_data,
-                params["race_id"],
-                job.job_id,
-            )
-        elif job_type in ("batch_collect", "batch"):
-            task_id = submit_task(
-                batch_collect,
-                params["race_date"],
-                params["meet"],
-                params["race_numbers"],
-                job.job_id,
-            )
-        elif job_type == "full_pipeline":
-            task_id = submit_task(
-                full_pipeline,
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id,
-            )
-        else:
-            raise ValueError(f"Unknown job type: {job_type}")
-
-        return task_id
+        return self.job_runner.submit(job)
 
     async def get_job(
         self, job_id: str, db: AsyncSession, user_id: str | None = None
@@ -201,7 +149,7 @@ class JobService:
         bg_status: dict[str, Any] | None = None
         if job.task_id:
             try:
-                bg_status = await get_task_status(job.task_id)
+                bg_status = await self.job_runner.status(job.task_id)
             except Exception as e:
                 logger.warning("Failed to get background task status", error=str(e))
 
@@ -379,7 +327,7 @@ class JobService:
             task_id = getattr(job, "task_id", None)
             if task_id:
                 try:
-                    await cancel_task(task_id)
+                    await self.job_runner.cancel(task_id)
                 except Exception as e:
                     logger.warning("Failed to cancel background task", error=str(e))
 

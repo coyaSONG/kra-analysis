@@ -97,6 +97,15 @@ async_session_maker = async_sessionmaker(
 
 async def init_db():
     """데이터베이스 초기화"""
+    env = settings.environment.lower()
+    is_dev_env = env in {"development", "dev", "local"}
+    if not is_dev_env and not settings.db_auto_create_on_startup:
+        logger.info(
+            "Skipping metadata.create_all; use Alembic migrations instead",
+            environment=settings.environment,
+        )
+        return
+
     try:
         # 테이블 생성
         async with engine.begin() as conn:

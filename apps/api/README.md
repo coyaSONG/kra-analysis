@@ -60,10 +60,25 @@ pip install -r requirements.txt
 - `PORT` (개발 기본 8000)
 - `VALID_API_KEYS` (선택: JSON 배열 또는 콤마 구분, 미설정 시 개발 모드에서 `test-api-key-123456789` 기본값 사용)
 - `KRA_API_KEY` (선택: 공공데이터 API 키)
+- `JOB_RUNNER_MODE` (`inprocess` 또는 `celery`, 기본 `inprocess`)
+- `METRICS_ENABLED` (`true`면 `/metrics` 노출)
 
-### 데이터베이스 설정 (선택)
+### 데이터베이스 마이그레이션 (Alembic)
 
-Supabase 대시보드에서 SQL 에디터를 열고 `migrations/001_initial_schema.sql` 파일의 내용을 실행합니다.
+스키마 관리는 Alembic을 기준으로 합니다.
+
+```bash
+# 최신 스키마 적용
+cd apps/api
+uv run alembic upgrade head
+
+# 스키마 변경 시 마이그레이션 생성
+uv run alembic revision --autogenerate -m "add_xxx_column"
+```
+
+규칙:
+- SQLAlchemy 모델(`models/database_models.py`)을 변경했다면 같은 PR에서 Alembic revision 파일을 반드시 추가합니다.
+- 운영/테스트 환경에서는 `metadata.create_all` 대신 `alembic upgrade head`로만 스키마를 맞춥니다.
 
 ### 서버 실행
 
@@ -156,7 +171,10 @@ Headers: X-API-Key: ...
 
 ### Health
 
-- `GET /` 기본 정보, `GET /health` 헬스체크, `GET /health/detailed`(DB/Redis 상태 포함)
+- `GET /` 기본 정보
+- `GET /health` 헬스체크
+- `GET /health/detailed` (DB/Redis/작업러너 상태 포함)
+- `GET /metrics` (Prometheus 포맷, `METRICS_ENABLED=true`일 때)
 
 ### 운영 진단 (DB/수집 상태)
 
@@ -215,6 +233,16 @@ uv run pytest -q
 uv run pytest --cov=. --cov-report=html
 ```
 
+### 마이그레이션 규칙
+
+```bash
+# PR 전 점검
+uv run alembic upgrade head
+```
+
+- 새 테이블/컬럼/인덱스 변경은 `apps/api/alembic/versions/`에 revision 파일로 관리합니다.
+- revision 메시지는 `snake_case`로 목적이 드러나게 작성합니다. 예: `add_job_task_id_index`.
+
 ## Legacy v1 정책
 
 - v1 레거시 모듈: `routers/race.py`, `services/race_service.py`
@@ -236,8 +264,8 @@ docker run -p 8000:8000 --env-file .env kra-api
 ### Docker Compose
 
 ```bash
-# 전체 스택 실행 (API + Redis + Celery)
-docker-compose up -d
+# 개발 환경(API + Redis + Postgres + Worker)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
 ## 모니터링
@@ -245,6 +273,31 @@ docker-compose up -d
 - 로그: 구조화된 JSON 로그 출력
 - 메트릭: Prometheus 형식 (`/metrics`)
 - 헬스체크: `/health`
+
+## 운영 온보딩
+
+운영 기준 문서를 먼저 확인하세요.
+
+- SLO/SLI: `../../docs/operations/slo.md`
+- 장애 대응: `../../docs/operations/runbook.md`
+
+운영 시작 전 최소 점검:
+
+```bash
+cd apps/api
+uv run alembic upgrade head
+uv run uvicorn main_v2:app --port 8000
+curl -s http://localhost:8000/health/detailed
+curl -s http://localhost:8000/metrics | head
+```
+
+Celery 모드 운영 시 worker를 반드시 별도로 기동합니다.
+
+```bash
+cd apps/api
+JOB_RUNNER_MODE=celery uv run uvicorn main_v2:app --port 8000
+celery -A tasks.celery_app:celery_app worker --loglevel=info
+```
 
 ## 주의사항
 

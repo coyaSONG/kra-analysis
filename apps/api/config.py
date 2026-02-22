@@ -5,6 +5,7 @@
 
 import os
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -31,6 +32,7 @@ class Settings(BaseSettings):
     )
     database_pool_size: int = 20
     database_max_overflow: int = 40
+    db_auto_create_on_startup: bool = False
 
     # Supabase
     supabase_url: str = Field(default="your_supabase_url")
@@ -51,6 +53,7 @@ class Settings(BaseSettings):
     kra_api_timeout: int = 30
     kra_api_max_retries: int = 3
     kra_rate_limit: int = 100  # requests per minute
+    kra_api_verify_tls: bool = True
 
     # Security
     secret_key: str = Field(
@@ -84,6 +87,7 @@ class Settings(BaseSettings):
     rate_limit_period: int = 60  # seconds
 
     # Monitoring
+    metrics_enabled: bool = True
     prometheus_enabled: bool = True
     prometheus_port: int = 9090
 
@@ -92,6 +96,12 @@ class Settings(BaseSettings):
     # Task Configuration
     collection_task_timeout: int = 300  # 5 minutes
     enrichment_task_timeout: int = 600  # 10 minutes
+    job_runner_mode: Literal["inprocess", "celery"] = "inprocess"
+    celery_broker_url: str = "redis://localhost:6379/1"
+    celery_result_backend: str = "redis://localhost:6379/2"
+    celery_task_always_eager: bool = False
+    celery_task_eager_propagates: bool = False
+    celery_task_store_eager_result: bool = True
 
     # API Keys (loaded from environment)
     valid_api_keys: list[str] = Field(default_factory=list)

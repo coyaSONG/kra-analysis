@@ -23,6 +23,7 @@ class KRAApiClient:
         self.api_key = settings.kra_api_key
         self.timeout = settings.kra_api_timeout
         self.max_retries = settings.kra_api_max_retries
+        self.verify_tls = settings.kra_api_verify_tls
 
         # API 엔드포인트별 경로
         self.endpoints = {
@@ -78,8 +79,9 @@ class KRAApiClient:
         """KRA API에 요청을 보내고 응답을 반환합니다."""
         url = f"{self.base_url}{endpoint}"
 
-        # 서비스 키 추가 (URL 디코딩 필요)
-        params["serviceKey"] = unquote(self.api_key) if self.api_key else None
+        # 서비스 키는 설정된 경우에만 추가 (None 전송 방지)
+        if self.api_key:
+            params["serviceKey"] = unquote(self.api_key)
 
         # JSON 응답 요청
         params["_type"] = "json"
@@ -88,7 +90,7 @@ class KRAApiClient:
         # KRA API는 특정 SSL/TLS 설정이 필요함
         async with httpx.AsyncClient(
             timeout=self.timeout,
-            verify=False,  # SSL 검증 비활성화 (정부 API 호환성)
+            verify=self.verify_tls,  # 명시적 플래그로만 비활성화 허용
             follow_redirects=True,
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             # HTTP/2 비활성화 (일부 정부 API와 호환성 문제)

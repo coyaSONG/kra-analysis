@@ -1,5 +1,6 @@
 """MLflow experiment tracking for prompt evaluation."""
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -65,6 +66,38 @@ class ExperimentTracker:
         if not self.enabled:
             return
         mlflow.log_text(text, artifact_name)
+
+    def log_run_metadata(
+        self,
+        run_metadata: dict[str, Any],
+        artifact_name: str = "run_metadata.json",
+        local_output_dir: str | Path | None = None,
+    ) -> str | None:
+        """Log standardized run metadata to MLflow and/or local artifacts."""
+        from evaluation.run_metadata import (
+            validate_run_metadata,
+            write_run_metadata_artifact,
+        )
+
+        ok, errors = validate_run_metadata(run_metadata)
+        if not ok:
+            raise ValueError(f"invalid_run_metadata: {errors}")
+
+        local_path: Path | None = None
+        if local_output_dir is not None:
+            local_path = write_run_metadata_artifact(
+                run_metadata,
+                output_dir=local_output_dir,
+                filename=artifact_name,
+            )
+
+        if self.enabled:
+            mlflow.log_text(
+                json.dumps(run_metadata, ensure_ascii=False, indent=2),
+                artifact_name,
+            )
+
+        return str(local_path) if local_path else None
 
     def end_run(self):
         """End the current run."""

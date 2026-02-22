@@ -252,6 +252,37 @@ async def cancel_task(task_id: str) -> bool:
     return True
 
 
+def get_runner_health() -> dict[str, int | str]:
+    """Return background task runner health based on the live in-memory registry."""
+    running = 0
+    failed = 0
+    cancelled = 0
+
+    for asyncio_task in list(_running_tasks.values()):
+        try:
+            if asyncio_task.cancelled():
+                cancelled += 1
+                continue
+
+            if asyncio_task.done():
+                exc = asyncio_task.exception()
+                if exc is not None:
+                    failed += 1
+            else:
+                running += 1
+        except Exception:
+            failed += 1
+
+    status = "degraded" if (failed > 0 or cancelled > 0) else "healthy"
+    return {
+        "status": status,
+        "tracked": len(_running_tasks),
+        "running": running,
+        "failed": failed,
+        "cancelled": cancelled,
+    }
+
+
 async def shutdown_all() -> None:
     """Cancel all running tasks. Call during app shutdown."""
     for task_id, asyncio_task in list(_running_tasks.items()):

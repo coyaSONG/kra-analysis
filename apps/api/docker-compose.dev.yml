@@ -13,6 +13,25 @@ services:
       - .:/app  # 코드 실시간 반영
     command: uvicorn main_v2:app --host 0.0.0.0 --port 8000 --reload
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=INFO
+      - JOB_RUNNER_MODE=celery
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/2
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-kra_redis_password}@redis:6379/0
+    volumes:
+      - .:/app
+    command: celery -A tasks.celery_app:celery_app worker --loglevel=info
+    depends_on:
+      - redis
+    networks:
+      - kra-network
+
   # 개발용 추가 서비스
   mailhog:
     image: mailhog/mailhog:latest

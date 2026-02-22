@@ -9,18 +9,21 @@ import uuid
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from config import settings
-from infrastructure.background_tasks import shutdown_all as shutdown_background_tasks
+from infrastructure.background_tasks import (
+    shutdown_all as shutdown_background_tasks,
+)
 from infrastructure.database import (
     check_database_connection,
     close_db,
     get_db,
     init_db,
 )
+from infrastructure.job_runner import get_job_runner_health
 from infrastructure.redis_client import (
     check_redis_connection,
     close_redis,
@@ -29,6 +32,7 @@ from infrastructure.redis_client import (
 )
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
+from monitoring.metrics import record_http_request, render_prometheus_metrics
 from routers import collection_v2, jobs_v2
 
 # 구조화된 로깅 설정
@@ -91,13 +95,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Redis initialization failed, running without Redis: {e}")
 
-    logger.info("Background task runner ready (in-process asyncio)")
+    logger.info(
+        "Background task runner ready",
+        mode=settings.job_runner_mode,
+    )
 
     yield
 
     # 종료
     logger.info("Shutting down KRA Unified API Server")
-    await shutdown_background_tasks()
+    if settings.job_runner_mode == "inprocess":
+        await shutdown_background_tasks()
     await close_db()
     await close_redis()
 
@@ -128,6 +136,28 @@ app = FastAPI(
         {"name": "jobs", "description": "작업 관리 API"},
     ],
 )
+
+
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    if not settings.metrics_enabled:
+        return await call_next(request)
+
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        duration = time.perf_counter() - start
+        status_code = exc.status_code if isinstance(exc, HTTPException) else 500
+        record_http_request(request.method, request.url.path, status_code, duration)
+        raise
+
+    duration = time.perf_counter() - start
+    record_http_request(
+        request.method, request.url.path, response.status_code, duration
+    )
+    return response
+
 
 # 미들웨어 추가
 app.add_middleware(RequestLoggingMiddleware)
@@ -169,6 +199,18 @@ async def health_check():
     return {"status": "healthy", "timestamp": time.time()}
 
 
+@app.get("/metrics", include_in_schema=False)
+async def metrics():
+    """Prometheus metrics endpoint."""
+    if not settings.metrics_enabled:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    return PlainTextResponse(
+        content=render_prometheus_metrics(),
+        media_type="text/plain; version=0.0.4",
+    )
+
+
 @app.get("/health/detailed")
 async def detailed_health_check(redis=Depends(get_redis), db=Depends(get_db)):
     """의존성 상태를 포함한 상세 헬스체크"""
@@ -191,12 +233,14 @@ async def detailed_health_check(redis=Depends(get_redis), db=Depends(get_db)):
     except Exception:
         redis_ok = False
 
-    status = "healthy" if db_ok else "degraded"
+    background_health = get_job_runner_health()
+    background_ok = background_health["status"] == "healthy"
+    status = "healthy" if (db_ok and redis_ok and background_ok) else "degraded"
     return {
-        "status": "healthy" if (db_ok and redis_ok) else status,
+        "status": status,
         "database": "healthy" if db_ok else "unhealthy",
         "redis": "healthy" if redis_ok else "unhealthy",
-        "background_tasks": "healthy",
+        "background_tasks": background_health["status"],
         "timestamp": time.time(),
         "version": settings.version,
     }

@@ -25,6 +25,7 @@ from evaluation.leakage_checks import check_detailed_results_for_leakage
 from evaluation.metrics import compute_prediction_quality_metrics
 from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.report_schema import build_report_v2, validate_report_v2
+from evaluation.run_metadata import build_run_metadata
 from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
 from shared.data_adapter import convert_basic_data_to_enriched_format
@@ -47,6 +48,9 @@ class PromptEvaluatorV3:
         jury_enabled: bool = False,
         jury_models: list[str] | None = None,
         jury_weights: dict[str, float] | None = None,
+        data_snapshot_id: str = "db_latest",
+        seed: int = 42,
+        mode: str = "evaluation",
     ):
         self.prompt_version = prompt_version
         self.prompt_path = prompt_path
@@ -61,6 +65,9 @@ class PromptEvaluatorV3:
         self.metrics_profile = metrics_profile
         self.defer_threshold = defer_threshold
         self.ensemble_k = ensemble_k
+        self.data_snapshot_id = data_snapshot_id
+        self.seed = seed
+        self.mode = mode
         self.ensemble = (
             SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
         )
@@ -758,6 +765,17 @@ class PromptEvaluatorV3:
             ),
             "detailed_results": results,
         }
+        run_metadata = build_run_metadata(
+            prompt_version=self.prompt_version,
+            dataset_id=self.data_snapshot_id,
+            mode=self.mode,
+            seed=self.seed,
+            extra={
+                "max_workers": max_workers,
+                "test_limit": test_limit,
+            },
+        )
+        summary["run_metadata"] = run_metadata
 
         metrics_v2 = compute_prediction_quality_metrics(
             detailed_results=results,
@@ -791,12 +809,17 @@ class PromptEvaluatorV3:
         schema_valid, schema_errors = validate_report_v2(report_v2)
         report_v2["schema_valid"] = schema_valid
         report_v2["schema_errors"] = schema_errors
+        report_v2["run_metadata"] = run_metadata
 
         # MLflow experiment tracking
         try:
             self.tracker.start_run(
                 run_name=f"{self.prompt_version}_{timestamp}",
-                tags={"prompt_version": self.prompt_version},
+                tags={
+                    "prompt_version": self.prompt_version,
+                    "mode": self.mode,
+                    "data_snapshot_id": self.data_snapshot_id,
+                },
             )
 
             self.tracker.log_params(
@@ -806,6 +829,9 @@ class PromptEvaluatorV3:
                     "total_races": total_races,
                     "max_workers": max_workers,
                     "model": "claude-opus-4-20250918",
+                    "data_snapshot_id": self.data_snapshot_id,
+                    "seed": self.seed,
+                    "mode": self.mode,
                 }
             )
 
@@ -828,6 +854,11 @@ class PromptEvaluatorV3:
             )
 
             self.tracker.log_artifact(str(self.prompt_path))
+            self.tracker.log_run_metadata(
+                run_metadata=run_metadata,
+                artifact_name=f"run_metadata_{self.prompt_version}_{timestamp}.json",
+                local_output_dir=self.results_dir,
+            )
         finally:
             self.tracker.end_run()
 
@@ -964,6 +995,24 @@ Example:
         default=None,
         help="Jury 모델별 가중치 (예: claude=1.0,codex=0.8,gemini=0.9)",
     )
+    parser.add_argument(
+        "--data-snapshot-id",
+        type=str,
+        default="db_latest",
+        help="평가 데이터 스냅샷 식별자 (기본값: db_latest)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="재현성 시드 (기본값: 42)",
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="evaluation",
+        help="실행 모드 메타데이터 값 (기본값: evaluation)",
+    )
 
     args = parser.parse_args()
 
@@ -996,6 +1045,9 @@ Example:
         jury_enabled=args.jury,
         jury_models=jury_models,
         jury_weights=jury_weights,
+        data_snapshot_id=args.data_snapshot_id,
+        seed=args.seed,
+        mode=args.mode,
     )
     _results = evaluator.evaluate_all_parallel(
         test_limit=args.test_limit,

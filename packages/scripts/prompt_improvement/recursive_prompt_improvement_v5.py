@@ -27,6 +27,11 @@ sys.path.append(str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from evaluation.calibration import ConfidenceCalibrator
 from evaluation.data_splitter import TemporalDataSplitter
+from evaluation.run_metadata import (
+    build_run_metadata,
+    validate_run_metadata,
+    write_run_metadata_artifact,
+)
 from v5_modules import (
     DynamicReconstructor,
     ExamplesManager,
@@ -152,6 +157,8 @@ class RecursivePromptImprovementV5:
         min_improvement: float = 0.005,
         jury_enabled: bool = False,
         jury_models: list[str] | None = None,
+        data_snapshot_id: str = "db_latest",
+        seed: int = 42,
     ):
         self.initial_prompt_path = initial_prompt_path
         self.target_date = target_date
@@ -163,6 +170,8 @@ class RecursivePromptImprovementV5:
         self.time_split = time_split
         self.defer_policy = defer_policy
         self.asof_check = asof_check
+        self.data_snapshot_id = data_snapshot_id
+        self.seed = seed
 
         # Patience-based early stopping (Phase 4)
         self.patience = patience
@@ -207,6 +216,19 @@ class RecursivePromptImprovementV5:
             get_data_dir() / "prompt_evaluation" / "champion_history.jsonl"
         )
         ensure_directory(self.champion_history_file.parent)
+
+    def _build_loop_run_metadata(self, prompt_version: str) -> dict[str, Any]:
+        return build_run_metadata(
+            prompt_version=prompt_version,
+            dataset_id=self.data_snapshot_id,
+            mode="recursive_improvement_v5",
+            seed=self.seed,
+            extra={
+                "time_split": self.time_split,
+                "defer_policy": self.defer_policy,
+                "selection_gate": self.selection_gate,
+            },
+        )
 
     def _init_jury_improver(self) -> None:
         """LLM Jury 프롬프트 개선기 초기화"""
@@ -254,6 +276,11 @@ class RecursivePromptImprovementV5:
         # 초기 버전 설정
         if not current_structure.version:
             current_structure.version = "v1.0"
+        write_run_metadata_artifact(
+            metadata=self._build_loop_run_metadata(current_structure.version),
+            output_dir=self.working_dir,
+            filename="run_metadata.json",
+        )
 
         # Train/Val/Test 시간순 분할 (Phase 4)
         self.data_splits = None
@@ -336,6 +363,7 @@ class RecursivePromptImprovementV5:
                 "leakage_check": leakage_check,
                 "promotion_decision": promotion_decision,
                 "prompt_path": str(current_prompt_path),
+                "run_metadata": evaluation_results.get("run_metadata"),
             }
             self.iteration_history.append(iteration_data)
             self._append_champion_history(
@@ -347,6 +375,7 @@ class RecursivePromptImprovementV5:
                     "promotion_decision": promotion_decision,
                     "metrics_v2": challenger_metrics,
                     "leakage_check": leakage_check,
+                    "run_metadata": evaluation_results.get("run_metadata"),
                 }
             )
 
@@ -602,6 +631,12 @@ class RecursivePromptImprovementV5:
                 self.asof_check,
                 "--topk",
                 "1,3",
+                "--data-snapshot-id",
+                self.data_snapshot_id,
+                "--seed",
+                str(self.seed),
+                "--mode",
+                "recursive_improvement_v5",
             ]
             if self.defer_policy == "threshold":
                 # 0.4로 낮춤: Claude 예측 confidence가 보통 50-65% (정규화 후 0.5-0.65)
@@ -667,6 +702,14 @@ class RecursivePromptImprovementV5:
             # 가장 최근 파일 읽기
             latest_file = max(eval_files, key=lambda p: p.stat().st_mtime)
             eval_data = read_json_file(latest_file)
+            run_metadata = eval_data.get("run_metadata")
+            if not isinstance(run_metadata, dict):
+                run_metadata = self._build_loop_run_metadata(version)
+                eval_data["run_metadata"] = run_metadata
+            else:
+                ok, _errors = validate_run_metadata(run_metadata)
+                if not ok:
+                    eval_data["run_metadata"] = self._build_loop_run_metadata(version)
 
             # 0 샘플 결과 검증 - 유효 예측이 없으면 재시도 또는 실패 처리
             valid_predictions = eval_data.get("valid_predictions", 0)
@@ -888,6 +931,18 @@ def main():
         default="claude,codex,gemini",
         help="Jury에 참여할 모델 목록 (쉼표 구분, 기본값: claude,codex,gemini)",
     )
+    parser.add_argument(
+        "--data-snapshot-id",
+        type=str,
+        default="db_latest",
+        help="평가 데이터 스냅샷 식별자 (기본값: db_latest)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="재현성 시드 (기본값: 42)",
+    )
 
     args = parser.parse_args()
 
@@ -916,6 +971,8 @@ def main():
         min_improvement=args.min_improvement,
         jury_enabled=args.jury,
         jury_models=jury_models,
+        data_snapshot_id=args.data_snapshot_id,
+        seed=args.seed,
     )
 
     try:

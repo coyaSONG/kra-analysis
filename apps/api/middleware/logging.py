@@ -18,6 +18,51 @@ logger = structlog.get_logger()
 # 요청 ID 컨텍스트 변수
 request_id_var: ContextVar[str] = ContextVar("request_id", default="")
 
+SENSITIVE_KEYS = {
+    "api_key",
+    "x-api-key",
+    "authorization",
+    "token",
+    "secret",
+    "servicekey",
+    "service_key",
+    "password",
+}
+REDACTED_VALUE = "[REDACTED]"
+REQUEST_BODY_LOG_LIMIT_BYTES = 10 * 1024
+
+
+def _safe_content_length(request: Request) -> int | None:
+    raw_content_length = request.headers.get("content-length")
+    if raw_content_length is None:
+        return None
+
+    try:
+        content_length = int(raw_content_length)
+    except (TypeError, ValueError):
+        return None
+
+    if content_length < 0:
+        return None
+
+    return content_length
+
+
+def _mask_sensitive_data(value: Any) -> Any:
+    if isinstance(value, dict):
+        masked: dict[Any, Any] = {}
+        for key, item in value.items():
+            if isinstance(key, str) and key.lower() in SENSITIVE_KEYS:
+                masked[key] = REDACTED_VALUE
+            else:
+                masked[key] = _mask_sensitive_data(item)
+        return masked
+
+    if isinstance(value, list):
+        return [_mask_sensitive_data(item) for item in value]
+
+    return value
+
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     """구조화된 로깅 미들웨어"""
@@ -93,25 +138,36 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """상세 요청/응답 로깅 미들웨어"""
 
     async def dispatch(self, request: Request, call_next):
-        # 요청 바디 읽기 (주의: 메모리 사용)
+        # 요청 바디 읽기 (작은 요청만 제한적으로 수행)
         request_body = None
         if request.method in ["POST", "PUT", "PATCH"]:
-            try:
-                request_body = await request.body()
+            content_length = _safe_content_length(request)
+            should_read_body = (
+                content_length is not None
+                and content_length < REQUEST_BODY_LOG_LIMIT_BYTES
+            )
 
-                # 바디를 다시 읽을 수 있도록 설정
-                async def receive():
-                    return {"type": "http.request", "body": request_body}
+            if should_read_body:
+                try:
+                    request_body = await request.body()
 
-                request._receive = receive
-            except Exception:
-                pass
+                    # 바디를 다시 읽을 수 있도록 설정
+                    async def receive():
+                        return {"type": "http.request", "body": request_body}
+
+                    request._receive = receive
+                except Exception:
+                    pass
 
         # 요청 상세 로깅
-        if request_body and len(request_body) < 10000:  # 10KB 제한
+        if request_body and len(request_body) < REQUEST_BODY_LOG_LIMIT_BYTES:
             try:
                 body_json = json.loads(request_body)
-                logger.debug("request_body", path=request.url.path, body=body_json)
+                logger.debug(
+                    "request_body",
+                    path=request.url.path,
+                    body=_mask_sensitive_data(body_json),
+                )
             except Exception:
                 logger.debug(
                     "request_body_raw",
