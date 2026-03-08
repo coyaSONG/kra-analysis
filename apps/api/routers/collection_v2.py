@@ -62,6 +62,7 @@ async def collect_race_data(
         race_numbers = request.race_numbers or list(range(1, 16))
 
         results = []
+        errors = []
         logger.info(
             f"Collecting races for {request.date}, meet {request.meet}, races: {race_numbers}"
         )
@@ -78,16 +79,35 @@ async def collect_race_data(
                 logger.info(f"Successfully collected race {race_no}")
             except Exception as e:
                 logger.error(f"Failed to collect race {race_no}: {e}", exc_info=True)
+                errors.append({"race_no": race_no, "error": str(e)})
+
+        if not results and errors:
+            raise HTTPException(
+                status_code=502,
+                detail={
+                    "message": "All requested races failed to collect",
+                    "errors": errors,
+                },
+            )
+
+        response_status = "success" if not errors else "partial"
+        response_message = f"Collected {len(results)} races"
+        if errors:
+            response_message = (
+                f"Collected {len(results)} races, failed {len(errors)} races"
+            )
 
         return CollectionResponse(
             job_id=None,
-            status="success",
-            message=f"Collected {len(results)} races",
+            status=response_status,
+            message=response_message,
             estimated_time=None,
             webhook_url=None,
             data=results,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Collection failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e

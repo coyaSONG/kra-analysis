@@ -34,39 +34,61 @@ class ResultCollectionService:
         db: AsyncSession,
         kra_api: KRAAPIService,
     ) -> dict[str, Any]:
-        result_response = await kra_api.get_race_result(
-            race_date, str(meet), race_number
-        )
-
-        if not KRAResponseAdapter.is_successful_response(result_response):
-            raise ResultNotFoundError(
-                f"경주 결과를 찾을 수 없습니다: {race_date} {meet}경마장 {race_number}R"
-            )
-
-        items = KRAResponseAdapter.extract_items(result_response)
-        if not items:
-            raise ResultNotFoundError("경주 결과 데이터가 비어있습니다")
-
-        sorted_items = sorted(
-            [item for item in items if item.get("ord") and int(item["ord"]) > 0],
-            key=lambda item: int(item["ord"]),
-        )
-        top3 = [int(item["chulNo"]) for item in sorted_items[:3]]
-        if len(top3) < 3:
-            raise ResultNotFoundError(f"1-3위 결과가 부족합니다 (찾은 수: {len(top3)})")
-
         race_id = f"{race_date}_{meet}_{race_number}"
         query_result = await db.execute(select(Race).where(Race.race_id == race_id))
         race = query_result.scalar_one_or_none()
+        try:
+            result_response = await kra_api.get_race_result(
+                race_date, str(meet), race_number
+            )
+
+            if not KRAResponseAdapter.is_successful_response(result_response):
+                raise ResultNotFoundError(
+                    f"경주 결과를 찾을 수 없습니다: {race_date} {meet}경마장 {race_number}R"
+                )
+
+            items = KRAResponseAdapter.extract_items(result_response)
+            if not items:
+                raise ResultNotFoundError("경주 결과 데이터가 비어있습니다")
+
+            sorted_items = sorted(
+                [item for item in items if item.get("ord") and int(item["ord"]) > 0],
+                key=lambda item: int(item["ord"]),
+            )
+            top3 = [int(item["chulNo"]) for item in sorted_items[:3]]
+            if len(top3) < 3:
+                raise ResultNotFoundError(
+                    f"1-3위 결과가 부족합니다 (찾은 수: {len(top3)})"
+                )
+
+            if race is None:
+                raise ResultNotFoundError(f"경주를 찾을 수 없습니다: {race_id}")
+
+            race.result_data = top3
+            race.result_status = DataStatus.COLLECTED
+            race.result_collected_at = datetime.now(UTC).replace(tzinfo=None)
+            race.updated_at = datetime.now(UTC).replace(tzinfo=None)
+
+            await db.commit()
+            logger.info("Race result collected", race_id=race_id, top3=top3)
+
+            return {"race_id": race_id, "top3": top3}
+        except Exception:
+            await self._mark_result_failure(race, db)
+            raise
+
+    async def _mark_result_failure(self, race: Race | None, db: AsyncSession) -> None:
+        """Persist a result collection failure without overwriting valid collected results."""
         if race is None:
-            raise ResultNotFoundError(f"경주를 찾을 수 없습니다: {race_id}")
+            return
 
-        race.result_data = top3
-        race.result_status = DataStatus.COLLECTED
-        race.result_collected_at = datetime.now(UTC).replace(tzinfo=None)
-        race.updated_at = datetime.now(UTC).replace(tzinfo=None)
+        if race.result_status == DataStatus.COLLECTED and race.result_data:
+            return
 
-        await db.commit()
-        logger.info("Race result collected", race_id=race_id, top3=top3)
-
-        return {"race_id": race_id, "top3": top3}
+        try:
+            race.result_status = DataStatus.FAILED
+            race.updated_at = datetime.now(UTC).replace(tzinfo=None)
+            await db.commit()
+        except Exception as exc:
+            logger.error("Failed to persist result collection failure", error=str(exc))
+            await db.rollback()

@@ -103,6 +103,8 @@ class CollectionService:
             overall_status = "pending"
         elif enriched_races == total_races:
             overall_status = "completed"
+        elif failed_collection == total_races and collected_races == 0:
+            overall_status = "failed"
         elif collected_races > 0 or enriched_races > 0:
             overall_status = "running"
         else:
@@ -179,15 +181,39 @@ class CollectionService:
 
             # 마필별 상세 정보 수집
             horses_data = []
-            if race_info and KRAResponseAdapter.is_successful_response(race_info):
-                normalized_race = KRAResponseAdapter.normalize_race_info(race_info)
-                horses = normalized_race["horses"]
+            if not race_info or not KRAResponseAdapter.is_successful_response(
+                race_info
+            ):
+                await self._save_collection_failure(
+                    race_date,
+                    meet,
+                    race_no,
+                    race_info,
+                    db,
+                    "KRA API returned an unsuccessful race response",
+                )
+                raise ValueError(
+                    f"Race data is unavailable for {race_date} {meet}-{race_no}"
+                )
 
-                for horse in horses:
-                    # Convert API camelCase to internal snake_case
-                    horse_converted = convert_api_to_internal(horse)
-                    horse_detail = await self._collect_horse_details(horse_converted)
-                    horses_data.append(horse_detail)
+            normalized_race = KRAResponseAdapter.normalize_race_info(race_info)
+            horses = normalized_race["horses"]
+            if not horses:
+                await self._save_collection_failure(
+                    race_date,
+                    meet,
+                    race_no,
+                    race_info,
+                    db,
+                    "KRA API returned no race items",
+                )
+                raise ValueError(f"Race data is empty for {race_date} {meet}-{race_no}")
+
+            for horse in horses:
+                # Convert API camelCase to internal snake_case
+                horse_converted = convert_api_to_internal(horse)
+                horse_detail = await self._collect_horse_details(horse_converted)
+                horses_data.append(horse_detail)
 
             # 데이터 통합
             collected_data = {
@@ -225,6 +251,66 @@ class CollectionService:
                 race_no=race_no,
                 error=str(e),
             )
+            raise
+
+    async def _save_collection_failure(
+        self,
+        race_date: str,
+        meet: int,
+        race_no: int,
+        race_info: dict[str, Any] | None,
+        db: AsyncSession,
+        reason: str,
+    ) -> None:
+        """Persist a failed collection attempt unless valid collected data already exists."""
+        try:
+            race_id = f"{race_date}_{meet}_{race_no}"
+            existing = await db.execute(select(Race).where(Race.race_id == race_id))
+            race = existing.scalar_one_or_none()
+
+            if race and race.collection_status in (
+                DataStatus.COLLECTED,
+                DataStatus.ENRICHED,
+            ):
+                race.updated_at = _utcnow()
+                await db.commit()
+                return
+
+            failure_payload = {
+                "race_info": race_info,
+                "failure_reason": reason,
+                "failed_at": datetime.now(UTC).isoformat(),
+            }
+
+            if race:
+                race.raw_data = failure_payload
+                race.collection_status = DataStatus.FAILED
+                race.updated_at = _utcnow()
+            else:
+                race = Race(
+                    race_id=race_id,
+                    date=race_date,
+                    race_date=race_date,
+                    meet=meet,
+                    race_number=race_no,
+                    race_no=race_no,
+                    raw_data=failure_payload,
+                    status=DataStatus.FAILED,
+                    collection_status=DataStatus.FAILED,
+                    updated_at=_utcnow(),
+                )
+                db.add(race)
+
+            await db.commit()
+        except Exception as exc:
+            logger.error(
+                "Failed to persist collection failure",
+                race_date=race_date,
+                meet=meet,
+                race_no=race_no,
+                error=str(exc),
+            )
+            await db.rollback()
             raise
 
     async def _collect_horse_details(

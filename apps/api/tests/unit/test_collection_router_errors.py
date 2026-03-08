@@ -18,8 +18,7 @@ async def test_collect_race_error_returns_500(monkeypatch, authenticated_client)
     r = await authenticated_client.post(
         "/api/v2/collection/", json={"date": "20240719", "meet": 1, "race_numbers": [1]}
     )
-    # Route logs error per race but continues; success with zero collected
-    assert r.status_code == 200
+    assert r.status_code == 502
     data = r.json()
-    assert data["status"] == "success"
-    assert "Collected" in data["message"]
+    assert data["detail"]["message"] == "All requested races failed to collect"
+    assert data["detail"]["errors"][0]["race_no"] == 1

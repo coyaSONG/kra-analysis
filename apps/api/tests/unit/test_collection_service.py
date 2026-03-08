@@ -266,6 +266,27 @@ class TestCollectionService:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
+    async def test_collect_race_data_empty_response_marks_failed(
+        self, collection_service, mock_kra_api_service, db_session
+    ):
+        mock_kra_api_service.get_race_info.return_value = {
+            "response": {"header": {"resultCode": "00"}, "body": {}}
+        }
+
+        with pytest.raises(ValueError, match="Race data is empty"):
+            await collection_service.collect_race_data(
+                race_date="20240719", meet=1, race_no=3, db=db_session
+            )
+
+        saved_race = await db_session.execute(
+            "SELECT collection_status FROM races WHERE date = '20240719' AND meet = 1 AND race_number = 3"
+        )
+        row = saved_race.first()
+        assert row is not None
+        assert row[0] == DataStatus.FAILED.value
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_preprocess_data_filtering(self, collection_service):
         """Test data preprocessing with horse filtering"""
         # Test data with mixed win_odds values
