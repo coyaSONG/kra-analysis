@@ -132,16 +132,22 @@ async def collect_single_race(
         stats["skipped"] += 1
     else:
         try:
-            async with async_session_maker() as db:
-                result = await collection_svc.collect_race_data(
-                    race_date, meet, race_no, db
-                )
-            if not result or not result.get("horses"):
-                # API 성공했지만 데이터 없음 → 이 경주 번호부터 경주 없음
+            # DB 저장 전에 API 응답을 먼저 확인하여 빈 경주 저장 방지
+            response = await kra_api.get_race_info(
+                race_date, str(meet), race_no, use_cache=False
+            )
+            if not KRAResponseAdapter.is_successful_response(
+                response
+            ) or not KRAResponseAdapter.extract_items(response):
                 logger.debug(
                     "데이터 없음: %s meet=%d race=%d", race_date, meet, race_no
                 )
                 return False
+
+            async with async_session_maker() as db:
+                result = await collection_svc.collect_race_data(
+                    race_date, meet, race_no, db
+                )
             stats["collected"] += 1
             logger.info(
                 "수집 완료: %s %s %dR (%d두)",
