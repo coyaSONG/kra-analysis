@@ -43,6 +43,7 @@ from services.kra_api_service import KRAAPIService
 from utils.field_mapping import convert_api_to_internal
 
 logger = structlog.get_logger()
+_HORSE_FAILURE_THRESHOLD = 0.5
 
 
 def _utcnow() -> datetime:
@@ -209,11 +210,47 @@ class CollectionService:
                 )
                 raise ValueError(f"Race data is empty for {race_date} {meet}-{race_no}")
 
+            failed_horses: list[dict[str, Any]] = []
             for horse in horses:
                 # Convert API camelCase to internal snake_case
                 horse_converted = convert_api_to_internal(horse)
-                horse_detail = await self._collect_horse_details(horse_converted)
-                horses_data.append(horse_detail)
+                try:
+                    horse_detail = await self._collect_horse_details(horse_converted)
+                    horses_data.append(horse_detail)
+                except Exception as exc:
+                    horse_no = horse_converted.get("hr_no")
+                    logger.warning(
+                        "Skipping horse after detail collection failure",
+                        race_date=race_date,
+                        meet=meet,
+                        race_no=race_no,
+                        horse_no=horse_no,
+                        error=str(exc),
+                    )
+                    failed_horses.append(
+                        {
+                            "horse_no": horse_no,
+                            "horse_name": horse_converted.get("hr_name"),
+                            "error": str(exc),
+                        }
+                    )
+
+            if not horses_data or (
+                len(failed_horses) / len(horses) >= _HORSE_FAILURE_THRESHOLD
+            ):
+                reason = (
+                    f"Too many horse detail collection failures: "
+                    f"{len(failed_horses)}/{len(horses)}"
+                )
+                await self._save_collection_failure(
+                    race_date,
+                    meet,
+                    race_no,
+                    race_info,
+                    db,
+                    reason,
+                )
+                raise ValueError(reason)
 
             # 데이터 통합
             collected_data = {
@@ -227,6 +264,8 @@ class CollectionService:
                 "race_info": race_info,
                 "weather": weather_info,
                 "horses": horses_data,
+                "failed_horses": failed_horses,
+                "status": "partial_failure" if failed_horses else "success",
                 "collected_at": datetime.now(UTC).isoformat(),
             }
 
@@ -379,7 +418,7 @@ class CollectionService:
                 horse_no=horse_basic.get("hr_no"),
                 error=str(e),
             )
-            return horse_basic
+            raise
 
     async def _save_race_data(self, data: dict[str, Any], db: AsyncSession) -> None:
         """경주 데이터 데이터베이스 저장"""

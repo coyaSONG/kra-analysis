@@ -4,32 +4,21 @@ KRA 통합 데이터 수집 API 서버 v2
 """
 
 import os
-import time
 import uuid
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import settings
 from infrastructure.background_tasks import shutdown_all as shutdown_background_tasks
-from infrastructure.database import (
-    check_database_connection,
-    close_db,
-    get_db,
-    init_db,
-)
-from infrastructure.redis_client import (
-    check_redis_connection,
-    close_redis,
-    get_redis,
-    init_redis,
-)
+from infrastructure.database import close_db, init_db
+from infrastructure.redis_client import close_redis, init_redis
 from middleware.logging import RequestLoggingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from routers import collection_v2, jobs_v2
+from routers import collection_v2, health, jobs_v2, metrics
 
 # 구조화된 로깅 설정
 structlog.configure(
@@ -145,6 +134,8 @@ app.include_router(
     collection_v2.router, prefix="/api/v2/collection", tags=["collection"]
 )
 app.include_router(jobs_v2.router, prefix="/api/v2/jobs", tags=["jobs"])
+app.include_router(health.router, tags=["health"])
+app.include_router(metrics.router, tags=["metrics"])
 
 
 @app.get("/")
@@ -160,45 +151,6 @@ async def root():
             "openapi": "/openapi.json",
         },
         "endpoints": {"collection": "/api/v2/collection", "jobs": "/api/v2/jobs"},
-    }
-
-
-@app.get("/health")
-async def health_check():
-    """간단한 헬스체크"""
-    return {"status": "healthy", "timestamp": time.time()}
-
-
-@app.get("/health/detailed")
-async def detailed_health_check(redis=Depends(get_redis), db=Depends(get_db)):
-    """의존성 상태를 포함한 상세 헬스체크"""
-    db_ok = await check_database_connection(db)
-    # Prefer DI-provided Redis (overridden in tests), fall back to global check
-    redis_ok = False
-    try:
-        if redis:
-            # If mock client (no ping), assume healthy for tests
-            if hasattr(redis, "ping"):
-                try:
-                    await redis.ping()
-                    redis_ok = True
-                except Exception:
-                    redis_ok = False
-            else:
-                redis_ok = True
-        else:
-            redis_ok = await check_redis_connection()
-    except Exception:
-        redis_ok = False
-
-    status = "healthy" if db_ok else "degraded"
-    return {
-        "status": "healthy" if (db_ok and redis_ok) else status,
-        "database": "healthy" if db_ok else "unhealthy",
-        "redis": "healthy" if redis_ok else "unhealthy",
-        "background_tasks": "healthy",
-        "timestamp": time.time(),
-        "version": settings.version,
     }
 
 

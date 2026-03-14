@@ -247,10 +247,12 @@ async def check_resource_access(
         from models.database_models import Prediction
 
         result = await db.execute(
-            select(Prediction).where(Prediction.prediction_id == resource_id)
+            select(Prediction).where(
+                Prediction.prediction_id == resource_id,
+                Prediction.created_by == api_key.name,
+            )
         )
         prediction = result.scalar_one_or_none()
-        # TODO: prediction에 created_by 필드 추가 필요
         return prediction is not None
 
     # 기본적으로 접근 거부

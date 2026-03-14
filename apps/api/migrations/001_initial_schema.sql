@@ -56,11 +56,13 @@ CREATE TABLE IF NOT EXISTS predictions (
     is_correct BOOLEAN,
     correct_count INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
     
     -- Index for performance queries
     INDEX idx_predictions_race_id (race_id),
     INDEX idx_predictions_prompt_version (prompt_version),
-    INDEX idx_predictions_created_at (created_at)
+    INDEX idx_predictions_created_at (created_at),
+    INDEX idx_predictions_created_by (created_by)
 );
 
 -- Collection jobs table

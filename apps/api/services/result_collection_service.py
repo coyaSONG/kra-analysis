@@ -4,6 +4,7 @@
 라우터 레이어에서 직접 KRA 응답 파싱/DB 업데이트를 하지 않도록 분리한다.
 """
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
@@ -24,6 +25,27 @@ class ResultNotFoundError(Exception):
 
 class ResultCollectionService:
     """경주 결과(1~3위) 수집/저장 서비스."""
+
+    async def _mark_result_failure_with_retry(
+        self, race: Race | None, db: AsyncSession
+    ) -> None:
+        """Fail-open retry wrapper for result failure persistence."""
+        last_exc: Exception | None = None
+
+        for attempt in range(2):
+            try:
+                await self._mark_result_failure(race, db)
+                return
+            except Exception as exc:
+                last_exc = exc
+                if attempt < 1:
+                    await asyncio.sleep(0.5)
+
+        if last_exc is not None:
+            logger.error(
+                "Failed to persist result collection failure after retries",
+                error=str(last_exc),
+            )
 
     async def collect_result(
         self,
@@ -74,7 +96,7 @@ class ResultCollectionService:
 
             return {"race_id": race_id, "top3": top3}
         except Exception:
-            await self._mark_result_failure(race, db)
+            await self._mark_result_failure_with_retry(race, db)
             raise
 
     async def _mark_result_failure(self, race: Race | None, db: AsyncSession) -> None:
@@ -92,3 +114,4 @@ class ResultCollectionService:
         except Exception as exc:
             logger.error("Failed to persist result collection failure", error=str(exc))
             await db.rollback()
+            raise

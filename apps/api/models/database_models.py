@@ -335,6 +335,9 @@ class Prediction(Base):
     created_at: Mapped[datetime | None] = mapped_column(
         DateTime, server_default=func.now()
     )
+    created_by: Mapped[str | None] = mapped_column(
+        String(100), index=True, default=None
+    )
     execution_time_ms: Mapped[int | None] = mapped_column(Integer, default=None)
     model_version: Mapped[str | None] = mapped_column(String(50), default=None)
 
