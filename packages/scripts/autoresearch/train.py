@@ -65,12 +65,37 @@ OUTPUT_SCHEMA = {
 # ============================================================
 
 
+def _safe_int(val) -> int:
+    """안전한 int 변환"""
+    try:
+        return int(val or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _compute_heuristic_score(horse: dict) -> float:
-    """입상률 + 기수입상률 기반 휴리스틱 점수"""
-    cf = horse.get("computed_features", {})
-    hp = cf.get("horse_place_rate") or 0
-    jp = cf.get("jockey_place_rate") or 0
-    return hp + jp * 0.2
+    """raw 성적에서 Laplace smoothed place rate 직접 계산"""
+    k = 2  # Laplace smoothing parameter
+
+    hd = horse.get("hrDetail", {})
+    h_starts = _safe_int(hd.get("rcCntT"))
+    h_place = (
+        _safe_int(hd.get("ord1CntT"))
+        + _safe_int(hd.get("ord2CntT"))
+        + _safe_int(hd.get("ord3CntT"))
+    )
+    h_spr = h_place / (h_starts + k) if (h_starts + k) > 0 else 0
+
+    jd = horse.get("jkDetail", {})
+    j_starts = _safe_int(jd.get("rcCntT"))
+    j_place = (
+        _safe_int(jd.get("ord1CntT"))
+        + _safe_int(jd.get("ord2CntT"))
+        + _safe_int(jd.get("ord3CntT"))
+    )
+    j_spr = j_place / (j_starts + k) if (j_starts + k) > 0 else 0
+
+    return h_spr + j_spr * 0.2
 
 
 def select_features(race_data: dict) -> dict:
