@@ -162,7 +162,15 @@ def parse_response(llm_output: str) -> dict:
 
 def _normalize(data: dict) -> dict:
     """파싱된 dict를 표준 스키마로 정규화"""
-    predicted = data.get("predicted", [])
+    raw_predicted = data.get("predicted", [])
+    # LLM이 문자열로 반환할 수 있으므로 int로 캐스팅
+    predicted = []
+    for p in raw_predicted:
+        try:
+            predicted.append(int(p))
+        except (TypeError, ValueError):
+            predicted.append(p)
+
     confidence = data.get("confidence", 0.0)
     try:
         confidence = float(confidence)

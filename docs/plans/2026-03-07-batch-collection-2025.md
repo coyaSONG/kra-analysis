@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
 **Step 2: 스크립트를 짧은 범위로 테스트 (2025-01-03 ~ 2025-01-05, 3일)**
 
-Run: `cd /Users/aiats-mbp/Developer/Personal/kra-analysis && uv run python3 packages/scripts/batch_collect_2025.py --start 20250103 --end 20250105 --meets 1,3`
+Run: `cd /Users/chsong/Developer/Personal/kra-analysis && uv run python3 packages/scripts/batch_collect_2025.py --start 20250103 --end 20250105 --meets 1,3`
 
 Expected: 경마 개최일이면 경주 수집, 없으면 skip. 수집 통계 출력.
 
@@ -294,7 +294,7 @@ already-collected races, rate limiting, and progress logging."
 
 **Step 1: 전체 실행 (background)**
 
-Run: `cd /Users/aiats-mbp/Developer/Personal/kra-analysis && uv run python3 packages/scripts/batch_collect_2025.py 2>&1 | tee logs/batch_collect_2025.log`
+Run: `cd /Users/chsong/Developer/Personal/kra-analysis && uv run python3 packages/scripts/batch_collect_2025.py 2>&1 | tee logs/batch_collect_2025.log`
 
 이 작업은 ~15시간 소요 예상. tmux 또는 background에서 실행 권장.
 
