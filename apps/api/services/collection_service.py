@@ -270,7 +270,7 @@ class CollectionService:
                 # Convert API camelCase to internal snake_case
                 horse_converted = convert_api_to_internal(horse)
                 try:
-                    horse_detail = await self._collect_horse_details(horse_converted)
+                    horse_detail = await self._collect_horse_details(horse_converted, meet)
                     horses_data.append(horse_detail)
                 except Exception as exc:
                     horse_no = horse_converted.get("hr_no")
@@ -425,7 +425,7 @@ class CollectionService:
             raise
 
     async def _collect_horse_details(
-        self, horse_basic: dict[str, Any]
+        self, horse_basic: dict[str, Any], meet: int = 1
     ) -> dict[str, Any]:
         """마필 상세 정보 수집"""
         try:
@@ -487,7 +487,7 @@ class CollectionService:
             if jockey_no:
                 try:
                     jk_stats_response = await self.kra_api.get_jockey_stats(
-                        str(jockey_no), meet=str(horse_basic.get("meet", "1"))
+                        str(jockey_no), meet=str(meet)
                     )
                     if jk_stats_response and KRAResponseAdapter.is_successful_response(
                         jk_stats_response
@@ -509,7 +509,7 @@ class CollectionService:
             if owner_no:
                 try:
                     owner_response = await self.kra_api.get_owner_info(
-                        str(owner_no), meet=str(horse_basic.get("meet", "1"))
+                        str(owner_no), meet=str(meet)
                     )
                     if owner_response and KRAResponseAdapter.is_successful_response(
                         owner_response
