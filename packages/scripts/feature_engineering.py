@@ -133,6 +133,17 @@ def compute_features(horse: dict) -> dict:
     # (개별 경주 결과 리스트가 있으면 활용 가능)
     features["horse_consistency"] = None
 
+    # --- 최근 top3 통계 (past_stats에서 주입) ---
+    past = horse.get("past_stats")
+    if past and isinstance(past, dict):
+        features["recent_top3_rate"] = past.get("recent_top3_rate")
+        features["recent_win_rate"] = past.get("recent_win_rate")
+        features["recent_race_count"] = past.get("recent_race_count")
+    else:
+        features["recent_top3_rate"] = None
+        features["recent_win_rate"] = None
+        features["recent_race_count"] = None
+
     # --- 7-8. 조교사 승률 / 입상률 ---
     tr = horse.get("trDetail")
     tr_rc = _safe_get(tr, "rcCntT")

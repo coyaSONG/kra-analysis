@@ -47,6 +47,7 @@ class PromptEvaluatorV3:
         jury_enabled: bool = False,
         jury_models: list[str] | None = None,
         jury_weights: dict[str, float] | None = None,
+        with_past_stats: bool = False,
     ):
         self.prompt_version = prompt_version
         self.prompt_path = prompt_path
@@ -64,6 +65,7 @@ class PromptEvaluatorV3:
         self.ensemble = (
             SelfConsistencyEnsemble(k=ensemble_k) if ensemble_k > 1 else None
         )
+        self.with_past_stats = with_past_stats
 
         # DB 클라이언트
         self.db_client = RaceDBClient()
@@ -153,6 +155,20 @@ class PromptEvaluatorV3:
                 }
 
                 horses.append(horse)
+
+            # Past Stats 주입 (A/B 테스트용)
+            if self.with_past_stats:
+                hr_nos = [h["hrNo"] for h in horses if h.get("hrNo")]
+                race_date = items[0]["rcDate"]
+                past_stats = self.db_client.get_past_top3_stats_for_race(
+                    hr_nos=hr_nos,
+                    race_date=race_date,
+                    lookback_days=90,
+                )
+                for horse in horses:
+                    hr_no = horse.get("hrNo", "")
+                    if hr_no in past_stats:
+                        horse["past_stats"] = past_stats[hr_no]
 
             # Feature Engineering: 파생 피처 계산
             horses = compute_race_features(horses)
@@ -964,6 +980,12 @@ Example:
         default=None,
         help="Jury 모델별 가중치 (예: claude=1.0,codex=0.8,gemini=0.9)",
     )
+    parser.add_argument(
+        "--with-past-stats",
+        action="store_true",
+        default=False,
+        help="최근 top3 과거 성적 피처를 추가하여 평가 (A/B 테스트용)",
+    )
 
     args = parser.parse_args()
 
@@ -996,6 +1018,7 @@ Example:
         jury_enabled=args.jury,
         jury_models=jury_models,
         jury_weights=jury_weights,
+        with_past_stats=args.with_past_stats,
     )
     _results = evaluator.evaluate_all_parallel(
         test_limit=args.test_limit,
