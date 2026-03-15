@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from adapters.kra_response_adapter import KRAResponseAdapter
 from models.database_models import DataStatus, Race
 from services.kra_api_service import KRAAPIService
+from utils.field_mapping import POOL_NAME_MAP, VALID_POOLS
 
 logger = structlog.get_logger()
 
@@ -135,20 +136,10 @@ class ResultCollectionService:
 
             items = KRAResponseAdapter.extract_items(response)
 
-            pool_map = {
-                "단승식": "WIN", "연승식": "PLC", "복승식": "QNL",
-                "쌍승식": "EXA", "복연승식": "QPL", "삼복승식": "TLA",
-                "삼쌍승식": "TRI", "쌍복승식": "XLA",
-                "WIN": "WIN", "PLC": "PLC", "QNL": "QNL",
-                "EXA": "EXA", "QPL": "QPL", "TLA": "TLA",
-                "TRI": "TRI", "XLA": "XLA",
-            }
-            valid_pools = {"WIN", "PLC", "QNL", "EXA", "QPL", "TLA", "TRI", "XLA"}
-
             rows = []
             for item in items:
-                pool = pool_map.get(item.get("pool", ""), "")
-                if pool not in valid_pools:
+                pool = POOL_NAME_MAP.get(item.get("pool", ""), "")
+                if pool not in VALID_POOLS:
                     continue
                 rows.append({
                     "race_id": race_id,
