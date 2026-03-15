@@ -247,15 +247,8 @@ def _horse_sort_key(horse: dict) -> tuple[float, ...]:
     win_odds = _safe_float(horse.get("winOdds"), 99.0)
     odds_signal = 0.06 / max(win_odds, 1.01)
 
-    # 이전 경주 1구간(200m) 순위: 선행력/스피드 지표
-    # 서울·제주=sjG1fOrd, 부산=buG1fOrd (경마장별 상호배타)
-    sj_pace = _safe_float(horse.get("sjG1fOrd"))
-    bu_pace = _safe_float(horse.get("buG1fOrd"))
-    pace_ord = sj_pace if sj_pace > 0 else bu_pace
-    pace_penalty = 0.12 * pace_ord if pace_ord > 0 else 0.0
-
     return (
-        year_place_rate + odds_signal - pace_penalty,
+        year_place_rate + odds_signal,
         total_place_rate,
         -_safe_float(cf.get("odds_rank"), 999.0),
     )
