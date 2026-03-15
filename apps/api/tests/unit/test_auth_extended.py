@@ -201,9 +201,13 @@ async def test_check_resource_access_paths(db_session):
         is True
     )
 
-    # prediction: existence implies accessible (until created_by field exists)
+    # prediction: only creator can access
     pred = Prediction(
-        prediction_id="p1", race_id="r1", prompt_id="t", predicted_positions=[1, 2, 3]
+        prediction_id="p1",
+        race_id="r1",
+        prompt_id="t",
+        predicted_positions=[1, 2, 3],
+        created_by="u1",
     )
     db_session.add(pred)
     await db_session.commit()

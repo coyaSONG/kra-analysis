@@ -45,6 +45,12 @@ _BASE_BACKOFF = 2  # seconds
 # ---------------------------------------------------------------------------
 
 _running_tasks: dict[str, asyncio.Task] = {}
+_task_counters = {
+    "submitted": 0,
+    "completed": 0,
+    "failed": 0,
+    "cancelled": 0,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -127,11 +133,13 @@ async def _run_with_retries(
             result = await func(*args, **kwargs)
 
             await _save_state(task_id, TaskState.COMPLETED, result=result)
+            _task_counters["completed"] += 1
             logger.info("Task completed", task_id=task_id)
             return result
 
         except asyncio.CancelledError:
             await _save_state(task_id, TaskState.CANCELLED)
+            _task_counters["cancelled"] += 1
             logger.info("Task cancelled", task_id=task_id)
             raise
 
@@ -151,6 +159,7 @@ async def _run_with_retries(
     tb = traceback.format_exception(type(last_exc), last_exc, last_exc.__traceback__)
     error_detail = "".join(tb)
     await _save_state(task_id, TaskState.FAILED, error=error_detail)
+    _task_counters["failed"] += 1
     logger.error("Task failed after retries", task_id=task_id, error=str(last_exc))
     raise last_exc
 
@@ -172,6 +181,7 @@ def submit_task(
         task_id (str): A UUID identifying the background task.
     """
     task_id = str(uuid.uuid4())
+    _task_counters["submitted"] += 1
 
     async def _wrapper() -> None:
         try:
@@ -192,6 +202,24 @@ def submit_task(
 
     logger.info("Task submitted", task_id=task_id, func=func.__name__)
     return task_id
+
+
+def get_task_stats() -> dict[str, Any]:
+    """Return in-memory background task runner statistics."""
+    active_tasks = len(_running_tasks)
+    alive_tasks = sum(1 for task in _running_tasks.values() if not task.done())
+    stuck_tasks = active_tasks - alive_tasks
+
+    return {
+        "active_tasks": active_tasks,
+        "alive_tasks": alive_tasks,
+        "stuck_tasks": stuck_tasks,
+        "submitted_tasks": _task_counters["submitted"],
+        "completed_tasks": _task_counters["completed"],
+        "failed_tasks": _task_counters["failed"],
+        "cancelled_tasks": _task_counters["cancelled"],
+        "status": "healthy" if stuck_tasks == 0 else "degraded",
+    }
 
 
 async def get_task_status(task_id: str) -> dict[str, Any] | None:

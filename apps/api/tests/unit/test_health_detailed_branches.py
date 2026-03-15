@@ -34,12 +34,12 @@ async def test_detailed_health_redis_unhealthy(monkeypatch, authenticated_client
 @pytest.mark.asyncio
 async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
     # Patch DB health to False
-    import main_v2
+    import routers.health as health_router
 
     async def bad_db(*_args, **_kwargs):
         return False
 
-    monkeypatch.setattr(main_v2, "check_database_connection", bad_db)
+    monkeypatch.setattr(health_router, "check_database_connection", bad_db)
 
     r = await authenticated_client.get("/health/detailed")
     assert r.status_code == 200

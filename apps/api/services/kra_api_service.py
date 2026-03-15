@@ -20,6 +20,7 @@ from config import settings
 from infrastructure.redis_client import CacheService
 
 logger = structlog.get_logger()
+_cache_failure_streak = 0
 
 
 class KRAAPIError(Exception):
@@ -67,6 +68,66 @@ class KRAAPIService:
         """클라이언트 종료"""
         await self.client.aclose()
 
+    def _reset_cache_failure_streak(self) -> None:
+        global _cache_failure_streak
+        _cache_failure_streak = 0
+
+    def _log_cache_failure(
+        self, operation: str, cache_key: str, error: Exception | str
+    ) -> None:
+        global _cache_failure_streak
+        _cache_failure_streak += 1
+        log_method = logger.error if _cache_failure_streak >= 5 else logger.warning
+        log_method(
+            "KRA API cache operation failed",
+            operation=operation,
+            cache_key=cache_key,
+            error=str(error),
+            failure_count=_cache_failure_streak,
+        )
+
+    async def _get_cached(self, cache_key: str) -> dict[str, Any] | None:
+        try:
+            cached_data = await self.cache_service.get(cache_key)
+            self._reset_cache_failure_streak()
+            return cached_data
+        except Exception as e:
+            self._log_cache_failure("read", cache_key, e)
+            return None
+
+    async def _set_cached(
+        self, cache_key: str, value: dict[str, Any], ttl: int
+    ) -> None:
+        try:
+            cached = await self.cache_service.set(cache_key, value, ttl=ttl)
+            if cached is False:
+                raise RuntimeError("Cache write returned False")
+            self._reset_cache_failure_streak()
+        except Exception as e:
+            self._log_cache_failure("write", cache_key, e)
+
+    def _log_rate_limit_headers(self, response: httpx.Response) -> None:
+        headers = getattr(response, "headers", None)
+        if headers is None:
+            return
+
+        request = getattr(response, "request", None)
+        rate_limit_headers = {
+            "rate_limit_limit": headers.get("X-RateLimit-Limit"),
+            "rate_limit_remaining": headers.get("X-RateLimit-Remaining"),
+            "rate_limit_reset": headers.get("X-RateLimit-Reset"),
+            "retry_after": headers.get("Retry-After"),
+        }
+        rate_limit_headers = {
+            key: value for key, value in rate_limit_headers.items() if value is not None
+        }
+        if rate_limit_headers:
+            logger.info(
+                "KRA API rate limit headers",
+                url=str(request.url) if request is not None else None,
+                **rate_limit_headers,
+            )
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
@@ -102,6 +163,7 @@ class KRAAPIService:
             response = await self.client.request(
                 method=method, url=url, params=params, json=data
             )
+            self._log_rate_limit_headers(response)
 
             # 응답 검증
             response.raise_for_status()
@@ -155,7 +217,7 @@ class KRAAPIService:
 
         # 캐시 확인
         if use_cache:
-            cached_data = await self.cache_service.get(cache_key)
+            cached_data = await self._get_cached(cache_key)
             if cached_data:
                 logger.info("Using cached race info", key=cache_key)
                 return cached_data
@@ -177,10 +239,7 @@ class KRAAPIService:
 
         # 캐시 저장 (1시간)
         if use_cache:
-            try:
-                await self.cache_service.set(cache_key, result, ttl=3600)
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
+            await self._set_cached(cache_key, result, ttl=3600)
 
         return result
 
@@ -219,7 +278,7 @@ class KRAAPIService:
 
         # 캐시 확인
         if use_cache:
-            cached_data = await self.cache_service.get(cache_key)
+            cached_data = await self._get_cached(cache_key)
             if cached_data:
                 logger.info("Using cached horse info", key=cache_key)
                 return cached_data
@@ -233,10 +292,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            try:
-                await self.cache_service.set(cache_key, result, ttl=86400)
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
+            await self._set_cached(cache_key, result, ttl=86400)
 
         return result
 
@@ -257,7 +313,7 @@ class KRAAPIService:
 
         # 캐시 확인
         if use_cache:
-            cached_data = await self.cache_service.get(cache_key)
+            cached_data = await self._get_cached(cache_key)
             if cached_data:
                 logger.info("Using cached jockey info", key=cache_key)
                 return cached_data
@@ -271,10 +327,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            try:
-                await self.cache_service.set(cache_key, result, ttl=86400)
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
+            await self._set_cached(cache_key, result, ttl=86400)
 
         return result
 
@@ -295,7 +348,7 @@ class KRAAPIService:
 
         # 캐시 확인
         if use_cache:
-            cached_data = await self.cache_service.get(cache_key)
+            cached_data = await self._get_cached(cache_key)
             if cached_data:
                 logger.info("Using cached trainer info", key=cache_key)
                 return cached_data
@@ -309,10 +362,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            try:
-                await self.cache_service.set(cache_key, result, ttl=86400)
-            except Exception as e:
-                logger.warning(f"Failed to cache result: {e}")
+            await self._set_cached(cache_key, result, ttl=86400)
 
         return result
 

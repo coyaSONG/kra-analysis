@@ -4,8 +4,9 @@
 Uses in-process background task runner (infrastructure.background_tasks).
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import structlog
 from sqlalchemy import and_, desc, func, select
@@ -20,6 +21,23 @@ from models.database_models import Job, JobLog
 
 logger = structlog.get_logger()
 
+type CanonicalDispatchJobType = Literal[
+    "collect_race",
+    "preprocess_race",
+    "enrich_race",
+    "batch_collect",
+    "full_pipeline",
+]
+type DispatchJobType = Literal[
+    "collect_race",
+    "preprocess_race",
+    "enrich_race",
+    "batch_collect",
+    "batch",
+    "full_pipeline",
+]
+type DispatchHandler = Callable[[dict[str, Any], str], str]
+
 
 class JobService:
     """작업 관리 서비스"""
@@ -30,6 +48,22 @@ class JobService:
         if hasattr(value, "value"):
             return str(value.value)
         return str(value)
+
+    @staticmethod
+    def _normalize_dispatch_job_type(job_type: Any) -> CanonicalDispatchJobType:
+        raw_job_type = job_type.value if hasattr(job_type, "value") else str(job_type)
+        alias_map: dict[str, CanonicalDispatchJobType] = {
+            "collect_race": "collect_race",
+            "preprocess_race": "preprocess_race",
+            "enrich_race": "enrich_race",
+            "batch_collect": "batch_collect",
+            "batch": "batch_collect",
+            "full_pipeline": "full_pipeline",
+        }
+        normalized = alias_map.get(raw_job_type)
+        if normalized is None:
+            raise ValueError(f"Unknown job type: {raw_job_type}")
+        return normalized
 
     async def create_job(
         self, job_type: str, parameters: dict[str, Any], user_id: str, db: AsyncSession
@@ -127,49 +161,43 @@ class JobService:
         )
 
         params = job.parameters
+        job_type = self._normalize_dispatch_job_type(job.type)
 
-        job_type = job.type.value if hasattr(job.type, "value") else str(job.type)
-
-        if job_type == "collect_race":
-            task_id = submit_task(
+        dispatch_table: dict[CanonicalDispatchJobType, DispatchHandler] = {
+            "collect_race": lambda dispatch_params, job_id: submit_task(
                 collect_race_data,
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id,
-            )
-        elif job_type == "preprocess_race":
-            task_id = submit_task(
+                dispatch_params["race_date"],
+                dispatch_params["meet"],
+                dispatch_params["race_no"],
+                job_id,
+            ),
+            "preprocess_race": lambda dispatch_params, job_id: submit_task(
                 preprocess_race_data,
-                params["race_id"],
-                job.job_id,
-            )
-        elif job_type == "enrich_race":
-            task_id = submit_task(
+                dispatch_params["race_id"],
+                job_id,
+            ),
+            "enrich_race": lambda dispatch_params, job_id: submit_task(
                 enrich_race_data,
-                params["race_id"],
-                job.job_id,
-            )
-        elif job_type in ("batch_collect", "batch"):
-            task_id = submit_task(
+                dispatch_params["race_id"],
+                job_id,
+            ),
+            "batch_collect": lambda dispatch_params, job_id: submit_task(
                 batch_collect,
-                params["race_date"],
-                params["meet"],
-                params["race_numbers"],
-                job.job_id,
-            )
-        elif job_type == "full_pipeline":
-            task_id = submit_task(
+                dispatch_params["race_date"],
+                dispatch_params["meet"],
+                dispatch_params["race_numbers"],
+                job_id,
+            ),
+            "full_pipeline": lambda dispatch_params, job_id: submit_task(
                 full_pipeline,
-                params["race_date"],
-                params["meet"],
-                params["race_no"],
-                job.job_id,
-            )
-        else:
-            raise ValueError(f"Unknown job type: {job_type}")
+                dispatch_params["race_date"],
+                dispatch_params["meet"],
+                dispatch_params["race_no"],
+                job_id,
+            ),
+        }
 
-        return task_id
+        return dispatch_table[job_type](params, job.job_id)
 
     async def get_job(
         self, job_id: str, db: AsyncSession, user_id: str | None = None

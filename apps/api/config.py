@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     kra_api_key: str | None = None  # 환경변수: KRA_API_KEY
     kra_api_timeout: int = 30
     kra_api_max_retries: int = 3
+    kra_api_verify_ssl: bool = True
     kra_rate_limit: int = 100  # requests per minute
 
     # Security
@@ -118,6 +119,11 @@ class Settings(BaseSettings):
         else:
             # Development/test mode - add a default test key
             self.valid_api_keys = ["test-api-key-123456789"]
+
+        if not self.kra_api_verify_ssl and self.environment != "development":
+            raise ValueError(
+                "KRA_API_VERIFY_SSL can only be disabled in development environment"
+            )
 
     model_config = {
         "env_file": ".env",

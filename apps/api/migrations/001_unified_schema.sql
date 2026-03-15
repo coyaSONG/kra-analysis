@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS predictions (
     accuracy_score FLOAT,
     correct_count INTEGER,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
     execution_time_ms INTEGER,
     model_version VARCHAR(50)
 );
@@ -99,6 +100,7 @@ CREATE TABLE IF NOT EXISTS predictions (
 CREATE INDEX IF NOT EXISTS idx_prediction_race_id ON predictions(race_id);
 CREATE INDEX IF NOT EXISTS idx_prediction_prompt ON predictions(prompt_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_prediction_accuracy ON predictions(accuracy_score, created_at);
+CREATE INDEX IF NOT EXISTS idx_prediction_created_by ON predictions(created_by);
 
 
 -- Jobs table

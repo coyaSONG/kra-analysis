@@ -15,6 +15,7 @@ async def test_check_resource_access_prediction_true(db_session):
         race_id="race-x",
         prompt_id="p1",
         predicted_positions=[1, 2, 3],
+        created_by="x",
     )
     db_session.add(p)
     await db_session.commit()
@@ -25,6 +26,28 @@ async def test_check_resource_access_prediction_true(db_session):
 
     ok = await check_resource_access("prediction", "pred-1", AK(), db_session)
     assert ok is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_check_resource_access_prediction_denies_non_owner(db_session):
+    p = Prediction(
+        prediction_id="pred-2",
+        race_id="race-x",
+        prompt_id="p1",
+        predicted_positions=[1, 2, 3],
+        created_by="owner",
+    )
+    db_session.add(p)
+    await db_session.commit()
+
+    class AK:
+        permissions = []
+        name = "other-user"
+
+    ok = await check_resource_access("prediction", "pred-2", AK(), db_session)
+    assert ok is False
 
 
 @pytest.mark.asyncio
