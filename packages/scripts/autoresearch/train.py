@@ -43,9 +43,13 @@ USER_PROMPT_TEMPLATE = """\
 ## 출전마 데이터
 {horse_data}
 
+## 통계 기반 추천 (참고)
+입상률+기수입상률 기반 상위 3마: {heuristic_hint}
+이 추천은 통계 모델의 출력입니다. 당신은 경주 조건, 휴양 상태, 핸디캡 등을 고려하여 이 추천을 수정할 수 있습니다.
+
 ## 지시사항
-위 데이터를 분석하여 1~3위에 들어올 말의 출전번호(chulNo)를 예측하세요.
-순서는 중요하지 않습니다 (set match 기준 평가).
+위 데이터와 통계 추천을 참고하여 1~3위에 들어올 말의 출전번호(chulNo)를 예측하세요.
+추천을 그대로 따라도 되고, 근거가 있으면 수정해도 됩니다.
 
 아래 JSON 형식으로만 응답하세요:
 {output_schema}"""
@@ -61,9 +65,27 @@ OUTPUT_SCHEMA = {
 # ============================================================
 
 
+def _compute_heuristic_score(horse: dict) -> float:
+    """입상률 + 기수입상률 기반 휴리스틱 점수"""
+    cf = horse.get("computed_features", {})
+    hp = cf.get("horse_place_rate") or 0
+    jp = cf.get("jockey_place_rate") or 0
+    rest_risk = cf.get("rest_risk", "low")
+    penalty = 5 if rest_risk == "high" else 0
+    return hp + jp * 0.3 - penalty
+
+
 def select_features(race_data: dict) -> dict:
-    """race_data에서 프롬프트에 포함할 필드 선택"""
-    return race_data
+    """race_data에서 프롬프트에 포함할 필드 선택 + 휴리스틱 pre-ranking 추가"""
+    horses = race_data.get("horses", [])
+    # 휴리스틱 점수로 정렬
+    scored = [(h, _compute_heuristic_score(h)) for h in horses]
+    scored.sort(key=lambda x: -x[1])
+    # 상위 3마를 힌트로 추가
+    hint_top3 = [h.get("chulNo") for h, _ in scored[:3]]
+    result = dict(race_data)
+    result["heuristic_hint"] = hint_top3
+    return result
 
 
 def format_race_info(features: dict) -> str:
@@ -124,9 +146,11 @@ def build_prompt(features: dict) -> tuple[str, str]:
     """프롬프트 조립. (system, user) 튜플 반환."""
     race_info = format_race_info(features)
     horse_data = format_horse_data(features.get("horses", []))
+    heuristic_hint = features.get("heuristic_hint", [])
     user = USER_PROMPT_TEMPLATE.format(
         race_info=race_info,
         horse_data=horse_data,
+        heuristic_hint=heuristic_hint,
         output_schema=json.dumps(OUTPUT_SCHEMA, ensure_ascii=False, indent=2),
     )
     return SYSTEM_PROMPT, user
