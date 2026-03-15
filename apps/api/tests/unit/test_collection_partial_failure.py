@@ -54,7 +54,7 @@ def collection_service(mock_kra_api_service):
 async def test_collect_race_data_keeps_successful_horses_on_partial_failure(
     collection_service, db_session, monkeypatch
 ):
-    async def fake_collect_horse_details(horse_basic):
+    async def fake_collect_horse_details(horse_basic, meet=1):
         if horse_basic["hr_no"] == "002":
             raise RuntimeError("horse detail failed")
         return {**horse_basic, "hrDetail": {"name": horse_basic["hr_name"]}}
@@ -85,7 +85,7 @@ async def test_collect_race_data_keeps_successful_horses_on_partial_failure(
 async def test_collect_race_data_fails_when_horse_failures_reach_threshold(
     collection_service, db_session, monkeypatch
 ):
-    async def fake_collect_horse_details(horse_basic):
+    async def fake_collect_horse_details(horse_basic, meet=1):
         if horse_basic["hr_no"] == "003":
             return {**horse_basic, "hrDetail": {"name": horse_basic["hr_name"]}}
         raise RuntimeError(f"{horse_basic['hr_no']} failed")
