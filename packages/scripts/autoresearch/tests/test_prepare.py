@@ -106,3 +106,62 @@ def test_set_match_score():
     assert set_match_score([1, 2, 3], [4, 5, 6]) == 0.0  # 0/3
     assert abs(set_match_score([1, 2, 3], [1, 4, 5]) - 1 / 3) < 0.01  # 1/3
     assert abs(set_match_score([1, 2, 3], [3, 2, 7]) - 2 / 3) < 0.01  # 2/3
+
+
+def test_compute_score_perfect():
+    """완벽한 예측의 스코어"""
+    from prepare import compute_score
+
+    prediction = {"predicted": [1, 2, 3], "confidence": 0.8, "reasoning": "test"}
+    actual = [1, 2, 3]
+    score = compute_score(prediction, actual)
+    assert score["json_ok"] is True
+    assert score["deferred"] is False
+    assert score["set_match"] == 1.0
+    assert score["correct_count"] == 3
+
+
+def test_compute_score_deferred():
+    """confidence < 0.3이면 defer 처리"""
+    from prepare import compute_score
+
+    prediction = {"predicted": [1, 2, 3], "confidence": 0.2, "reasoning": "low"}
+    actual = [1, 2, 3]
+    score = compute_score(prediction, actual)
+    assert score["deferred"] is True
+
+
+def test_compute_score_confidence_normalize():
+    """confidence > 1.0이면 100으로 나눠서 정규화"""
+    from prepare import compute_score
+
+    prediction = {"predicted": [1, 2, 3], "confidence": 72, "reasoning": "high"}
+    actual = [1, 2, 3]
+    score = compute_score(prediction, actual)
+    assert score["deferred"] is False  # 0.72 >= 0.3
+
+
+def test_compute_score_invalid_schema():
+    """스키마 불일치 시 json_ok=False"""
+    from prepare import compute_score
+
+    prediction = {"wrong_key": [1, 2, 3]}
+    actual = [1, 2, 3]
+    score = compute_score(prediction, actual)
+    assert score["json_ok"] is False
+
+
+def test_print_score_line(capsys):
+    """스코어 라인 출력 형식"""
+    from prepare import print_score_line
+
+    results = [
+        {"json_ok": True, "deferred": False, "set_match": 1.0, "correct_count": 3},
+        {"json_ok": True, "deferred": False, "set_match": 0.333, "correct_count": 1},
+        {"json_ok": False, "deferred": False, "set_match": 0.0, "correct_count": 0},
+    ]
+    print_score_line(results)
+    output = capsys.readouterr().out
+    assert "set_match=" in output
+    assert "json_ok=" in output
+    assert "coverage=" in output
