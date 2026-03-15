@@ -68,3 +68,41 @@ def test_import_guard_allows_safe_imports():
         violations = check_train_imports(f.name)
 
     assert violations == []
+
+
+def test_strip_forbidden_fields():
+    """forbidden fields가 snapshot에서 제거되는지"""
+    from prepare import strip_forbidden_fields
+
+    race_data = {
+        "chulNo": 1,
+        "hrName": "테스트마",
+        "winOdds": 5.0,
+        "rank": "국6",  # forbidden → 제거 대상
+        "rcTime": "1:23.4",  # forbidden → 제거 대상
+    }
+    cleaned = strip_forbidden_fields(race_data)
+    assert "rank" not in cleaned
+    assert "rcTime" not in cleaned
+    assert cleaned["chulNo"] == 1
+    assert cleaned["hrName"] == "테스트마"
+
+
+def test_rename_rank_to_class_rank():
+    """rank 필드가 class_rank로 rename되는지"""
+    from prepare import strip_forbidden_fields
+
+    race_data = {"rank": "국6", "chulNo": 1}
+    cleaned = strip_forbidden_fields(race_data)
+    assert "rank" not in cleaned
+    assert cleaned["class_rank"] == "국6"
+
+
+def test_set_match_score():
+    """set_match 계산이 정확한지"""
+    from prepare import set_match_score
+
+    assert set_match_score([1, 2, 3], [1, 2, 3]) == 1.0  # 3/3
+    assert set_match_score([1, 2, 3], [4, 5, 6]) == 0.0  # 0/3
+    assert abs(set_match_score([1, 2, 3], [1, 4, 5]) - 1 / 3) < 0.01  # 1/3
+    assert abs(set_match_score([1, 2, 3], [3, 2, 7]) - 2 / 3) < 0.01  # 2/3
