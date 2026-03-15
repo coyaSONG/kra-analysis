@@ -1,11 +1,14 @@
 """prepare.py 단위 테스트"""
 
 import sys
+import tempfile
+import textwrap
 from pathlib import Path
 from unittest.mock import MagicMock
 
 # packages/scripts/ 를 sys.path에 추가 (기존 evaluate_prompt_v3.py와 동일한 패턴)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def test_find_races_with_results_filters_result_status():
@@ -27,3 +30,41 @@ def test_find_races_with_results_filters_result_status():
     executed_sql = mock_cursor.execute.call_args[0][0]
     assert "result_status" in executed_sql
     assert "collection_status" in executed_sql
+
+
+def test_import_guard_blocks_forbidden_imports():
+    """금지 모듈 import를 감지하는지"""
+    from prepare import check_train_imports
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(
+            textwrap.dedent("""\
+            import os
+            from pathlib import Path
+            import json  # 이건 허용
+        """)
+        )
+        f.flush()
+        violations = check_train_imports(f.name)
+
+    assert "os" in violations
+    assert "pathlib" in violations
+    assert "json" not in violations
+
+
+def test_import_guard_allows_safe_imports():
+    """허용된 모듈은 통과하는지"""
+    from prepare import check_train_imports
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(
+            textwrap.dedent("""\
+            import json
+            import re
+            import math
+        """)
+        )
+        f.flush()
+        violations = check_train_imports(f.name)
+
+    assert violations == []
