@@ -70,9 +70,7 @@ def _compute_heuristic_score(horse: dict) -> float:
     cf = horse.get("computed_features", {})
     hp = cf.get("horse_place_rate") or 0
     jp = cf.get("jockey_place_rate") or 0
-    rest_risk = cf.get("rest_risk", "low")
-    penalty = 5 if rest_risk == "high" else 0
-    return hp + jp * 0.3 - penalty
+    return hp + jp * 0.2
 
 
 def select_features(race_data: dict) -> dict:
