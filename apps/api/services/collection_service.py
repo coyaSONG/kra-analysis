@@ -307,11 +307,20 @@ class CollectionService:
                 )
                 raise ValueError(reason)
 
-            # training 정보 매칭 (hrName 기반)
+            # training 정보 매칭 (hrName 기반, API329에 hrNo 미제공)
+            unmatched_horses = []
             for horse_data in horses_data:
                 hr_name = horse_data.get("hr_name", "")
                 if hr_name and hr_name in training_map:
                     horse_data["training"] = training_map[hr_name]
+                elif hr_name and training_map:
+                    unmatched_horses.append(hr_name)
+            if unmatched_horses:
+                logger.warning(
+                    "Training data unmatched horses",
+                    unmatched=unmatched_horses,
+                    available=list(training_map.keys())[:10],
+                )
 
             # 데이터 통합
             collected_data = {
@@ -478,7 +487,7 @@ class CollectionService:
             if jockey_no:
                 try:
                     jk_stats_response = await self.kra_api.get_jockey_stats(
-                        str(jockey_no)
+                        str(jockey_no), meet=str(horse_basic.get("meet", "1"))
                     )
                     if jk_stats_response and KRAResponseAdapter.is_successful_response(
                         jk_stats_response
@@ -499,7 +508,9 @@ class CollectionService:
                 owner_no = result["hrDetail"].get("ow_no")
             if owner_no:
                 try:
-                    owner_response = await self.kra_api.get_owner_info(str(owner_no))
+                    owner_response = await self.kra_api.get_owner_info(
+                        str(owner_no), meet=str(horse_basic.get("meet", "1"))
+                    )
                     if owner_response and KRAResponseAdapter.is_successful_response(
                         owner_response
                     ):
@@ -535,6 +546,11 @@ class CollectionService:
         from sqlalchemy.dialects.postgresql import insert as pg_insert
 
         from models.database_models import RaceOdds
+
+        valid_sources = {"API160_1", "API301"}
+        if source not in valid_sources:
+            return {"race_id": f"{race_date}_{meet}_{race_no}", "inserted_count": 0,
+                    "error": f"Invalid source: {source}. Must be one of {valid_sources}"}
 
         race_id = f"{race_date}_{meet}_{race_no}"
 
@@ -596,13 +612,18 @@ class CollectionService:
             )
 
         if rows:
-            stmt = pg_insert(RaceOdds).values(rows)
-            stmt = stmt.on_conflict_do_update(
-                constraint="uq_race_odds_entry",
-                set_={"odds": stmt.excluded.odds, "collected_at": func.now()},
-            )
-            await db.execute(stmt)
-            await db.commit()
+            try:
+                stmt = pg_insert(RaceOdds).values(rows)
+                stmt = stmt.on_conflict_do_update(
+                    constraint="uq_race_odds_entry",
+                    set_={"odds": stmt.excluded.odds, "collected_at": func.now()},
+                )
+                await db.execute(stmt)
+                await db.commit()
+            except Exception as e:
+                logger.error("Failed to upsert race odds", race_id=race_id, error=str(e))
+                await db.rollback()
+                return {"race_id": race_id, "inserted_count": 0, "error": str(e)}
 
         return {"race_id": race_id, "inserted_count": len(rows), "source": source}
 

@@ -10,6 +10,7 @@ from typing import Any
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -462,6 +463,14 @@ class RaceOdds(Base):
             "chul_no3",
             "source",
             name="uq_race_odds_entry",
+        ),
+        CheckConstraint(
+            "pool IN ('WIN','PLC','QNL','EXA','QPL','TLA','TRI','XLA')",
+            name="chk_race_odds_pool",
+        ),
+        CheckConstraint(
+            "source IN ('API160_1','API301')",
+            name="chk_race_odds_source",
         ),
         Index("idx_race_odds_race_pool", "race_id", "pool"),
         Index("idx_race_odds_date_pool_source", "rc_date", "pool", "source"),
