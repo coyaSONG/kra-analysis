@@ -131,7 +131,9 @@ class ResultCollectionService:
             )
 
             if not KRAResponseAdapter.is_successful_response(response):
-                logger.warning("Odds API returned unsuccessful response", race_id=race_id)
+                logger.warning(
+                    "Odds API returned unsuccessful response", race_id=race_id
+                )
                 return {"collected": False, "reason": "API response failed"}
 
             items = KRAResponseAdapter.extract_items(response)
@@ -141,16 +143,18 @@ class ResultCollectionService:
                 pool = POOL_NAME_MAP.get(item.get("pool", ""), "")
                 if pool not in VALID_POOLS:
                     continue
-                rows.append({
-                    "race_id": race_id,
-                    "pool": pool,
-                    "chul_no": item.get("chulNo", 0),
-                    "chul_no2": item.get("chulNo2", 0),
-                    "chul_no3": item.get("chulNo3", 0),
-                    "odds": item.get("odds", 0),
-                    "rc_date": race_date,
-                    "source": "API160_1",
-                })
+                rows.append(
+                    {
+                        "race_id": race_id,
+                        "pool": pool,
+                        "chul_no": item.get("chulNo", 0),
+                        "chul_no2": item.get("chulNo2", 0),
+                        "chul_no3": item.get("chulNo3", 0),
+                        "odds": item.get("odds", 0),
+                        "rc_date": race_date,
+                        "source": "API160_1",
+                    }
+                )
 
             if rows:
                 from sqlalchemy.sql import func
@@ -167,7 +171,9 @@ class ResultCollectionService:
             return {"collected": True, "count": len(rows)}
 
         except Exception as e:
-            logger.warning("Odds collection failed (non-blocking)", race_id=race_id, error=str(e))
+            logger.warning(
+                "Odds collection failed (non-blocking)", race_id=race_id, error=str(e)
+            )
             try:
                 await db.rollback()
             except Exception:
