@@ -17,18 +17,24 @@ import re
 
 SYSTEM_PROMPT = """\
 당신은 한국마사회(KRA) 경마 데이터 분석 전문가입니다.
-삼복연승(1-3위) 예측을 수행합니다.
+삼복연승(1-3위) 예측을 수행합니다. 순서는 중요하지 않습니다.
 
-분석 원칙:
-1. 배당률(winOdds)이 낮을수록 인기마 — 시장 내재 확률 = 1/winOdds
-2. 기수·조교사 승률(jockey_win_rate, trainer_win_rate)은 핵심 예측 변수
-3. 마필 승률·입상률(horse_win_rate, horse_place_rate)로 실력 판단
-4. 부담중량(wgBudam) 대비 마체중(wgHr) 비율이 높을수록 유리
-5. 장기휴양(rest_days > 90)은 감점 요인
-6. 핸디캡 경주에서는 저부담마가 유리
-7. odds_rank 상위 3두가 기본 후보, 거기서 edge를 찾을 것
+핵심 발견: 입상률(horse_place_rate)이 가장 강력한 예측 변수입니다.
 
-반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요."""
+분석 우선순위 (중요도 순):
+1. horse_place_rate (입상률) — 가장 중요. 높을수록 3위 이내 확률 높음
+2. jockey_place_rate (기수 입상률) — 두 번째로 중요
+3. winOdds (배당률) — 시장 합의. 낮을수록 인기마
+4. horse_win_rate (마필 승률) — 보조 지표
+5. rest_risk — high이면 감점
+6. 핸디캡 경주: 부담중량 높은 말 감점
+
+절차:
+1. horse_place_rate 상위 5마를 후보로 선정
+2. 후보 중 jockey_place_rate와 odds_rank를 종합 평가
+3. 최종 3마 선택
+
+반드시 JSON만 출력하세요. 다른 텍스트 없이."""
 
 USER_PROMPT_TEMPLATE = """\
 ## 경주 정보
@@ -162,7 +168,15 @@ def parse_response(llm_output: str) -> dict:
 
 def _normalize(data: dict) -> dict:
     """파싱된 dict를 표준 스키마로 정규화"""
-    predicted = data.get("predicted", [])
+    raw_predicted = data.get("predicted", [])
+    # LLM이 문자열로 반환할 수 있으므로 int로 캐스팅
+    predicted = []
+    for p in raw_predicted:
+        try:
+            predicted.append(int(p))
+        except (TypeError, ValueError):
+            predicted.append(p)
+
     confidence = data.get("confidence", 0.0)
     try:
         confidence = float(confidence)
