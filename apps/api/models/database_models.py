@@ -15,9 +15,11 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     TypeDecorator,
+    UniqueConstraint,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -429,3 +431,38 @@ class PromptTemplate(Base):
     # 메타데이터
     tags: Mapped[list[Any] | None] = mapped_column(JSON, default=list)
     template_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
+
+
+class RaceOdds(Base):
+    """배당률 데이터 모델 (API160_1 + API301)"""
+
+    __tablename__ = "race_odds"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    race_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("races.race_id", ondelete="CASCADE"), nullable=False
+    )
+    pool: Mapped[str] = mapped_column(String(10), nullable=False)
+    chul_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    chul_no2: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    chul_no3: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    odds: Mapped[float] = mapped_column(Numeric(10, 1), nullable=False)
+    rc_date: Mapped[str] = mapped_column(String(8), nullable=False)
+    source: Mapped[str] = mapped_column(String(20), nullable=False)
+    collected_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "race_id",
+            "pool",
+            "chul_no",
+            "chul_no2",
+            "chul_no3",
+            "source",
+            name="uq_race_odds_entry",
+        ),
+        Index("idx_race_odds_race_pool", "race_id", "pool"),
+        Index("idx_race_odds_date_pool_source", "rc_date", "pool", "source"),
+    )
