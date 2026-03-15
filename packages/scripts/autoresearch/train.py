@@ -97,10 +97,13 @@ def _compute_heuristic_score(horse: dict) -> float:
 
     score = h_spr + j_spr * 0.2
 
-    # odds_rank=1 보너스: 1번 인기마 입상률 70-76%
+    # odds_rank 보너스: 1번 인기마 입상률 70-76%, 2번도 60%+
     cf = horse.get("computed_features", {})
-    if cf.get("odds_rank") == 1:
+    odds_rank = cf.get("odds_rank", 99)
+    if odds_rank == 1:
         score += 0.08
+    elif odds_rank == 2:
+        score += 0.02
 
     return score
 
