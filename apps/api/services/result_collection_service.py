@@ -94,10 +94,94 @@ class ResultCollectionService:
             await db.commit()
             logger.info("Race result collected", race_id=race_id, top3=top3)
 
-            return {"race_id": race_id, "top3": top3}
+            # 확정 배당률 자동 수집 (경주 종료 후 확정값)
+            odds_result = await self._collect_odds_after_result(
+                race_date=race_date,
+                meet=meet,
+                race_number=race_number,
+                race_id=race_id,
+                db=db,
+                kra_api=kra_api,
+            )
+
+            return {"race_id": race_id, "top3": top3, "odds": odds_result}
         except Exception:
             await self._mark_result_failure_with_retry(race, db)
             raise
+
+    async def _collect_odds_after_result(
+        self,
+        *,
+        race_date: str,
+        meet: int,
+        race_number: int,
+        race_id: str,
+        db: AsyncSession,
+        kra_api: KRAAPIService,
+    ) -> dict[str, Any]:
+        """결과 수집 직후 확정 배당률 수집 (실패해도 결과 수집에 영향 없음)."""
+        try:
+            from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+            from models.database_models import RaceOdds
+
+            response = await kra_api.get_final_odds(
+                race_date, str(meet), race_no=race_number
+            )
+
+            if not KRAResponseAdapter.is_successful_response(response):
+                logger.warning("Odds API returned unsuccessful response", race_id=race_id)
+                return {"collected": False, "reason": "API response failed"}
+
+            items = KRAResponseAdapter.extract_items(response)
+
+            pool_map = {
+                "단승식": "WIN", "연승식": "PLC", "복승식": "QNL",
+                "쌍승식": "EXA", "복연승식": "QPL", "삼복승식": "TLA",
+                "삼쌍승식": "TRI", "쌍복승식": "XLA",
+                "WIN": "WIN", "PLC": "PLC", "QNL": "QNL",
+                "EXA": "EXA", "QPL": "QPL", "TLA": "TLA",
+                "TRI": "TRI", "XLA": "XLA",
+            }
+            valid_pools = {"WIN", "PLC", "QNL", "EXA", "QPL", "TLA", "TRI", "XLA"}
+
+            rows = []
+            for item in items:
+                pool = pool_map.get(item.get("pool", ""), "")
+                if pool not in valid_pools:
+                    continue
+                rows.append({
+                    "race_id": race_id,
+                    "pool": pool,
+                    "chul_no": item.get("chulNo", 0),
+                    "chul_no2": item.get("chulNo2", 0),
+                    "chul_no3": item.get("chulNo3", 0),
+                    "odds": item.get("odds", 0),
+                    "rc_date": race_date,
+                    "source": "API160_1",
+                })
+
+            if rows:
+                from sqlalchemy.sql import func
+
+                stmt = pg_insert(RaceOdds).values(rows)
+                stmt = stmt.on_conflict_do_update(
+                    constraint="uq_race_odds_entry",
+                    set_={"odds": stmt.excluded.odds, "collected_at": func.now()},
+                )
+                await db.execute(stmt)
+                await db.commit()
+
+            logger.info("Odds collected after result", race_id=race_id, count=len(rows))
+            return {"collected": True, "count": len(rows)}
+
+        except Exception as e:
+            logger.warning("Odds collection failed (non-blocking)", race_id=race_id, error=str(e))
+            try:
+                await db.rollback()
+            except Exception:
+                pass
+            return {"collected": False, "reason": str(e)}
 
     async def _mark_result_failure(self, race: Race | None, db: AsyncSession) -> None:
         """Persist a result collection failure without overwriting valid collected results."""
