@@ -219,6 +219,29 @@ def _normalize(data: dict) -> dict:
 # ============================================================
 
 
+def _heuristic_predict(race_data: dict) -> dict:
+    """순수 휴리스틱 예측 (LLM 미사용). 더 빠르고 안정적."""
+    horses = race_data.get("horses", [])
+    if len(horses) < 3:
+        return {"predicted": [], "confidence": 0.0, "reasoning": "too_few_horses"}
+
+    scored = [(h, _compute_heuristic_score(h)) for h in horses]
+    scored.sort(key=lambda x: -x[1])
+    top3 = scored[:3]
+
+    predicted = [h.get("chulNo") for h, _ in top3]
+    reasons = [
+        f"{h.get('chulNo')}번 {h.get('hrName', '?')} "
+        f"(입상률={h.get('computed_features', {}).get('horse_place_rate', 0):.0f}%)"
+        for h, _ in top3
+    ]
+    return {
+        "predicted": predicted,
+        "confidence": 0.7,
+        "reasoning": ", ".join(reasons),
+    }
+
+
 def predict(race_data: dict, call_llm) -> dict:
     """prepare.py가 호출하는 유일한 인터페이스.
 
@@ -229,7 +252,5 @@ def predict(race_data: dict, call_llm) -> dict:
     Returns:
         {"predicted": [1, 5, 3], "confidence": 0.72, "reasoning": "..."}
     """
-    features = select_features(race_data)
-    system, user = build_prompt(features)
-    response = call_llm(system, user)
-    return parse_response(response)
+    # 휴리스틱 우선, LLM은 사용하지 않음 (실험 6)
+    return _heuristic_predict(race_data)
