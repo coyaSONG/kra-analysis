@@ -232,8 +232,7 @@ def create_snapshot(force: bool = False) -> None:
 # Constants
 # ============================================================
 
-MODEL = "claude-sonnet-4-20250514"
-MAX_TOKENS = 4096
+MODEL = "sonnet"
 RACE_TIMEOUT = 120  # seconds
 EXPERIMENT_TIMEOUT = 1800  # 30 minutes
 DEFER_THRESHOLD = 0.3
@@ -251,23 +250,24 @@ def _call_llm(system: str, user: str) -> str:
     (기존 ClaudeClient._extract_text()와 동일한 처리)
     """
     combined_prompt = f"[System]\n{system}\n\n[User]\n{user}"
+    env = {**__import__("os").environ, "DISABLE_INTERLEAVED_THINKING": "true"}
+    env.pop("CLAUDECODE", None)
     proc = subprocess.run(
         [
             "claude",
+            "-p",
+            combined_prompt,
             "--model",
             MODEL,
-            "--max-tokens",
-            str(MAX_TOKENS),
             "--output-format",
             "json",
             "--max-turns",
             "1",
-            "-p",
-            combined_prompt,
         ],
         capture_output=True,
         text=True,
         timeout=RACE_TIMEOUT,
+        env=env,
     )
     stdout = proc.stdout.strip()
     if not stdout:
