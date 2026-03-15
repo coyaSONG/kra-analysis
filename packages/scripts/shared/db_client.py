@@ -91,6 +91,45 @@ class RaceDBClient:
             for row in rows
         ]
 
+    def find_races_with_results(
+        self,
+        date_filter: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """수집 완료 + 결과 확정된 경주 목록 조회"""
+        query = """
+            SELECT race_id, date, meet, race_number
+            FROM races
+            WHERE collection_status = 'collected'
+              AND result_status = 'collected'
+        """
+        params: list[Any] = []
+
+        if date_filter:
+            query += " AND date = %s"
+            params.append(date_filter)
+
+        query += " ORDER BY date, meet, race_number"
+
+        if limit:
+            query += " LIMIT %s"
+            params.append(limit)
+
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, params)
+            rows = cur.fetchall()
+
+        meet_map = {1: "서울", 2: "제주", 3: "부산경남"}
+        return [
+            {
+                "race_id": row["race_id"],
+                "race_date": row["date"],
+                "race_no": str(row["race_number"]),
+                "meet": meet_map.get(row["meet"], "서울"),
+            }
+            for row in rows
+        ]
+
     def load_race_basic_data(self, race_id: str) -> dict | None:
         """경주 basic_data 로드 (raw JSON)
 
