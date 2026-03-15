@@ -165,3 +165,177 @@ def test_print_score_line(capsys):
     assert "set_match=" in output
     assert "json_ok=" in output
     assert "coverage=" in output
+
+
+# ============================================================
+# Integration tests
+# ============================================================
+
+
+def _make_race_data(race_id: str = "test_001") -> dict:
+    """테스트용 mock race_data 생성"""
+    return {
+        "race_id": race_id,
+        "race_info": {
+            "rcDate": "20250101",
+            "rcNo": "1",
+            "meet": "서울",
+            "rcDist": "1200",
+            "track": "건조",
+            "weather": "맑음",
+            "budam": "별정A",
+            "ageCond": "3세이상",
+        },
+        "horses": [
+            {
+                "chulNo": 1,
+                "hrName": "마1",
+                "winOdds": 3.0,
+                "computed_features": {
+                    "odds_rank": 1,
+                    "horse_win_rate": 30.0,
+                    "jockey_win_rate": 20.0,
+                },
+            },
+            {
+                "chulNo": 2,
+                "hrName": "마2",
+                "winOdds": 5.0,
+                "computed_features": {
+                    "odds_rank": 2,
+                    "horse_win_rate": 20.0,
+                    "jockey_win_rate": 15.0,
+                },
+            },
+            {
+                "chulNo": 3,
+                "hrName": "마3",
+                "winOdds": 8.0,
+                "computed_features": {
+                    "odds_rank": 3,
+                    "horse_win_rate": 10.0,
+                    "jockey_win_rate": 10.0,
+                },
+            },
+        ],
+    }
+
+
+def test_train_prepare_integration():
+    """train.py predict() + prepare.py compute_score() 통합 테스트"""
+    from prepare import compute_score
+    from train import predict
+
+    race_data = _make_race_data()
+
+    def mock_llm(system: str, user: str) -> str:
+        return (
+            '{"predicted": [1, 2, 3], "confidence": 0.75, "reasoning": "인기마 순서"}'
+        )
+
+    prediction = predict(race_data, call_llm=mock_llm)
+    actual = [1, 2, 3]
+    score = compute_score(prediction, actual)
+
+    assert score["json_ok"] is True
+    assert score["deferred"] is False
+    assert score["set_match"] == 1.0
+    assert score["correct_count"] == 3
+
+
+def test_end_to_end_with_mock_snapshot(capsys):
+    """전체 파이프라인 통합 테스트: predict → compute_score → print_score_line
+
+    4가지 시나리오를 커버:
+    1. 완벽한 예측 (3/3 match)
+    2. 부분 예측 (1/3 match)
+    3. defer 예측 (confidence < 0.3)
+    4. 실패한 예측 (invalid JSON)
+    """
+    from prepare import compute_score, print_score_line
+    from train import predict
+
+    # --- 시나리오별 mock race data + answer_key ---
+    races = [
+        {"data": _make_race_data("race_perfect"), "actual": [1, 2, 3]},
+        {"data": _make_race_data("race_partial"), "actual": [1, 5, 6]},
+        {"data": _make_race_data("race_defer"), "actual": [1, 2, 3]},
+        {"data": _make_race_data("race_fail"), "actual": [1, 2, 3]},
+    ]
+
+    # 시나리오별 LLM 응답
+    llm_responses = {
+        "race_perfect": '{"predicted": [1, 2, 3], "confidence": 0.85, "reasoning": "완벽 예측"}',
+        "race_partial": '{"predicted": [1, 4, 7], "confidence": 0.60, "reasoning": "부분 예측"}',
+        "race_defer": '{"predicted": [1, 2, 3], "confidence": 0.15, "reasoning": "불확실"}',
+        "race_fail": "이건 JSON이 아닙니다. 그냥 텍스트입니다.",
+    }
+
+    def mock_llm(system: str, user: str) -> str:
+        # race_id를 user prompt에서 추출할 수 없으므로 call 순서로 구분
+        return mock_llm._responses.pop(0)
+
+    mock_llm._responses = [llm_responses[r["data"]["race_id"]] for r in races]
+
+    # --- 전체 파이프라인 실행 ---
+    results = []
+    for race in races:
+        prediction = predict(race["data"], call_llm=mock_llm)
+        score = compute_score(prediction, race["actual"])
+        results.append(score)
+
+    # --- 시나리오 1: 완벽한 예측 ---
+    perfect = results[0]
+    assert perfect["json_ok"] is True
+    assert perfect["deferred"] is False
+    assert perfect["set_match"] == 1.0
+    assert perfect["correct_count"] == 3
+
+    # --- 시나리오 2: 부분 예측 (actual=[1,5,6], predicted=[1,4,7]) → 1/3 ---
+    partial = results[1]
+    assert partial["json_ok"] is True
+    assert partial["deferred"] is False
+    assert abs(partial["set_match"] - 1 / 3) < 0.01
+    assert partial["correct_count"] == 1
+
+    # --- 시나리오 3: defer (confidence=0.15 < 0.3) ---
+    deferred = results[2]
+    assert deferred["json_ok"] is True
+    assert deferred["deferred"] is True
+    assert deferred["set_match"] == 1.0  # 맞추긴 했지만 defer
+    assert deferred["correct_count"] == 3
+
+    # --- 시나리오 4: invalid JSON → json_ok=False ---
+    failed = results[3]
+    assert failed["json_ok"] is False
+    assert failed["deferred"] is False
+    assert failed["set_match"] == 0.0
+    assert failed["correct_count"] == 0
+
+    # --- 집계 검증 ---
+    # json_ok: 3/4 (perfect, partial, defer는 ok, fail은 not ok)
+    json_ok_count = sum(1 for r in results if r["json_ok"])
+    assert json_ok_count == 3
+
+    # deferred: 1/4
+    deferred_count = sum(1 for r in results if r["deferred"])
+    assert deferred_count == 1
+
+    # coverage: (4 - 1) / 4 = 75%
+    coverage_pct = (len(results) - deferred_count) / len(results) * 100
+    assert coverage_pct == 75.0
+
+    # --- print_score_line 출력 검증 ---
+    print_score_line(results)
+    output = capsys.readouterr().out
+
+    # valid = json_ok=True & deferred=False → perfect + partial
+    # avg set_match = (1.0 + 1/3) / 2 = 0.667
+    assert "set_match=0.667" in output
+    # avg correct = (3 + 1) / 2 = 2.0
+    assert "avg_correct=2.00" in output
+    # json_ok = 3/4 = 75%
+    assert "json_ok=75%" in output
+    # coverage = 3/4 = 75%
+    assert "coverage=75%" in output
+    assert "races=4" in output
