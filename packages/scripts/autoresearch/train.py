@@ -95,7 +95,14 @@ def _compute_heuristic_score(horse: dict) -> float:
     )
     j_spr = j_place / (j_starts + k) if (j_starts + k) > 0 else 0
 
-    return h_spr + j_spr * 0.2
+    score = h_spr + j_spr * 0.2
+
+    # odds_rank=1 보너스: 1번 인기마 입상률 70-76%
+    cf = horse.get("computed_features", {})
+    if cf.get("odds_rank") == 1:
+        score += 0.08
+
+    return score
 
 
 def select_features(race_data: dict) -> dict:
