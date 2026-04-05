@@ -8,16 +8,16 @@ async def test_require_migration_manifest_accepts_matching_manifest(monkeypatch)
     monkeypatch.setattr(
         database,
         "get_active_migration_names",
-        lambda: ["001_unified_schema.sql", "004_add_usage_events.sql"],
+        lambda: ["001_unified_schema.sql", "005_add_usage_events.sql"],
     )
     monkeypatch.setattr(
-        database, "get_required_migration_head", lambda: "004_add_usage_events.sql"
+        database, "get_required_migration_head", lambda: "005_add_usage_events.sql"
     )
 
     async def fake_applied_migrations():
         return {
             "001_unified_schema.sql": "abc",
-            "004_add_usage_events.sql": "def",
+            "005_add_usage_events.sql": "def",
         }
 
     monkeypatch.setattr(database, "get_applied_migrations", fake_applied_migrations)
@@ -30,14 +30,14 @@ async def test_require_migration_manifest_rejects_mismatch(monkeypatch):
     monkeypatch.setattr(
         database,
         "get_active_migration_names",
-        lambda: ["001_unified_schema.sql", "004_add_usage_events.sql"],
+        lambda: ["001_unified_schema.sql", "005_add_usage_events.sql"],
     )
     monkeypatch.setattr(
-        database, "get_required_migration_head", lambda: "004_add_usage_events.sql"
+        database, "get_required_migration_head", lambda: "005_add_usage_events.sql"
     )
 
     async def fake_applied_migrations():
-        return {"003_add_job_shadow_fields.sql": "abc"}
+        return {"004_add_job_shadow_fields.sql": "abc"}
 
     monkeypatch.setattr(database, "get_applied_migrations", fake_applied_migrations)
 

@@ -52,6 +52,24 @@ async def _update_job_status(
             logger.error("Failed to update job status", job_id=job_id, error=str(e))
 
 
+async def unsupported_job_type(job_kind: str, job_id: str | None = None) -> dict[str, Any]:
+    """Fail unsupported legacy job kinds without crashing the dispatcher."""
+    payload = {
+        "status": "failed",
+        "job_kind": job_kind,
+        "error": f"Unsupported job type: {job_kind}",
+    }
+    if job_id:
+        await _add_job_log(
+            job_id,
+            "error",
+            f"Unsupported job type: {job_kind}",
+            {"job_kind": job_kind},
+        )
+        await _update_job_status(job_id, "failed", error=payload["error"])
+    return payload
+
+
 async def _add_job_log(
     job_id: str,
     level: str,

@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from bootstrap.runtime import create_runtime
 from config import settings
 from infrastructure.background_tasks import shutdown_all as shutdown_background_tasks
 from infrastructure.database import async_session_maker, close_db, init_db
@@ -143,6 +144,7 @@ def create_app() -> FastAPI:
     )
 
     app.state.db_session_factory = async_session_maker
+    app.state.runtime = create_runtime()
 
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(PolicyAccountingMiddleware)

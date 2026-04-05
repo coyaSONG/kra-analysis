@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends
 
 from bootstrap.runtime import AppRuntime, get_runtime
 from config import settings
-from infrastructure.background_tasks import get_task_stats
 from infrastructure.database import check_database_connection, get_db
 from infrastructure.redis_client import check_redis_connection, get_redis
 
@@ -16,7 +15,7 @@ def get_optional_redis():
     """Return Redis when available, otherwise allow degraded health checks."""
     try:
         return get_redis()
-    except Exception:
+    except RuntimeError:
         return None
 
 
@@ -52,7 +51,7 @@ async def detailed_health_check(
     except Exception:
         redis_ok = False
 
-    background_stats = get_task_stats()
+    background_stats = runtime.observability.get_task_stats()
     return runtime.observability.build_health_snapshot(
         db_ok=db_ok,
         redis_ok=redis_ok,

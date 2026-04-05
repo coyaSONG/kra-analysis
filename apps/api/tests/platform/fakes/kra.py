@@ -3,28 +3,42 @@ Reusable fake KRA service for tests.
 """
 
 from typing import Any
-from unittest.mock import AsyncMock
 
 
 class MockKRAAPIService:
     """Mock KRA API service for testing."""
 
     def __init__(self):
-        self.get_race_info = AsyncMock()
-        self.get_horse_info = AsyncMock()
-        self.get_jockey_info = AsyncMock()
-        self.get_trainer_info = AsyncMock()
-        self.get_race_result = AsyncMock()
-
+        self._responses: dict[str, Any] = {}
         self.set_default_responses()
 
     def set_default_responses(self):
         """Reset fake methods to default success responses."""
-        self.get_race_info.return_value = self._default_race_info()
-        self.get_horse_info.return_value = self._default_horse_info()
-        self.get_jockey_info.return_value = self._default_jockey_info()
-        self.get_trainer_info.return_value = self._default_trainer_info()
-        self.get_race_result.return_value = self._default_race_result()
+        self._responses = {
+            "race_info": self._default_race_info(),
+            "horse_info": self._default_horse_info(),
+            "jockey_info": self._default_jockey_info(),
+            "trainer_info": self._default_trainer_info(),
+            "race_result": self._default_race_result(),
+        }
+
+    def set_response(self, name: str, value: Any) -> None:
+        self._responses[name] = value
+
+    async def get_race_info(self, *args, **kwargs):
+        return self._responses["race_info"]
+
+    async def get_horse_info(self, *args, **kwargs):
+        return self._responses["horse_info"]
+
+    async def get_jockey_info(self, *args, **kwargs):
+        return self._responses["jockey_info"]
+
+    async def get_trainer_info(self, *args, **kwargs):
+        return self._responses["trainer_info"]
+
+    async def get_race_result(self, *args, **kwargs):
+        return self._responses["race_result"]
 
     def _default_race_info(self) -> dict[str, Any]:
         return {
@@ -148,4 +162,3 @@ class MockKRAAPIService:
                 }
             }
         }
-

@@ -11,6 +11,7 @@ from fastapi import Depends, Header, HTTPException, Request, status
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 from sqlalchemy import or_, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
@@ -26,6 +27,10 @@ logger = structlog.get_logger()
 _principal_authenticator = PrincipalAuthenticator()
 _policy_authorizer = PolicyAuthorizer()
 _usage_accountant = UsageAccountant()
+
+
+class APIKeyBackendError(RuntimeError):
+    """Raised when API key verification cannot reach or update backing storage."""
 
 
 def _resolve_presented_api_key(
@@ -92,9 +97,9 @@ async def verify_api_key(api_key: str, db: AsyncSession) -> APIKey | None:
 
         return api_key_obj
 
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"API key verification failed: {e}")
-        return None
+        raise APIKeyBackendError("API key verification backend unavailable") from e
 
 
 async def require_api_key(
@@ -119,7 +124,14 @@ async def require_api_key_record(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="API key required"
         )
 
-    api_key_obj = await verify_api_key(provided_key, db)
+    try:
+        api_key_obj = await verify_api_key(provided_key, db)
+    except APIKeyBackendError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication backend unavailable",
+        ) from exc
+
     if not api_key_obj:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
@@ -141,11 +153,10 @@ async def require_api_key_record(
 async def require_principal(
     x_api_key: str | None = Header(None, alias="X-API-Key"),
     api_key: str | None = None,
-    db: AsyncSession = Depends(get_db),
+    api_key_obj: APIKey = Depends(require_api_key_record),
 ) -> AuthenticatedPrincipal:
     """Authenticate a caller and return a normalized principal object."""
-    provided_key = _resolve_presented_api_key(x_api_key, api_key)
-    api_key_obj = await require_api_key_record(x_api_key=x_api_key, api_key=api_key, db=db)
+    provided_key = _resolve_presented_api_key(x_api_key, api_key) or str(api_key_obj.key)
     return _build_principal_from_api_key(
         provided_key,
         api_key_obj,
@@ -247,14 +258,16 @@ async def get_current_user(
 
 # 권한 체크 데코레이터 (편의 함수)
 async def _require_admin_permissions(
-    api_key_obj: APIKey = Depends(require_api_key), db: AsyncSession = Depends(get_db)
+    api_key_obj: APIKey = Depends(require_api_key_record),
+    db: AsyncSession = Depends(get_db),
 ) -> APIKey:
     """관리자 권한 확인"""
     return await require_permissions(["admin"], api_key_obj, db)
 
 
 async def _require_write_permissions(
-    api_key_obj: APIKey = Depends(require_api_key), db: AsyncSession = Depends(get_db)
+    api_key_obj: APIKey = Depends(require_api_key_record),
+    db: AsyncSession = Depends(get_db),
 ) -> APIKey:
     """쓰기 권한 확인"""
     return await require_permissions(["write"], api_key_obj, db)

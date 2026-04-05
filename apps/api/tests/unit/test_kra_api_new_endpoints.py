@@ -52,7 +52,6 @@ class TestGetTrackInfo:
                 "rc_date_to": "20250315",
                 "numOfRows": 50,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -97,7 +96,6 @@ class TestGetRacePlan:
                 "rc_date": "20250315",
                 "numOfRows": 50,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -142,7 +140,6 @@ class TestGetCancelledHorses:
                 "rc_date": "20250315",
                 "numOfRows": 100,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -187,7 +184,6 @@ class TestGetJockeyStats:
                 "meet": "1",
                 "numOfRows": 10,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -206,7 +202,6 @@ class TestGetJockeyStats:
                 "meet": "3",
                 "numOfRows": 10,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
 
@@ -250,7 +245,6 @@ class TestGetOwnerInfo:
                 "meet": "1",
                 "numOfRows": 10,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -294,7 +288,6 @@ class TestGetTrainingStatus:
                 "trng_dt": "20250314",
                 "numOfRows": 500,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -339,7 +332,6 @@ class TestGetFinalOdds:
                 "rc_date": "20250315",
                 "numOfRows": 1000,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -358,7 +350,6 @@ class TestGetFinalOdds:
                 "rc_date": "20250315",
                 "numOfRows": 1000,
                 "pageNo": 1,
-                "_type": "json",
                 "pool": "WIN",
                 "rc_no": 3,
             },
@@ -393,7 +384,6 @@ class TestGetFinalOddsTotal:
                 "rc_date": "20250315",
                 "numOfRows": 1000,
                 "pageNo": 1,
-                "_type": "json",
             },
         )
         assert result == response
@@ -414,7 +404,6 @@ class TestGetFinalOddsTotal:
                 "rc_date": "20250315",
                 "numOfRows": 1000,
                 "pageNo": 1,
-                "_type": "json",
                 "pool": "EXACTA",
                 "rc_no": 5,
             },

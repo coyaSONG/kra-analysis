@@ -31,6 +31,9 @@ type DispatchJobType = Literal[
     "collect_race",
     "preprocess_race",
     "enrich_race",
+    "analysis",
+    "prediction",
+    "improvement",
     "batch_collect",
     "batch",
     "full_pipeline",
@@ -135,7 +138,7 @@ class JobService:
             # 상태 업데이트
             job.status = "queued"
             job.task_id = task_id
-            job.started_at = datetime.now(UTC).replace(tzinfo=None)
+            job.started_at = datetime.now(UTC)
             apply_job_shadow_fields(job, lifecycle_status="queued")
 
             await db.commit()
@@ -162,6 +165,7 @@ class JobService:
             enrich_race_data,
             full_pipeline,
             preprocess_race_data,
+            unsupported_job_type,
         )
 
         params = job.parameters
@@ -183,6 +187,21 @@ class JobService:
             DispatchAction.ENRICH_RACE: lambda dispatch_params, job_id: submit_task(
                 enrich_race_data,
                 dispatch_params["race_id"],
+                job_id,
+            ),
+            DispatchAction.ANALYSIS: lambda dispatch_params, job_id: submit_task(
+                unsupported_job_type,
+                "analysis",
+                job_id,
+            ),
+            DispatchAction.PREDICTION: lambda dispatch_params, job_id: submit_task(
+                unsupported_job_type,
+                "prediction",
+                job_id,
+            ),
+            DispatchAction.IMPROVEMENT: lambda dispatch_params, job_id: submit_task(
+                unsupported_job_type,
+                "improvement",
                 job_id,
             ),
             DispatchAction.BATCH_COLLECT: lambda dispatch_params, job_id: submit_task(
@@ -364,7 +383,7 @@ class JobService:
             filters.append(Job.type == self._to_filter_value(job_type))
         if status:
             normalized_status = self._normalize_lifecycle_status_value(status)
-            legacy_status_values = [normalized_status]
+            legacy_status_values = [normalized_status, self._to_filter_value(status)]
             if normalized_status == "processing":
                 legacy_status_values.append("running")
 
@@ -430,7 +449,7 @@ class JobService:
 
             # 상태 업데이트
             job.status = "cancelled"
-            job.completed_at = datetime.now(UTC).replace(tzinfo=None)
+            job.completed_at = datetime.now(UTC)
             apply_job_shadow_fields(job, lifecycle_status="cancelled")
 
             await db.commit()

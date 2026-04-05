@@ -15,11 +15,15 @@ from services.job_contract import (
 def test_normalize_dispatch_action_accepts_batch_alias():
     assert normalize_dispatch_action("batch") is DispatchAction.BATCH_COLLECT
     assert normalize_dispatch_action("batch_collect") is DispatchAction.BATCH_COLLECT
+    assert normalize_dispatch_action("analysis") is DispatchAction.ANALYSIS
+    assert normalize_dispatch_action("prediction") is DispatchAction.PREDICTION
+    assert normalize_dispatch_action("improvement") is DispatchAction.IMPROVEMENT
 
 
 def test_normalize_lifecycle_status_accepts_running_alias():
     assert normalize_lifecycle_status("running") is LifecycleStatus.PROCESSING
     assert normalize_lifecycle_status("processing") is LifecycleStatus.PROCESSING
+    assert normalize_lifecycle_status("retrying") is LifecycleStatus.PROCESSING
 
 
 def test_normalize_job_kind_accepts_batch_alias():

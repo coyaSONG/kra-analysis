@@ -242,7 +242,7 @@ class Job(Base):
     job_kind_v2: Mapped[str | None] = mapped_column(String(100), default=None, index=True)
     status: Mapped[str | None] = mapped_column(
         PostgresEnum(JobStatus, name="job_status"),
-        default=JobStatus.QUEUED,
+        default=JobStatus.PENDING,
         index=True,
     )
     lifecycle_state_v2: Mapped[str | None] = mapped_column(

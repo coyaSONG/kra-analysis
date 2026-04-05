@@ -121,15 +121,6 @@ async def apply_migration(conn, migration_file: Path, dry_run: bool = False):
 
     try:
         checksum = compute_checksum(migration_file)
-        applied = await get_applied_migrations(conn)
-        applied_checksum = applied.get(migration_file.name)
-        if applied_checksum == checksum:
-            print(f"⏭️  이미 적용됨: {migration_file.name}")
-            return False
-        if applied_checksum and applied_checksum != checksum:
-            raise RuntimeError(
-                f"Checksum mismatch for applied migration {migration_file.name}"
-            )
 
         # SQL 파일 읽기
         sql_content = migration_file.read_text()
@@ -152,11 +143,27 @@ async def apply_migration(conn, migration_file: Path, dry_run: bool = False):
 
         # 트랜잭션으로 실행
         async with conn.transaction():
+            await ensure_schema_migrations_table(conn)
+            await conn.fetchval(
+                "SELECT pg_advisory_xact_lock(hashtext($1))", migration_file.name
+            )
+            existing = await conn.fetchrow(
+                f"SELECT name, checksum FROM {MIGRATIONS_TABLE} WHERE name = $1",
+                migration_file.name,
+            )
+            if existing and existing["checksum"] == checksum:
+                print(f"⏭️  이미 적용됨: {migration_file.name}")
+                return False
+            if existing and existing["checksum"] != checksum:
+                raise RuntimeError(
+                    f"Checksum mismatch for applied migration {migration_file.name}"
+                )
             await conn.execute(sql_content)
             await conn.execute(
                 f"""
                 INSERT INTO {MIGRATIONS_TABLE}(name, checksum)
                 VALUES($1, $2)
+                ON CONFLICT (name) DO NOTHING
             """,
                 migration_file.name,
                 checksum,

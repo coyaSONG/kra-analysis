@@ -1,8 +1,6 @@
 """
 Shared pytest fixtures for apps/api tests.
 """
-
-import asyncio
 from datetime import UTC, datetime
 
 import pytest
@@ -11,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool, StaticPool
 
+from bootstrap.runtime import set_runtime_for_tests
 from config import Settings
 from infrastructure.database import Base, get_db
 from infrastructure.redis_client import get_redis
@@ -47,14 +46,6 @@ def test_settings():
     )
     _apply_test_settings_to_global(settings_obj)
     return settings_obj
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for async pytest fixtures."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture
@@ -123,7 +114,10 @@ async def redis_client():
 @pytest.fixture(scope="function")
 def api_app():
     """Create a fresh app instance per test."""
-    return create_app()
+    app = create_app()
+    set_runtime_for_tests(app.state.runtime)
+    yield app
+    set_runtime_for_tests(None)
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -233,6 +227,7 @@ async def clean_db(db_session):
     await db_session.execute("DELETE FROM usage_events")
     await db_session.execute("DELETE FROM jobs")
     await db_session.execute("DELETE FROM job_logs")
+    await db_session.commit()
 
 
 @pytest.fixture

@@ -19,7 +19,7 @@ class RaceEvaluationDataLoader:
     with_past_stats: bool = False
 
     def find_test_races(self, limit: int | None = None) -> list[dict[str, Any]]:
-        races = self.db_client.find_races(limit=limit)
+        races = self.db_client.find_races_with_results(limit=limit)
         print(f"테스트할 경주: {len(races)}개 (DB 데이터)")
         return races
 
@@ -28,7 +28,7 @@ class RaceEvaluationDataLoader:
     ) -> dict[str, Any]:
         race_ids = [str(race.get("race_id")) for race in races if race.get("race_id")]
         return {
-            "source": "RaceDBClient.find_races",
+            "source": "RaceDBClient.find_races_with_results",
             "requested_limit": limit,
             "race_count": len(races),
             "race_ids": race_ids,

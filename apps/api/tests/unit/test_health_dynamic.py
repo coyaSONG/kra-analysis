@@ -28,22 +28,19 @@ async def test_detailed_health_uses_background_task_status(
                 "version": version,
             }
 
-    monkeypatch.setattr(
-        health_router,
-        "get_task_stats",
-        lambda: {
-            "active_tasks": 2,
-            "alive_tasks": 1,
-            "stuck_tasks": 1,
-            "submitted_tasks": 3,
-            "completed_tasks": 1,
-            "failed_tasks": 1,
-            "cancelled_tasks": 0,
-            "status": "degraded",
-        },
-    )
+    task_stats = {
+        "active_tasks": 2,
+        "alive_tasks": 1,
+        "stuck_tasks": 1,
+        "submitted_tasks": 3,
+        "completed_tasks": 1,
+        "failed_tasks": 1,
+        "cancelled_tasks": 0,
+        "status": "degraded",
+    }
     api_app.dependency_overrides[get_runtime] = lambda: AppRuntime(
-        settings=health_router.settings, observability=FakeObservability()
+        settings=health_router.settings,
+        observability=FakeObservability(task_stats_provider=lambda: task_stats),
     )
 
     response = await authenticated_client.get("/health/detailed")
@@ -62,22 +59,19 @@ async def test_detailed_health_reports_healthy_background_tasks(
     import routers.health as health_router
     from bootstrap.runtime import AppRuntime, ObservabilityFacade, get_runtime
 
-    monkeypatch.setattr(
-        health_router,
-        "get_task_stats",
-        lambda: {
-            "active_tasks": 0,
-            "alive_tasks": 0,
-            "stuck_tasks": 0,
-            "submitted_tasks": 0,
-            "completed_tasks": 0,
-            "failed_tasks": 0,
-            "cancelled_tasks": 0,
-            "status": "healthy",
-        },
-    )
+    task_stats = {
+        "active_tasks": 0,
+        "alive_tasks": 0,
+        "stuck_tasks": 0,
+        "submitted_tasks": 0,
+        "completed_tasks": 0,
+        "failed_tasks": 0,
+        "cancelled_tasks": 0,
+        "status": "healthy",
+    }
     api_app.dependency_overrides[get_runtime] = lambda: AppRuntime(
-        settings=health_router.settings, observability=ObservabilityFacade()
+        settings=health_router.settings,
+        observability=ObservabilityFacade(task_stats_provider=lambda: task_stats),
     )
 
     response = await authenticated_client.get("/health/detailed")

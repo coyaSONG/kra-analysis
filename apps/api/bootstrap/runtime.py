@@ -5,8 +5,11 @@ Minimal runtime and observability facade for the API app.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
+
+from fastapi import Request
 
 from config import settings
 from infrastructure.background_tasks import get_task_stats
@@ -18,6 +21,11 @@ class ObservabilityFacade:
     """Expose health and metrics rendering behind one object."""
 
     process_start_time: float = field(default_factory=time.time)
+    task_stats_provider: Callable[[], dict[str, Any]] = get_task_stats
+    request_count_provider: Callable[[], int] = get_request_count
+
+    def get_task_stats(self) -> dict[str, Any]:
+        return self.task_stats_provider()
 
     def build_health_snapshot(
         self,
@@ -46,12 +54,12 @@ class ObservabilityFacade:
     def render_metrics(self, *, db_ok: bool, now: float | None = None) -> str:
         timestamp = time.time() if now is None else now
         uptime_seconds = max(0.0, timestamp - self.process_start_time)
-        task_stats = get_task_stats()
+        task_stats = self.get_task_stats()
 
         lines = [
             "# HELP kra_requests_total Total HTTP requests processed",
             "# TYPE kra_requests_total counter",
-            f"kra_requests_total {get_request_count()}",
+            f"kra_requests_total {self.request_count_provider()}",
             "# HELP kra_background_tasks_active Current active background tasks",
             "# TYPE kra_background_tasks_active gauge",
             f"kra_background_tasks_active {task_stats['active_tasks']}",
@@ -83,15 +91,21 @@ def create_runtime() -> AppRuntime:
     return AppRuntime(settings=settings, observability=ObservabilityFacade())
 
 
-def get_runtime() -> AppRuntime:
+def _get_cached_runtime() -> AppRuntime:
     global _runtime
     if _runtime is None:
         _runtime = create_runtime()
     return _runtime
 
 
+def get_runtime(request: Request) -> AppRuntime:
+    runtime = getattr(request.app.state, "runtime", None)
+    if runtime is not None:
+        return runtime
+    return _get_cached_runtime()
+
+
 def set_runtime_for_tests(runtime: AppRuntime | None) -> None:
     """Allow tests to replace the cached runtime."""
     global _runtime
     _runtime = runtime
-

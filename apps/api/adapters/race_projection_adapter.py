@@ -142,10 +142,12 @@ class RaceProjectionAdapter:
 
         top3_values: list[int] = []
         for horse in normalized_horses:
-            if horse["ord"] > 0:
-                top3_values.append(horse["ord"])
+            if horse["ord"] > 0 and horse["chulNo"] > 0:
+                top3_values.append(horse["chulNo"])
             elif horse["chulNo"] > 0:
                 top3_values.append(horse["chulNo"])
+            elif horse["ord"] > 0:
+                top3_values.append(horse["ord"])
         return top3_values
 
     @staticmethod

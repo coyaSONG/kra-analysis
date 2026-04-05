@@ -5,6 +5,7 @@ Centralizes batch request planning and partial-failure handling while keeping
 CollectionService focused on per-race collection and persistence.
 """
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -51,6 +52,27 @@ class CollectionWorkflow:
         self.job_service = job_service or JobService()
 
     @staticmethod
+    async def _collect_one_race(
+        semaphore: asyncio.Semaphore,
+        collection_service: CollectionService,
+        race_date: str,
+        meet: int,
+        race_no: int,
+        db: AsyncSession,
+    ) -> tuple[int, dict[str, Any] | None, Exception | None]:
+        async with semaphore:
+            try:
+                result = await collection_service.collect_race_data(
+                    race_date,
+                    meet,
+                    race_no,
+                    db,
+                )
+                return race_no, result, None
+            except Exception as exc:
+                return race_no, None, exc
+
+    @staticmethod
     def build_batch_plan(request: CollectionRequest) -> BatchCollectionPlan:
         return CollectionWorkflow.build_batch_plan_from_values(
             request.date,
@@ -87,17 +109,24 @@ class CollectionWorkflow:
             race_numbers=plan.race_numbers,
         )
 
-        for race_no in plan.race_numbers:
-            try:
-                result = await collection_service.collect_race_data(
-                    plan.race_date,
-                    plan.meet,
-                    race_no,
-                    db,
-                )
+        semaphore = asyncio.Semaphore(4)
+        tasks = [
+            self._collect_one_race(
+                semaphore,
+                collection_service,
+                plan.race_date,
+                plan.meet,
+                race_no,
+                db,
+            )
+            for race_no in plan.race_numbers
+        ]
+
+        for race_no, result, exc in await asyncio.gather(*tasks):
+            if exc is None and result is not None:
                 results.append(result)
                 logger.info("Collected race", race_no=race_no)
-            except Exception as exc:
+            else:
                 logger.error(
                     "Batch collection failed for race",
                     race_no=race_no,
@@ -147,7 +176,7 @@ class CollectionWorkflow:
             db=db,
         )
         job_id = str(job.job_id)
-        await self.job_service.start_job(job_id, db)
+        task_id = await self.job_service.start_job(job_id, db)
 
         return CollectionResponse(
             job_id=job_id,

@@ -246,6 +246,30 @@ async def test_list_jobs_with_total_processing_filter_matches_legacy_running_row
 
 
 @pytest.mark.unit
+@pytest.mark.asyncio
+async def test_list_jobs_with_total_running_filter_matches_processing_shadow_row(
+    db_session,
+):
+    service = JobService()
+    running_job = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.RUNNING,
+        lifecycle_state_v2="processing",
+        parameters={"idx": 1},
+        created_by="tester",
+    )
+    db_session.add(running_job)
+    await db_session.commit()
+
+    paged_jobs, total = await service.list_jobs_with_total(
+        db=db_session, status="running", limit=10, offset=0
+    )
+
+    assert total == 1
+    assert [job.job_id for job in paged_jobs] == [running_job.job_id]
+
+
+@pytest.mark.unit
 def test_calculate_progress_full_pipeline_steps():
     service = JobService()
     job = SimpleNamespace(status="processing", type="full_pipeline")

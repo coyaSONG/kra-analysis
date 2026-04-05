@@ -33,6 +33,14 @@ def normalize_result_data(result_data: Any | None) -> list[int]:
     return []
 
 
+def _decode_json_if_needed(value: Any) -> Any:
+    if isinstance(value, str):
+        import json
+
+        return json.loads(value)
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class RaceKey:
     """Stable identity for a race row."""
@@ -81,8 +89,8 @@ class RaceSnapshot:
             key=key,
             collection_status=row.get("collection_status"),
             result_status=row.get("result_status"),
-            basic_data=row.get("basic_data"),
-            result_data=row.get("result_data"),
+            basic_data=_decode_json_if_needed(row.get("basic_data")),
+            result_data=_decode_json_if_needed(row.get("result_data")),
         )
 
     @property

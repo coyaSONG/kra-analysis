@@ -5,11 +5,13 @@ from fastapi import HTTPException
 
 from config import settings
 from dependencies.auth import (
+    APIKeyBackendError,
     AuthenticatedPrincipal,
     check_resource_access,
     create_access_token,
     get_current_user,
     require_api_key,
+    require_api_key_record,
     require_permissions,
     require_principal,
     verify_api_key,
@@ -66,7 +68,11 @@ async def test_require_principal_returns_normalized_principal(db_session):
     db_session.add(keyrow)
     await db_session.commit()
 
-    principal = await require_principal(x_api_key=key_value, api_key=None, db=db_session)
+    principal = await require_principal(
+        x_api_key=key_value,
+        api_key=None,
+        api_key_obj=keyrow,
+    )
 
     assert isinstance(principal, AuthenticatedPrincipal)
     assert principal.owner_ref == key_value
@@ -138,6 +144,22 @@ async def test_require_api_key_daily_limit_exceeded(db_session):
     with pytest.raises(HTTPException) as ex:
         await require_api_key(x_api_key=blocked_key, api_key=None, db=db_session)
     assert ex.value.status_code == 429
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_require_api_key_backend_error_returns_503(monkeypatch, db_session):
+    async def boom(_api_key, _db):
+        raise APIKeyBackendError("db down")
+
+    monkeypatch.setattr("dependencies.auth.verify_api_key", boom)
+
+    with pytest.raises(HTTPException) as ex:
+        await require_api_key_record(
+            x_api_key="test-api-key-12345", api_key=None, db=db_session
+        )
+
+    assert ex.value.status_code == 503
 
 
 @pytest.mark.asyncio

@@ -8,8 +8,8 @@ ACTIVE_MIGRATIONS = [
     "001_unified_schema.sql",
     "002_add_prediction_created_by.sql",
     "003_add_race_odds.sql",
-    "003_add_job_shadow_fields.sql",
-    "004_add_usage_events.sql",
+    "004_add_job_shadow_fields.sql",
+    "005_add_usage_events.sql",
 ]
 
 

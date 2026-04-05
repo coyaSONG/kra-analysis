@@ -397,22 +397,7 @@ class PromptEvaluatorV3:
 
     def _convert_race_data_for_v5(self, race_data: dict) -> dict:
         """v5 insight_analyzer 호환 형식으로 race_data 변환"""
-        entries = []
-        for horse in race_data.get("horses", []):
-            entries.append(
-                {
-                    "horse_no": horse.get("chulNo"),
-                    "win_odds": horse.get("winOdds", 0),
-                    "jockey_name": horse.get("jkName", ""),
-                    "jockey_winrate": horse.get("jkDetail", {}).get("winRate", 0),
-                    "horse_name": horse.get("hrName", ""),
-                    "horse_record": horse.get("hrDetail", {}),
-                }
-            )
-        return {
-            "entries": entries,
-            "race_info": race_data.get("raceInfo", {}),
-        }
+        return self.data_loader.build_v5_race_data(race_data)
 
     def process_single_race(self, race_info: dict, race_data: dict) -> dict | None:
         """단일 경주 처리"""
@@ -575,6 +560,7 @@ class PromptEvaluatorV3:
         metrics_v2["json_valid_rate"] = (
             len(valid_results) / total_races if total_races > 0 else 0.0
         )
+        summary["metrics_v2"] = metrics_v2
 
         if self.asof_check == "on":
             leakage_check = check_detailed_results_for_leakage(results)

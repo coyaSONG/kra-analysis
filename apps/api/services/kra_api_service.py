@@ -169,7 +169,6 @@ class KRAAPIService:
             "rc_no": race_no,
             "numOfRows": 50,
             "pageNo": 1,
-            "_type": "json",
         }
 
         # Use correct endpoint from KRA API documentation
@@ -224,7 +223,7 @@ class KRAAPIService:
                 return cached_data
 
         # API 호출
-        params = {"hr_no": horse_no, "pageNo": 1, "numOfRows": 10, "_type": "json"}
+        params = {"hr_no": horse_no, "pageNo": 1, "numOfRows": 10}
 
         result = await self._make_request(
             endpoint="API8_2/raceHorseInfo_2", params=params
@@ -259,7 +258,7 @@ class KRAAPIService:
                 return cached_data
 
         # API 호출
-        params = {"jk_no": jockey_no, "numOfRows": 100, "pageNo": 1, "_type": "json"}
+        params = {"jk_no": jockey_no, "numOfRows": 100, "pageNo": 1}
 
         result = await self._make_request(
             endpoint="API12_1/jockeyInfo_1", params=params
@@ -294,7 +293,7 @@ class KRAAPIService:
                 return cached_data
 
         # API 호출
-        params = {"tr_no": trainer_no, "pageNo": 1, "numOfRows": 10, "_type": "json"}
+        params = {"tr_no": trainer_no, "pageNo": 1, "numOfRows": 10}
 
         result = await self._make_request(
             endpoint="API19_1/trainerInfo_1", params=params
@@ -323,7 +322,6 @@ class KRAAPIService:
             "rc_date_to": race_date,
             "numOfRows": 50,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(endpoint="API189_1/Track_1", params=params)
@@ -349,7 +347,6 @@ class KRAAPIService:
             "rc_date": race_date,
             "numOfRows": 50,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(endpoint="API72_2/racePlan_2", params=params)
@@ -375,7 +372,6 @@ class KRAAPIService:
             "rc_date": race_date,
             "numOfRows": 100,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(
@@ -405,7 +401,6 @@ class KRAAPIService:
             "meet": meet,
             "numOfRows": 10,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(
@@ -433,7 +428,6 @@ class KRAAPIService:
             "meet": meet,
             "numOfRows": 10,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(
@@ -460,7 +454,6 @@ class KRAAPIService:
             "trng_dt": training_date,
             "numOfRows": 500,
             "pageNo": 1,
-            "_type": "json",
         }
 
         result = await self._make_request(
@@ -487,7 +480,6 @@ class KRAAPIService:
             "rc_date": race_date,
             "numOfRows": 1000,
             "pageNo": 1,
-            "_type": "json",
         }
         if pool is not None:
             params["pool"] = pool
@@ -511,7 +503,6 @@ class KRAAPIService:
             "rc_date": race_date,
             "numOfRows": 1000,
             "pageNo": 1,
-            "_type": "json",
         }
         if pool is not None:
             params["pool"] = pool

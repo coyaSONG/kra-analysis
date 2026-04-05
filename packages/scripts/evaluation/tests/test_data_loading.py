@@ -117,7 +117,7 @@ def test_build_dataset_metadata():
         limit=5,
     )
 
-    assert metadata["source"] == "RaceDBClient.find_races"
+    assert metadata["source"] == "RaceDBClient.find_races_with_results"
     assert metadata["requested_limit"] == 5
     assert metadata["race_count"] == 2
     assert metadata["race_ids"] == ["race-1", "race-2"]
