@@ -16,6 +16,8 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
 - [x] (2026-04-05 14:42 KST) Added `apps/api/tests/unit/test_race_processing_workflow.py` and ran the selected collection, task, pipeline, and module pytest subsets successfully.
 - [x] (2026-04-05 14:55 KST) Migrated async tasks, pipeline stages, `DataProcessingPipeline`, and `CollectionCommands` to instantiate the workflow directly instead of routing through `CollectionService`.
 - [x] (2026-04-05 14:58 KST) Updated the affected async/module/stage tests for workflow-first execution paths and revalidated the core regression suite.
+- [x] (2026-04-05 15:43 KST) Updated the collection endpoint integration tests to patch the router's current workflow boundary instead of the old `CollectionService` seam.
+- [x] (2026-04-05 15:44 KST) Ran the full `apps/api` pytest suite successfully after the direct-caller migration.
 - [ ] (2026-04-05 14:58 KST) Reduce legacy wrappers and seam-heavy tests after direct workflow callers are in place.
 
 ## Surprises & Discoveries
@@ -31,6 +33,9 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
 
 - Observation: several stage and task tests were asserting against `CollectionService` mocks even though the callers really care about lifecycle outcomes, not the intermediate adapter.
   Evidence: `tests/unit/test_pipeline_stages.py`, `tests/unit/test_async_tasks.py`, and `tests/unit/test_kra_collection_module.py` all needed to swap `CollectionService` monkeypatches for workflow doubles once the direct caller migration landed.
+
+- Observation: one integration collection endpoint test was still patching `CollectionService.collect_race_data`, which no longer sits on the route's main execution path.
+  Evidence: the first full-suite run failed in `tests/integration/test_api_endpoints.py::TestCollectionEndpoints::test_collect_races_success` with a real KRA API `401 Unauthorized` because the patch target no longer intercepted the request path.
 
 ## Decision Log
 
@@ -50,9 +55,13 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
   Rationale: this removes the extra orchestration hop from production paths now, without forcing a full removal of the legacy adapter in the same change.
   Date/Author: 2026-04-05 / Codex
 
+- Decision: collection route integration tests will patch `routers.collection_v2.collection_module.commands.collect_batch` instead of patching `CollectionService`.
+  Rationale: the router contract now depends on the facade command boundary, so patching the old service seam hides the real path and allows accidental live API calls in tests.
+  Date/Author: 2026-04-05 / Codex
+
 ## Outcomes & Retrospective
 
-The first two implementation slices landed successfully. `apps/api/services/race_processing_workflow.py` now owns the collect, materialize, and odds orchestration, while `CollectionService` has been reduced to a compatibility adapter that delegates through bound helper callables. The direct callers in async tasks, pipeline stages, `DataProcessingPipeline`, and `CollectionCommands` now instantiate the workflow directly, so the legacy adapter is no longer on the main execution path for those flows.
+The first two implementation slices landed successfully. `apps/api/services/race_processing_workflow.py` now owns the collect, materialize, and odds orchestration, while `CollectionService` has been reduced to a compatibility adapter that delegates through bound helper callables. The direct callers in async tasks, pipeline stages, `DataProcessingPipeline`, and `CollectionCommands` now instantiate the workflow directly, so the legacy adapter is no longer on the main execution path for those flows. After updating the outdated integration patch target, the full `apps/api` suite passed, which confirms the workflow boundary did not leave hidden regressions across the API surface.
 
 The remaining work is now cleanup: remove or shrink the legacy wrappers that are still only preserving old seams, and replace seam-heavy tests with boundary-style workflow tests where that reduces maintenance cost without losing coverage.
 
@@ -146,6 +155,10 @@ Observed commands:
     ...
     162 passed in 0.37s
 
+    uv run pytest -q --no-cov
+    ...
+    597 passed, 2 skipped in 4.30s
+
 ## Validation and Acceptance
 
 Acceptance is behavioral. The selected tests must prove that:
@@ -204,6 +217,13 @@ Key evidence:
     ....................................................................     [100%]
     ============================== 162 passed in 0.37s ==============================
 
+    tests/integration/test_api_endpoints.py ........................         [  4%]
+    tests/integration/test_collection_workflow_router.py ..                  [  4%]
+    tests/integration/test_jobs_v2_router_additional.py ........             [  5%]
+    ...
+    tests/unit/test_utils_field_mapping.py ....                              [100%]
+    ======================== 597 passed, 2 skipped in 4.30s ========================
+
 ## Interfaces and Dependencies
 
 Define the new workflow module in `apps/api/services/race_processing_workflow.py`. The final file for this slice must contain stable names for:
@@ -235,3 +255,5 @@ Revision note: Initial ExecPlan created for the first implementation slice of th
 Revision note: Updated after implementation to record the new workflow module, the compatibility-preserving delegation strategy, the enrich preprocessing discovery, and the passing targeted pytest results.
 
 Revision note: Updated after the second implementation slice to record the direct caller migration, the workflow-first test updates, and the expanded passing regression suites.
+
+Revision note: Updated after full-suite verification to record the integration test boundary fix and the successful `apps/api` regression run.

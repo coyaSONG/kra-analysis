@@ -3,7 +3,8 @@ Integration tests for API endpoints
 """
 
 from datetime import UTC, datetime
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import AsyncClient
@@ -44,16 +45,24 @@ class TestCollectionEndpoints:
     async def test_collect_races_success(self, authenticated_client: AsyncClient):
         """Test successful race collection"""
         with patch(
-            "services.collection_service.CollectionService.collect_race_data"
-        ) as mock_collect:
-            mock_collect.return_value = {
-                "race_date": "20240719",
-                "meet": 1,
-                "race_no": 1,
-                "horses": [],
-                "collected_at": datetime.now(UTC).isoformat(),
-            }
-
+            "routers.collection_v2.collection_module.commands.collect_batch",
+            new=AsyncMock(
+                return_value=SimpleNamespace(
+                    status="success",
+                    message="Collected 1 races",
+                    errors=[],
+                    data=[
+                        {
+                            "race_date": "20240719",
+                            "meet": 1,
+                            "race_no": 1,
+                            "horses": [],
+                            "collected_at": datetime.now(UTC).isoformat(),
+                        }
+                    ],
+                )
+            ),
+        ):
             response = await authenticated_client.post(
                 "/api/v2/collection/",
                 json={"date": "20240719", "meet": 1, "race_numbers": [1]},
@@ -70,18 +79,23 @@ class TestCollectionEndpoints:
     ):
         """When one race fails during iteration, the endpoint returns partial with successes."""
         with patch(
-            "services.collection_service.CollectionService.collect_race_data"
-        ) as mock_collect:
-            mock_collect.side_effect = [
-                Exception("boom"),
-                {
-                    "race_date": "20240719",
-                    "meet": 1,
-                    "race_no": 2,
-                    "horses": [],
-                },
-            ]
-
+            "routers.collection_v2.collection_module.commands.collect_batch",
+            new=AsyncMock(
+                return_value=SimpleNamespace(
+                    status="partial",
+                    message="Collected 1 races, failed 1 races",
+                    errors=[{"race_no": 1, "error": "boom"}],
+                    data=[
+                        {
+                            "race_date": "20240719",
+                            "meet": 1,
+                            "race_no": 2,
+                            "horses": [],
+                        }
+                    ],
+                )
+            ),
+        ):
             response = await authenticated_client.post(
                 "/api/v2/collection/",
                 json={"date": "20240719", "meet": 1, "race_numbers": [1, 2]},
@@ -96,8 +110,15 @@ class TestCollectionEndpoints:
         self, authenticated_client: AsyncClient
     ):
         with patch(
-            "services.collection_service.CollectionService.collect_race_data",
-            side_effect=Exception("boom"),
+            "routers.collection_v2.collection_module.commands.collect_batch",
+            new=AsyncMock(
+                return_value=SimpleNamespace(
+                    status="error",
+                    message="All requested races failed to collect",
+                    errors=[{"race_no": 1, "error": "boom"}],
+                    data=[],
+                )
+            ),
         ):
             response = await authenticated_client.post(
                 "/api/v2/collection/",
