@@ -25,10 +25,12 @@ async def test_jobs_v2_list_returns_jobs(authenticated_client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_jobs_v2_list_normalizes_running_status(authenticated_client, db_session):
+async def test_jobs_v2_list_returns_canonical_processing_status(
+    authenticated_client, db_session
+):
     job = Job(
         type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
+        status=JobStatus.PROCESSING,
         parameters={"race_date": "20240719"},
         created_by="test-api-key-123",
     )
@@ -43,24 +45,11 @@ async def test_jobs_v2_list_normalizes_running_status(authenticated_client, db_s
 
 
 @pytest.mark.asyncio
-async def test_jobs_v2_processing_filter_matches_legacy_running_row(
+async def test_jobs_v2_list_rejects_removed_running_status_filter(
     authenticated_client, db_session
 ):
-    job = Job(
-        type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
-        parameters={"race_date": "20240719"},
-        created_by="test-api-key-123",
-    )
-    db_session.add(job)
-    await db_session.commit()
-
-    response = await authenticated_client.get("/api/v2/jobs/?status=processing")
-    assert response.status_code == 200
-    data = response.json()
-    job_ids = {item["job_id"] for item in data["jobs"]}
-    assert str(job.job_id) in job_ids
-    assert all(item["status"] == "processing" for item in data["jobs"])
+    response = await authenticated_client.get("/api/v2/jobs/?status=running")
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
@@ -87,7 +76,7 @@ async def test_jobs_v2_get_detail_returns_logs(authenticated_client, db_session)
 async def test_jobs_v2_cancel_endpoint_updates_status(authenticated_client, db_session):
     job = Job(
         type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
+        status=JobStatus.PROCESSING,
         parameters={"race_date": "20240719"},
         created_by="test-api-key-123",
     )
@@ -106,10 +95,9 @@ async def test_jobs_v2_cancel_endpoint_updates_status(authenticated_client, db_s
         data = response.json()
         assert data["message"]
 
-    from services.job_service import JobService
-
-    updated = await JobService().get_job(str(job.job_id), db_session)
-    assert str(updated.status) in ("cancelled", JobStatus.CANCELLED.value)
+    detail_response = await authenticated_client.get(f"/api/v2/jobs/{job.job_id}")
+    assert detail_response.status_code == 200
+    assert detail_response.json()["job"]["status"] == "cancelled"
 
 
 @pytest.mark.asyncio
@@ -163,7 +151,7 @@ async def test_jobs_v2_cancel_other_owner_returns_not_found(
 ):
     other_job = Job(
         type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
+        status=JobStatus.PROCESSING,
         parameters={"race_date": "20240720"},
         created_by="other-api-key-999",
     )

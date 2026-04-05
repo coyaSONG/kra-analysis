@@ -21,7 +21,6 @@ from models.job_dto import (
 from models.job_dto import (
     JobLog as JobLogDTO,
 )
-from services.job_contract import normalize_lifecycle_status
 from services.job_service import JobService
 
 logger = structlog.get_logger()
@@ -39,7 +38,9 @@ job_service = JobService()
 
 
 def _dto_job_status(value: object) -> JobStatus:
-    return JobStatus(normalize_lifecycle_status(value).value)
+    if hasattr(value, "value"):
+        return JobStatus(str(value.value))
+    return JobStatus(str(value))
 
 
 @router.get(

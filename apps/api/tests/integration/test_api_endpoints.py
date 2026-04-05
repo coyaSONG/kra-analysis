@@ -383,7 +383,7 @@ class TestJobsEndpoints:
         # Create jobs with different statuses
         statuses = [
             JobStatus.PENDING,
-            JobStatus.RUNNING,
+            JobStatus.PROCESSING,
             JobStatus.COMPLETED,
             JobStatus.FAILED,
         ]
@@ -411,7 +411,7 @@ class TestJobsEndpoints:
         # Create test job
         job = Job(
             type=JobType.COLLECTION,
-            status=JobStatus.RUNNING,
+            status=JobStatus.PROCESSING,
             parameters={"date": "20240719"},
             created_by="test-api-key-123",
         )
@@ -441,7 +441,7 @@ class TestJobsEndpoints:
         # Create test job
         job = Job(
             type=JobType.COLLECTION,
-            status=JobStatus.RUNNING,
+            status=JobStatus.PROCESSING,
             parameters={},
             created_by="test-api-key-123",
         )
@@ -453,6 +453,10 @@ class TestJobsEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Job cancelled successfully"
+
+        detail_response = await authenticated_client.get(f"/api/v2/jobs/{job.job_id}")
+        assert detail_response.status_code == 200
+        assert detail_response.json()["job"]["status"] == "cancelled"
 
 
 class TestAsyncCollectionEndpoints:
@@ -479,6 +483,8 @@ class TestAsyncCollectionEndpoints:
             assert detail_response.status_code == 200
             detail_data = detail_response.json()
             assert detail_data["job"]["job_id"] == job_id
+            assert detail_data["job"]["type"] == "batch"
+            assert detail_data["job"]["status"] == "queued"
 
 
 class TestAuthenticationEndpoints:

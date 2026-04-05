@@ -23,7 +23,6 @@ from services.job_contract import (
     apply_job_shadow_fields,
     normalize_dispatch_action,
     normalize_job_kind,
-    normalize_lifecycle_status,
 )
 
 logger = structlog.get_logger()
@@ -64,7 +63,7 @@ class JobService:
 
     @staticmethod
     def _normalize_lifecycle_status_value(status: Any) -> str:
-        return normalize_lifecycle_status(status).value
+        return JobService._to_filter_value(status)
 
     async def create_job(
         self,
