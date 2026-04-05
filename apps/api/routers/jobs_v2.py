@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies.auth import AuthenticatedPrincipal, require_action
 from infrastructure.database import get_db
+from models.database_models import Job as JobModel
 from models.job_dto import (
     Job,
     JobCancelResponse,
@@ -44,7 +45,7 @@ def _dto_job_status(value: object) -> JobStatus:
     return JobStatus(str(value))
 
 
-def _to_job_dto(job_row: object) -> Job:
+def _to_job_dto(job_row: JobModel) -> Job:
     return Job(
         job_id=job_row.job_id,
         type=JobType(
