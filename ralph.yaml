@@ -9,19 +9,23 @@ project:
 scope:
   allowedGlobs:
     - "packages/scripts/autoresearch/clean_model_config.json"
+    - "packages/scripts/autoresearch/extract_rrx_metric.py"
     - "packages/scripts/autoresearch/research_clean.py"
     - "packages/scripts/autoresearch/rrx_propose.py"
+    - "packages/scripts/autoresearch/run_rrx_experiment.sh"
+    - "packages/scripts/autoresearch/run_rrx_metric.sh"
+    - "packages/scripts/autoresearch/run_rrx_propose.sh"
     - ".ralph/**"
   maxFilesChanged: 5
   maxLineDelta: 200
 
 proposer:
   type: command
-  command: "uv run python packages/scripts/autoresearch/rrx_propose.py --config packages/scripts/autoresearch/clean_model_config.json"
+  command: "./packages/scripts/autoresearch/run_rrx_propose.sh"
 
 experiment:
   run:
-    command: "uv run python packages/scripts/autoresearch/research_clean.py --config packages/scripts/autoresearch/clean_model_config.json --output .ralph/outputs/research_clean.json"
+    command: "./packages/scripts/autoresearch/run_rrx_experiment.sh"
   outputs:
     - id: clean_research
       path: .ralph/outputs/research_clean.json
@@ -33,7 +37,7 @@ metrics:
       direction: maximize
       extractor:
         type: command
-        command: "uv run python - <<'PY'\nimport json\nfrom pathlib import Path\npayload = json.loads(Path('.ralph/outputs/research_clean.json').read_text())\nprint(payload['dev']['exact_3of3_rate'])\nPY"
+        command: "./packages/scripts/autoresearch/run_rrx_metric.sh"
         parser: plain_number
 
 frontier:
