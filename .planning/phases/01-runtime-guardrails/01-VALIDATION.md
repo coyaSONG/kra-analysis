@@ -1,9 +1,9 @@
 ---
 phase: 01
 slug: runtime-guardrails
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-05
 ---
 
@@ -19,17 +19,17 @@ created: 2026-04-05
 |----------|-------|
 | **Framework** | pytest + pytest-asyncio + pytest-cov |
 | **Config file** | `apps/api/pytest.ini`, `apps/api/.coveragerc` |
-| **Quick run command** | `cd apps/api && uv run pytest -q tests/unit/test_health_detailed_branches.py tests/unit/test_health_dynamic.py tests/unit/test_middleware_logging.py tests/unit/test_logging_redaction.py tests/unit/test_auth_deps.py` |
-| **Full suite command** | `cd apps/api && uv run pytest -q` |
+| **Quick run command** | `cd apps/api && uv run pytest -v --tb=short --timeout=60 -o addopts='' tests/unit/test_health_detailed_branches.py tests/unit/test_health_dynamic.py tests/unit/test_middleware_logging.py tests/unit/test_logging_redaction.py tests/unit/test_auth_deps.py` |
+| **Full suite command** | `pnpm -F @apps/api test` |
 | **Estimated runtime** | ~30 seconds quick subset / full suite longer but required before verify |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run the smallest targeted pytest subset for the touched area
-- **After every plan wave:** Run `cd apps/api && uv run pytest -q tests/unit/test_health_detailed_branches.py tests/unit/test_health_dynamic.py tests/unit/test_middleware_logging.py tests/unit/test_logging_redaction.py tests/unit/test_auth_deps.py tests/unit/test_auth.py tests/unit/test_auth_extended.py tests/unit/test_auth_resource_access.py tests/integration/test_policy_accounting.py`
-- **Before `/gsd-verify-work`:** Full suite must be green via `cd apps/api && uv run pytest -q`
+- **After every task commit:** Run the smallest targeted pytest subset for the touched area with `-o addopts=''`
+- **After every plan wave:** Run `bash apps/api/scripts/run_quality_ci.sh unit` and the explicit focused integration files needed for health and policy accounting
+- **Before `/gsd-verify-work`:** Full suite must be green via `pnpm -F @apps/api test`, then run `bash apps/api/scripts/run_quality_ci.sh integration`
 - **Max feedback latency:** 30 seconds for quick subset
 
 ---
@@ -38,9 +38,9 @@ created: 2026-04-05
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 01-01-01 | 01 | 1 | HEALTH-01 | — | degraded health reports Redis issues without 500 | unit/integration | `cd apps/api && uv run pytest -q tests/unit/test_health_detailed_branches.py tests/unit/test_health_dynamic.py tests/integration/test_api_endpoints.py` | ✅ | ⬜ pending |
-| 01-02-01 | 02 | 1 | HEALTH-02 | — | canonical logging path redacts sensitive fields and propagates request id | unit | `cd apps/api && uv run pytest -q tests/unit/test_middleware_logging.py tests/unit/test_logging_redaction.py tests/unit/test_logging_middleware_post_body.py tests/unit/test_logging_middleware_error.py` | ✅ | ⬜ pending |
-| 01-03-01 | 03 | 2 | HEALTH-03 | — | auth/policy boundary stays principal-first and accounting still persists request metadata | unit/integration | `cd apps/api && uv run pytest -q tests/unit/test_auth_deps.py tests/unit/test_auth.py tests/unit/test_auth_extended.py tests/unit/test_auth_resource_access.py tests/integration/test_policy_accounting.py` | ✅ | ⬜ pending |
+| 01-01-01 | 01 | 1 | HEALTH-01 | — | degraded health reports Redis issues without 500 | unit/integration | `cd apps/api && uv run pytest -v --tb=short --timeout=60 -o addopts='' tests/unit/test_health_detailed_branches.py tests/unit/test_health_dynamic.py tests/integration/test_api_endpoints.py -k 'health'` | ✅ | ⬜ pending |
+| 01-02-01 | 02 | 1 | HEALTH-02 | — | canonical logging path redacts sensitive fields and propagates request id | unit/integration | `cd apps/api && uv run pytest -v --tb=short --timeout=60 -o addopts='' tests/unit/test_middleware_logging.py tests/unit/test_logging_redaction.py tests/unit/test_logging_middleware_post_body.py tests/unit/test_logging_middleware_error.py tests/integration/test_api_endpoints.py -k 'request_id or logging'` | ✅ | ⬜ pending |
+| 01-03-01 | 03 | 1 | HEALTH-03 | — | auth/policy boundary stays principal-first and accounting still persists request metadata | unit/integration | `cd apps/api && uv run pytest -v --tb=short --timeout=60 -o addopts='' tests/unit/test_auth_deps.py tests/unit/test_auth.py tests/unit/test_auth_extended.py tests/unit/test_auth_resource_access.py tests/integration/test_policy_accounting.py` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -48,7 +48,11 @@ created: 2026-04-05
 
 ## Wave 0 Requirements
 
-- [ ] Existing infrastructure covers all phase requirements.
+- [x] `tests/integration/test_api_endpoints.py` degraded-Redis contract case is absorbed into `01-01-PLAN.md`.
+- [x] Logging tests moving to the canonical runtime path are absorbed into `01-02-PLAN.md`.
+- [x] Small JSON body redaction coverage is absorbed into `01-02-PLAN.md`.
+- [x] `tests/integration/test_policy_accounting.py` integration marker and request-id correlation assertions are absorbed into `01-03-PLAN.md`.
+- [x] `tests/unit/test_auth_deps.py` direct `require_action()` request-state coverage is absorbed into `01-03-PLAN.md`.
 
 ---
 
@@ -62,11 +66,11 @@ created: 2026-04-05
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** ready
