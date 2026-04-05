@@ -10,6 +10,7 @@
 ## Discoveries
 - [DB 데이터 저장 구조](discovery-2026-03-15-db-data-structure.md) — basic_data vs enriched_data 용도 차이, result_data는 top3 배열만 저장
 - [구간 통과 데이터 누수](discovery-2026-03-15-sectional-data-leakage.md) — sjG1fOrd 등 27개 필드가 경주 후 데이터, FORBIDDEN 목록에 추가
+- [신규 KRA API 8건 통합](discovery-2026-03-15-new-api-integration.md) — collect_race_data에 6개 API 자동 통합 + collect_race_odds 신규 메서드 (API160_1/API301)
 
 ## Reviews
 - [Codex 리뷰: DB 구조 분석](review-2026-03-15-codex-data-analysis.md) — 초기 분석 오류 교정, 구현 플랜 검증, 4건 피드백 반영
