@@ -9,6 +9,7 @@ import pytest
 from pipelines.base import PipelineContext, StageStatus
 from pipelines.stages import (
     CollectionStage,
+    EnrichmentStage,
     PreprocessingStage,
     ValidationStage,
 )
@@ -135,32 +136,21 @@ class TestCollectionStage:
         await collection_stage.rollback(pipeline_context)
         assert pipeline_context.raw_data is None
 
-    @pytest.mark.unit
-    @pytest.mark.asyncio
-    async def test_execute_legacy_fallback(self, collection_stage, pipeline_context):
-        """CollectionStage should fall back to collection service when workflow is disabled"""
-        collection_stage.workflow_factory = None
-        collection_stage.collection_service.collect_race_data = AsyncMock(
-            return_value={
-                "race_date": "20240101",
-                "meet": 1,
-                "race_number": 5,
-                "horses": [{"hr_no": "001", "hr_name": "Test Horse", "win_odds": 5.2}],
-            }
-        )
-
-        result = await collection_stage.execute(pipeline_context)
-
-        assert result.status == StageStatus.COMPLETED
-        collection_stage.collection_service.collect_race_data.assert_awaited_once()
-
 
 class TestPreprocessingStage:
     """Test PreprocessingStage functionality"""
 
     @pytest.fixture
-    def preprocessing_stage(self):
-        return PreprocessingStage()
+    def mock_kra_api_service(self):
+        return Mock(spec=KRAAPIService)
+
+    @pytest.fixture
+    def mock_db_session(self):
+        return Mock()
+
+    @pytest.fixture
+    def preprocessing_stage(self, mock_kra_api_service, mock_db_session):
+        return PreprocessingStage(mock_kra_api_service, mock_db_session)
 
     @pytest.fixture
     def pipeline_context_with_raw_data(self):
@@ -201,47 +191,150 @@ class TestPreprocessingStage:
     async def test_execute_success(
         self, preprocessing_stage, pipeline_context_with_raw_data
     ):
-        """PreprocessingStage should filter invalid horses successfully"""
+        """PreprocessingStage should materialize preprocessed payload successfully"""
+        preprocessed_data = {
+            "horses": [
+                {"hr_no": "001", "win_odds": 5.2},
+                {"hr_no": "003", "win_odds": 3.1},
+            ],
+            "data_flags": {
+                "has_valid_horses": True,
+                "horses_count": 2,
+                "filtering_applied": True,
+            },
+        }
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(
+            return_value=Mock(payload=preprocessed_data)
+        )
+        preprocessing_stage.workflow_factory = Mock(return_value=fake_workflow)
+
         result = await preprocessing_stage.execute(pipeline_context_with_raw_data)
 
         assert result.status == StageStatus.COMPLETED
-        assert pipeline_context_with_raw_data.preprocessed_data is not None
-
-        # Should filter out horses with win_odds = 0 or invalid format
-        horses = pipeline_context_with_raw_data.preprocessed_data["horses"]
-        assert len(horses) == 2  # Only 2 valid horses
-
-        valid_horse_numbers = [horse["hr_no"] for horse in horses]
-        assert "001" in valid_horse_numbers
-        assert "003" in valid_horse_numbers
-        assert "002" not in valid_horse_numbers  # Filtered out (win_odds = 0)
-        assert "004" not in valid_horse_numbers  # Filtered out (invalid format)
+        assert pipeline_context_with_raw_data.preprocessed_data == preprocessed_data
+        assert result.metadata["horses_filtered"] == 2
+        fake_workflow.materialize.assert_awaited_once()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_execute_failure(self, preprocessing_stage):
-        """PreprocessingStage should handle execution failure"""
+        """PreprocessingStage should handle workflow failures"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
-        context.raw_data = None  # This will cause an error
+        context.raw_data = {"horses": [{"hr_no": "001", "win_odds": 5.2}]}
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(
+            side_effect=RuntimeError("preprocess boom")
+        )
+        preprocessing_stage.workflow_factory = Mock(return_value=fake_workflow)
 
         result = await preprocessing_stage.execute(context)
         assert result.status == StageStatus.FAILED
 
     @pytest.mark.unit
-    def test_should_skip_with_existing_data(self, preprocessing_stage):
-        """PreprocessingStage should skip when preprocessed data already exists"""
+    @pytest.mark.asyncio
+    async def test_validate_prerequisites_missing_service(
+        self, mock_db_session, pipeline_context_with_raw_data
+    ):
+        """PreprocessingStage should fail validation when KRA API service is missing"""
+        stage = PreprocessingStage(None, mock_db_session)
+        result = await stage.validate_prerequisites(pipeline_context_with_raw_data)
+        assert result is False
+
+
+class TestEnrichmentStage:
+    @pytest.fixture
+    def mock_kra_api_service(self):
+        return Mock(spec=KRAAPIService)
+
+    @pytest.fixture
+    def mock_db_session(self):
+        return Mock()
+
+    @pytest.fixture
+    def enrichment_stage(self, mock_kra_api_service, mock_db_session):
+        return EnrichmentStage(mock_kra_api_service, mock_db_session)
+
+    @pytest.fixture
+    def pipeline_context_with_preprocessed_data(self):
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
-        context.preprocessed_data = {"existing": "data"}
-        assert preprocessing_stage.should_skip(context) is True
+        context.preprocessed_data = {"horses": [{"hr_no": "001", "win_odds": 5.2}]}
+        return context
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_rollback(self, preprocessing_stage):
-        """PreprocessingStage should clear preprocessed data on rollback"""
+    async def test_validate_prerequisites_success(
+        self, enrichment_stage, pipeline_context_with_preprocessed_data
+    ):
+        result = await enrichment_stage.validate_prerequisites(
+            pipeline_context_with_preprocessed_data
+        )
+        assert result is True
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_validate_prerequisites_missing_service(
+        self, mock_db_session, pipeline_context_with_preprocessed_data
+    ):
+        stage = EnrichmentStage(None, mock_db_session)
+        result = await stage.validate_prerequisites(
+            pipeline_context_with_preprocessed_data
+        )
+        assert result is False
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_execute_success(
+        self, enrichment_stage, pipeline_context_with_preprocessed_data
+    ):
+        enriched_data = {
+            "horses": [
+                {
+                    "hr_no": "001",
+                    "past_stats": {},
+                    "jockey_stats": {},
+                    "trainer_stats": {},
+                }
+            ]
+        }
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(return_value=Mock(payload=enriched_data))
+        enrichment_stage.workflow_factory = Mock(return_value=fake_workflow)
+
+        result = await enrichment_stage.execute(pipeline_context_with_preprocessed_data)
+
+        assert result.status == StageStatus.COMPLETED
+        assert pipeline_context_with_preprocessed_data.enriched_data == enriched_data
+        fake_workflow.materialize.assert_awaited_once()
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_execute_failure(
+        self, enrichment_stage, pipeline_context_with_preprocessed_data
+    ):
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(side_effect=RuntimeError("enrich boom"))
+        enrichment_stage.workflow_factory = Mock(return_value=fake_workflow)
+
+        result = await enrichment_stage.execute(pipeline_context_with_preprocessed_data)
+
+        assert result.status == StageStatus.FAILED
+
+    @pytest.mark.unit
+    def test_should_skip_with_existing_data(self, enrichment_stage):
+        """EnrichmentStage should skip when enriched data already exists"""
         context = PipelineContext(race_date="20240101", meet=1, race_number=5)
-        context.preprocessed_data = {"some": "data"}
-        await preprocessing_stage.rollback(context)
-        assert context.preprocessed_data is None
+        context.enriched_data = {"existing": "data"}
+        assert enrichment_stage.should_skip(context) is True
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_rollback(self, enrichment_stage):
+        """EnrichmentStage should clear enriched data on rollback"""
+        context = PipelineContext(race_date="20240101", meet=1, race_number=5)
+        context.enriched_data = {"some": "data"}
+        await enrichment_stage.rollback(context)
+        assert context.enriched_data is None
 
 
 class TestValidationStage:

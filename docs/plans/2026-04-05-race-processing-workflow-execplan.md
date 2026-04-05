@@ -18,6 +18,10 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
 - [x] (2026-04-05 14:58 KST) Updated the affected async/module/stage tests for workflow-first execution paths and revalidated the core regression suite.
 - [x] (2026-04-05 15:43 KST) Updated the collection endpoint integration tests to patch the router's current workflow boundary instead of the old `CollectionService` seam.
 - [x] (2026-04-05 15:44 KST) Ran the full `apps/api` pytest suite successfully after the direct-caller migration.
+- [x] (2026-04-05 15:53 KST) Migrated `scripts/batch_backfill.py` enrichment flow to build the workflow directly instead of routing through `CollectionService`.
+- [x] (2026-04-05 15:54 KST) Added a focused `batch_backfill` unit test and re-ran the full `apps/api` pytest suite successfully.
+- [x] (2026-04-05 16:06 KST) Removed the runtime fallback branches from pipeline stages so collection, preprocessing, and enrichment stages now execute through the workflow boundary only.
+- [x] (2026-04-05 16:08 KST) Updated pipeline and coverage tests for workflow-only stage execution and re-ran the full `apps/api` pytest suite successfully.
 - [ ] (2026-04-05 14:58 KST) Reduce legacy wrappers and seam-heavy tests after direct workflow callers are in place.
 
 ## Surprises & Discoveries
@@ -36,6 +40,12 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
 
 - Observation: one integration collection endpoint test was still patching `CollectionService.collect_race_data`, which no longer sits on the route's main execution path.
   Evidence: the first full-suite run failed in `tests/integration/test_api_endpoints.py::TestCollectionEndpoints::test_collect_races_success` with a real KRA API `401 Unauthorized` because the patch target no longer intercepted the request path.
+
+- Observation: the 2025 backfill script still instantiated `CollectionService` for enrichment even after the main API callers had moved to the workflow boundary.
+  Evidence: `apps/api/scripts/batch_backfill.py` was still calling `CollectionService.enrich_race_data(race_id, db)` inside the enrichment loop before this cleanup slice.
+
+- Observation: the pipeline stages still carried dead compatibility branches even after every real pipeline caller had already been migrated to `RaceProcessingWorkflow`.
+  Evidence: `apps/api/pipelines/stages.py` still had runtime branches for `collection_service.collect_race_data`, local stage preprocessing, and `collection_service.enrich_race_data`, while `apps/api/pipelines/data_pipeline.py` always passed `kra_api_service` and `db_session`.
 
 ## Decision Log
 
@@ -59,9 +69,17 @@ After this change, single-race collection, preprocessing, enrichment, and odds c
   Rationale: the router contract now depends on the facade command boundary, so patching the old service seam hides the real path and allows accidental live API calls in tests.
   Date/Author: 2026-04-05 / Codex
 
+- Decision: the backfill enrichment script will build `RaceProcessingWorkflow` per DB session and call `materialize(target='enriched')` directly.
+  Rationale: this keeps the operational backfill path aligned with the main workflow boundary and removes another production hop through `CollectionService`.
+  Date/Author: 2026-04-05 / Codex
+
+- Decision: pipeline stages will retain `workflow_factory` as a test seam, but remove all runtime fallbacks to `CollectionService` or local stage-owned preprocessing logic.
+  Rationale: this keeps stage tests easy to isolate while making the runtime contract explicit: pipeline stages are workflow clients, not alternate orchestration owners.
+  Date/Author: 2026-04-05 / Codex
+
 ## Outcomes & Retrospective
 
-The first two implementation slices landed successfully. `apps/api/services/race_processing_workflow.py` now owns the collect, materialize, and odds orchestration, while `CollectionService` has been reduced to a compatibility adapter that delegates through bound helper callables. The direct callers in async tasks, pipeline stages, `DataProcessingPipeline`, and `CollectionCommands` now instantiate the workflow directly, so the legacy adapter is no longer on the main execution path for those flows. After updating the outdated integration patch target, the full `apps/api` suite passed, which confirms the workflow boundary did not leave hidden regressions across the API surface.
+The first four implementation slices landed successfully. `apps/api/services/race_processing_workflow.py` now owns the collect, materialize, and odds orchestration, while `CollectionService` has been reduced to a compatibility adapter that delegates through bound helper callables. The direct callers in async tasks, pipeline stages, `DataProcessingPipeline`, `CollectionCommands`, and the enrichment branch of `scripts/batch_backfill.py` now instantiate the workflow directly, and the pipeline stages no longer carry runtime fallbacks to older orchestration paths. After updating the outdated integration patch target, adding a backfill unit test, and simplifying the stages, the full `apps/api` suite passed again, which confirms the workflow boundary did not leave hidden regressions across the API surface.
 
 The remaining work is now cleanup: remove or shrink the legacy wrappers that are still only preserving old seams, and replace seam-heavy tests with boundary-style workflow tests where that reduces maintenance cost without losing coverage.
 
@@ -159,6 +177,26 @@ Observed commands:
     ...
     597 passed, 2 skipped in 4.30s
 
+    uv run pytest -q --no-cov tests/unit/test_batch_backfill.py
+    ...
+    1 passed in 0.01s
+
+    uv run pytest -q --no-cov
+    ...
+    598 passed, 2 skipped in 3.81s
+
+    uv run pytest -q --no-cov \
+      tests/unit/test_pipeline_stages.py \
+      tests/unit/test_data_pipeline.py \
+      tests/unit/test_coverage_boost.py \
+      tests/unit/test_coverage_kra_core_adapter.py
+    ...
+    138 passed in 0.12s
+
+    uv run pytest -q --no-cov
+    ...
+    609 passed, 2 skipped in 4.39s
+
 ## Validation and Acceptance
 
 Acceptance is behavioral. The selected tests must prove that:
@@ -224,6 +262,30 @@ Key evidence:
     tests/unit/test_utils_field_mapping.py ....                              [100%]
     ======================== 597 passed, 2 skipped in 4.30s ========================
 
+    tests/unit/test_batch_backfill.py .                                      [100%]
+    ============================== 1 passed in 0.01s ===============================
+
+    tests/integration/test_api_endpoints.py ........................         [  4%]
+    ...
+    tests/unit/test_batch_backfill.py .                                      [ 19%]
+    ...
+    tests/unit/test_utils_field_mapping.py ....                              [100%]
+    ======================== 598 passed, 2 skipped in 3.81s ========================
+
+    tests/unit/test_pipeline_stages.py ...........................           [ 19%]
+    tests/unit/test_data_pipeline.py ........                                [ 25%]
+    tests/unit/test_coverage_boost.py ........                               [ 31%]
+    tests/unit/test_coverage_kra_core_adapter.py ........................... [ 50%]
+    ....................................................................     [100%]
+    ============================== 138 passed in 0.12s ==============================
+
+    tests/integration/test_api_endpoints.py ........................         [  4%]
+    ...
+    tests/unit/test_pipeline_stages.py ...........................           [ 91%]
+    ...
+    tests/unit/test_utils_field_mapping.py ....                              [100%]
+    ======================== 609 passed, 2 skipped in 4.39s ========================
+
 ## Interfaces and Dependencies
 
 Define the new workflow module in `apps/api/services/race_processing_workflow.py`. The final file for this slice must contain stable names for:
@@ -257,3 +319,7 @@ Revision note: Updated after implementation to record the new workflow module, t
 Revision note: Updated after the second implementation slice to record the direct caller migration, the workflow-first test updates, and the expanded passing regression suites.
 
 Revision note: Updated after full-suite verification to record the integration test boundary fix and the successful `apps/api` regression run.
+
+Revision note: Updated after the backfill cleanup slice to record the script migration, the new backfill unit test, and the refreshed full-suite verification.
+
+Revision note: Updated after the stage cleanup slice to record the removal of pipeline fallbacks, the workflow-only stage tests, and the refreshed full-suite verification.

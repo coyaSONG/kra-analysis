@@ -617,13 +617,13 @@ class TestPipelineBuilder:
 
     def test_add_preprocessing_stage(self):
         builder = PipelineBuilder("test")
-        builder.add_preprocessing_stage()
+        builder.add_preprocessing_stage(kra_api_service=Mock(), db_session=Mock())
         assert len(builder.pipeline.stages) == 1
         assert builder.pipeline.stages[0].name == "preprocessing"
 
     def test_add_enrichment_stage(self):
         builder = PipelineBuilder("test")
-        builder.add_enrichment_stage(collection_service=Mock(), db_session=Mock())
+        builder.add_enrichment_stage(kra_api_service=Mock(), db_session=Mock())
         assert len(builder.pipeline.stages) == 1
         assert builder.pipeline.stages[0].name == "enrichment"
 
@@ -653,7 +653,7 @@ class TestCollectionStageQuality:
 class TestPreprocessingStagePrereqNoHorses:
     @pytest.mark.asyncio
     async def test_validate_prerequisites_no_horses(self):
-        stage = PreprocessingStage()
+        stage = PreprocessingStage(kra_api_service=Mock(), db_session=Mock())
         ctx = PipelineContext(race_date="20240101", meet=1, race_number=1)
         ctx.raw_data = {"horses": []}
         assert await stage.validate_prerequisites(ctx) is False
@@ -662,7 +662,7 @@ class TestPreprocessingStagePrereqNoHorses:
 class TestEnrichmentStageNoService:
     @pytest.mark.asyncio
     async def test_validate_prerequisites_no_collection_service(self):
-        stage = EnrichmentStage(collection_service=None, db_session=Mock())
+        stage = EnrichmentStage(kra_api_service=None, db_session=Mock())
         ctx = PipelineContext(race_date="20240101", meet=1, race_number=1)
         ctx.preprocessed_data = {"horses": []}
         assert await stage.validate_prerequisites(ctx) is False
@@ -671,13 +671,22 @@ class TestEnrichmentStageNoService:
 @pytest.mark.asyncio
 class TestEnrichmentStageExecute:
     async def test_execute_success(self):
-        mock_service = AsyncMock()
-        mock_service.enrich_race_data = AsyncMock(
-            return_value={
-                "horses": [{"past_stats": {}, "jockey_stats": {}, "trainer_stats": {}}]
-            }
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(
+            return_value=Mock(
+                payload={
+                    "horses": [
+                        {
+                            "past_stats": {},
+                            "jockey_stats": {},
+                            "trainer_stats": {},
+                        }
+                    ]
+                }
+            )
         )
-        stage = EnrichmentStage(collection_service=mock_service, db_session=Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
+        stage.workflow_factory = Mock(return_value=fake_workflow)
         ctx = PipelineContext(race_date="20240101", meet=1, race_number=1)
         ctx.preprocessed_data = {"horses": []}
         result = await stage.execute(ctx)
@@ -685,25 +694,26 @@ class TestEnrichmentStageExecute:
         assert ctx.enriched_data is not None
 
     async def test_execute_failure(self):
-        mock_service = AsyncMock()
-        mock_service.enrich_race_data = AsyncMock(side_effect=RuntimeError("boom"))
-        stage = EnrichmentStage(collection_service=mock_service, db_session=Mock())
+        fake_workflow = Mock()
+        fake_workflow.materialize = AsyncMock(side_effect=RuntimeError("boom"))
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
+        stage.workflow_factory = Mock(return_value=fake_workflow)
         ctx = PipelineContext(race_date="20240101", meet=1, race_number=1)
         ctx.preprocessed_data = {"horses": []}
         result = await stage.execute(ctx)
         assert result.is_failure()
 
     async def test_calculate_enrichment_quality_empty_data(self):
-        stage = EnrichmentStage(collection_service=Mock(), db_session=Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         assert stage._calculate_enrichment_quality({}) == 0.0
         assert stage._calculate_enrichment_quality(None) == 0.0
 
     async def test_calculate_enrichment_quality_no_horses(self):
-        stage = EnrichmentStage(collection_service=Mock(), db_session=Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         assert stage._calculate_enrichment_quality({"horses": []}) == 0.0
 
     async def test_calculate_enrichment_quality_with_horses(self):
-        stage = EnrichmentStage(collection_service=Mock(), db_session=Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         data = {
             "horses": [
                 {

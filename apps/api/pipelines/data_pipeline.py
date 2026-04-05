@@ -45,13 +45,7 @@ class DataProcessingPipeline:
             PipelineBuilder("standard_data_processing")
             .add_stage(CollectionStage(kra_api_service, db_session))
             .add_stage(PreprocessingStage(kra_api_service, db_session))
-            .add_stage(
-                EnrichmentStage(
-                    collection_service=None,
-                    db_session=db_session,
-                    kra_api_service=kra_api_service,
-                )
-            )
+            .add_stage(EnrichmentStage(kra_api_service, db_session))
             .add_stage(ValidationStage(min_horses, min_quality_score))
             .build()
         )
@@ -100,13 +94,7 @@ class DataProcessingPipeline:
         """
         pipeline = (
             PipelineBuilder("enrichment_only")
-            .add_stage(
-                EnrichmentStage(
-                    collection_service=None,
-                    db_session=db_session,
-                    kra_api_service=kra_api_service,
-                )
-            )
+            .add_stage(EnrichmentStage(kra_api_service, db_session))
             .add_stage(
                 ValidationStage(min_horses=1, min_quality_score=min_quality_score)
             )

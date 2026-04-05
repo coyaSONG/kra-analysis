@@ -21,7 +21,7 @@ class TestEnrichmentStagePartial:
     @pytest.mark.asyncio
     async def test_enrichment_stage_validate_prerequisites_no_data(self):
         """Test EnrichmentStage prerequisite validation without data"""
-        stage = EnrichmentStage(Mock(), Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         context = PipelineContext(race_date="20240719", meet=1, race_number=1)
 
         # No preprocessed data
@@ -32,7 +32,7 @@ class TestEnrichmentStagePartial:
     @pytest.mark.asyncio
     async def test_enrichment_stage_validate_prerequisites_with_data(self):
         """Test EnrichmentStage prerequisite validation with data"""
-        stage = EnrichmentStage(Mock(), Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         context = PipelineContext(race_date="20240719", meet=1, race_number=1)
         context.preprocessed_data = {"horses": []}
 
@@ -42,7 +42,7 @@ class TestEnrichmentStagePartial:
     @pytest.mark.unit
     def test_enrichment_stage_should_skip(self):
         """Test EnrichmentStage should_skip logic"""
-        stage = EnrichmentStage(Mock(), Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         context = PipelineContext(race_date="20240719", meet=1, race_number=1)
 
         # Should not skip without enriched data
@@ -56,7 +56,7 @@ class TestEnrichmentStagePartial:
     @pytest.mark.asyncio
     async def test_enrichment_stage_rollback(self):
         """Test EnrichmentStage rollback"""
-        stage = EnrichmentStage(Mock(), Mock())
+        stage = EnrichmentStage(kra_api_service=Mock(), db_session=Mock())
         context = PipelineContext(race_date="20240719", meet=1, race_number=1)
         context.enriched_data = {"some": "data"}
 

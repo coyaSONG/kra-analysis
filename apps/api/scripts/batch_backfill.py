@@ -34,8 +34,11 @@ from sqlalchemy import select  # noqa: E402
 
 from infrastructure.database import async_session_maker, close_db  # noqa: E402
 from models.database_models import DataStatus, Race  # noqa: E402
-from services.collection_service import CollectionService  # noqa: E402
 from services.kra_api_service import KRAAPIService  # noqa: E402
+from services.race_processing_workflow import (  # noqa: E402
+    MaterializeRaceCommand,
+    build_race_processing_workflow,
+)
 from services.result_collection_service import (  # noqa: E402
     ResultCollectionService,
     ResultNotFoundError,
@@ -53,6 +56,10 @@ logger = logging.getLogger("batch_backfill")
 
 API_DELAY_SECONDS = 1.0
 MEET_NAMES = {1: "서울", 2: "제주", 3: "부산경남"}
+
+
+def _build_workflow(kra_api: KRAAPIService, db):
+    return build_race_processing_workflow(kra_api, db)
 
 
 # ---------------------------------------------------------------------------
@@ -173,14 +180,16 @@ async def backfill_enrichment(start: str | None, end: str | None) -> None:
         return
 
     kra_api = KRAAPIService()
-    collection_svc = CollectionService(kra_api)
     enriched, failed = 0, 0
 
     try:
         for idx, race_id in enumerate(pending, 1):
             try:
                 async with async_session_maker() as db:
-                    await collection_svc.enrich_race_data(race_id, db)
+                    workflow = _build_workflow(kra_api, db)
+                    await workflow.materialize(
+                        MaterializeRaceCommand(race_id=race_id, target="enriched")
+                    )
                 enriched += 1
                 if idx % 20 == 0 or idx == len(pending):
                     logger.info(
