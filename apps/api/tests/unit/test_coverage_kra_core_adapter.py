@@ -868,19 +868,35 @@ class TestJobContractEdgeCases:
 
 
 class TestAuthHelpers:
-    def test_require_admin_returns_key(self):
+    def test_require_admin_returns_principal(self):
         from dependencies.auth import require_admin
+        from models.database_models import APIKey
+        from policy.principal import AuthenticatedPrincipal
 
-        key = Mock()
+        key = APIKey(
+            key="admin-key-coverage",
+            name="Admin",
+            is_active=True,
+            permissions=["admin", "write"],
+        )
         result = require_admin(api_key_obj=key)
-        assert result is key
+        assert isinstance(result, AuthenticatedPrincipal)
+        assert result.credential_id == "admin-key-coverage"
 
-    def test_require_write_returns_key(self):
+    def test_require_write_returns_principal(self):
         from dependencies.auth import require_write
+        from models.database_models import APIKey
+        from policy.principal import AuthenticatedPrincipal
 
-        key = Mock()
+        key = APIKey(
+            key="write-key-coverage",
+            name="Writer",
+            is_active=True,
+            permissions=["write"],
+        )
         result = require_write(api_key_obj=key)
-        assert result is key
+        assert isinstance(result, AuthenticatedPrincipal)
+        assert result.credential_id == "write-key-coverage"
 
     @pytest.mark.asyncio
     async def test_check_resource_access_unknown_type(self):

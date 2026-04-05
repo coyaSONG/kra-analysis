@@ -79,6 +79,7 @@ class TestAuthAdminWritePermissions:
     @pytest.mark.asyncio
     async def test_require_admin_permissions(self):
         from dependencies.auth import _require_admin_permissions
+        from policy.principal import AuthenticatedPrincipal
 
         api_key_obj = APIKey(
             key="admin-key-123456",
@@ -88,7 +89,8 @@ class TestAuthAdminWritePermissions:
         )
         mock_db = AsyncMock()
         result = await _require_admin_permissions(api_key_obj=api_key_obj, db=mock_db)
-        assert result.key == "admin-key-123456"
+        assert isinstance(result, AuthenticatedPrincipal)
+        assert result.credential_id == "admin-key-123456"
 
     @pytest.mark.asyncio
     async def test_require_admin_permissions_denied(self):
@@ -110,6 +112,7 @@ class TestAuthAdminWritePermissions:
     @pytest.mark.asyncio
     async def test_require_write_permissions(self):
         from dependencies.auth import _require_write_permissions
+        from policy.principal import AuthenticatedPrincipal
 
         api_key_obj = APIKey(
             key="write-key-12345678",
@@ -119,7 +122,8 @@ class TestAuthAdminWritePermissions:
         )
         mock_db = AsyncMock()
         result = await _require_write_permissions(api_key_obj=api_key_obj, db=mock_db)
-        assert result.key == "write-key-12345678"
+        assert isinstance(result, AuthenticatedPrincipal)
+        assert result.credential_id == "write-key-12345678"
 
 
 class TestRequireResourceAccess:
@@ -173,6 +177,7 @@ class TestRequireResourceAccess:
     @pytest.mark.asyncio
     async def test_resource_access_granted(self):
         from dependencies.auth import require_resource_access
+        from policy.principal import AuthenticatedPrincipal
 
         dep_fn = require_resource_access("job", "job_id")
         mock_request = Mock()
@@ -193,7 +198,8 @@ class TestRequireResourceAccess:
             result = await dep_fn(
                 request=mock_request, api_key_obj=mock_api_key, db=mock_db
             )
-        assert result.key == "key-for-resource-test"
+        assert isinstance(result, AuthenticatedPrincipal)
+        assert result.credential_id == "key-for-resource-test"
 
 
 # ---------------------------------------------------------------------------

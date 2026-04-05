@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 1 UAT complete, repo-wide verify blocked by stale dirty coverage expectations
-last_updated: "2026-04-05T05:43:03.355Z"
-last_activity: 2026-04-05 — Phase 1 UAT completed with HEALTH-01/02/03 phase-local pass; repo-wide verify remains blocked by stale dirty coverage expectations for the old auth helper shape.
+status: ready
+stopped_at: Phase 1 verified complete, Phase 2 discussion pending
+last_updated: "2026-04-05T06:08:42Z"
+last_activity: 2026-04-05 — Phase 1 runtime guardrails passed full API verification including repo-wide `uv run pytest -q`; next step is Phase 2 job vocabulary discussion.
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 17
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-05)
 
 **Core value:** KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이 런타임, 스키마, 문서에서 모두 같은 사실을 말해야 한다.
-**Current focus:** Phase 1 - Runtime Guardrails
+**Current focus:** Phase 2 - Job Vocabulary
 
 ## Current Position
 
-Phase: 1 of 6 (Runtime Guardrails)
-Plan: 3 of 3 in current phase
-Status: UAT complete, repo-wide verify blocked externally
-Last activity: 2026-04-05 — Phase 1 UAT completed with HEALTH-01/02/03 phase-local pass; repo-wide verify remains blocked by stale dirty coverage expectations for the old auth helper shape.
+Phase: 2 of 6 (Job Vocabulary)
+Plan: 0 of TBD in current phase
+Status: Phase 1 verified complete, Phase 2 not started
+Last activity: 2026-04-05 — Phase 1 runtime guardrails passed full API verification including repo-wide `uv run pytest -q`; next step is Phase 2 job vocabulary discussion.
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 17%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 3
 - Average duration: 0 min
 - Total execution time: 0.0 hours
 
@@ -44,7 +44,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1. Runtime Guardrails | 3 | complete | verified |
 
 **Recent Trend:**
 
@@ -64,7 +64,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Phase 2 should collapse job type/status aliases before runner-boundary work starts.
 
 ### Blockers/Concerns
 
@@ -74,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T05:43:03.353Z
-Stopped at: Phase 1 UAT complete, repo-wide verify blocked by stale dirty coverage expectations
-Resume file: .planning/phases/01-runtime-guardrails/01-UAT.md
+Last session: 2026-04-05T06:08:42Z
+Stopped at: Phase 1 verified complete, Phase 2 discussion pending
+Resume file: .planning/ROADMAP.md

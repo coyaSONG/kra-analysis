@@ -6,7 +6,7 @@ source:
   - 01-runtime-guardrails-02-SUMMARY.md
   - 01-runtime-guardrails-03-SUMMARY.md
 started: 2026-04-05T06:00:56Z
-updated: 2026-04-05T06:03:31Z
+updated: 2026-04-05T06:08:42Z
 ---
 
 ## Current Test
@@ -42,6 +42,7 @@ evidence:
   - `cd apps/api && uv run pytest -q tests/unit/test_auth_deps.py tests/unit/test_auth.py tests/unit/test_auth_extended.py tests/unit/test_auth_resource_access.py tests/integration/test_policy_accounting.py -o addopts=''`
   - `cd apps/api && uv run pytest -q -m integration tests/integration/test_policy_accounting.py -o addopts=''`
   - `bash apps/api/scripts/run_quality_ci.sh integration`
+  - `cd apps/api && uv run pytest -q`
 
 ## Summary
 
@@ -58,6 +59,4 @@ none
 
 ## External Blockers
 
-- `pnpm -F @apps/api test` is still blocked by dirty coverage expectations outside the committed Phase 1 changes.
-- Current failure: `tests/unit/test_coverage_final_gaps.py::TestAuthAdminWritePermissions::test_require_admin_permissions`
-- Observed error: stale test expectation still reads `.key` from the old helper return shape, while Phase 1 now returns `AuthenticatedPrincipal` from the public helper surface.
+none

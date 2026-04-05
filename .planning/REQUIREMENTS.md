@@ -7,9 +7,9 @@
 
 ### Runtime Health
 
-- [ ] **HEALTH-01**: Operator can call `/health/detailed` with Redis unavailable and still receive HTTP 200 with an explicit degraded component status.
-- [ ] **HEALTH-02**: Operator can rely on one canonical request logging path that redacts sensitive request data consistently in runtime and tests.
-- [ ] **HEALTH-03**: Contributor can use one consistent authentication and authorization contract without type mismatches across dependency, policy, and accounting paths.
+- [x] **HEALTH-01**: Operator can call `/health/detailed` with Redis unavailable and still receive HTTP 200 with an explicit degraded component status.
+- [x] **HEALTH-02**: Operator can rely on one canonical request logging path that redacts sensitive request data consistently in runtime and tests.
+- [x] **HEALTH-03**: Contributor can use one consistent authentication and authorization contract without type mismatches across dependency, policy, and accounting paths.
 
 ### Job Contract
 
@@ -63,9 +63,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HEALTH-01 | Phase 1 | Pending |
-| HEALTH-02 | Phase 1 | Pending |
-| HEALTH-03 | Phase 1 | Pending |
+| HEALTH-01 | Phase 1 | Complete |
+| HEALTH-02 | Phase 1 | Complete |
+| HEALTH-03 | Phase 1 | Complete |
 | JOBS-01 | Phase 2 | Pending |
 | JOBS-02 | Phase 2 | Pending |
 | SCHEMA-01 | Phase 3 | Pending |
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after roadmap initialization*
+*Last updated: 2026-04-05 after Phase 1 verification*
