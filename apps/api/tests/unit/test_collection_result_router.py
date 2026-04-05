@@ -18,7 +18,7 @@ async def test_collect_result_success(monkeypatch, authenticated_client):
         }
 
     monkeypatch.setattr(
-        "routers.collection_v2.result_collection_service.collect_result",
+        "routers.collection_v2.collection_module.commands.collect_result",
         AsyncMock(side_effect=fake_collect_result),
     )
 
@@ -37,7 +37,7 @@ async def test_collect_result_success(monkeypatch, authenticated_client):
 @pytest.mark.unit
 async def test_collect_result_not_found_maps_to_404(monkeypatch, authenticated_client):
     monkeypatch.setattr(
-        "routers.collection_v2.result_collection_service.collect_result",
+        "routers.collection_v2.collection_module.commands.collect_result",
         AsyncMock(side_effect=ResultNotFoundError("result missing")),
     )
 
@@ -56,7 +56,7 @@ async def test_collect_result_unexpected_error_maps_to_500(
     monkeypatch, authenticated_client
 ):
     monkeypatch.setattr(
-        "routers.collection_v2.result_collection_service.collect_result",
+        "routers.collection_v2.collection_module.commands.collect_result",
         AsyncMock(side_effect=RuntimeError("boom")),
     )
 

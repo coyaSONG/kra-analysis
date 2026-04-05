@@ -3,6 +3,8 @@
 경주 데이터 수집, 전처리, 강화, 결과 수집 엔드포인트
 """
 
+from dataclasses import asdict
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,12 +17,12 @@ from models.collection_dto import (
     CollectionStatus,
     ResultCollectionRequest,
 )
-from services.collection_service import CollectionService
-from services.collection_workflow import CollectionWorkflow
-from services.job_service import JobService
-from services.kra_api_service import KRAAPIService, get_kra_api_service
+from services.kra_collection_module import (
+    BatchCollectInput,
+    KRACollectionModule,
+    ResultCollectInput,
+)
 from services.result_collection_service import (
-    ResultCollectionService,
     ResultNotFoundError,
 )
 
@@ -34,10 +36,7 @@ router = APIRouter(
     }
 )
 
-# JobService 인스턴스
-job_service = JobService()
-collection_workflow = CollectionWorkflow(job_service)
-result_collection_service = ResultCollectionService()
+collection_module = KRACollectionModule()
 
 
 @router.post(
@@ -50,12 +49,17 @@ async def collect_race_data(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
     principal: AuthenticatedPrincipal = Depends(require_action("collection.collect")),
-    kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 데이터 수집"""
     try:
-        plan = collection_workflow.build_batch_plan(request)
-        outcome = await collection_workflow.collect_batch(plan, db, kra_api)
+        outcome = await collection_module.commands.collect_batch(
+            BatchCollectInput(
+                race_date=request.date,
+                meet=request.meet,
+                race_numbers=request.race_numbers,
+            ),
+            db=db,
+        )
 
         if outcome.status == "error":
             raise HTTPException(
@@ -63,7 +67,14 @@ async def collect_race_data(
                 detail={"message": outcome.message, "errors": outcome.errors},
             )
 
-        return outcome.to_response()
+        return CollectionResponse(
+            job_id=None,
+            status=outcome.status,
+            message=outcome.message,
+            estimated_time=None,
+            webhook_url=None,
+            data=outcome.data,
+        )
 
     except HTTPException:
         raise
@@ -88,11 +99,22 @@ async def collect_race_data_async(
 ):
     """경주 데이터 비동기 수집"""
     try:
-        plan = collection_workflow.build_batch_plan(request)
-        return await collection_workflow.submit_batch_job(
-            plan,
+        receipt = await collection_module.jobs.submit_batch_collect(
+            BatchCollectInput(
+                race_date=request.date,
+                meet=request.meet,
+                race_numbers=request.race_numbers,
+            ),
             owner_ref=principal.owner_ref,
             db=db,
+        )
+        return CollectionResponse(
+            job_id=receipt.job_id,
+            status=receipt.status,
+            message=receipt.message,
+            estimated_time=receipt.estimated_time,
+            webhook_url=receipt.webhook_url,
+            data=None,
         )
     except Exception as e:
         logger.error(f"Async collection failed: {e}")
@@ -115,8 +137,12 @@ async def get_collection_status(
 ):
     """수집 상태 조회"""
     try:
-        status_data = await CollectionService.get_collection_status(db, date, meet)
-        return CollectionStatus(**status_data)
+        status_data = await collection_module.queries.get_status(
+            race_date=date,
+            meet=meet,
+            db=db,
+        )
+        return CollectionStatus(**asdict(status_data))
     except Exception as e:
         logger.error(f"Status check failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -134,16 +160,16 @@ async def collect_race_result(
     principal: AuthenticatedPrincipal = Depends(
         require_action("collection.result.collect")
     ),
-    kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 결과 수집 - KRA API에서 결과를 가져와 races.result_data에 저장"""
     try:
-        result_data = await result_collection_service.collect_result(
-            race_date=request.date,
-            meet=request.meet,
-            race_number=request.race_number,
+        result_data = await collection_module.commands.collect_result(
+            ResultCollectInput(
+                race_date=request.date,
+                meet=request.meet,
+                race_number=request.race_number,
+            ),
             db=db,
-            kra_api=kra_api,
         )
 
         return CollectionResponse(

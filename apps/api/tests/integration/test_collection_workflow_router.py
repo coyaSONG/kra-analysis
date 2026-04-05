@@ -3,8 +3,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from models.collection_dto import CollectionResponse
-
 
 @pytest.mark.asyncio
 async def test_collection_sync_route_uses_workflow(authenticated_client, monkeypatch):
@@ -14,17 +12,10 @@ async def test_collection_sync_route_uses_workflow(authenticated_client, monkeyp
         status="partial",
         message="Collected 1 races, failed 1 races",
         errors=[{"race_no": 2, "error": "boom"}],
-        to_response=lambda: CollectionResponse(
-            job_id=None,
-            status="partial",
-            message="Collected 1 races, failed 1 races",
-            estimated_time=None,
-            webhook_url=None,
-            data=[{"race_no": 1}],
-        ),
+        data=[{"race_no": 1}],
     )
     collect_mock = AsyncMock(return_value=outcome)
-    monkeypatch.setattr(router.collection_workflow, "collect_batch", collect_mock)
+    monkeypatch.setattr(router.collection_module.commands, "collect_batch", collect_mock)
 
     response = await authenticated_client.post(
         "/api/v2/collection/",
@@ -41,16 +32,19 @@ async def test_collection_async_route_uses_workflow(authenticated_client, monkey
     from routers import collection_v2 as router
 
     submit_mock = AsyncMock(
-        return_value=CollectionResponse(
+        return_value=SimpleNamespace(
             job_id="job-123",
             status="accepted",
             message="Collection job started",
             estimated_time=5,
             webhook_url="/api/v2/jobs/job-123",
-            data=None,
         )
     )
-    monkeypatch.setattr(router.collection_workflow, "submit_batch_job", submit_mock)
+    monkeypatch.setattr(
+        router.collection_module.jobs,
+        "submit_batch_collect",
+        submit_mock,
+    )
 
     response = await authenticated_client.post(
         "/api/v2/collection/async",

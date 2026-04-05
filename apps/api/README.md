@@ -140,6 +140,7 @@ apps/api/
 │   ├── metrics.py
 │   └── race.py                 # legacy v1, 비활성
 ├── services/
+│   ├── kra_collection_module.py
 │   ├── collection_service.py
 │   ├── result_collection_service.py
 │   ├── job_service.py

@@ -7,6 +7,7 @@ FastAPI 기반 경마 데이터 수집/작업 관리 API(v2)입니다.
 - `POST /api/v2/collection/`
 - `POST /api/v2/collection/async`
 - `GET /api/v2/collection/status`
+- `POST /api/v2/collection/result`
 - `GET /api/v2/jobs/`
 - `GET /api/v2/jobs/{job_id}`
 - `POST /api/v2/jobs/{job_id}/cancel`
@@ -23,7 +24,9 @@ apps/api/
 │   ├── jobs_v2.py
 │   └── race.py              # legacy v1 (비활성)
 ├── services/
+│   ├── kra_collection_module.py
 │   ├── collection_service.py
+│   ├── result_collection_service.py
 │   ├── job_service.py
 │   ├── kra_api_service.py
 │   └── race_service.py      # legacy v1 (비활성)

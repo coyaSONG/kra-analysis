@@ -10,7 +10,7 @@ async def test_collect_race_data_async_error(monkeypatch, authenticated_client):
     async def boom(*args, **kwargs):
         raise RuntimeError("submit fail")
 
-    monkeypatch.setattr(r.collection_workflow, "submit_batch_job", boom)
+    monkeypatch.setattr(r.collection_module.jobs, "submit_batch_collect", boom)
 
     resp = await authenticated_client.post(
         "/api/v2/collection/async",
@@ -28,7 +28,7 @@ async def test_collect_race_data_top_level_error(monkeypatch, authenticated_clie
     async def boom(*args, **kwargs):
         raise RuntimeError("workflow fail")
 
-    monkeypatch.setattr(r.collection_workflow, "collect_batch", boom)
+    monkeypatch.setattr(r.collection_module.commands, "collect_batch", boom)
 
     resp = await authenticated_client.post(
         "/api/v2/collection/", json={"date": "20240719", "meet": 1, "race_numbers": [1]}
