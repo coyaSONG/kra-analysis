@@ -7,82 +7,13 @@ from pathlib import Path
 
 from research_clean import SAFE_FEATURES
 
-OPTIONAL_FEATURES = [
-    "draw_no",
-    "sex_code",
-    "weather_code",
-    "track_pct",
-    "class_code",
-    "budam_code",
-    "rest_risk_code",
-    "allowance_flag",
-    "horse_win_rate",
+# Current frontier is already a strong early baseline. Keep it stable and only
+# explore a small set of additive, non-market features around it.
+TUNABLE_FEATURES = [
     "horse_place_rate",
-    "horse_top3_skill",
-    "horse_starts_y",
-    "horse_low_sample",
-    "jockey_win_rate",
-    "jockey_place_rate",
-    "jk_skill",
-    "trainer_win_rate",
-    "trainer_place_rate",
-    "tr_skill",
-    "rest_days",
-    "jockey_recent_win_rate",
-    "year_place_rate",
-    "total_place_rate",
-    "jockey_total_place_rate",
-    "trainer_total_place_rate",
-    "field_size",
-    "is_handicap",
-    "dist",
-    "is_sprint",
-    "is_mile",
+    "jockey_form",
+    "burden_ratio",
     "is_route",
-    "is_large",
-    "horse_skill_rank",
-    "jk_skill_rank",
-    "tr_skill_rank",
-    "wg_budam_rank",
-    "hr_starts_y",
-    "hr_starts_t",
-    "jk_place_rate_y",
-    "tr_place_rate_y",
-    "rating_rr",
-    "wgBudam_rr",
-    "horse_place_rate_rr",
-    "jockey_place_rate_rr",
-    "trainer_place_rate_rr",
-    "year_place_rate_rr",
-    "total_place_rate_rr",
-    "draw_rr",
-]
-
-CORE_FEATURES = [
-    "rating",
-    "wgBudam",
-    "wgHr_value",
-    "age",
-    "draw_no",
-    "class_code",
-    "track_pct",
-    "budam_code",
-    "rest_risk_code",
-    "allowance_flag",
-    "horse_top3_skill",
-    "jk_skill",
-    "tr_skill",
-    "year_place_rate",
-    "total_place_rate",
-    "jk_place_rate_y",
-    "tr_place_rate_y",
-    "draw_rr",
-    "rating_rank",
-    "horse_skill_rank",
-    "jk_skill_rank",
-    "tr_skill_rank",
-    "wg_budam_rank",
-    "age_prime",
 ]
 
 
@@ -112,38 +43,21 @@ def _has_accepted_run(start: Path) -> bool:
 def _mutate_hgb(params: dict, rng: random.Random) -> list[str]:
     notes: list[str] = []
     if rng.random() < 0.6:
-        params["max_depth"] = rng.choice([3, 4, 5, 6])
+        params["max_depth"] = rng.choice([5, 6, 7])
         notes.append(f"max_depth={params['max_depth']}")
     if rng.random() < 0.6:
-        params["learning_rate"] = rng.choice([0.02, 0.03, 0.05, 0.07])
+        params["learning_rate"] = rng.choice([0.04, 0.05, 0.06])
         notes.append(f"learning_rate={params['learning_rate']}")
     if rng.random() < 0.6:
-        params["max_iter"] = rng.choice([400, 500, 600, 700, 900])
+        params["max_iter"] = rng.choice([500, 600, 700])
         notes.append(f"max_iter={params['max_iter']}")
     if rng.random() < 0.6:
-        params["min_samples_leaf"] = rng.choice([10, 15, 20, 25, 30])
+        params["min_samples_leaf"] = rng.choice([25, 30, 35])
         notes.append(f"min_samples_leaf={params['min_samples_leaf']}")
     if rng.random() < 0.4:
-        params["l2_regularization"] = rng.choice([0.0, 0.1, 0.3, 0.6, 1.0])
+        params["l2_regularization"] = rng.choice([0.2, 0.3, 0.4, 0.6])
         notes.append(f"l2={params['l2_regularization']}")
     return notes
-
-
-def _mutate_forest(params: dict, rng: random.Random) -> list[str]:
-    params["n_estimators"] = rng.choice([300, 400, 500, 700])
-    params["max_depth"] = rng.choice([8, 10, 12, 14, None])
-    params["min_samples_leaf"] = rng.choice([1, 2, 3, 5, 8])
-    return [
-        f"n_estimators={params['n_estimators']}",
-        f"max_depth={params['max_depth']}",
-        f"min_samples_leaf={params['min_samples_leaf']}",
-    ]
-
-
-def _mutate_logreg(params: dict, rng: random.Random) -> list[str]:
-    params["max_iter"] = rng.choice([1000, 1500, 2000, 3000])
-    params["C"] = rng.choice([0.05, 0.1, 0.2, 0.5, 1.0, 2.0])
-    return [f"max_iter={params['max_iter']}", f"C={params['C']}"]
 
 
 def _mutate_features(
@@ -151,23 +65,14 @@ def _mutate_features(
 ) -> tuple[list[str], list[str]]:
     selected = set(features)
     mutation_notes: list[str] = []
-    touched: set[str] = set()
 
-    candidates = OPTIONAL_FEATURES[:]
+    candidates = TUNABLE_FEATURES[:]
     rng.shuffle(candidates)
-    for candidate in candidates[: rng.randint(1, 4)]:
-        if candidate in touched:
-            continue
-        touched.add(candidate)
-        must_keep = candidate in CORE_FEATURES
-        if (
-            candidate in selected
-            and not must_keep
-            and len(selected) > len(CORE_FEATURES)
-        ):
+    for candidate in candidates[: rng.randint(1, 2)]:
+        if candidate in selected:
             selected.remove(candidate)
             mutation_notes.append(f"drop:{candidate}")
-        elif candidate not in selected:
+        else:
             selected.add(candidate)
             mutation_notes.append(f"add:{candidate}")
 
@@ -201,30 +106,17 @@ def main() -> None:
         return
 
     notes: list[str] = []
-    if rng.random() < 0.25:
-        config["model"]["kind"] = rng.choice(["hgb", "rf", "et"])
-        notes.append(f"kind={config['model']['kind']}")
-
-    kind = config["model"]["kind"]
-    if kind == "hgb":
-        params = config["model"].setdefault("params", {})
-        params.setdefault("max_depth", 4)
-        params.setdefault("learning_rate", 0.03)
-        params.setdefault("max_iter", 300)
-        params.setdefault("min_samples_leaf", 20)
-        params.setdefault("l2_regularization", 0.0)
-        notes.extend(_mutate_hgb(params, rng))
-    elif kind in {"rf", "et"}:
-        params = config["model"].setdefault("params", {})
-        notes.extend(_mutate_forest(params, rng))
-    else:
-        params = config["model"].setdefault("params", {})
-        notes.extend(_mutate_logreg(params, rng))
+    config["model"]["kind"] = "hgb"
+    params = config["model"].setdefault("params", {})
+    params.setdefault("max_depth", 6)
+    params.setdefault("learning_rate", 0.05)
+    params.setdefault("max_iter", 600)
+    params.setdefault("min_samples_leaf", 30)
+    params.setdefault("l2_regularization", 0.3)
+    notes.extend(_mutate_hgb(params, rng))
 
     if rng.random() < 0.7:
-        config["model"]["positive_class_weight"] = rng.choice(
-            [0.9, 1.0, 1.1, 1.25, 1.5]
-        )
+        config["model"]["positive_class_weight"] = rng.choice([0.95, 1.0, 1.05, 1.1])
         notes.append(f"positive_weight={config['model']['positive_class_weight']}")
 
     features, feature_notes = _mutate_features(config["features"], rng)
