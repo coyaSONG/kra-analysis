@@ -11,8 +11,6 @@ from research_clean import SAFE_FEATURES
 # explore a small set of additive, non-market features around it.
 TUNABLE_FEATURES = [
     "horse_place_rate",
-    "jockey_form",
-    "burden_ratio",
     "is_route",
 ]
 
