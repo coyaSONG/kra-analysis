@@ -24,7 +24,14 @@ def main() -> None:
         return
 
     summary = payload.get("summary") or {}
-    print(summary.get("early_primary_exact_rate", summary.get("robust_exact_rate", 0)))
+    print(
+        summary.get(
+            "overfit_safe_exact_rate",
+            summary.get(
+                "early_primary_exact_rate", summary.get("robust_exact_rate", 0)
+            ),
+        )
+    )
 
 
 if __name__ == "__main__":

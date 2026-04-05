@@ -505,6 +505,56 @@ def _summarize(
     }
 
 
+def _evaluate_window(
+    *,
+    X: np.ndarray,
+    y: np.ndarray,
+    groups: np.ndarray,
+    dates: np.ndarray,
+    chuls: list[int],
+    answers: dict[str, list[int]],
+    config: dict,
+    train_end: str,
+    eval_start: str | None,
+    eval_end: str | None = None,
+) -> dict[str, float | int]:
+    train_mask = dates <= train_end
+    eval_mask = dates > train_end if eval_start is None else dates >= eval_start
+    if eval_end:
+        eval_mask = eval_mask & (dates <= eval_end)
+
+    if not train_mask.any() or not eval_mask.any():
+        raise ValueError(
+            f"Window produced empty partition: train_end={train_end}, eval_start={eval_start}, eval_end={eval_end}"
+        )
+
+    model = _make_model(config)
+    sample_weight = np.where(
+        y[train_mask] == 1, config["model"].get("positive_class_weight", 1.0), 1.0
+    )
+    model.fit(X[train_mask], y[train_mask], clf__sample_weight=sample_weight)
+    probs = model.predict_proba(X[eval_mask])[:, 1]
+
+    eval_answers = {}
+    for rid, ans in answers.items():
+        date = rid[:8]
+        if eval_start is None:
+            if date <= train_end:
+                continue
+        elif date < eval_start:
+            continue
+        if eval_end and date > eval_end:
+            continue
+        eval_answers[rid] = ans
+
+    return _summarize(
+        groups[eval_mask],
+        [chuls[idx] for idx, flag in enumerate(eval_mask) if flag],
+        probs,
+        eval_answers,
+    )
+
+
 def _make_model(config: dict) -> Pipeline:
     model = config["model"]
     kind = model["kind"]
@@ -564,35 +614,29 @@ def evaluate(config_path: Path) -> dict:
     if not train_mask.any() or not dev_mask.any() or not test_mask.any():
         raise ValueError("Split produced an empty partition")
 
-    model = _make_model(config)
-    sample_weight = np.where(
-        y[train_mask] == 1, config["model"].get("positive_class_weight", 1.0), 1.0
+    dev_summary = _evaluate_window(
+        X=X,
+        y=y,
+        groups=groups,
+        dates=dates,
+        chuls=chuls,
+        answers=answers,
+        config=config,
+        train_end=split["train_end"],
+        eval_start=None,
+        eval_end=split["dev_end"],
     )
-    model.fit(X[train_mask], y[train_mask], clf__sample_weight=sample_weight)
-
-    dev_answers = {
-        rid: ans
-        for rid, ans in answers.items()
-        if split["train_end"] < rid[:8] <= split["dev_end"]
-    }
-    test_answers = {
-        rid: ans for rid, ans in answers.items() if rid[:8] >= split["test_start"]
-    }
-
-    dev_probs = model.predict_proba(X[dev_mask])[:, 1]
-    test_probs = model.predict_proba(X[test_mask])[:, 1]
-
-    dev_summary = _summarize(
-        groups[dev_mask],
-        [chuls[idx] for idx, flag in enumerate(dev_mask) if flag],
-        dev_probs,
-        dev_answers,
-    )
-    test_summary = _summarize(
-        groups[test_mask],
-        [chuls[idx] for idx, flag in enumerate(test_mask) if flag],
-        test_probs,
-        test_answers,
+    test_summary = _evaluate_window(
+        X=X,
+        y=y,
+        groups=groups,
+        dates=dates,
+        chuls=chuls,
+        answers=answers,
+        config=config,
+        train_end=split["train_end"],
+        eval_start=split["test_start"],
+        eval_end=None,
     )
     robust_exact_rate = round(
         min(dev_summary["exact_3of3_rate"], test_summary["exact_3of3_rate"]), 6
@@ -600,6 +644,42 @@ def evaluate(config_path: Path) -> dict:
     blended_exact_rate = round(
         (dev_summary["exact_3of3_rate"] + test_summary["exact_3of3_rate"]) / 2, 6
     )
+    rolling_windows = config.get("rolling_windows") or []
+    rolling_results = []
+    for window in rolling_windows:
+        summary = _evaluate_window(
+            X=X,
+            y=y,
+            groups=groups,
+            dates=dates,
+            chuls=chuls,
+            answers=answers,
+            config=config,
+            train_end=window["train_end"],
+            eval_start=window["eval_start"],
+            eval_end=window.get("eval_end"),
+        )
+        rolling_results.append({"name": window["name"], "summary": summary})
+
+    rolling_min_exact_rate = round(
+        min(
+            (item["summary"]["exact_3of3_rate"] for item in rolling_results),
+            default=robust_exact_rate,
+        ),
+        6,
+    )
+    rolling_mean_exact_rate = (
+        round(
+            (
+                sum(item["summary"]["exact_3of3_rate"] for item in rolling_results)
+                / len(rolling_results)
+            ),
+            6,
+        )
+        if rolling_results
+        else robust_exact_rate
+    )
+    overfit_safe_exact_rate = round(min(robust_exact_rate, rolling_min_exact_rate), 6)
 
     return {
         "config_path": str(config_path),
@@ -616,6 +696,9 @@ def evaluate(config_path: Path) -> dict:
             "robust_exact_rate": robust_exact_rate,
             "blended_exact_rate": blended_exact_rate,
             "early_primary_exact_rate": robust_exact_rate,
+            "rolling_min_exact_rate": rolling_min_exact_rate,
+            "rolling_mean_exact_rate": rolling_mean_exact_rate,
+            "overfit_safe_exact_rate": overfit_safe_exact_rate,
             "dev_test_gap": round(
                 abs(dev_summary["exact_3of3_rate"] - test_summary["exact_3of3_rate"]),
                 6,
@@ -623,6 +706,7 @@ def evaluate(config_path: Path) -> dict:
         },
         "dev": dev_summary,
         "test": test_summary,
+        "rolling": rolling_results,
     }
 
 

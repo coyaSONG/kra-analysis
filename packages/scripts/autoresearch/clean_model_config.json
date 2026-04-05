@@ -5,6 +5,26 @@
     "dev_end": "20251130",
     "test_start": "20251201"
   },
+  "rolling_windows": [
+    {
+      "name": "fold_a",
+      "train_end": "20250731",
+      "eval_start": "20250801",
+      "eval_end": "20250930"
+    },
+    {
+      "name": "fold_b",
+      "train_end": "20250930",
+      "eval_start": "20251001",
+      "eval_end": "20251130"
+    },
+    {
+      "name": "fold_c",
+      "train_end": "20251130",
+      "eval_start": "20251201",
+      "eval_end": "20251231"
+    }
+  ],
   "model": {
     "kind": "hgb",
     "positive_class_weight": 1.0,
