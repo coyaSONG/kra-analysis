@@ -9,7 +9,7 @@
 - 이 앱의 활성 런타임은 `main_v2.py`입니다.
 - 현재 데이터 접근의 중심은 `SQLAlchemy + PostgreSQL`입니다.
 - Supabase는 PostgreSQL 호스팅과 키 관리 관점에서 사용하지만, 오래된 문서에 있는 "이중 시스템" 설명은 현재 구조를 정확히 설명하지 않습니다.
-- 마이그레이션 기준선 정리는 진행 중이며, 최신 방향은 `001_unified_schema.sql` 계열을 기준으로 봐야 합니다.
+- 새 환경 bootstrap과 startup 검증은 `scripts/apply_migrations.py`와 non-test verification command를 기준으로 진행합니다.
 
 ## 📋 사전 준비
 
@@ -116,7 +116,7 @@ $ → %24    % → %25    ^ → %5E
 
 ```bash
 cd apps/api
-python3 scripts/test_db_connection.py
+uv run python3 scripts/test_db_connection.py
 ```
 
 #### 3-2. 예상 출력
@@ -155,7 +155,7 @@ KRA API Key: 설정됨
 ⚠️  테이블이 없습니다. 마이그레이션을 실행해야 합니다.
 
 마이그레이션 실행:
-   python3 scripts/apply_migrations.py
+   uv run python3 scripts/apply_migrations.py
 
 ================================================================================
 4. Supabase Python Client 테스트
@@ -184,18 +184,18 @@ KRA API Key: 설정됨
 
 ### 4단계: 데이터베이스 마이그레이션
 
-주의: 저장소에는 legacy baseline과 unified baseline이 함께 남아 있습니다. 새 환경에서는 현재 활성 기준선으로 보는 `migrations/001_unified_schema.sql` 계열을 우선 확인하세요. `001_initial_schema.sql`은 현재 운영 모델과 직접 일치하는 기준선이 아닙니다.
+주의: 저장소에는 inactive legacy baseline이 남아 있지만 operator bootstrap 경로는 manifest가 공개하는 active unified chain만 사용합니다.
 
 #### 4-1. 마이그레이션 미리보기 (DRY RUN)
 
 ```bash
-python3 scripts/apply_migrations.py --dry-run
+uv run python3 scripts/apply_migrations.py --dry-run
 ```
 
 #### 4-2. 마이그레이션 적용
 
 ```bash
-python3 scripts/apply_migrations.py
+uv run python3 scripts/apply_migrations.py
 ```
 
 **대화형 확인**:
@@ -258,9 +258,18 @@ SQL 미리보기:
 
 #### 4-4. 주의사항
 
-⚠️ legacy와 unified baseline이 섞인 데이터베이스에서는 자동 진행하지 마세요.
+⚠️ mixed legacy/unified state가 보이면 자동 진행하지 마세요.
 - 기존 데이터가 있으면 먼저 백업합니다.
-- `001_initial_schema.sql` 계열과 `001_unified_schema.sql` 계열이 동시에 보이면 수동 점검 후 진행합니다.
+- inactive legacy baseline 흔적과 active unified chain이 함께 보이면 수동 점검 후 진행합니다.
+
+#### 4-5. Non-test bootstrap verification
+
+```bash
+cd apps/api
+uv run pytest -q tests/integration/test_bootstrap_manifest.py tests/integration/test_startup_manifest_rejection.py -o addopts=''
+```
+
+위 명령은 fresh DB bootstrap proof와 startup rejection proof를 함께 확인합니다. mixed legacy/unified state가 남아 있으면 앱은 fail closed 되므로, 먼저 DB 상태를 정리한 뒤 manifest path를 다시 적용하세요.
 
 ---
 
@@ -377,7 +386,7 @@ cat .env | grep DATABASE_URL
 # https://supabase.com/dashboard/project/[YOUR_SUPABASE_PROJECT_ID]
 
 # 3. 연결 테스트
-python3 scripts/test_db_connection.py
+uv run python3 scripts/test_db_connection.py
 ```
 
 ### 마이그레이션 실패
@@ -411,8 +420,11 @@ DROP TABLE IF EXISTS predictions CASCADE;
 # 1. 현재 스키마 확인
 psql "$DATABASE_URL" -c "\d races"
 
-# 2. 최신 migration 경로 재적용
-python3 scripts/apply_migrations.py
+# 2. 최신 manifest migration 경로 재적용
+uv run python3 scripts/apply_migrations.py
+
+# 3. non-test bootstrap/startup 검증
+uv run pytest -q tests/integration/test_bootstrap_manifest.py tests/integration/test_startup_manifest_rejection.py -o addopts=''
 ```
 
 ---
@@ -445,5 +457,5 @@ python3 scripts/apply_migrations.py
 1. ✅ 데이터베이스 연결 완료
 2. ✅ 마이그레이션 적용 완료
 3. 🔄 실제 데이터 수집 테스트
-4. 🔄 legacy 문서/스키마 정리 계획
+4. 🔄 bootstrap verification 자동화 유지
 5. 🔄 프로덕션 배포 준비

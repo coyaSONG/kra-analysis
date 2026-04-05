@@ -100,24 +100,25 @@ curl -X POST http://localhost:8000/api/v2/collection/ \
 
 - 동기 수집은 즉시 결과를 반환합니다.
 - 비동기 수집은 `jobs` API로 추적합니다.
-- 현재 작업 타입 계약은 정리 대상입니다. 문서상 의미와 내부 dispatcher vocabulary가 완전히 통일된 상태는 아닙니다.
 - `/api/v2/collection/result`는 경주 결과만 별도로 수집합니다.
 
 현재 구조의 제약:
 
 - 작업 실행기는 durable queue가 아니라 API 프로세스 내부 task입니다.
-- Redis와 상세 헬스체크, logging wiring, migration 기준선은 정리 작업이 진행 중입니다.
+- startup은 manifest migration history와 mixed legacy/unified schema state를 request serving 전에 fail closed로 거부합니다.
 
 ## 데이터베이스와 마이그레이션
 
-새 환경에서는 최신 migration 경로를 먼저 확인하세요.
+새 환경 bootstrap은 아래 한 경로만 사용합니다.
 
 ```bash
 cd apps/api
-uv run python scripts/apply_migrations.py
+uv run python3 scripts/apply_migrations.py
+uv run pytest -q tests/integration/test_bootstrap_manifest.py tests/integration/test_startup_manifest_rejection.py -o addopts=''
+uv run uvicorn main_v2:app --reload --port 8000
 ```
 
-현재 기준선으로 보는 파일은 `migrations/001_unified_schema.sql`입니다. 저장소 안에는 legacy baseline도 남아 있으므로 `001_initial_schema.sql`을 현재 기준처럼 취급하면 안 됩니다. 배경은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
+현재 schema truth는 `apps/api/infrastructure/migration_manifest.py`가 공개하는 active unified chain입니다. operator 경로는 모두 이 manifest-first bootstrap을 기준으로 하며, mixed legacy/unified state가 감지되면 앱이 fail closed 됩니다.
 
 ## 운영 점검 명령
 
