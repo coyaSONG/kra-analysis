@@ -10,6 +10,7 @@
 ## Discoveries
 - [DB 데이터 저장 구조](discovery-2026-03-15-db-data-structure.md) — basic_data vs enriched_data 용도 차이, result_data는 top3 배열만 저장
 - [구간 통과 데이터 누수](discovery-2026-03-15-sectional-data-leakage.md) — sjG1fOrd 등 27개 필드가 경주 후 데이터, FORBIDDEN 목록에 추가
+- [hrDetail 동결 스냅샷](discovery-2026-03-15-hrdetail-stale-snapshot.md) — hrDetail/jkDetail/trDetail은 1회 수집 후 갱신 안 됨, 경주 결과 미반영
 - [신규 KRA API 8건 통합](discovery-2026-03-15-new-api-integration.md) — collect_race_data에 6개 API 자동 통합 + collect_race_odds 신규 메서드 (API160_1/API301)
 
 ## Reviews
