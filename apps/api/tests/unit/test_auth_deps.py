@@ -5,11 +5,13 @@ from fastapi import HTTPException
 
 from config import settings
 from dependencies.auth import (
+    AuthenticatedPrincipal,
     check_resource_access,
     create_access_token,
     get_current_user,
     require_api_key,
     require_permissions,
+    require_principal,
     verify_api_key,
     verify_token,
 )
@@ -48,6 +50,28 @@ async def test_require_api_key_missing_raises(db_session):
     with pytest.raises(HTTPException) as ex:
         await require_api_key(x_api_key=None, api_key=None, db=db_session)
     assert ex.value.status_code == 401
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_require_principal_returns_normalized_principal(db_session):
+    key_value = "principal-key-12345"
+    keyrow = DBAPIKey(
+        key=key_value,
+        name="principal-user",
+        is_active=True,
+        permissions=["read", "write"],
+    )
+    db_session.add(keyrow)
+    await db_session.commit()
+
+    principal = await require_principal(x_api_key=key_value, api_key=None, db=db_session)
+
+    assert isinstance(principal, AuthenticatedPrincipal)
+    assert principal.owner_ref == key_value
+    assert principal.credential_id == key_value
+    assert principal.permissions == frozenset({"read", "write"})
 
 
 @pytest.mark.asyncio

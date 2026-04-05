@@ -25,6 +25,45 @@ async def test_jobs_v2_list_returns_jobs(authenticated_client, db_session):
 
 
 @pytest.mark.asyncio
+async def test_jobs_v2_list_normalizes_running_status(authenticated_client, db_session):
+    job = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.RUNNING,
+        parameters={"race_date": "20240719"},
+        created_by="test-api-key-123",
+    )
+    db_session.add(job)
+    await db_session.commit()
+
+    response = await authenticated_client.get("/api/v2/jobs/")
+    assert response.status_code == 200
+    data = response.json()
+    listed = next(item for item in data["jobs"] if item["job_id"] == str(job.job_id))
+    assert listed["status"] == "processing"
+
+
+@pytest.mark.asyncio
+async def test_jobs_v2_processing_filter_matches_legacy_running_row(
+    authenticated_client, db_session
+):
+    job = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.RUNNING,
+        parameters={"race_date": "20240719"},
+        created_by="test-api-key-123",
+    )
+    db_session.add(job)
+    await db_session.commit()
+
+    response = await authenticated_client.get("/api/v2/jobs/?status=processing")
+    assert response.status_code == 200
+    data = response.json()
+    job_ids = {item["job_id"] for item in data["jobs"]}
+    assert str(job.job_id) in job_ids
+    assert all(item["status"] == "processing" for item in data["jobs"])
+
+
+@pytest.mark.asyncio
 async def test_jobs_v2_get_detail_returns_logs(authenticated_client, db_session):
     job = Job(
         type=JobType.COLLECTION,
@@ -40,6 +79,7 @@ async def test_jobs_v2_get_detail_returns_logs(authenticated_client, db_session)
     assert response.status_code == 200
     data = response.json()
     assert data["job"]["job_id"] == str(job.job_id)
+    assert data["job"]["status"] == "processing"
     assert isinstance(data["logs"], list)
 
 

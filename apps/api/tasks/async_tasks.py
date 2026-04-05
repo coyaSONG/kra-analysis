@@ -12,6 +12,7 @@ from sqlalchemy import and_, select
 from infrastructure.database import async_session_maker
 from models.database_models import Job, JobLog, Race
 from services.collection_service import CollectionService
+from services.job_contract import apply_job_shadow_fields
 from services.kra_api_service import KRAAPIService
 
 logger = structlog.get_logger()
@@ -37,6 +38,7 @@ async def _update_job_status(
 
             if job:
                 job.status = status
+                apply_job_shadow_fields(job, lifecycle_status=status)
                 if error:
                     job.error_message = error
                 if result_payload is not None:

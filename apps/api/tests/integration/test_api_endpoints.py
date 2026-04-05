@@ -354,7 +354,7 @@ class TestJobsEndpoints:
         data = response.json()
         assert data["job"]["job_id"] == job.job_id
         assert data["job"]["type"] == "collection"
-        assert data["job"]["status"] == "running"
+        assert data["job"]["status"] == "processing"
         assert data["logs"] is None or isinstance(data["logs"], list)
 
     @pytest.mark.integration

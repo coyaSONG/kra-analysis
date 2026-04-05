@@ -9,6 +9,7 @@ Supabase 데이터베이스 마이그레이션 적용 스크립트
 
 import argparse
 import asyncio
+import hashlib
 import sys
 from pathlib import Path
 
@@ -19,8 +20,18 @@ import structlog
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import settings
+from infrastructure.migration_manifest import (
+    get_active_migration_names,
+    get_active_migration_paths,
+    get_required_migration_head,
+)
 
 logger = structlog.get_logger()
+MIGRATIONS_TABLE = "schema_migrations"
+
+
+def compute_checksum(migration_file: Path) -> str:
+    return hashlib.sha256(migration_file.read_bytes()).hexdigest()
 
 
 async def get_connection():
@@ -38,6 +49,14 @@ async def check_migration_status(conn):
     print("\n" + "=" * 80)
     print("마이그레이션 상태 확인")
     print("=" * 80)
+
+    applied = await fetch_applied_migrations(conn, create_if_missing=False)
+    if applied:
+        print(f"✅ 적용된 마이그레이션 {len(applied)}개:")
+        for migration in applied:
+            print(f"   - {migration['name']} ({migration['checksum'][:8]})")
+    else:
+        print("ℹ️  적용된 마이그레이션 기록이 없습니다.")
 
     # 테이블 존재 여부 확인
     tables = await conn.fetch(
@@ -59,12 +78,59 @@ async def check_migration_status(conn):
         return False
 
 
+async def ensure_schema_migrations_table(conn):
+    await conn.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {MIGRATIONS_TABLE} (
+            name VARCHAR(255) PRIMARY KEY,
+            checksum VARCHAR(64) NOT NULL,
+            applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """
+    )
+
+
+async def fetch_applied_migrations(conn, *, create_if_missing: bool) -> list[asyncpg.Record]:
+    if create_if_missing:
+        await ensure_schema_migrations_table(conn)
+    else:
+        exists = await conn.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = $1
+            )
+        """,
+            MIGRATIONS_TABLE,
+        )
+        if not exists:
+            return []
+    return await conn.fetch(f"SELECT name, checksum, applied_at FROM {MIGRATIONS_TABLE} ORDER BY name")
+
+
+async def get_applied_migrations(conn, *, create_if_missing: bool = True) -> dict[str, str]:
+    rows = await fetch_applied_migrations(conn, create_if_missing=create_if_missing)
+    return {row["name"]: row["checksum"] for row in rows}
+
+
 async def apply_migration(conn, migration_file: Path, dry_run: bool = False):
     """마이그레이션 파일 적용"""
     print(f"\n{'[DRY RUN] ' if dry_run else ''}적용 중: {migration_file.name}")
     print("-" * 80)
 
     try:
+        checksum = compute_checksum(migration_file)
+        applied = await get_applied_migrations(conn)
+        applied_checksum = applied.get(migration_file.name)
+        if applied_checksum == checksum:
+            print(f"⏭️  이미 적용됨: {migration_file.name}")
+            return False
+        if applied_checksum and applied_checksum != checksum:
+            raise RuntimeError(
+                f"Checksum mismatch for applied migration {migration_file.name}"
+            )
+
         # SQL 파일 읽기
         sql_content = migration_file.read_text()
 
@@ -87,6 +153,14 @@ async def apply_migration(conn, migration_file: Path, dry_run: bool = False):
         # 트랜잭션으로 실행
         async with conn.transaction():
             await conn.execute(sql_content)
+            await conn.execute(
+                f"""
+                INSERT INTO {MIGRATIONS_TABLE}(name, checksum)
+                VALUES($1, $2)
+            """,
+                migration_file.name,
+                checksum,
+            )
 
         print(f"✅ {migration_file.name} 적용 완료")
         return True
@@ -116,14 +190,12 @@ async def verify_schema(conn):
     # 필수 테이블 목록
     required_tables = [
         "races",
-        "race_results",
         "predictions",
-        "collection_jobs",
-        "horse_cache",
-        "jockey_cache",
-        "trainer_cache",
-        "prompt_versions",
-        "performance_analysis",
+        "jobs",
+        "job_logs",
+        "api_keys",
+        "prompt_templates",
+        "usage_events",
     ]
 
     # 테이블 존재 확인
@@ -173,6 +245,21 @@ async def verify_schema(conn):
     return all_present
 
 
+async def get_migration_head(conn) -> str | None:
+    applied = await get_applied_migrations(conn, create_if_missing=False)
+    if not applied:
+        return None
+    return sorted(applied)[-1]
+
+
+def validate_manifest_files() -> list[Path]:
+    paths = get_active_migration_paths()
+    missing = [path.name for path in paths if not path.exists()]
+    if missing:
+        raise RuntimeError(f"Manifest references missing migrations: {missing}")
+    return paths
+
+
 async def main():
     """메인 함수"""
     parser = argparse.ArgumentParser(description="Supabase 마이그레이션 적용")
@@ -203,14 +290,23 @@ async def main():
         print(f"\n❌ 마이그레이션 디렉토리가 없습니다: {migrations_dir}")
         sys.exit(1)
 
-    migration_files = sorted(migrations_dir.glob("*.sql"))
+    migration_files = validate_manifest_files()
     if not migration_files:
         print(f"\n⚠️  마이그레이션 파일이 없습니다: {migrations_dir}")
         sys.exit(0)
 
-    print(f"\n발견된 마이그레이션 파일 {len(migration_files)}개:")
+    print(f"\n활성 마이그레이션 파일 {len(migration_files)}개:")
     for f in migration_files:
         print(f"   - {f.name}")
+    inactive = sorted(
+        path.name
+        for path in migrations_dir.glob("*.sql")
+        if path.name not in get_active_migration_names()
+    )
+    if inactive:
+        print("\n비활성/legacy 마이그레이션 파일:")
+        for name in inactive:
+            print(f"   - {name}")
 
     # 연결
     print("\n데이터베이스 연결 중...")
@@ -226,6 +322,9 @@ async def main():
     try:
         # 현재 상태 확인
         has_tables = await check_migration_status(conn)
+        required_head = get_required_migration_head()
+        if required_head:
+            print(f"\n정답 migration head: {required_head}")
 
         # 사용자 확인
         if not args.dry_run:

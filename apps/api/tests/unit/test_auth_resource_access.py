@@ -3,6 +3,8 @@ from fastapi import Depends, FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from dependencies.auth import check_resource_access, require_resource_access
+from infrastructure.database import get_db
+from models.database_models import APIKey as DBAPIKey
 from models.database_models import Job, JobStatus, JobType, Prediction
 
 
@@ -65,9 +67,6 @@ async def test_require_resource_access_job_allow_and_deny(db_session):
     await db_session.commit()
     await db_session.refresh(j)
 
-    # Ensure the header key exists in DB for this test app
-    from models.database_models import APIKey as DBAPIKey
-
     dbkey = DBAPIKey(
         key="test-api-key-123",
         name="Environment Key",
@@ -78,8 +77,6 @@ async def test_require_resource_access_job_allow_and_deny(db_session):
     await db_session.commit()
 
     app = FastAPI()
-
-    from infrastructure.database import get_db
 
     async def override_get_db():
         yield db_session
@@ -104,3 +101,49 @@ async def test_require_resource_access_job_allow_and_deny(db_session):
             "/guard/jobs/does-not-exist", headers={"X-API-Key": "test-api-key-123"}
         )
         assert r_dn.status_code == 403
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_require_resource_access_verifies_db_key_once(db_session):
+    presented_key = "resource-access-key-12345"
+    dbkey = DBAPIKey(
+        key=presented_key,
+        name="Resource User",
+        is_active=True,
+        permissions=["read", "write"],
+        today_requests=0,
+        total_requests=0,
+    )
+    job = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.PENDING,
+        parameters={},
+        created_by=presented_key,
+    )
+    db_session.add_all([dbkey, job])
+    await db_session.commit()
+    await db_session.refresh(job)
+
+    app = FastAPI()
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    @app.get("/guard/jobs/{job_id}")
+    async def guard(job_id: str, _=Depends(require_resource_access("job", "job_id"))):
+        return {"ok": True}
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get(
+            f"/guard/jobs/{job.job_id}", headers={"X-API-Key": presented_key}
+        )
+
+    assert response.status_code == 200
+    await db_session.refresh(dbkey)
+    assert dbkey.today_requests == 1
+    assert dbkey.total_requests == 1

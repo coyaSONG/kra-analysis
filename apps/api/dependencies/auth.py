@@ -10,14 +10,33 @@ import structlog
 from fastapi import Depends, Header, HTTPException, Request, status
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from infrastructure.database import get_db
 from models.database_models import APIKey
+from policy.accounting import UsageAccountant
+from policy.authentication import PrincipalAuthenticator
+from policy.authorization import PolicyAction, PolicyAuthorizer
+from policy.principal import AuthenticatedPrincipal
 
 logger = structlog.get_logger()
+
+_principal_authenticator = PrincipalAuthenticator()
+_policy_authorizer = PolicyAuthorizer()
+_usage_accountant = UsageAccountant()
+
+
+def _resolve_presented_api_key(
+    x_api_key: str | None,
+    api_key: str | None,
+) -> str | None:
+    return (
+        x_api_key
+        if isinstance(x_api_key, str)
+        else (api_key if isinstance(api_key, str) else None)
+    )
 
 
 async def verify_api_key(api_key: str, db: AsyncSession) -> APIKey | None:
@@ -84,25 +103,28 @@ async def require_api_key(
     db: AsyncSession = Depends(get_db),
 ) -> str:
     """API 키 필수 의존성"""
-    # Missing header -> 401 with clear message
-    provided_key = (
-        x_api_key
-        if isinstance(x_api_key, str)
-        else (api_key if isinstance(api_key, str) else None)
-    )
+    api_key_obj = await require_api_key_record(x_api_key=x_api_key, api_key=api_key, db=db)
+    return str(api_key_obj.key)
+
+
+async def require_api_key_record(
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    api_key: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> APIKey:
+    """Resolve and validate the API key record once per request."""
+    provided_key = _resolve_presented_api_key(x_api_key, api_key)
     if not provided_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="API key required"
         )
 
     api_key_obj = await verify_api_key(provided_key, db)
-
     if not api_key_obj:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
         )
 
-    # 일일 한도 확인
     if (
         api_key_obj.daily_limit
         and api_key_obj.today_requests
@@ -113,12 +135,52 @@ async def require_api_key(
             detail="Daily request limit exceeded",
         )
 
-    return provided_key
+    return api_key_obj
+
+
+async def require_principal(
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    api_key: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> AuthenticatedPrincipal:
+    """Authenticate a caller and return a normalized principal object."""
+    provided_key = _resolve_presented_api_key(x_api_key, api_key)
+    api_key_obj = await require_api_key_record(x_api_key=x_api_key, api_key=api_key, db=db)
+    return _build_principal_from_api_key(
+        provided_key,
+        api_key_obj,
+        is_environment_key=provided_key in settings.valid_api_keys,
+    )
+
+
+def _build_principal_from_api_key(
+    presented_key: str, api_key_obj: APIKey, *, is_environment_key: bool
+) -> AuthenticatedPrincipal:
+    return _principal_authenticator.authenticate_api_key(
+        presented_key, api_key_obj, is_environment_key=is_environment_key
+    )
+
+
+def require_action(action: PolicyAction):
+    """Authenticate and authorize a principal for a named action."""
+
+    async def dependency(
+        request: Request,
+        principal: AuthenticatedPrincipal = Depends(require_principal),
+    ) -> AuthenticatedPrincipal:
+        await _policy_authorizer.authorize(principal, action)
+        reservation = await _usage_accountant.reserve(principal, action)
+        request.state.principal = principal
+        request.state.policy_action = action
+        request.state.usage_reservation = reservation
+        return principal
+
+    return dependency
 
 
 async def require_permissions(
     required_permissions: list[str],
-    api_key_obj: APIKey = Depends(require_api_key),
+    api_key_obj: APIKey = Depends(require_api_key_record),
     db: AsyncSession = Depends(get_db),
 ) -> APIKey:
     """특정 권한 필요 의존성"""
@@ -227,6 +289,12 @@ async def check_resource_access(
     if "admin" in (api_key.permissions or []):
         return True
 
+    owner_candidates = tuple(
+        candidate
+        for candidate in {getattr(api_key, "key", None), getattr(api_key, "name", None)}
+        if isinstance(candidate, str) and candidate
+    )
+
     # 리소스별 접근 권한 체크
     if resource_type == "race":
         # 경주 데이터는 읽기 권한만 있으면 접근 가능
@@ -237,7 +305,10 @@ async def check_resource_access(
         from models.database_models import Job
 
         result = await db.execute(
-            select(Job).where(Job.job_id == resource_id, Job.created_by == api_key.name)
+            select(Job).where(
+                Job.job_id == resource_id,
+                or_(*(Job.created_by == candidate for candidate in owner_candidates)),
+            )
         )
         job = result.scalar_one_or_none()
         return job is not None
@@ -249,7 +320,12 @@ async def check_resource_access(
         result = await db.execute(
             select(Prediction).where(
                 Prediction.prediction_id == resource_id,
-                Prediction.created_by == api_key.name,
+                or_(
+                    *(
+                        Prediction.created_by == candidate
+                        for candidate in owner_candidates
+                    )
+                ),
             )
         )
         prediction = result.scalar_one_or_none()
@@ -274,18 +350,9 @@ def require_resource_access(resource_type: str, resource_id_param: str = "resour
 
     async def dependency(
         request: Request,
-        api_key: APIKey = Depends(require_api_key),
+        api_key_obj: APIKey = Depends(require_api_key_record),
         db: AsyncSession = Depends(get_db),
     ):
-        # Get api_key_obj from require_api_key
-        # Resolve API key object for permission checks
-        api_key_value = request.headers.get("X-API-Key", "")
-        api_key_obj = await verify_api_key(api_key_value, db)
-        if not api_key_obj:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key"
-            )
-
         resource_id = request.path_params.get(resource_id_param)
 
         if not resource_id:

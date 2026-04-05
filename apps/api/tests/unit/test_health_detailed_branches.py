@@ -9,24 +9,22 @@ class FailPing:
 @pytest.mark.asyncio
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_detailed_health_redis_unhealthy(monkeypatch, authenticated_client):
+async def test_detailed_health_redis_unhealthy(api_app, authenticated_client):
     # Override dependency to simulate redis with failing ping
-    async def override():
-        yield FailPing()
+    def override():
+        return FailPing()
 
     # FastAPI override
-    from infrastructure.redis_client import get_redis as getdep
-    from main_v2 import app as fastapp
+    import routers.health as health_router
 
-    fastapp.dependency_overrides[getdep] = override
+    api_app.dependency_overrides[health_router.get_optional_redis] = override
     try:
         r = await authenticated_client.get("/health/detailed")
         assert r.status_code == 200
         data = r.json()
-        # DB healthy from fixtures; redis unhealthy branch covered
-        assert data["redis"] in ("unhealthy", "healthy")  # depends on mock
+        assert data["redis"] == "unhealthy"
     finally:
-        fastapp.dependency_overrides.clear()
+        api_app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
@@ -44,4 +42,4 @@ async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
     r = await authenticated_client.get("/health/detailed")
     assert r.status_code == 200
     data = r.json()
-    assert data["database"] in ("unhealthy", "healthy")
+    assert data["database"] == "unhealthy"

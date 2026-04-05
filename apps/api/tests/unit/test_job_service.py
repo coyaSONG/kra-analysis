@@ -16,11 +16,13 @@ async def test_create_job(db_session):
     job = await service.create_job(
         job_type=JobType.COLLECTION.value,  # use enum value to satisfy DB enum
         parameters=params,
-        user_id="tester",
+        owner_ref="tester",
         db=db_session,
     )
     assert job.job_id
     assert job.parameters["meet"] == 1
+    assert job.job_kind_v2 == "collection"
+    assert job.lifecycle_state_v2 == "pending"
 
 
 @pytest.mark.unit
@@ -53,6 +55,7 @@ async def test_start_job_queues_task(monkeypatch, db_session):
         JobStatus.QUEUED.value,
     )
     assert job2.task_id == "stub-task-id"
+    assert job2.lifecycle_state_v2 == "queued"
 
 
 @pytest.mark.unit
@@ -217,6 +220,29 @@ async def test_list_jobs_with_total_returns_paginated_jobs_and_total(db_session)
 
     assert len(paged_jobs) == 1
     assert total == 2
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_list_jobs_with_total_processing_filter_matches_legacy_running_row(
+    db_session,
+):
+    service = JobService()
+    running_job = Job(
+        type=JobType.COLLECTION,
+        status=JobStatus.RUNNING,
+        parameters={"idx": 1},
+        created_by="tester",
+    )
+    db_session.add(running_job)
+    await db_session.commit()
+
+    paged_jobs, total = await service.list_jobs_with_total(
+        db=db_session, status="processing", limit=10, offset=0
+    )
+
+    assert total == 1
+    assert [job.job_id for job in paged_jobs] == [running_job.job_id]
 
 
 @pytest.mark.unit

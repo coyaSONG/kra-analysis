@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from models.database_models import DataStatus, Job, JobLog, JobStatus, JobType, Race
+from services.job_contract import apply_job_shadow_fields
 from tasks import async_tasks
 
 
@@ -20,16 +21,16 @@ def patch_async_tasks_session_maker(monkeypatch, test_db_engine):
 
 async def _create_job(session_maker, job_id: str, job_type: JobType) -> None:
     async with session_maker() as session:
-        session.add(
-            Job(
-                job_id=job_id,
-                type=job_type,
-                status=JobStatus.PENDING,
-                created_by="tester",
-                parameters={},
-                created_at=datetime.now(UTC),
-            )
+        job = Job(
+            job_id=job_id,
+            type=job_type,
+            status=JobStatus.PENDING,
+            created_by="tester",
+            parameters={},
+            created_at=datetime.now(UTC),
         )
+        apply_job_shadow_fields(job)
+        session.add(job)
         await session.commit()
 
 
@@ -97,6 +98,8 @@ async def test_collect_race_data_updates_job_and_writes_log(
         )
 
     assert job.status == JobStatus.COMPLETED
+    assert job.job_kind_v2 == "collection"
+    assert job.lifecycle_state_v2 == "completed"
     assert job.task_id == "task-collect-success"
     assert job.result["status"] == "success"
     assert len(logs) == 1
@@ -149,6 +152,8 @@ async def test_collect_race_data_marks_job_failed_on_service_error(
         )
 
     assert job.status == JobStatus.FAILED
+    assert job.job_kind_v2 == "collection"
+    assert job.lifecycle_state_v2 == "failed"
     assert job.error_message == "collection exploded"
     assert len(logs) == 1
     assert logs[0].level == "error"
@@ -203,6 +208,8 @@ async def test_batch_collect_marks_job_completed_when_all_items_succeed(
         ).scalar_one()
 
     assert job.status == JobStatus.COMPLETED
+    assert job.job_kind_v2 == "batch_collect"
+    assert job.lifecycle_state_v2 == "completed"
     assert job.result["status"] == "completed"
     assert job.error_message is None
 
@@ -285,6 +292,8 @@ async def test_full_pipeline_runs_all_steps_and_updates_job(
         )
 
     assert job.status == JobStatus.COMPLETED
+    assert job.job_kind_v2 == "collection"
+    assert job.lifecycle_state_v2 == "completed"
     assert job.result["race_id"] == "race-20240719-1-9"
     assert [log.message for log in logs] == [
         "Starting data collection",

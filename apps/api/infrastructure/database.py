@@ -13,6 +13,10 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool
 
 from config import settings
+from infrastructure.migration_manifest import (
+    get_active_migration_names,
+    get_required_migration_head,
+)
 
 logger = structlog.get_logger()
 
@@ -84,16 +88,65 @@ async_session_maker = async_sessionmaker(
 )
 
 
+async def get_applied_migrations() -> dict[str, str]:
+    async with engine.connect() as conn:
+        result = await conn.execute(
+            text(
+                """
+                SELECT name, checksum
+                FROM schema_migrations
+                ORDER BY name
+            """
+            )
+        )
+        return {row[0]: row[1] for row in result.all()}
+
+
+async def require_migration_manifest() -> None:
+    required_names = get_active_migration_names()
+    if not required_names:
+        return
+
+    try:
+        applied = await get_applied_migrations()
+    except Exception as exc:
+        raise RuntimeError(
+            "Database schema_migrations table missing or unreadable. "
+            "Run scripts/apply_migrations.py before starting the app."
+        ) from exc
+
+    missing = [name for name in required_names if name not in applied]
+    unexpected = [name for name in applied if name not in required_names]
+    if missing or unexpected:
+        raise RuntimeError(
+            "Database migration manifest mismatch: "
+            f"missing={missing}, unexpected={unexpected}. "
+            "Run scripts/apply_migrations.py before starting the app."
+        )
+
+    applied_head = max(applied)
+    required_head = get_required_migration_head()
+    if applied_head != required_head:
+        raise RuntimeError(
+            f"Database migration head mismatch: required={required_head}, applied={applied_head}. "
+            "Run scripts/apply_migrations.py before starting the app."
+        )
+
+
 async def init_db():
     """데이터베이스 초기화"""
     try:
-        # 테이블 생성
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        if settings.environment == "test" or "sqlite" in database_url:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+        else:
+            await require_migration_manifest()
 
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
+        if settings.environment != "test":
+            raise
         logger.warning("API will run without database connection")
 
 

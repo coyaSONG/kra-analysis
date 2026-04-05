@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 import structlog
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.background_tasks import (
@@ -18,16 +18,15 @@ from infrastructure.background_tasks import (
     submit_task,
 )
 from models.database_models import Job, JobLog
+from services.job_contract import (
+    DispatchAction,
+    apply_job_shadow_fields,
+    normalize_dispatch_action,
+    normalize_lifecycle_status,
+)
 
 logger = structlog.get_logger()
 
-type CanonicalDispatchJobType = Literal[
-    "collect_race",
-    "preprocess_race",
-    "enrich_race",
-    "batch_collect",
-    "full_pipeline",
-]
 type DispatchJobType = Literal[
     "collect_race",
     "preprocess_race",
@@ -50,23 +49,23 @@ class JobService:
         return str(value)
 
     @staticmethod
-    def _normalize_dispatch_job_type(job_type: Any) -> CanonicalDispatchJobType:
-        raw_job_type = job_type.value if hasattr(job_type, "value") else str(job_type)
-        alias_map: dict[str, CanonicalDispatchJobType] = {
-            "collect_race": "collect_race",
-            "preprocess_race": "preprocess_race",
-            "enrich_race": "enrich_race",
-            "batch_collect": "batch_collect",
-            "batch": "batch_collect",
-            "full_pipeline": "full_pipeline",
-        }
-        normalized = alias_map.get(raw_job_type)
-        if normalized is None:
-            raise ValueError(f"Unknown job type: {raw_job_type}")
-        return normalized
+    def _normalize_dispatch_action(job_type: Any) -> DispatchAction:
+        return normalize_dispatch_action(job_type)
+
+    @staticmethod
+    def _normalize_dispatch_job_type(job_type: Any) -> str:
+        return JobService._normalize_dispatch_action(job_type).value
+
+    @staticmethod
+    def _normalize_lifecycle_status_value(status: Any) -> str:
+        return normalize_lifecycle_status(status).value
 
     async def create_job(
-        self, job_type: str, parameters: dict[str, Any], user_id: str, db: AsyncSession
+        self,
+        job_type: str,
+        parameters: dict[str, Any],
+        owner_ref: str,
+        db: AsyncSession,
     ) -> Job:
         """
         새 작업 생성
@@ -74,7 +73,7 @@ class JobService:
         Args:
             job_type: 작업 유형
             parameters: 작업 파라미터
-            user_id: 사용자 ID
+            owner_ref: 작업 소유자 식별자
             db: 데이터베이스 세션
 
         Returns:
@@ -86,15 +85,19 @@ class JobService:
                 type=job_type,
                 parameters=parameters,
                 status="pending",
-                created_by=user_id,
+                created_by=owner_ref,
             )
+            apply_job_shadow_fields(job, job_kind=job_type, lifecycle_status="pending")
 
             db.add(job)
             await db.commit()
             await db.refresh(job)
 
             logger.info(
-                "Job created", job_id=job.job_id, job_type=job_type, user_id=user_id
+                "Job created",
+                job_id=job.job_id,
+                job_type=job_type,
+                owner_ref=owner_ref,
             )
 
             return job
@@ -133,6 +136,7 @@ class JobService:
             job.status = "queued"
             job.task_id = task_id
             job.started_at = datetime.now(UTC).replace(tzinfo=None)
+            apply_job_shadow_fields(job, lifecycle_status="queued")
 
             await db.commit()
 
@@ -161,34 +165,34 @@ class JobService:
         )
 
         params = job.parameters
-        job_type = self._normalize_dispatch_job_type(job.type)
+        dispatch_action = self._normalize_dispatch_action(job.type)
 
-        dispatch_table: dict[CanonicalDispatchJobType, DispatchHandler] = {
-            "collect_race": lambda dispatch_params, job_id: submit_task(
+        dispatch_table: dict[DispatchAction, DispatchHandler] = {
+            DispatchAction.COLLECT_RACE: lambda dispatch_params, job_id: submit_task(
                 collect_race_data,
                 dispatch_params["race_date"],
                 dispatch_params["meet"],
                 dispatch_params["race_no"],
                 job_id,
             ),
-            "preprocess_race": lambda dispatch_params, job_id: submit_task(
+            DispatchAction.PREPROCESS_RACE: lambda dispatch_params, job_id: submit_task(
                 preprocess_race_data,
                 dispatch_params["race_id"],
                 job_id,
             ),
-            "enrich_race": lambda dispatch_params, job_id: submit_task(
+            DispatchAction.ENRICH_RACE: lambda dispatch_params, job_id: submit_task(
                 enrich_race_data,
                 dispatch_params["race_id"],
                 job_id,
             ),
-            "batch_collect": lambda dispatch_params, job_id: submit_task(
+            DispatchAction.BATCH_COLLECT: lambda dispatch_params, job_id: submit_task(
                 batch_collect,
                 dispatch_params["race_date"],
                 dispatch_params["meet"],
                 dispatch_params["race_numbers"],
                 job_id,
             ),
-            "full_pipeline": lambda dispatch_params, job_id: submit_task(
+            DispatchAction.FULL_PIPELINE: lambda dispatch_params, job_id: submit_task(
                 full_pipeline,
                 dispatch_params["race_date"],
                 dispatch_params["meet"],
@@ -197,15 +201,15 @@ class JobService:
             ),
         }
 
-        return dispatch_table[job_type](params, job.job_id)
+        return dispatch_table[dispatch_action](params, job.job_id)
 
     async def get_job(
-        self, job_id: str, db: AsyncSession, user_id: str | None = None
+        self, job_id: str, db: AsyncSession, owner_ref: str | None = None
     ) -> Job | None:
         """작업 조회"""
         query = select(Job).where(Job.job_id == job_id)
-        if user_id:
-            query = query.where(Job.created_by == user_id)
+        if owner_ref:
+            query = query.where(Job.created_by == owner_ref)
         result = await db.execute(query)
         return result.scalar_one_or_none()
 
@@ -239,7 +243,7 @@ class JobService:
         return {
             "job_id": job.job_id,
             "type": job.type,
-            "status": job.status,
+            "status": self._normalize_lifecycle_status_value(job.status),
             "progress": progress,
             "created_at": job.created_at.isoformat(),
             "started_at": job.started_at.isoformat() if job.started_at else None,
@@ -313,7 +317,7 @@ class JobService:
     async def list_jobs(
         self,
         db: AsyncSession,
-        user_id: str | None = None,
+        owner_ref: str | None = None,
         job_type: str | None = None,
         status: str | None = None,
         limit: int = 20,
@@ -324,7 +328,7 @@ class JobService:
 
         Args:
             db: 데이터베이스 세션
-            user_id: 사용자 ID (필터)
+            owner_ref: 작업 소유자 식별자 (필터)
             job_type: 작업 유형 (필터)
             status: 상태 (필터)
             limit: 조회 개수
@@ -335,7 +339,7 @@ class JobService:
         """
         jobs, _ = await self.list_jobs_with_total(
             db=db,
-            user_id=user_id,
+            owner_ref=owner_ref,
             job_type=job_type,
             status=status,
             limit=limit,
@@ -346,7 +350,7 @@ class JobService:
     async def list_jobs_with_total(
         self,
         db: AsyncSession,
-        user_id: str | None = None,
+        owner_ref: str | None = None,
         job_type: str | None = None,
         status: str | None = None,
         limit: int = 20,
@@ -354,12 +358,25 @@ class JobService:
     ) -> tuple[list[Job], int]:
         """작업 목록과 전체 개수를 함께 조회."""
         filters = []
-        if user_id:
-            filters.append(Job.created_by == user_id)
+        if owner_ref:
+            filters.append(Job.created_by == owner_ref)
         if job_type:
             filters.append(Job.type == self._to_filter_value(job_type))
         if status:
-            filters.append(Job.status == self._to_filter_value(status))
+            normalized_status = self._normalize_lifecycle_status_value(status)
+            legacy_status_values = [normalized_status]
+            if normalized_status == "processing":
+                legacy_status_values.append("running")
+
+            filters.append(
+                or_(
+                    Job.lifecycle_state_v2 == normalized_status,
+                    and_(
+                        Job.lifecycle_state_v2.is_(None),
+                        Job.status.in_(legacy_status_values),
+                    ),
+                )
+            )
 
         list_query = select(Job)
         count_query = select(func.count()).select_from(Job)
@@ -379,7 +396,7 @@ class JobService:
         return list(list_result.scalars().all()), count_result.scalar_one()
 
     async def cancel_job(
-        self, job_id: str, db: AsyncSession, user_id: str | None = None
+        self, job_id: str, db: AsyncSession, owner_ref: str | None = None
     ) -> bool:
         """
         작업 취소
@@ -392,7 +409,7 @@ class JobService:
             성공 여부
         """
         try:
-            job = await self.get_job(job_id, db, user_id=user_id)
+            job = await self.get_job(job_id, db, owner_ref=owner_ref)
 
             if not job:
                 return False
@@ -414,6 +431,7 @@ class JobService:
             # 상태 업데이트
             job.status = "cancelled"
             job.completed_at = datetime.now(UTC).replace(tzinfo=None)
+            apply_job_shadow_fields(job, lifecycle_status="cancelled")
 
             await db.commit()
 
@@ -470,14 +488,14 @@ class JobService:
             return 0
 
     async def get_job_statistics(
-        self, db: AsyncSession, user_id: str | None = None
+        self, db: AsyncSession, owner_ref: str | None = None
     ) -> dict[str, Any]:
         """
         작업 통계 조회
 
         Args:
             db: 데이터베이스 세션
-            user_id: 사용자 ID (필터)
+            owner_ref: 작업 소유자 식별자 (필터)
 
         Returns:
             통계 정보
@@ -485,8 +503,8 @@ class JobService:
         try:
             # 기본 쿼리
             base_query = select(Job)
-            if user_id:
-                base_query = base_query.where(Job.created_by == user_id)
+            if owner_ref:
+                base_query = base_query.where(Job.created_by == owner_ref)
 
             # 전체 작업 수
             total_result = await db.execute(base_query)

@@ -239,10 +239,14 @@ class Job(Base):
     type: Mapped[str] = mapped_column(
         PostgresEnum(JobType, name="job_type"), index=True
     )
+    job_kind_v2: Mapped[str | None] = mapped_column(String(100), default=None, index=True)
     status: Mapped[str | None] = mapped_column(
         PostgresEnum(JobStatus, name="job_status"),
         default=JobStatus.QUEUED,
         index=True,
+    )
+    lifecycle_state_v2: Mapped[str | None] = mapped_column(
+        String(50), default=None, index=True
     )
 
     # 시간 정보
@@ -279,6 +283,7 @@ class Job(Base):
     __table_args__ = (
         Index("idx_job_created_status", "created_at", "status"),
         Index("idx_job_type_status", "type", "status"),
+        Index("idx_job_kind_v2_state_v2", "job_kind_v2", "lifecycle_state_v2"),
     )
 
 
@@ -393,6 +398,29 @@ class APIKey(Base):
         String(100), index=True, default=None
     )
     key_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
+
+
+class UsageEvent(Base):
+    """Append-only usage accounting event."""
+
+    __tablename__ = "usage_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    principal_id: Mapped[str] = mapped_column(String(150), index=True)
+    owner_ref: Mapped[str] = mapped_column(String(150), index=True)
+    credential_id: Mapped[str | None] = mapped_column(String(150), default=None)
+    action: Mapped[str] = mapped_column(String(100), index=True)
+    units: Mapped[int] = mapped_column(Integer, default=1)
+    outcome: Mapped[str] = mapped_column(String(30), index=True)
+    status_code: Mapped[int | None] = mapped_column(Integer, default=None)
+    request_id: Mapped[str | None] = mapped_column(String(100), index=True, default=None)
+    method: Mapped[str | None] = mapped_column(String(16), default=None)
+    path: Mapped[str | None] = mapped_column(String(255), default=None)
+    error_detail: Mapped[str | None] = mapped_column(Text, default=None)
+    event_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
 
 
 class PromptTemplate(Base):

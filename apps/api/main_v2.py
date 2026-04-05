@@ -14,9 +14,10 @@ from fastapi.responses import JSONResponse
 
 from config import settings
 from infrastructure.background_tasks import shutdown_all as shutdown_background_tasks
-from infrastructure.database import close_db, init_db
+from infrastructure.database import async_session_maker, close_db, init_db
 from infrastructure.redis_client import close_redis, init_redis
 from middleware.logging import RequestLoggingMiddleware
+from middleware.policy_accounting import PolicyAccountingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
 from routers import collection_v2, health, jobs_v2, metrics
 
@@ -57,6 +58,28 @@ async def create_required_directories():
             # Continue with other directories even if one fails
 
 
+async def global_exception_handler(request, exc):
+    """전역 예외 처리"""
+    error_id = str(uuid.uuid4())
+
+    logger.error(
+        "Unhandled exception",
+        error_id=error_id,
+        exception=str(exc),
+        path=request.url.path,
+        method=request.method,
+    )
+
+    return JSONResponse(
+        content={
+            "error": "Internal server error",
+            "error_id": error_id,
+            "message": "An unexpected error occurred. Please contact support with the error ID.",
+        },
+        status_code=500,
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """애플리케이션 생명주기 관리"""
@@ -91,91 +114,80 @@ async def lifespan(app: FastAPI):
     await close_redis()
 
 
+def create_app() -> FastAPI:
+    """Create a configured FastAPI app instance."""
+    app = FastAPI(
+        title="KRA 통합 데이터 수집 API",
+        description="""
+        ## 개요
+        경마 데이터 수집, 분석, 예측을 위한 통합 RESTful API
+
+        ## 주요 기능
+        - **데이터 수집**: 경주, 말, 기수, 조교사 정보 자동 수집
+        - **데이터 분석**: AI 기반 패턴 분석 및 인사이트 도출
+        - **예측 실행**: 삼복연승 예측 및 평가
+        - **작업 관리**: 비동기 작업 실행 및 모니터링
+
+        ## 인증
+        - API Key: 헤더에 `X-API-Key` 포함
+        - JWT: Bearer 토큰 사용 (선택적)
+        """,
+        version=settings.version,
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_tags=[
+            {"name": "collection", "description": "데이터 수집 관련 API"},
+            {"name": "jobs", "description": "작업 관리 API"},
+        ],
+    )
+
+    app.state.db_session_factory = async_session_maker
+
+    app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(PolicyAccountingMiddleware)
+    app.add_middleware(
+        RateLimitMiddleware,
+        calls=settings.rate_limit_calls,
+        period=settings.rate_limit_period,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(
+        collection_v2.router, prefix="/api/v2/collection", tags=["collection"]
+    )
+    app.include_router(jobs_v2.router, prefix="/api/v2/jobs", tags=["jobs"])
+    app.include_router(health.router, tags=["health"])
+    app.include_router(metrics.router, tags=["metrics"])
+
+    @app.get("/")
+    async def root():
+        """루트 엔드포인트"""
+        return {
+            "service": "KRA Unified Collection API",
+            "version": settings.version,
+            "status": "operational",
+            "documentation": {
+                "swagger": "/docs",
+                "redoc": "/redoc",
+                "openapi": "/openapi.json",
+            },
+            "endpoints": {"collection": "/api/v2/collection", "jobs": "/api/v2/jobs"},
+        }
+
+    app.add_exception_handler(Exception, global_exception_handler)
+
+    return app
+
+
 # FastAPI 앱 생성
-app = FastAPI(
-    title="KRA 통합 데이터 수집 API",
-    description="""
-    ## 개요
-    경마 데이터 수집, 분석, 예측을 위한 통합 RESTful API
-
-    ## 주요 기능
-    - **데이터 수집**: 경주, 말, 기수, 조교사 정보 자동 수집
-    - **데이터 분석**: AI 기반 패턴 분석 및 인사이트 도출
-    - **예측 실행**: 삼복연승 예측 및 평가
-    - **작업 관리**: 비동기 작업 실행 및 모니터링
-
-    ## 인증
-    - API Key: 헤더에 `X-API-Key` 포함
-    - JWT: Bearer 토큰 사용 (선택적)
-    """,
-    version="2.0.0",
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_tags=[
-        {"name": "collection", "description": "데이터 수집 관련 API"},
-        {"name": "jobs", "description": "작업 관리 API"},
-    ],
-)
-
-# 미들웨어 추가
-app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(RateLimitMiddleware, calls=100, period=60)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.allowed_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
-
-# 라우터 포함
-app.include_router(
-    collection_v2.router, prefix="/api/v2/collection", tags=["collection"]
-)
-app.include_router(jobs_v2.router, prefix="/api/v2/jobs", tags=["jobs"])
-app.include_router(health.router, tags=["health"])
-app.include_router(metrics.router, tags=["metrics"])
-
-
-@app.get("/")
-async def root():
-    """루트 엔드포인트"""
-    return {
-        "service": "KRA Unified Collection API",
-        "version": "2.0.0",
-        "status": "operational",
-        "documentation": {
-            "swagger": "/docs",
-            "redoc": "/redoc",
-            "openapi": "/openapi.json",
-        },
-        "endpoints": {"collection": "/api/v2/collection", "jobs": "/api/v2/jobs"},
-    }
-
-
-# 전역 에러 핸들러
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """전역 예외 처리"""
-    error_id = str(uuid.uuid4())
-
-    logger.error(
-        "Unhandled exception",
-        error_id=error_id,
-        exception=str(exc),
-        path=request.url.path,
-        method=request.method,
-    )
-
-    return JSONResponse(
-        content={
-            "error": "Internal server error",
-            "error_id": error_id,
-            "message": "An unexpected error occurred. Please contact support with the error ID.",
-        },
-        status_code=500,
-    )
+app = create_app()
 
 
 if __name__ == "__main__":

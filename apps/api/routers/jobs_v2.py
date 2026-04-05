@@ -9,7 +9,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies.auth import require_api_key
+from dependencies.auth import AuthenticatedPrincipal, require_action
 from infrastructure.database import get_db
 from models.job_dto import (
     Job,
@@ -21,6 +21,7 @@ from models.job_dto import (
 from models.job_dto import (
     JobLog as JobLogDTO,
 )
+from services.job_contract import normalize_lifecycle_status
 from services.job_service import JobService
 
 logger = structlog.get_logger()
@@ -37,6 +38,10 @@ router = APIRouter(
 job_service = JobService()
 
 
+def _dto_job_status(value: object) -> JobStatus:
+    return JobStatus(normalize_lifecycle_status(value).value)
+
+
 @router.get(
     "/",
     response_model=JobListResponse,
@@ -49,13 +54,13 @@ async def list_jobs(
     limit: int = Query(50, ge=1, le=100, description="조회 개수"),
     offset: int = Query(0, ge=0, description="오프셋"),
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(require_action("jobs.list")),
 ):
     """작업 목록 조회"""
     try:
         jobs, total_count = await job_service.list_jobs_with_total(
             db=db,
-            user_id=api_key,
+            owner_ref=principal.owner_ref,
             status=status,
             job_type=job_type,
             limit=limit,
@@ -67,9 +72,7 @@ async def list_jobs(
             Job(
                 job_id=j.job_id,
                 type=JobType(j.type.value if hasattr(j.type, "value") else str(j.type)),
-                status=JobStatus(
-                    j.status.value if hasattr(j.status, "value") else str(j.status)
-                ),
+                status=_dto_job_status(j.status),
                 created_at=j.created_at or datetime.now(UTC),
                 started_at=j.started_at,
                 completed_at=j.completed_at,
@@ -107,13 +110,11 @@ async def list_jobs(
 async def get_job(
     job_id: str,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(
-        require_api_key
-    ),  # Keep for now, will implement resource access later
+    principal: AuthenticatedPrincipal = Depends(require_action("jobs.read")),
 ):
     """작업 상세 조회"""
     try:
-        job = await job_service.get_job(job_id, db, user_id=api_key)
+        job = await job_service.get_job(job_id, db, owner_ref=principal.owner_ref)
         if not job:
             raise HTTPException(status_code=404, detail="Job not found")
 
@@ -133,9 +134,7 @@ async def get_job(
             type=JobType(
                 job.type.value if hasattr(job.type, "value") else str(job.type)
             ),
-            status=JobStatus(
-                job.status.value if hasattr(job.status, "value") else str(job.status)
-            ),
+            status=_dto_job_status(job.status),
             created_at=job.created_at or datetime.now(UTC),
             started_at=job.started_at,
             completed_at=job.completed_at,
@@ -170,11 +169,13 @@ async def get_job(
 async def cancel_job(
     job_id: str,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(require_action("jobs.cancel")),
 ):
     """작업 취소"""
     try:
-        success = await job_service.cancel_job(job_id, db, user_id=api_key)
+        success = await job_service.cancel_job(
+            job_id, db, owner_ref=principal.owner_ref
+        )
         if not success:
             raise HTTPException(status_code=404, detail="Job not found")
         return {"message": "Job cancelled successfully"}

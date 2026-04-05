@@ -4,9 +4,29 @@ import pytest
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_detailed_health_uses_background_task_status(
-    monkeypatch, authenticated_client
+    monkeypatch, authenticated_client, api_app
 ):
     import routers.health as health_router
+    from bootstrap.runtime import AppRuntime, ObservabilityFacade, get_runtime
+
+    class FakeObservability(ObservabilityFacade):
+        def build_health_snapshot(
+            self,
+            *,
+            db_ok: bool,
+            redis_ok: bool,
+            background_status: str,
+            version: str,
+            now: float | None = None,
+        ) -> dict:
+            return {
+                "status": "degraded",
+                "database": "healthy" if db_ok else "unhealthy",
+                "redis": "healthy" if redis_ok else "unhealthy",
+                "background_tasks": background_status,
+                "timestamp": 1.0,
+                "version": version,
+            }
 
     monkeypatch.setattr(
         health_router,
@@ -22,6 +42,9 @@ async def test_detailed_health_uses_background_task_status(
             "status": "degraded",
         },
     )
+    api_app.dependency_overrides[get_runtime] = lambda: AppRuntime(
+        settings=health_router.settings, observability=FakeObservability()
+    )
 
     response = await authenticated_client.get("/health/detailed")
 
@@ -34,9 +57,10 @@ async def test_detailed_health_uses_background_task_status(
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_detailed_health_reports_healthy_background_tasks(
-    monkeypatch, authenticated_client
+    monkeypatch, authenticated_client, api_app
 ):
     import routers.health as health_router
+    from bootstrap.runtime import AppRuntime, ObservabilityFacade, get_runtime
 
     monkeypatch.setattr(
         health_router,
@@ -51,6 +75,9 @@ async def test_detailed_health_reports_healthy_background_tasks(
             "cancelled_tasks": 0,
             "status": "healthy",
         },
+    )
+    api_app.dependency_overrides[get_runtime] = lambda: AppRuntime(
+        settings=health_router.settings, observability=ObservabilityFacade()
     )
 
     response = await authenticated_client.get("/health/detailed")
