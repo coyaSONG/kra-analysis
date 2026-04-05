@@ -7,6 +7,7 @@ from tests.platform.fixtures import (  # noqa: F401
     api_app,
     auth_headers_factory,
     authenticated_client,
+    bootstrap_proof_database,
     clean_db,
     client,
     controlled_task_runner,

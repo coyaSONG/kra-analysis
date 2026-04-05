@@ -2,8 +2,13 @@
 Shared pytest fixtures for apps/api tests.
 """
 
+import os
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from urllib.parse import urlsplit, urlunsplit
+from uuid import uuid4
 
+import asyncpg
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -17,7 +22,114 @@ from infrastructure.redis_client import get_redis
 from main_v2 import create_app
 from models.database_models import APIKey
 from routers.health import get_optional_redis
+import scripts.apply_migrations as migration_runner
 from tests.platform.fakes import ControlledTaskRunner, FakeRedis, InlineTaskRunner
+
+
+def _to_asyncpg_url(database_url: str) -> str:
+    return database_url.replace("postgresql+asyncpg://", "postgresql://")
+
+
+def _replace_database_name(database_url: str, database_name: str) -> str:
+    parsed = urlsplit(database_url)
+    return urlunsplit(
+        (parsed.scheme, parsed.netloc, f"/{database_name}", parsed.query, parsed.fragment)
+    )
+
+
+async def _connect_postgres(database_url: str) -> asyncpg.Connection:
+    return await asyncpg.connect(
+        _to_asyncpg_url(database_url),
+        statement_cache_size=0,
+        server_settings={"jit": "off"},
+        timeout=30,
+    )
+
+
+async def _resolve_bootstrap_admin_url() -> str:
+    candidates = [
+        os.getenv("TEST_BOOTSTRAP_ADMIN_DATABASE_URL"),
+        os.getenv("BOOTSTRAP_ADMIN_DATABASE_URL"),
+        "postgresql+asyncpg://test:test@localhost:5432/postgres",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres",
+    ]
+    last_error: Exception | None = None
+
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            conn = await _connect_postgres(candidate)
+        except Exception as exc:  # pragma: no cover - environment dependent
+            last_error = exc
+            continue
+        await conn.close()
+        return candidate
+
+    pytest.skip(f"Bootstrap-proof Postgres admin connection unavailable: {last_error}")
+
+
+async def _ensure_cluster_role(admin_conn: asyncpg.Connection, role_name: str) -> bool:
+    exists = await admin_conn.fetchval(
+        "SELECT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = $1)", role_name
+    )
+    if exists:
+        return False
+    try:
+        await admin_conn.execute(f'CREATE ROLE "{role_name}"')
+    except asyncpg.UniqueViolationError:  # pragma: no cover - concurrent bootstrap
+        return False
+    return True
+
+
+@dataclass
+class BootstrapProofDatabase:
+    admin_url: str
+    database_url: str
+    database_name: str
+
+    async def connect(self) -> asyncpg.Connection:
+        return await _connect_postgres(self.database_url)
+
+    async def list_public_tables(self) -> set[str]:
+        conn = await self.connect()
+        try:
+            rows = await conn.fetch(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                ORDER BY table_name
+                """
+            )
+            return {row["table_name"] for row in rows}
+        finally:
+            await conn.close()
+
+    async def list_applied_migrations(self) -> list[str]:
+        conn = await self.connect()
+        try:
+            rows = await conn.fetch(
+                """
+                SELECT name
+                FROM schema_migrations
+                ORDER BY name
+                """
+            )
+            return [row["name"] for row in rows]
+        finally:
+            await conn.close()
+
+    async def apply_manifest(self) -> list[str]:
+        conn = await self.connect()
+        try:
+            applied: list[str] = []
+            for migration_file in migration_runner.validate_manifest_files():
+                await migration_runner.apply_migration(conn, migration_file, dry_run=False)
+                applied.append(migration_file.name)
+            return applied
+        finally:
+            await conn.close()
 
 
 def _apply_test_settings_to_global(settings_obj: Settings) -> None:
@@ -110,6 +222,41 @@ async def redis_client():
     yield client
     await client.flushdb()
     await client.close()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def bootstrap_proof_database():
+    admin_url = await _resolve_bootstrap_admin_url()
+    database_name = f"bootstrap_manifest_{uuid4().hex[:8]}"
+    database_url = _replace_database_name(admin_url, database_name)
+
+    admin_conn = await _connect_postgres(admin_url)
+    created_roles = [
+        role_name
+        for role_name in ("service_role", "authenticated")
+        if await _ensure_cluster_role(admin_conn, role_name)
+    ]
+    await admin_conn.execute(f'CREATE DATABASE "{database_name}"')
+
+    try:
+        yield BootstrapProofDatabase(
+            admin_url=admin_url,
+            database_url=database_url,
+            database_name=database_name,
+        )
+    finally:
+        await admin_conn.execute(
+            """
+            SELECT pg_terminate_backend(pid)
+            FROM pg_stat_activity
+            WHERE datname = $1 AND pid <> pg_backend_pid()
+            """,
+            database_name,
+        )
+        await admin_conn.execute(f'DROP DATABASE IF EXISTS "{database_name}"')
+        for role_name in created_roles:
+            await admin_conn.execute(f'DROP ROLE IF EXISTS "{role_name}"')
+        await admin_conn.close()
 
 
 @pytest.fixture(scope="function")
