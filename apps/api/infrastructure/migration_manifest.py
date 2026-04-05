@@ -10,6 +10,7 @@ ACTIVE_MIGRATIONS = [
     "003_add_race_odds.sql",
     "004_add_job_shadow_fields.sql",
     "005_add_usage_events.sql",
+    "006_canonical_job_status_backfill.sql",
 ]
 
 
