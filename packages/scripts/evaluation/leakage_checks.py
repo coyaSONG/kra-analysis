@@ -2,46 +2,49 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
-FORBIDDEN_POST_RACE_FIELDS = {
-    "rank",
-    "ord",
-    "rcTime",
-    "result",
-    "resultTime",
-    "finish_position",
-    "top3",
-    "actual_result",
-    "dividend",
-    "payout",
-    # 경주 중 구간 통과 순위/시간 (경주 후에만 확정)
-    "sjG1fOrd",
-    "sjG3fOrd",
-    "sjS1fOrd",
-    "sj_1cOrd",
-    "sj_2cOrd",
-    "sj_3cOrd",
-    "sj_4cOrd",
-    "buG1fOrd",
-    "buG6fOrd",
-    "buG8fOrd",
-    "buS1fOrd",
-    "seG1fAccTime",
-    "seG3fAccTime",
-    "seS1fAccTime",
-    "se_1cAccTime",
-    "se_2cAccTime",
-    "se_3cAccTime",
-    "se_4cAccTime",
-    "buG1fAccTime",
-    "buG2fAccTime",
-    "buG3fAccTime",
-    "buG4fAccTime",
-    "buG6fAccTime",
-    "buG8fAccTime",
-    "buS1fAccTime",
-}
+# --- 구간 통과 데이터 필드 자동 생성 ---
+# 패턴: {prefix}G{1-8}f{suffix}, {prefix}S1f{suffix}, {prefix}_{1-4}c{suffix}
+# prefix: sj(서울지방), bu(부산경남), se(서울)
+# suffix: Ord(순위), AccTime(누적시간), GTime(구간시간)
+_PREFIXES = ("sj", "bu", "se")
+_GATES = tuple(f"G{i}f" for i in range(1, 9)) + ("S1f",)
+_CORNERS = tuple(f"_{i}c" for i in range(1, 5))
+_SUFFIXES = ("Ord", "AccTime", "GTime")
+
+_SECTIONAL_FIELDS = frozenset(
+    f"{prefix}{segment}{suffix}"
+    for prefix in _PREFIXES
+    for segment in (*_GATES, *_CORNERS)
+    for suffix in _SUFFIXES
+)
+
+# 경주 결과/사후 확정 필드
+_RESULT_FIELDS = frozenset(
+    {
+        "rank",
+        "ord",
+        "rcTime",
+        "result",
+        "resultTime",
+        "finish_position",
+        "top3",
+        "actual_result",
+        "dividend",
+        "payout",
+        "diffUnit",
+        "rankRise",
+    }
+)
+
+FORBIDDEN_POST_RACE_FIELDS = _RESULT_FIELDS | _SECTIONAL_FIELDS
+
+# 패턴 기반 2차 검증 (명시적 목록에 없는 필드도 감지)
+_SECTIONAL_PATTERN = re.compile(
+    r"^(sj|bu|se)(G[1-8]f|S[12]f|_[1-4]c)(Ord|AccTime|GTime)$"
+)
 
 
 def _is_meaningful(value: Any) -> bool:
@@ -54,11 +57,18 @@ def _is_meaningful(value: Any) -> bool:
     return True
 
 
+def _is_forbidden(key: str) -> bool:
+    """명시적 목록 + 패턴 기반 2차 검증."""
+    if key in FORBIDDEN_POST_RACE_FIELDS:
+        return True
+    return bool(_SECTIONAL_PATTERN.match(key))
+
+
 def _scan_forbidden_fields(obj: Any, path: str, issues: set[str]) -> None:
     if isinstance(obj, dict):
         for key, value in obj.items():
             current_path = f"{path}.{key}" if path else key
-            if key in FORBIDDEN_POST_RACE_FIELDS and _is_meaningful(value):
+            if _is_forbidden(key) and _is_meaningful(value):
                 issues.add(current_path)
             _scan_forbidden_fields(value, current_path, issues)
     elif isinstance(obj, list):

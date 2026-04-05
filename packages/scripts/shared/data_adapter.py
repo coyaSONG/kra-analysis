@@ -66,21 +66,34 @@ def convert_basic_data_to_enriched_format(basic_data: dict) -> dict | None:
 
     # horses 배열에서 chul_no → detail 매핑 생성
     detail_map: dict[int, dict] = {}
+    _DETAIL_KEYS = (
+        "hrDetail",
+        "jkDetail",
+        "trDetail",
+        "jkStats",
+        "owDetail",
+        "training",
+    )
     for horse in horses:
         chul_no = horse.get("chul_no")
         if chul_no is None:
             continue
         details = {}
-        for detail_key in ("hrDetail", "jkDetail", "trDetail"):
+        for detail_key in _DETAIL_KEYS:
             if detail_key in horse and horse[detail_key]:
-                # detail 값의 snake_case 키 → camelCase 변환
                 details[detail_key] = _convert_dict_keys_to_camel(horse[detail_key])
         detail_map[int(chul_no)] = details
 
-    # 각 camelCase item에 detail 병합
+    # 경주 레벨 메타데이터 (신규 API)
+    race_meta: dict[str, Any] = {}
+    for meta_key in ("race_plan", "track", "cancelled_horses"):
+        if meta_key in basic_data and basic_data[meta_key]:
+            race_meta[_snake_to_camel(meta_key)] = basic_data[meta_key]
+
+    # 각 camelCase item에 detail + race_meta 병합
     merged_items = []
     for item in items:
-        merged = {**item}
+        merged = {**item, **race_meta}
         chul_no = item.get("chulNo")
         if chul_no is not None and int(chul_no) in detail_map:
             merged.update(detail_map[int(chul_no)])
