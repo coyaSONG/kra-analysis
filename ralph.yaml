@@ -9,6 +9,8 @@ project:
 scope:
   allowedGlobs:
     - "packages/scripts/autoresearch/clean_model_config.json"
+    - "packages/scripts/autoresearch/research_clean.py"
+    - "packages/scripts/autoresearch/rrx_propose.py"
     - ".ralph/**"
   maxFilesChanged: 5
   maxLineDelta: 200
