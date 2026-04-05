@@ -1,6 +1,7 @@
 """
 Shared pytest fixtures for apps/api tests.
 """
+
 from datetime import UTC, datetime
 
 import pytest

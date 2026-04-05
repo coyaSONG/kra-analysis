@@ -108,7 +108,9 @@ async def require_api_key(
     db: AsyncSession = Depends(get_db),
 ) -> str:
     """API 키 필수 의존성"""
-    api_key_obj = await require_api_key_record(x_api_key=x_api_key, api_key=api_key, db=db)
+    api_key_obj = await require_api_key_record(
+        x_api_key=x_api_key, api_key=api_key, db=db
+    )
     return str(api_key_obj.key)
 
 
@@ -156,7 +158,9 @@ async def require_principal(
     api_key_obj: APIKey = Depends(require_api_key_record),
 ) -> AuthenticatedPrincipal:
     """Authenticate a caller and return a normalized principal object."""
-    provided_key = _resolve_presented_api_key(x_api_key, api_key) or str(api_key_obj.key)
+    provided_key = _resolve_presented_api_key(x_api_key, api_key) or str(
+        api_key_obj.key
+    )
     return _build_principal_from_api_key(
         provided_key,
         api_key_obj,

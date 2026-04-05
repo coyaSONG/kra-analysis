@@ -43,4 +43,3 @@ class PolicyAuthorizer:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
-

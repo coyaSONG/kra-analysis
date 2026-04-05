@@ -190,4 +190,3 @@ class KRACollectionModule:
         self.queries = queries or CollectionQueries()
         self.commands = commands or CollectionCommands()
         self.jobs = jobs or CollectionJobs()
-

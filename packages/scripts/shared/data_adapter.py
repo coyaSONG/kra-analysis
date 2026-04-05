@@ -115,6 +115,8 @@ def convert_snapshot_to_enriched_format(
     return {"response": {"body": {"items": {"item": merged_items}}}}
 
 
-def convert_basic_data_to_enriched_format(basic_data: dict | RaceSnapshot) -> dict | None:
+def convert_basic_data_to_enriched_format(
+    basic_data: dict | RaceSnapshot,
+) -> dict | None:
     """Backward-compatible wrapper for legacy callers."""
     return convert_snapshot_to_enriched_format(basic_data)

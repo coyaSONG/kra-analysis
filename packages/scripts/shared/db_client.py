@@ -56,9 +56,7 @@ class RaceDBClient:
             cur.execute(query, params)
             return list(cur.fetchall())
 
-    def _legacy_rows_to_race_keys(
-        self, rows: list[dict[str, Any]]
-    ) -> list[RaceKey]:
+    def _legacy_rows_to_race_keys(self, rows: list[dict[str, Any]]) -> list[RaceKey]:
         return [
             RaceKey(
                 race_id=str(row["race_id"]),

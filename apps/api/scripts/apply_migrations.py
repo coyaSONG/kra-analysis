@@ -90,7 +90,9 @@ async def ensure_schema_migrations_table(conn):
     )
 
 
-async def fetch_applied_migrations(conn, *, create_if_missing: bool) -> list[asyncpg.Record]:
+async def fetch_applied_migrations(
+    conn, *, create_if_missing: bool
+) -> list[asyncpg.Record]:
     if create_if_missing:
         await ensure_schema_migrations_table(conn)
     else:
@@ -106,10 +108,14 @@ async def fetch_applied_migrations(conn, *, create_if_missing: bool) -> list[asy
         )
         if not exists:
             return []
-    return await conn.fetch(f"SELECT name, checksum, applied_at FROM {MIGRATIONS_TABLE} ORDER BY name")
+    return await conn.fetch(
+        f"SELECT name, checksum, applied_at FROM {MIGRATIONS_TABLE} ORDER BY name"
+    )
 
 
-async def get_applied_migrations(conn, *, create_if_missing: bool = True) -> dict[str, str]:
+async def get_applied_migrations(
+    conn, *, create_if_missing: bool = True
+) -> dict[str, str]:
     rows = await fetch_applied_migrations(conn, create_if_missing=create_if_missing)
     return {row["name"]: row["checksum"] for row in rows}
 

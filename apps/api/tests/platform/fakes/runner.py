@@ -126,7 +126,9 @@ class ControlledTaskRunner(_BaseTaskRunner):
 
     def __init__(self):
         super().__init__()
-        self._queue: list[tuple[str, Callable[..., Awaitable[Any]], tuple[Any, ...], dict[str, Any]]] = []
+        self._queue: list[
+            tuple[str, Callable[..., Awaitable[Any]], tuple[Any, ...], dict[str, Any]]
+        ] = []
 
     def submit_task(
         self, func: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any

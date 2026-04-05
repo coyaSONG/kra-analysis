@@ -115,7 +115,10 @@ async def get_horse_past_performances(
         for race in races:
             horses = RaceProjectionAdapter.extract_result_horses(race.result_data)
             for horse in horses:
-                if horse.get("hr_no") == horse_no or str(horse.get("chulNo")) == horse_no:
+                if (
+                    horse.get("hr_no") == horse_no
+                    or str(horse.get("chulNo")) == horse_no
+                ):
                     performances.append(
                         {
                             "date": race.date,

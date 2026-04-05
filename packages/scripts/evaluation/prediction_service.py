@@ -27,7 +27,9 @@ def build_prediction_prompt(prompt_template: str, race_data: dict[str, Any]) -> 
 }}"""
 
 
-def parse_prediction_output(output: str, execution_time: float) -> dict[str, Any] | None:
+def parse_prediction_output(
+    output: str, execution_time: float
+) -> dict[str, Any] | None:
     for candidate in _candidate_json_blobs(output):
         try:
             prediction = json.loads(candidate)

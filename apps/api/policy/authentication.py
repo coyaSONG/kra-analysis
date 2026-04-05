@@ -31,4 +31,3 @@ class PrincipalAuthenticator:
             ),
             is_environment_key=is_environment_key,
         )
-

@@ -101,7 +101,9 @@ class PromptEvaluatorV3:
             "source": type(self.db_client).__name__,
             "requested_limit": limit,
             "race_count": len(races),
-            "race_ids": [str(race.get("race_id")) for race in races if race.get("race_id")],
+            "race_ids": [
+                str(race.get("race_id")) for race in races if race.get("race_id")
+            ],
             "feature_schema_version": "unknown",
             "with_past_stats": self.with_past_stats,
         }

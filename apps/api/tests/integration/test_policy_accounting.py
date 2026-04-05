@@ -33,10 +33,16 @@ async def test_jobs_read_persists_usage_event(authenticated_client, db_session):
 
     assert response.status_code == 200
     events = (
-        await db_session.execute(
-            select(UsageEvent).order_by(UsageEvent.created_at.desc(), UsageEvent.id.desc())
+        (
+            await db_session.execute(
+                select(UsageEvent).order_by(
+                    UsageEvent.created_at.desc(), UsageEvent.id.desc()
+                )
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(events) == 1
     assert events[0].action == "jobs.read"
     assert events[0].status_code == 200

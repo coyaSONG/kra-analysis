@@ -71,7 +71,9 @@ def test_load_race_data_builds_normalized_payload(monkeypatch):
             horse["features_applied"] = True
         return horses
 
-    monkeypatch.setattr(data_loading, "convert_basic_data_to_enriched_format", fake_convert)
+    monkeypatch.setattr(
+        data_loading, "convert_basic_data_to_enriched_format", fake_convert
+    )
     monkeypatch.setattr(data_loading, "compute_race_features", fake_features)
 
     loader = data_loading.RaceEvaluationDataLoader(FakeDBClient(), with_past_stats=True)

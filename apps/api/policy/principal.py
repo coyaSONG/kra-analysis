@@ -26,4 +26,3 @@ class AuthenticatedPrincipal:
     permissions: frozenset[str]
     limits: PolicyLimits
     is_environment_key: bool = False
-

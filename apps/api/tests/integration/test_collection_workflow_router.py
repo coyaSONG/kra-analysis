@@ -15,7 +15,9 @@ async def test_collection_sync_route_uses_workflow(authenticated_client, monkeyp
         data=[{"race_no": 1}],
     )
     collect_mock = AsyncMock(return_value=outcome)
-    monkeypatch.setattr(router.collection_module.commands, "collect_batch", collect_mock)
+    monkeypatch.setattr(
+        router.collection_module.commands, "collect_batch", collect_mock
+    )
 
     response = await authenticated_client.post(
         "/api/v2/collection/",

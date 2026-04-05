@@ -20,7 +20,7 @@ class _FailurePlan:
 class FakeRedisPipeline:
     """Minimal async Redis pipeline for rate-limit tests."""
 
-    def __init__(self, redis: "FakeRedis"):
+    def __init__(self, redis: FakeRedis):
         self._redis = redis
         self._ops: list[tuple[str, tuple[Any, ...]]] = []
 
@@ -206,4 +206,3 @@ class FakeRedis:
 
 class MockRedisClient(FakeRedis):
     """Compatibility alias for legacy tests."""
-
