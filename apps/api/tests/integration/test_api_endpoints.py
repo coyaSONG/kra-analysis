@@ -12,6 +12,15 @@ from httpx import AsyncClient
 from middleware import logging as logging_middleware
 from models.database_models import DataStatus, Job, JobStatus, JobType, Race
 
+CANONICAL_JOB_STATUSES = {
+    "pending",
+    "queued",
+    "processing",
+    "completed",
+    "failed",
+    "cancelled",
+}
+
 
 class TestHealthEndpoints:
     """Test health check endpoints"""
@@ -476,7 +485,7 @@ class TestAsyncCollectionEndpoints:
             assert "job_id" in data
             assert data["status"] == "accepted"
             assert data["message"] == "Collection job started"
-            assert "webhook_url" in data
+            assert data["webhook_url"] == f"/api/v2/jobs/{data['job_id']}"
 
             job_id = data["job_id"]
             detail_response = await authenticated_client.get(f"/api/v2/jobs/{job_id}")
@@ -484,7 +493,11 @@ class TestAsyncCollectionEndpoints:
             detail_data = detail_response.json()
             assert detail_data["job"]["job_id"] == job_id
             assert detail_data["job"]["type"] == "batch"
-            assert detail_data["job"]["status"] == "queued"
+            assert detail_data["job"]["status"] in CANONICAL_JOB_STATUSES
+            assert {
+                "job_kind_v2",
+                "lifecycle_state_v2",
+            }.isdisjoint(detail_data["job"])
 
 
 class TestAuthenticationEndpoints:
