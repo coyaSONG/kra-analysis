@@ -62,6 +62,17 @@ FIELD_MAPPINGS = {
     "moHrName": "mo_hr_name",
 }
 
+# KRA pool name mapping (한글 → 영문 코드)
+POOL_NAME_MAP = {
+    "단승식": "WIN", "연승식": "PLC", "복승식": "QNL",
+    "쌍승식": "EXA", "복연승식": "QPL", "삼복승식": "TLA",
+    "삼쌍승식": "TRI", "쌍복승식": "XLA",
+    "WIN": "WIN", "PLC": "PLC", "QNL": "QNL",
+    "EXA": "EXA", "QPL": "QPL", "TLA": "TLA",
+    "TRI": "TRI", "XLA": "XLA",
+}
+VALID_POOLS = {"WIN", "PLC", "QNL", "EXA", "QPL", "TLA", "TRI", "XLA"}
+
 # Reverse mapping for converting back to API format
 REVERSE_FIELD_MAPPINGS = {v: k for k, v in FIELD_MAPPINGS.items()}
 

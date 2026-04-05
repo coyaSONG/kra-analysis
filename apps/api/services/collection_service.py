@@ -40,7 +40,7 @@ from services.collection_enrichment import (
 )
 from services.collection_preprocessing import preprocess_data as preprocess_data_helper
 from services.kra_api_service import KRAAPIService
-from utils.field_mapping import convert_api_to_internal
+from utils.field_mapping import POOL_NAME_MAP, VALID_POOLS, convert_api_to_internal
 
 logger = structlog.get_logger()
 _HORSE_FAILURE_THRESHOLD = 0.5
@@ -577,31 +577,11 @@ class CollectionService:
 
         items = KRAResponseAdapter.extract_items(response)
 
-        pool_map = {
-            "단승식": "WIN",
-            "연승식": "PLC",
-            "복승식": "QNL",
-            "쌍승식": "EXA",
-            "복연승식": "QPL",
-            "삼복승식": "TLA",
-            "삼쌍승식": "TRI",
-            "쌍복승식": "XLA",
-            "WIN": "WIN",
-            "PLC": "PLC",
-            "QNL": "QNL",
-            "EXA": "EXA",
-            "QPL": "QPL",
-            "TLA": "TLA",
-            "TRI": "TRI",
-            "XLA": "XLA",
-        }
-        valid_pools = {"WIN", "PLC", "QNL", "EXA", "QPL", "TLA", "TRI", "XLA"}
-
         rows = []
         for item in items:
             pool_raw = item.get("pool", "")
-            pool = pool_map.get(pool_raw, pool_raw)
-            if pool not in valid_pools:
+            pool = POOL_NAME_MAP.get(pool_raw, pool_raw)
+            if pool not in VALID_POOLS:
                 continue
             rows.append(
                 {
