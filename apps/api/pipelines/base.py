@@ -123,7 +123,7 @@ class PipelineStage(ABC):
         Returns:
             단계 실행 결과
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def validate_prerequisites(self, context: PipelineContext) -> bool:
@@ -136,7 +136,7 @@ class PipelineStage(ABC):
         Returns:
             전제조건 만족 여부
         """
-        pass
+        raise NotImplementedError
 
     async def rollback(self, context: PipelineContext) -> None:
         """

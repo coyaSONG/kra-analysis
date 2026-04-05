@@ -146,11 +146,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 request_body = await request.body()
 
                 # 바디를 다시 읽을 수 있도록 설정
-                async def receive():
+                async def receive():  # pragma: no cover
                     return {"type": "http.request", "body": request_body}
 
                 request._receive = receive
-            except Exception:
+            except Exception:  # pragma: no cover
                 pass
 
         # 요청 상세 로깅

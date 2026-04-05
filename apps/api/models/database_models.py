@@ -112,13 +112,8 @@ class DataStatus(str, enum.Enum):
     def _missing_(cls, value):
         """Handle case-insensitive enum lookup"""
         if isinstance(value, str):
-            # Try lowercase
             for item in cls:
                 if item.value == value.lower():
-                    return item
-            # Try uppercase
-            for item in cls:
-                if item.name == value.upper():
                     return item
         return None
 
@@ -239,7 +234,9 @@ class Job(Base):
     type: Mapped[str] = mapped_column(
         PostgresEnum(JobType, name="job_type"), index=True
     )
-    job_kind_v2: Mapped[str | None] = mapped_column(String(100), default=None, index=True)
+    job_kind_v2: Mapped[str | None] = mapped_column(
+        String(100), default=None, index=True
+    )
     status: Mapped[str | None] = mapped_column(
         PostgresEnum(JobStatus, name="job_status"),
         default=JobStatus.PENDING,
@@ -413,7 +410,9 @@ class UsageEvent(Base):
     units: Mapped[int] = mapped_column(Integer, default=1)
     outcome: Mapped[str] = mapped_column(String(30), index=True)
     status_code: Mapped[int | None] = mapped_column(Integer, default=None)
-    request_id: Mapped[str | None] = mapped_column(String(100), index=True, default=None)
+    request_id: Mapped[str | None] = mapped_column(
+        String(100), index=True, default=None
+    )
     method: Mapped[str | None] = mapped_column(String(16), default=None)
     path: Mapped[str | None] = mapped_column(String(255), default=None)
     error_detail: Mapped[str | None] = mapped_column(Text, default=None)

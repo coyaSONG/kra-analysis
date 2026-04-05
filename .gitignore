@@ -76,3 +76,4 @@ logs/
 apps/collector/cache/
 apps/collector/tmp/
 .worktrees/
+cov_annotate/

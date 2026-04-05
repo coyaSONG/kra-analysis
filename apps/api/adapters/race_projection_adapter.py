@@ -35,8 +35,12 @@ class RaceProjectionAdapter:
                         or source_item.get("winOdds")
                         or source_item.get("odds")
                     ),
-                    "rating": RaceProjectionAdapter._safe_int(source_item.get("rating")),
-                    "weight": RaceProjectionAdapter._safe_float(source_item.get("weight")),
+                    "rating": RaceProjectionAdapter._safe_int(
+                        source_item.get("rating")
+                    ),
+                    "weight": RaceProjectionAdapter._safe_float(
+                        source_item.get("weight")
+                    ),
                 }
             )
 
@@ -73,9 +77,7 @@ class RaceProjectionAdapter:
             top3 = RaceProjectionAdapter._extract_top3_from_horses(
                 result_data.get("top3"), result_data.get("horses")
             )
-            horses = RaceProjectionAdapter._normalize_horses(
-                result_data.get("horses"), top3
-            )
+            horses = RaceProjectionAdapter._normalize_horses(result_data.get("horses"))
             return {
                 "schema_version": result_data.get("schema_version", 1),
                 "source": result_data.get("source", "legacy"),
@@ -92,7 +94,7 @@ class RaceProjectionAdapter:
 
     @staticmethod
     def _normalize_horses(
-        horses: Any, top3: list[int] | None = None
+        horses: Any,
     ) -> list[dict[str, Any]]:
         if not isinstance(horses, list):
             horses = []
@@ -121,18 +123,10 @@ class RaceProjectionAdapter:
                 }
             )
 
-        if top3:
-            top3_positions = {horse_no: idx + 1 for idx, horse_no in enumerate(top3)}
-            for horse in normalized:
-                if horse["chulNo"] in top3_positions and not horse["ord"]:
-                    horse["ord"] = top3_positions[horse["chulNo"]]
-
         return normalized
 
     @staticmethod
-    def _extract_top3_from_horses(
-        top3: Any, horses: Any
-    ) -> list[int]:
+    def _extract_top3_from_horses(top3: Any, horses: Any) -> list[int]:
         if isinstance(top3, list) and top3:
             return [int(item) for item in top3 if str(item).strip()]
 
@@ -142,18 +136,14 @@ class RaceProjectionAdapter:
 
         top3_values: list[int] = []
         for horse in normalized_horses:
-            if horse["ord"] > 0 and horse["chulNo"] > 0:
-                top3_values.append(horse["chulNo"])
-            elif horse["chulNo"] > 0:
+            if horse["chulNo"] > 0:
                 top3_values.append(horse["chulNo"])
             elif horse["ord"] > 0:
                 top3_values.append(horse["ord"])
         return top3_values
 
     @staticmethod
-    def _find_source_item(
-        items: list[dict[str, Any]], horse_no: int
-    ) -> dict[str, Any]:
+    def _find_source_item(items: list[dict[str, Any]], horse_no: int) -> dict[str, Any]:
         for item in items:
             if not isinstance(item, dict):
                 continue

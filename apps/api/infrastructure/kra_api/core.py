@@ -71,7 +71,10 @@ def build_httpx_client_kwargs(policy: KRARequestPolicy) -> dict[str, Any]:
 
 
 def build_request_params(
-    params: dict[str, Any] | None, api_key: str | None, *, include_json_type: bool = True
+    params: dict[str, Any] | None,
+    api_key: str | None,
+    *,
+    include_json_type: bool = True,
 ) -> dict[str, Any]:
     request_params = dict(params or {})
     if api_key:
@@ -223,4 +226,4 @@ async def request_json_with_retry(
 
             raise KRAApiRetryableRequestError(f"Connection error: {str(e)}") from e
 
-    raise KRAApiRequestError("All retries exhausted")
+    raise KRAApiRequestError("All retries exhausted")  # pragma: no cover

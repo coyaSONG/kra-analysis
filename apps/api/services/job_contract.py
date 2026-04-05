@@ -3,6 +3,7 @@ Canonical job vocabulary used internally by the job service layer.
 """
 
 from enum import Enum
+from typing import Any
 
 
 class DispatchAction(str, Enum):
@@ -86,7 +87,7 @@ def normalize_lifecycle_status(value: object) -> LifecycleStatus:
 
 
 def apply_job_shadow_fields(
-    job: object,
+    job: Any,
     *,
     job_kind: object | None = None,
     lifecycle_status: object | None = None,
@@ -96,17 +97,23 @@ def apply_job_shadow_fields(
         try:
             job.job_kind_v2 = normalize_job_kind(source_kind)
         except ValueError:
-            raw_kind = source_kind.value if hasattr(source_kind, "value") else source_kind
+            raw_kind = (
+                source_kind.value if hasattr(source_kind, "value") else source_kind
+            )
             job.job_kind_v2 = str(raw_kind)
 
     source_status = (
-        lifecycle_status if lifecycle_status is not None else getattr(job, "status", None)
+        lifecycle_status
+        if lifecycle_status is not None
+        else getattr(job, "status", None)
     )
     if source_status is not None:
         try:
             job.lifecycle_state_v2 = normalize_lifecycle_status(source_status).value
         except ValueError:
             raw_status = (
-                source_status.value if hasattr(source_status, "value") else source_status
+                source_status.value
+                if hasattr(source_status, "value")
+                else source_status
             )
             job.lifecycle_state_v2 = str(raw_status)
