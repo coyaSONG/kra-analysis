@@ -177,8 +177,63 @@ class CollectionService:
             # 기본 경주 정보 수집 (캐시 활성화)
             race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no)
 
-            # 날씨 정보 수집 (현재 API에서 제공하지 않음)
-            weather_info: dict[str, Any] = {}
+            # === 신규 경주 단위 API 수집 ===
+            # 경주 계획표 (API72_2)
+            race_plan_data = {}
+            try:
+                race_plan_response = await self.kra_api.get_race_plan(
+                    race_date, str(meet)
+                )
+                if KRAResponseAdapter.is_successful_response(race_plan_response):
+                    plans = KRAResponseAdapter.extract_items(race_plan_response)
+                    for plan in plans:
+                        if plan.get("rcNo") == race_no:
+                            race_plan_data = convert_api_to_internal(plan)
+                            break
+            except Exception as e:
+                logger.warning("Failed to get race plan", error=str(e))
+
+            # 경주로 정보 (API189_1)
+            track_data = {}
+            try:
+                track_response = await self.kra_api.get_track_info(race_date, str(meet))
+                if KRAResponseAdapter.is_successful_response(track_response):
+                    tracks = KRAResponseAdapter.extract_items(track_response)
+                    for t in tracks:
+                        if t.get("rcNo") == race_no:
+                            track_data = convert_api_to_internal(t)
+                            break
+            except Exception as e:
+                logger.warning("Failed to get track info", error=str(e))
+
+            # 출전 취소 정보 (API9_1)
+            cancelled_horses_data: list[dict[str, Any]] = []
+            try:
+                cancel_response = await self.kra_api.get_cancelled_horses(
+                    race_date, str(meet)
+                )
+                if KRAResponseAdapter.is_successful_response(cancel_response):
+                    cancels = KRAResponseAdapter.extract_items(cancel_response)
+                    cancelled_horses_data = [
+                        convert_api_to_internal(c)
+                        for c in cancels
+                        if c.get("rcNo") == race_no
+                    ]
+            except Exception as e:
+                logger.warning("Failed to get cancelled horses", error=str(e))
+
+            # 조교 현황 (API329)
+            training_map: dict[str, dict[str, Any]] = {}
+            try:
+                training_response = await self.kra_api.get_training_status(race_date)
+                if KRAResponseAdapter.is_successful_response(training_response):
+                    trainings = KRAResponseAdapter.extract_items(training_response)
+                    for tr in trainings:
+                        hr_name = tr.get("hrnm", "")
+                        if hr_name:
+                            training_map[hr_name] = convert_api_to_internal(tr)
+            except Exception as e:
+                logger.warning("Failed to get training status", error=str(e))
 
             # 마필별 상세 정보 수집
             horses_data = []
@@ -215,7 +270,9 @@ class CollectionService:
                 # Convert API camelCase to internal snake_case
                 horse_converted = convert_api_to_internal(horse)
                 try:
-                    horse_detail = await self._collect_horse_details(horse_converted)
+                    horse_detail = await self._collect_horse_details(
+                        horse_converted, meet
+                    )
                     horses_data.append(horse_detail)
                 except Exception as exc:
                     horse_no = horse_converted.get("hr_no")
@@ -252,6 +309,21 @@ class CollectionService:
                 )
                 raise ValueError(reason)
 
+            # training 정보 매칭 (hrName 기반, API329에 hrNo 미제공)
+            unmatched_horses = []
+            for horse_data in horses_data:
+                hr_name = horse_data.get("hr_name", "")
+                if hr_name and hr_name in training_map:
+                    horse_data["training"] = training_map[hr_name]
+                elif hr_name and training_map:
+                    unmatched_horses.append(hr_name)
+            if unmatched_horses:
+                logger.warning(
+                    "Training data unmatched horses",
+                    unmatched=unmatched_horses,
+                    available=list(training_map.keys())[:10],
+                )
+
             # 데이터 통합
             collected_data = {
                 # compatibility fields expected by tests
@@ -262,7 +334,9 @@ class CollectionService:
                 "meet": meet,
                 "race_number": race_no,
                 "race_info": race_info,
-                "weather": weather_info,
+                "race_plan": race_plan_data,
+                "track": track_data,
+                "cancelled_horses": cancelled_horses_data,
                 "horses": horses_data,
                 "failed_horses": failed_horses,
                 "status": "partial_failure" if failed_horses else "success",
@@ -353,7 +427,7 @@ class CollectionService:
             raise
 
     async def _collect_horse_details(
-        self, horse_basic: dict[str, Any]
+        self, horse_basic: dict[str, Any], meet: int = 1
     ) -> dict[str, Any]:
         """마필 상세 정보 수집"""
         try:
@@ -410,6 +484,48 @@ class CollectionService:
                         normalized_trainer["raw_data"]
                     )
 
+            # 기수 성적 (API11_1) → jkStats (별도 네임스페이스)
+            jockey_no = horse_basic.get("jk_no")
+            if jockey_no:
+                try:
+                    jk_stats_response = await self.kra_api.get_jockey_stats(
+                        str(jockey_no), meet=str(meet)
+                    )
+                    if jk_stats_response and KRAResponseAdapter.is_successful_response(
+                        jk_stats_response
+                    ):
+                        jk_stats_item = KRAResponseAdapter.extract_single_item(
+                            jk_stats_response
+                        )
+                        if jk_stats_item:
+                            result["jkStats"] = convert_api_to_internal(jk_stats_item)
+                except Exception as e:
+                    logger.warning(
+                        "Failed to get jockey stats", jockey_no=jockey_no, error=str(e)
+                    )
+
+            # 마주 정보 (API14_1) → owDetail
+            owner_no = horse_basic.get("ow_no")
+            if not owner_no and "hrDetail" in result:
+                owner_no = result["hrDetail"].get("ow_no")
+            if owner_no:
+                try:
+                    owner_response = await self.kra_api.get_owner_info(
+                        str(owner_no), meet=str(meet)
+                    )
+                    if owner_response and KRAResponseAdapter.is_successful_response(
+                        owner_response
+                    ):
+                        owner_item = KRAResponseAdapter.extract_single_item(
+                            owner_response
+                        )
+                        if owner_item:
+                            result["owDetail"] = convert_api_to_internal(owner_item)
+                except Exception as e:
+                    logger.warning(
+                        "Failed to get owner info", owner_no=owner_no, error=str(e)
+                    )
+
             return result
 
         except Exception as e:
@@ -419,6 +535,104 @@ class CollectionService:
                 error=str(e),
             )
             raise
+
+    async def collect_race_odds(
+        self,
+        race_date: str,
+        meet: int,
+        race_no: int,
+        db: AsyncSession,
+        source: str = "API160_1",
+    ) -> dict[str, Any]:
+        """배당률 데이터 수집 및 race_odds 테이블 UPSERT"""
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        from models.database_models import RaceOdds
+
+        valid_sources = {"API160_1", "API301"}
+        if source not in valid_sources:
+            return {
+                "race_id": f"{race_date}_{meet}_{race_no}",
+                "inserted_count": 0,
+                "error": f"Invalid source: {source}. Must be one of {valid_sources}",
+            }
+
+        race_id = f"{race_date}_{meet}_{race_no}"
+
+        if source == "API160_1":
+            response = await self.kra_api.get_final_odds(
+                race_date, str(meet), race_no=race_no
+            )
+        else:
+            response = await self.kra_api.get_final_odds_total(
+                race_date, str(meet), race_no=race_no
+            )
+
+        if not KRAResponseAdapter.is_successful_response(response):
+            return {
+                "race_id": race_id,
+                "inserted_count": 0,
+                "error": "API response failed",
+            }
+
+        items = KRAResponseAdapter.extract_items(response)
+
+        pool_map = {
+            "단승식": "WIN",
+            "연승식": "PLC",
+            "복승식": "QNL",
+            "쌍승식": "EXA",
+            "복연승식": "QPL",
+            "삼복승식": "TLA",
+            "삼쌍승식": "TRI",
+            "쌍복승식": "XLA",
+            "WIN": "WIN",
+            "PLC": "PLC",
+            "QNL": "QNL",
+            "EXA": "EXA",
+            "QPL": "QPL",
+            "TLA": "TLA",
+            "TRI": "TRI",
+            "XLA": "XLA",
+        }
+        valid_pools = {"WIN", "PLC", "QNL", "EXA", "QPL", "TLA", "TRI", "XLA"}
+
+        rows = []
+        for item in items:
+            pool_raw = item.get("pool", "")
+            pool = pool_map.get(pool_raw, pool_raw)
+            if pool not in valid_pools:
+                continue
+            rows.append(
+                {
+                    "race_id": race_id,
+                    "pool": pool,
+                    "chul_no": item.get("chulNo", 0),
+                    "chul_no2": item.get("chulNo2", 0),
+                    "chul_no3": item.get("chulNo3", 0),
+                    "odds": item.get("odds", 0),
+                    "rc_date": race_date,
+                    "source": source,
+                }
+            )
+
+        if rows:
+            try:
+                stmt = pg_insert(RaceOdds).values(rows)
+                stmt = stmt.on_conflict_do_update(
+                    constraint="uq_race_odds_entry",
+                    set_={"odds": stmt.excluded.odds, "collected_at": func.now()},
+                )
+                await db.execute(stmt)
+                await db.commit()
+            except Exception as e:
+                logger.error(
+                    "Failed to upsert race odds", race_id=race_id, error=str(e)
+                )
+                await db.rollback()
+                return {"race_id": race_id, "inserted_count": 0, "error": str(e)}
+
+        return {"race_id": race_id, "inserted_count": len(rows), "source": source}
 
     async def _save_race_data(self, data: dict[str, Any], db: AsyncSession) -> None:
         """경주 데이터 데이터베이스 저장"""

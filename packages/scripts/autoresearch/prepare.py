@@ -158,13 +158,13 @@ def create_snapshot(force: bool = False) -> None:
         races = db.find_races_with_results()
         print(f"Found {len(races)} races with results")
 
-        if len(races) < 70:
-            print(f"ERROR: Need >= 70 races, got {len(races)}")
+        if len(races) < 700:
+            print(f"ERROR: Need >= 700 races, got {len(races)}")
             sys.exit(1)
 
-        # walk-forward split: [...][mini_val 20][holdout 50]
-        holdout_races = races[-50:]
-        mini_val_races = races[-70:-50]
+        # walk-forward split: [...][mini_val 200][holdout 500]
+        holdout_races = races[-500:]
+        mini_val_races = races[-700:-500]
 
         answer_key: dict[str, Any] = {"meta": {}, "mini_val": {}, "holdout": {}}
         snapshots: dict[str, list[dict]] = {"mini_val": [], "holdout": []}
@@ -197,15 +197,15 @@ def create_snapshot(force: bool = False) -> None:
         # 개수 검증
         mv_count = len(snapshots["mini_val"])
         ho_count = len(snapshots["holdout"])
-        if mv_count < 15:
+        if mv_count < 150:
             print(
-                f"ERROR: mini_val has only {mv_count} races (need >= 15). "
+                f"ERROR: mini_val has only {mv_count} races (need >= 150). "
                 f"Check DB for missing basic_data or failed conversions."
             )
             sys.exit(1)
-        if ho_count < 40:
+        if ho_count < 400:
             print(
-                f"ERROR: holdout has only {ho_count} races (need >= 40). "
+                f"ERROR: holdout has only {ho_count} races (need >= 400). "
                 f"Check DB for missing basic_data or failed conversions."
             )
             sys.exit(1)

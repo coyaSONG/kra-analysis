@@ -366,6 +366,218 @@ class KRAAPIService:
 
         return result
 
+    async def get_track_info(
+        self, race_date: str, meet: str, use_cache: bool = True
+    ) -> dict[str, Any]:
+        """주로 정보 조회 (API189_1)"""
+        cache_key = f"track_info:{race_date}:{meet}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "meet": meet,
+            "rc_date_fr": race_date,
+            "rc_date_to": race_date,
+            "numOfRows": 50,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(endpoint="API189_1/Track_1", params=params)
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=3600)
+
+        return result
+
+    async def get_race_plan(
+        self, race_date: str, meet: str, use_cache: bool = True
+    ) -> dict[str, Any]:
+        """경주 계획 조회 (API72_2)"""
+        cache_key = f"race_plan:{race_date}:{meet}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "meet": meet,
+            "rc_date": race_date,
+            "numOfRows": 50,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(endpoint="API72_2/racePlan_2", params=params)
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=86400)
+
+        return result
+
+    async def get_cancelled_horses(
+        self, race_date: str, meet: str, use_cache: bool = True
+    ) -> dict[str, Any]:
+        """기권/제외마 정보 조회 (API9_1)"""
+        cache_key = f"cancelled_horses:{race_date}:{meet}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "meet": meet,
+            "rc_date": race_date,
+            "numOfRows": 100,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(
+            endpoint="API9_1/raceHorseCancelInfo_1", params=params
+        )
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=1800)
+
+        return result
+
+    async def get_jockey_stats(
+        self, jockey_no: str, meet: str = "1", use_cache: bool = True
+    ) -> dict[str, Any]:
+        """기수 성적 조회 (API11_1)"""
+        cache_key = f"jockey_stats:{jockey_no}:{meet}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "jk_no": jockey_no,
+            "meet": meet,
+            "numOfRows": 10,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(
+            endpoint="API11_1/jockeyResult_1", params=params
+        )
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=86400)
+
+        return result
+
+    async def get_owner_info(
+        self, owner_no: str, meet: str = "1", use_cache: bool = True
+    ) -> dict[str, Any]:
+        """마주 정보 조회 (API14_1)"""
+        cache_key = f"owner_info:{owner_no}:{meet}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "ow_no": owner_no,
+            "meet": meet,
+            "numOfRows": 10,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(
+            endpoint="API14_1/horseOwnerInfo_1", params=params
+        )
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=86400)
+
+        return result
+
+    async def get_training_status(
+        self, training_date: str, use_cache: bool = True
+    ) -> dict[str, Any]:
+        """조교 상태 조회 (API329)"""
+        cache_key = f"training_status:{training_date}"
+
+        if use_cache:
+            cached_data = await self._get_cached(cache_key)
+            if cached_data:
+                return cached_data
+
+        params = {
+            "trng_dt": training_date,
+            "numOfRows": 500,
+            "pageNo": 1,
+            "_type": "json",
+        }
+
+        result = await self._make_request(
+            endpoint="API329/textDataSeGtscol", params=params
+        )
+
+        if use_cache:
+            await self._set_cached(cache_key, result, ttl=21600)
+
+        return result
+
+    async def get_final_odds(
+        self,
+        race_date: str,
+        meet: str,
+        pool: str | None = None,
+        race_no: int | None = None,
+    ) -> dict[str, Any]:
+        """최종 배당률 조회 (API160_1) - 캐시 없음"""
+        params: dict[str, Any] = {
+            "meet": meet,
+            "rc_date": race_date,
+            "numOfRows": 1000,
+            "pageNo": 1,
+            "_type": "json",
+        }
+        if pool is not None:
+            params["pool"] = pool
+        if race_no is not None:
+            params["rc_no"] = race_no
+
+        return await self._make_request(
+            endpoint="API160_1/integratedInfo_1", params=params
+        )
+
+    async def get_final_odds_total(
+        self,
+        race_date: str,
+        meet: str,
+        pool: str | None = None,
+        race_no: int | None = None,
+    ) -> dict[str, Any]:
+        """최종 배당률 합계 조회 (API301) - 캐시 없음"""
+        params: dict[str, Any] = {
+            "meet": meet,
+            "rc_date": race_date,
+            "numOfRows": 1000,
+            "pageNo": 1,
+            "_type": "json",
+        }
+        if pool is not None:
+            params["pool"] = pool
+        if race_no is not None:
+            params["rc_no"] = race_no
+
+        return await self._make_request(
+            endpoint="API301/Dividend_rate_total", params=params
+        )
+
     async def get_odds_from_race_info(
         self, race_date: str, meet: str, race_no: int, use_cache: bool = True
     ) -> dict[str, Any]:
