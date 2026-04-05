@@ -7,13 +7,13 @@
   },
   "model": {
     "kind": "hgb",
-    "positive_class_weight": 4.0,
+    "positive_class_weight": 1.0,
     "params": {
       "max_depth": 4,
-      "learning_rate": 0.05,
+      "learning_rate": 0.03,
       "max_iter": 300,
-      "min_samples_leaf": 10,
-      "l2_regularization": 0.3
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0
     }
   },
   "features": [
@@ -37,12 +37,14 @@
     "total_place_rate",
     "jockey_total_place_rate",
     "trainer_total_place_rate",
+    "field_size",
     "is_handicap",
     "dist",
     "is_sprint",
     "is_mile",
     "is_route",
     "is_large",
+    "rating_rr",
     "wgBudam_rr",
     "winOdds_rr",
     "plcOdds_rr",
@@ -54,6 +56,6 @@
   ],
   "notes": {
     "goal": "Leakage-free exact 3-of-3 optimization",
-    "last_mutation": "learning_rate=0.05, min_samples_leaf=10, l2=0.3, positive_weight=4.0, drop:field_size, drop:rating_rr"
+    "last_mutation": "baseline"
   }
 }
