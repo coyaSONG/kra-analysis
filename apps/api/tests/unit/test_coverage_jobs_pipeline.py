@@ -227,7 +227,7 @@ class TestJobServiceStartJob:
         service = JobService()
         job = Job(
             type=JobType.COLLECTION,
-            status=JobStatus.RUNNING,
+            status=JobStatus.PROCESSING,
             parameters={},
             created_by="tester",
         )
@@ -475,7 +475,7 @@ class TestJobServiceCancelJob:
         service = JobService()
         job = Job(
             type=JobType.COLLECTION,
-            status=JobStatus.RUNNING,
+            status=JobStatus.PROCESSING,
             parameters={},
             created_by="tester",
         )

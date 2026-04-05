@@ -114,5 +114,4 @@ def test_job_status_transitions():
     # Just accessing the values increases coverage
     assert JobStatus.PENDING.value == "pending"
     assert JobStatus.QUEUED.value == "queued"
-    assert JobStatus.RUNNING.value == "running"
     assert JobStatus.PROCESSING.value == "processing"

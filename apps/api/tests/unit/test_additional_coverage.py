@@ -87,7 +87,6 @@ class TestJobServiceAdditional:
         """Test JobStatus enum values"""
         assert JobStatus.PENDING.value == "pending"
         assert JobStatus.QUEUED.value == "queued"
-        assert JobStatus.RUNNING.value == "running"
         assert JobStatus.PROCESSING.value == "processing"
         assert JobStatus.COMPLETED.value == "completed"
         assert JobStatus.FAILED.value == "failed"
