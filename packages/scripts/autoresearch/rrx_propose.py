@@ -175,11 +175,14 @@ def main() -> None:
     rng = random.Random(args.seed)
 
     if not _has_accepted_run(Path.cwd()):
-        config["notes"]["last_mutation"] = "baseline-seed"
+        baseline_note = "baseline-seed"
+        if config.get("notes", {}).get("last_mutation") == baseline_note:
+            baseline_note = "baseline-seed-reset"
+        config["notes"]["last_mutation"] = baseline_note
         config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n")
         print(
             json.dumps(
-                {"config": str(config_path), "mutation": ["baseline-seed"]},
+                {"config": str(config_path), "mutation": [baseline_note]},
                 ensure_ascii=False,
                 indent=2,
             )
