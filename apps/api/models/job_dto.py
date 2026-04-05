@@ -104,6 +104,13 @@ class JobDetailResponse(BaseModel):
     resource_usage: dict[str, Any] | None = Field(None, description="리소스 사용량")
 
 
+class JobCancelResponse(BaseModel):
+    """작업 취소 응답"""
+
+    message: str = Field(..., description="취소 결과 메시지")
+    job: Job = Field(..., description="취소된 작업의 canonical 상태")
+
+
 class JobListResponse(BaseModel):
     """작업 목록 응답"""
 

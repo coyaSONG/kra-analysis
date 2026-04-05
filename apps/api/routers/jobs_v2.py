@@ -13,6 +13,7 @@ from dependencies.auth import AuthenticatedPrincipal, require_action
 from infrastructure.database import get_db
 from models.job_dto import (
     Job,
+    JobCancelResponse,
     JobDetailResponse,
     JobListResponse,
     JobStatus,
@@ -43,6 +44,28 @@ def _dto_job_status(value: object) -> JobStatus:
     return JobStatus(str(value))
 
 
+def _to_job_dto(job_row: object) -> Job:
+    return Job(
+        job_id=job_row.job_id,
+        type=JobType(
+            job_row.type.value if hasattr(job_row.type, "value") else str(job_row.type)
+        ),
+        status=_dto_job_status(job_row.status),
+        created_at=job_row.created_at or datetime.now(UTC),
+        started_at=job_row.started_at,
+        completed_at=job_row.completed_at,
+        progress=job_row.progress or 0,
+        current_step=job_row.current_step,
+        total_steps=job_row.total_steps,
+        result=job_row.result,
+        error_message=job_row.error_message,
+        retry_count=job_row.retry_count or 0,
+        parameters=job_row.parameters,
+        created_by=job_row.created_by,
+        tags=job_row.tags or [],
+    )
+
+
 @router.get(
     "/",
     response_model=JobListResponse,
@@ -69,26 +92,7 @@ async def list_jobs(
         )
 
         # Convert SQLAlchemy models to DTOs
-        dto_jobs = [
-            Job(
-                job_id=j.job_id,
-                type=JobType(j.type.value if hasattr(j.type, "value") else str(j.type)),
-                status=_dto_job_status(j.status),
-                created_at=j.created_at or datetime.now(UTC),
-                started_at=j.started_at,
-                completed_at=j.completed_at,
-                progress=j.progress or 0,
-                current_step=j.current_step,
-                total_steps=j.total_steps,
-                result=j.result,
-                error_message=j.error_message,
-                retry_count=j.retry_count or 0,
-                parameters=j.parameters,
-                created_by=j.created_by,
-                tags=j.tags or [],
-            )
-            for j in jobs
-        ]
+        dto_jobs = [_to_job_dto(j) for j in jobs]
 
         return JobListResponse(
             jobs=dto_jobs,
@@ -130,28 +134,8 @@ async def get_job(
             for log in (logs or [])
         ]
 
-        dto_job = Job(
-            job_id=job.job_id,
-            type=JobType(
-                job.type.value if hasattr(job.type, "value") else str(job.type)
-            ),
-            status=_dto_job_status(job.status),
-            created_at=job.created_at or datetime.now(UTC),
-            started_at=job.started_at,
-            completed_at=job.completed_at,
-            progress=job.progress or 0,
-            current_step=job.current_step,
-            total_steps=job.total_steps,
-            result=job.result,
-            error_message=job.error_message,
-            retry_count=job.retry_count or 0,
-            parameters=job.parameters,
-            created_by=job.created_by,
-            tags=job.tags or [],
-        )
-
         return JobDetailResponse(
-            job=dto_job,
+            job=_to_job_dto(job),
             logs=dto_logs,
             estimated_completion=None,
             duration_seconds=None,
@@ -165,7 +149,10 @@ async def get_job(
 
 
 @router.post(
-    "/{job_id}/cancel", summary="작업 취소", description="진행 중인 작업을 취소합니다."
+    "/{job_id}/cancel",
+    response_model=JobCancelResponse,
+    summary="작업 취소",
+    description="진행 중인 작업을 취소합니다.",
 )
 async def cancel_job(
     job_id: str,
@@ -179,7 +166,18 @@ async def cancel_job(
         )
         if not success:
             raise HTTPException(status_code=404, detail="Job not found")
-        return {"message": "Job cancelled successfully"}
+        cancelled_job = await job_service.get_job(
+            job_id, db, owner_ref=principal.owner_ref
+        )
+        if not cancelled_job:
+            raise HTTPException(
+                status_code=500,
+                detail="Cancelled job could not be reloaded",
+            )
+        return JobCancelResponse(
+            message="Job cancelled successfully",
+            job=_to_job_dto(cancelled_job),
+        )
     except HTTPException:
         raise
     except Exception as e:

@@ -462,6 +462,9 @@ class TestJobsEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Job cancelled successfully"
+        assert data["job"]["job_id"] == str(job.job_id)
+        assert data["job"]["type"] == "collection"
+        assert data["job"]["status"] == "cancelled"
 
         detail_response = await authenticated_client.get(f"/api/v2/jobs/{job.job_id}")
         assert detail_response.status_code == 200

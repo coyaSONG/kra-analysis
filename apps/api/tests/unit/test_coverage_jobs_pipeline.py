@@ -158,6 +158,9 @@ class TestJobsRouterCancelJob:
         resp = await authenticated_client.post(f"/api/v2/jobs/{job.job_id}/cancel")
         assert resp.status_code == 200
         assert resp.json()["message"] == "Job cancelled successfully"
+        assert resp.json()["job"]["job_id"] == str(job.job_id)
+        assert resp.json()["job"]["type"] == "collection"
+        assert resp.json()["job"]["status"] == "cancelled"
 
     @pytest.mark.asyncio
     async def test_cancel_job_not_found(self, authenticated_client: AsyncClient):

@@ -246,6 +246,7 @@ class TestCancelJobDirect:
 
         mock_svc = AsyncMock()
         mock_svc.cancel_job.return_value = True
+        mock_svc.get_job.return_value = _make_job_row(status="cancelled")
         monkeypatch.setattr(jobs_v2, "job_service", mock_svc)
 
         result = await jobs_v2.cancel_job(
@@ -254,7 +255,10 @@ class TestCancelJobDirect:
             principal=_make_principal(),
         )
 
-        assert result["message"] == "Job cancelled successfully"
+        assert result.message == "Job cancelled successfully"
+        assert result.job.job_id == "job-1"
+        assert result.job.type.value == "collection"
+        assert result.job.status.value == "cancelled"
 
     @pytest.mark.asyncio
     @pytest.mark.unit
