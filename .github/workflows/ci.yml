@@ -68,6 +68,16 @@ jobs:
           ENVIRONMENT: test
           RATE_LIMIT_ENABLED: "false"
         run: bash apps/api/scripts/run_quality_ci.sh integration
+      - name: Bootstrap manifest verification
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/15
+          SECRET_KEY: test-secret-key
+          ENVIRONMENT: development
+          RATE_LIMIT_ENABLED: "false"
+        run: |
+          cd apps/api
+          uv run pytest -q tests/integration/test_bootstrap_manifest.py tests/integration/test_startup_manifest_rejection.py -o addopts=''
       - name: Coverage
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
