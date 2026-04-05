@@ -8,6 +8,14 @@ from pathlib import Path
 from research_clean import SAFE_FEATURES
 
 OPTIONAL_FEATURES = [
+    "draw_no",
+    "sex_code",
+    "weather_code",
+    "track_pct",
+    "class_code",
+    "budam_code",
+    "rest_risk_code",
+    "allowance_flag",
     "horse_win_rate",
     "horse_place_rate",
     "jockey_win_rate",
@@ -27,6 +35,10 @@ OPTIONAL_FEATURES = [
     "is_mile",
     "is_route",
     "is_large",
+    "hr_starts_y",
+    "hr_starts_t",
+    "jk_place_rate_y",
+    "tr_place_rate_y",
     "rating_rr",
     "wgBudam_rr",
     "winOdds_rr",
@@ -36,14 +48,17 @@ OPTIONAL_FEATURES = [
     "trainer_place_rate_rr",
     "year_place_rate_rr",
     "total_place_rate_rr",
+    "draw_rr",
 ]
 
 CORE_FEATURES = [
     "rating",
     "wgBudam",
+    "wgHr_value",
     "winOdds",
     "plcOdds",
     "age",
+    "draw_no",
     "rating_rank",
     "odds_rank",
     "age_prime",
