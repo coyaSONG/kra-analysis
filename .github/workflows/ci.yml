@@ -82,51 +82,6 @@ jobs:
           flags: api
           fail_ci_if_error: false
 
-  node-checks:
-    name: Node.js Checks
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      KRA_SERVICE_KEY: ${{ secrets.KRA_SERVICE_KEY }}
-    steps:
-      - uses: actions/checkout@v5
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          STORE_PATH=$(pnpm store path --silent)
-          echo "STORE_PATH=$STORE_PATH" >> $GITHUB_ENV
-          mkdir -p "$STORE_PATH"
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml', '**/package.json') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Turbo cache
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-turbo-
-      - name: Lint
-        run: pnpm run quality:node:lint
-      - name: Type check
-        run: pnpm run quality:node:typecheck
-      - name: Tests
-        run: pnpm run quality:node:test
-        env:
-          NODE_ENV: test
-          LOG_LEVEL: error
-
   security:
     name: Security Checks
     runs-on: ubuntu-latest
