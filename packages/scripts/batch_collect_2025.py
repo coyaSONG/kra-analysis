@@ -8,6 +8,7 @@ Usage:
     uv run python3 packages/scripts/batch_collect_2025.py
     uv run python3 packages/scripts/batch_collect_2025.py --start 20250301 --end 20250331
     uv run python3 packages/scripts/batch_collect_2025.py --meets 1,2,3
+    uv run python3 packages/scripts/batch_collect_2025.py --force --skip-results  # 신규 API 필드 백필
 """
 
 from __future__ import annotations
@@ -123,11 +124,14 @@ async def collect_single_race(
     meet: int,
     race_no: int,
     stats: dict,
+    *,
+    force: bool = False,
+    skip_results: bool = False,
 ) -> bool:
     """단일 경주 데이터 + 결과 수집. 성공 시 True, 경주 없음 시 False 반환."""
 
     # 1) 경주 데이터 수집
-    if await is_race_already_collected(race_date, meet, race_no):
+    if not force and await is_race_already_collected(race_date, meet, race_no):
         logger.debug("이미 수집됨 - skip: %s meet=%d race=%d", race_date, meet, race_no)
         stats["skipped"] += 1
     else:
@@ -175,6 +179,8 @@ async def collect_single_race(
     await asyncio.sleep(API_DELAY_SECONDS)
 
     # 2) 결과 수집
+    if skip_results:
+        return True
     if await is_result_already_collected(race_date, meet, race_no):
         logger.debug(
             "결과 이미 수집됨 - skip: %s meet=%d race=%d", race_date, meet, race_no
@@ -222,6 +228,9 @@ async def collect_date_meet(
     race_date: str,
     meet: int,
     stats: dict,
+    *,
+    force: bool = False,
+    skip_results: bool = False,
 ) -> None:
     """특정 날짜+경마장의 모든 경주를 수집한다."""
 
@@ -247,6 +256,8 @@ async def collect_date_meet(
             meet,
             race_no,
             stats,
+            force=force,
+            skip_results=skip_results,
         )
         if not ok:
             break
@@ -276,14 +287,27 @@ def log_stats(stats: dict, label: str) -> None:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-async def main(start: str, end: str, meets: list[int]) -> None:
+async def main(
+    start: str,
+    end: str,
+    meets: list[int],
+    *,
+    force: bool = False,
+    skip_results: bool = False,
+) -> None:
     dates = date_range(start, end)
+    mode_flags = []
+    if force:
+        mode_flags.append("force")
+    if skip_results:
+        mode_flags.append("skip-results")
     logger.info(
-        "배치 수집 시작: %s ~ %s (%d일), 경마장=%s",
+        "배치 수집 시작: %s ~ %s (%d일), 경마장=%s%s",
         start,
         end,
         len(dates),
         [MEET_NAMES.get(m, str(m)) for m in meets],
+        f", 모드={mode_flags}" if mode_flags else "",
     )
 
     stats: dict = {
@@ -313,6 +337,8 @@ async def main(start: str, end: str, meets: list[int]) -> None:
                         race_date,
                         meet,
                         stats,
+                        force=force,
+                        skip_results=skip_results,
                     )
                 except Exception as e:
                     logger.error(
@@ -344,10 +370,28 @@ def parse_args() -> argparse.Namespace:
         default="1,3",
         help="경마장 코드 (콤마 구분, 1=서울 2=제주 3=부산경남)",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="이미 수집된 경주도 재수집 (basic_data 갱신, result/enriched 보존)",
+    )
+    parser.add_argument(
+        "--skip-results",
+        action="store_true",
+        help="결과 수집 단계를 건너뜀 (basic_data 백필 시 유용)",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
     meets = [int(m.strip()) for m in args.meets.split(",")]
-    asyncio.run(main(args.start, args.end, meets))
+    asyncio.run(
+        main(
+            args.start,
+            args.end,
+            meets,
+            force=args.force,
+            skip_results=args.skip_results,
+        )
+    )
