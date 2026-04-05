@@ -296,19 +296,19 @@ Official SQLAlchemy docs describe this as useful for tests, small/new apps, or s
 
 All material claims in this research were either verified from the codebase or cited from official documentation. The only missing information is live database state, which is recorded as an open question rather than treated as an assumption. [VERIFIED: apps/api/infrastructure/database.py][VERIFIED: apps/api/scripts/apply_migrations.py]
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should Phase 3 physically archive `001_initial_schema.sql`, or only detect and reject it as legacy state?** [VERIFIED: apps/api/migrations/001_initial_schema.sql][VERIFIED: .planning/ROADMAP.md]  
    What we know: the active chain ignores it, but operator docs and scripts still expose it. [VERIFIED: apps/api/infrastructure/migration_manifest.py][VERIFIED: apps/api/scripts/setup.sh]  
-   Recommendation: decide this explicitly in planning because it changes the cleanup scope and doc touches. [VERIFIED: apps/api/scripts/setup.sh][VERIFIED: apps/api/README.md]
+   Resolved: Phase 3 keeps `001_initial_schema.sql` in the repository as an explicit inactive legacy marker, but it must remain outside `ACTIVE_MIGRATIONS` and outside all operator bootstrap paths. Archiving or relocating the legacy file is deferred; this phase instead codifies it as inactive truth and rejects mixed-state databases that still reflect the legacy baseline. [VERIFIED: .planning/phases/03-unified-bootstrap/03-01-PLAN.md][VERIFIED: .planning/phases/03-unified-bootstrap/03-04-PLAN.md]
 
 2. **How strict should mixed-state rejection be at startup?** [VERIFIED: apps/api/infrastructure/database.py][VERIFIED: apps/api/scripts/apply_migrations.py]  
    What we know: current startup guard checks migration names only; current runner logs extra tables without failing. [VERIFIED: apps/api/infrastructure/database.py][VERIFIED: apps/api/scripts/apply_migrations.py]  
-   Recommendation: plan a fail-closed rule for obvious legacy markers, and keep the allowlist small and explicit. [VERIFIED: apps/api/migrations/001_initial_schema.sql][VERIFIED: apps/api/migrations/001_unified_schema.sql]
+   Resolved: Phase 3 will fail closed on obvious legacy/unified mixed state using explicit legacy-marker tables and unexpected manifest rows. The allowlist stays narrow and explicit, and the runtime must stop with remediation pointing to `scripts/apply_migrations.py`; there is no auto-heal, implicit drop, or `create_all()` fallback in non-test startup. [VERIFIED: .planning/phases/03-unified-bootstrap/03-02-PLAN.md]
 
 3. **Does Phase 3 include all operator doc cleanup or only the bootstrap-critical ones?** [VERIFIED: apps/api/README.md][VERIFIED: apps/api/docs/SUPABASE_SETUP.md][VERIFIED: apps/api/scripts/setup.sh][VERIFIED: apps/api/Makefile]  
    What we know: SCHEMA-03 and broader docs cleanup are assigned to Phase 6, but Phase 3 success criteria still require a documented migration-first verification path. [VERIFIED: .planning/ROADMAP.md][VERIFIED: .planning/REQUIREMENTS.md]  
-   Recommendation: update only the bootstrap-critical entrypoints in Phase 3, and defer broader doc harmonization to Phase 6. [VERIFIED: .planning/ROADMAP.md]
+   Resolved: Phase 3 includes only the bootstrap-critical operator entrypoints: `apps/api/scripts/setup.sh`, `apps/api/Makefile`, `apps/api/README.md`, and `apps/api/docs/SUPABASE_SETUP.md`. Broader architecture/document harmonization remains deferred to Phase 6. [VERIFIED: .planning/phases/03-unified-bootstrap/03-04-PLAN.md][VERIFIED: .planning/ROADMAP.md]
 
 ## Environment Availability
 

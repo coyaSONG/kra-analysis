@@ -19,18 +19,18 @@ created: 2026-04-05
 |----------|-------|
 | **Framework** | pytest |
 | **Config file** | `apps/api/pyproject.toml`, `apps/api/pytest.ini` |
-| **Quick run command** | `cd apps/api && uv run pytest -q tests/unit/test_database_migration_guard.py tests/unit/test_job_service.py -o addopts=''` |
+| **Quick run command** | `cd apps/api && uv run pytest -q tests/unit/test_migration_manifest.py tests/unit/test_database_migration_guard.py -o addopts=''` |
 | **Full suite command** | `cd apps/api && uv run pytest -q tests/unit/test_database_migration_guard.py tests/platform tests/integration -o addopts=''` |
-| **Estimated runtime** | ~90 seconds |
+| **Estimated runtime** | ~30 seconds for quick loop, ~90 seconds for full suite |
 
 ---
 
 ## Sampling Rate
 
-- **After every task commit:** Run `cd apps/api && uv run pytest -q tests/unit/test_database_migration_guard.py tests/unit/test_job_service.py -o addopts=''`
+- **After every task commit:** Run `cd apps/api && uv run pytest -q tests/unit/test_migration_manifest.py tests/unit/test_database_migration_guard.py -o addopts=''`
 - **After every plan wave:** Run `cd apps/api && uv run pytest -q tests/unit/test_database_migration_guard.py tests/platform tests/integration -o addopts=''`
 - **Before `/gsd-verify-work`:** Full suite must be green
-- **Max feedback latency:** 90 seconds
+- **Max feedback latency:** 30 seconds on the task-level quick loop; the slower ~90 second full suite is reserved for post-wave gates because bootstrap proof spans platform/integration fixtures
 
 ---
 
@@ -70,7 +70,7 @@ created: 2026-04-05
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
 - [ ] Wave 0 covers all MISSING references
 - [ ] No watch-mode flags
-- [ ] Feedback latency < 90s
+- [ ] Feedback latency < 30s on task-level quick loop, with post-wave full suite explicitly exempted due to bootstrap proof cost
 - [ ] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
