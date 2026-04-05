@@ -15,7 +15,7 @@ async def test_dispatch_task_uses_dispatch_table_for_supported_type():
         "services.job_service.submit_task", return_value="task-id"
     ) as mock_submit:
         job = SimpleNamespace(
-            type="collect_race",
+            type="collection",
             parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
             job_id="job-1",
         )

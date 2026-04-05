@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 import structlog
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.background_tasks import (
@@ -22,14 +22,17 @@ from services.job_contract import (
     DispatchAction,
     apply_job_shadow_fields,
     normalize_dispatch_action,
+    normalize_job_kind,
     normalize_lifecycle_status,
 )
 
 logger = structlog.get_logger()
 
 type DispatchJobType = Literal[
+    "collection",
     "collect_race",
     "preprocess_race",
+    "enrichment",
     "enrich_race",
     "analysis",
     "prediction",
@@ -83,14 +86,20 @@ class JobService:
             생성된 작업 객체
         """
         try:
+            canonical_job_type = normalize_job_kind(job_type)
+
             # 작업 생성
             job = Job(
-                type=job_type,
+                type=canonical_job_type,
                 parameters=parameters,
                 status="pending",
                 created_by=owner_ref,
             )
-            apply_job_shadow_fields(job, job_kind=job_type, lifecycle_status="pending")
+            apply_job_shadow_fields(
+                job,
+                job_kind=canonical_job_type,
+                lifecycle_status="pending",
+            )
 
             db.add(job)
             await db.commit()
@@ -99,7 +108,7 @@ class JobService:
             logger.info(
                 "Job created",
                 job_id=job.job_id,
-                job_type=job_type,
+                job_type=canonical_job_type,
                 owner_ref=owner_ref,
             )
 
@@ -380,22 +389,10 @@ class JobService:
         if owner_ref:
             filters.append(Job.created_by == owner_ref)
         if job_type:
-            filters.append(Job.type == self._to_filter_value(job_type))
+            filters.append(Job.type == normalize_job_kind(job_type))
         if status:
             normalized_status = self._normalize_lifecycle_status_value(status)
-            legacy_status_values = [normalized_status, self._to_filter_value(status)]
-            if normalized_status == "processing":
-                legacy_status_values.append("running")
-
-            filters.append(
-                or_(
-                    Job.lifecycle_state_v2 == normalized_status,
-                    and_(
-                        Job.lifecycle_state_v2.is_(None),
-                        Job.status.in_(legacy_status_values),
-                    ),
-                )
-            )
+            filters.append(Job.status == normalized_status)
 
         list_query = select(Job)
         count_query = select(func.count()).select_from(Job)
@@ -545,11 +542,12 @@ class JobService:
             # 작업 유형별 수
             type_counts = {}
             for job_type in [
-                "collect_race",
-                "preprocess_race",
-                "enrich_race",
-                "batch_collect",
-                "full_pipeline",
+                "collection",
+                "batch",
+                "enrichment",
+                "analysis",
+                "prediction",
+                "improvement",
             ]:
                 result = await db.execute(base_query.where(Job.type == job_type))
                 type_counts[job_type] = len(result.scalars().all())

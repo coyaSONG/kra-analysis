@@ -20,8 +20,27 @@ async def test_create_job(db_session):
         db=db_session,
     )
     assert job.job_id
+    assert str(job.type.value if hasattr(job.type, "value") else job.type) == "collection"
     assert job.parameters["meet"] == 1
     assert job.job_kind_v2 == "collection"
+    assert job.lifecycle_state_v2 == "pending"
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_create_job_normalizes_internal_alias_to_public_type(db_session):
+    service = JobService()
+    params = {"race_date": "20240719", "meet": 1, "race_numbers": [1]}
+
+    job = await service.create_job(
+        job_type="batch_collect",
+        parameters=params,
+        owner_ref="tester",
+        db=db_session,
+    )
+
+    assert str(job.type.value if hasattr(job.type, "value") else job.type) == "batch"
+    assert job.job_kind_v2 == "batch"
     assert job.lifecycle_state_v2 == "pending"
 
 
@@ -97,7 +116,7 @@ async def test_cancel_job_cancels_task(monkeypatch, db_session):
     service = JobService()
     job = Job(
         type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
+        status=JobStatus.PROCESSING,
         parameters={},
         created_by="tester",
     )
@@ -149,7 +168,7 @@ async def test_cleanup_old_jobs(db_session):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_dispatch_task_collect_race(monkeypatch):
+async def test_dispatch_task_collection_public_type(monkeypatch):
     service = JobService()
 
     with patch(
@@ -157,7 +176,7 @@ async def test_dispatch_task_collect_race(monkeypatch):
         return_value="task-id",
     ) as mock_submit:
         job = SimpleNamespace(
-            type="collect_race",
+            type="collection",
             parameters={"race_date": "20240719", "meet": 1, "race_no": 3},
             job_id="job-1",
         )
@@ -224,17 +243,15 @@ async def test_list_jobs_with_total_returns_paginated_jobs_and_total(db_session)
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_list_jobs_with_total_processing_filter_matches_legacy_running_row(
-    db_session,
-):
+async def test_list_jobs_with_total_filters_canonical_processing_status(db_session):
     service = JobService()
-    running_job = Job(
+    processing_job = Job(
         type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
+        status=JobStatus.PROCESSING,
         parameters={"idx": 1},
         created_by="tester",
     )
-    db_session.add(running_job)
+    db_session.add(processing_job)
     await db_session.commit()
 
     paged_jobs, total = await service.list_jobs_with_total(
@@ -242,31 +259,30 @@ async def test_list_jobs_with_total_processing_filter_matches_legacy_running_row
     )
 
     assert total == 1
-    assert [job.job_id for job in paged_jobs] == [running_job.job_id]
+    assert [job.job_id for job in paged_jobs] == [processing_job.job_id]
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_list_jobs_with_total_running_filter_matches_processing_shadow_row(
+async def test_list_jobs_with_total_normalizes_internal_type_filter_to_public_batch(
     db_session,
 ):
     service = JobService()
-    running_job = Job(
-        type=JobType.COLLECTION,
-        status=JobStatus.RUNNING,
-        lifecycle_state_v2="processing",
+    batch_job = Job(
+        type=JobType.BATCH,
+        status=JobStatus.PENDING,
         parameters={"idx": 1},
         created_by="tester",
     )
-    db_session.add(running_job)
+    db_session.add(batch_job)
     await db_session.commit()
 
     paged_jobs, total = await service.list_jobs_with_total(
-        db=db_session, status="running", limit=10, offset=0
+        db=db_session, job_type="batch_collect", limit=10, offset=0
     )
 
     assert total == 1
-    assert [job.job_id for job in paged_jobs] == [running_job.job_id]
+    assert [job.job_id for job in paged_jobs] == [batch_job.job_id]
 
 
 @pytest.mark.unit
