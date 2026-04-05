@@ -8,8 +8,6 @@ omit =
     setup.py
     */config.py
     main.py
-    run_tests.py
-    infrastructure/claude_cli/*
     infrastructure/supabase_client.py
     infrastructure/kra_api/client.py
     infrastructure/database.py
