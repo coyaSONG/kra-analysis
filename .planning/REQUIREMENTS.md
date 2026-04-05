@@ -63,26 +63,26 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HEALTH-01 | TBD | Pending |
-| HEALTH-02 | TBD | Pending |
-| HEALTH-03 | TBD | Pending |
-| JOBS-01 | TBD | Pending |
-| JOBS-02 | TBD | Pending |
-| JOBS-03 | TBD | Pending |
-| SCHEMA-01 | TBD | Pending |
-| SCHEMA-02 | TBD | Pending |
-| SCHEMA-03 | TBD | Pending |
-| COLL-01 | TBD | Pending |
-| COLL-02 | TBD | Pending |
-| COLL-03 | TBD | Pending |
-| DOCS-01 | TBD | Pending |
-| DOCS-02 | TBD | Pending |
+| HEALTH-01 | Phase 1 | Pending |
+| HEALTH-02 | Phase 1 | Pending |
+| HEALTH-03 | Phase 1 | Pending |
+| JOBS-01 | Phase 2 | Pending |
+| JOBS-02 | Phase 2 | Pending |
+| SCHEMA-01 | Phase 3 | Pending |
+| SCHEMA-02 | Phase 3 | Pending |
+| JOBS-03 | Phase 4 | Pending |
+| COLL-01 | Phase 5 | Pending |
+| COLL-02 | Phase 5 | Pending |
+| SCHEMA-03 | Phase 6 | Pending |
+| COLL-03 | Phase 6 | Pending |
+| DOCS-01 | Phase 6 | Pending |
+| DOCS-02 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 14 total
-- Mapped to phases: 0
-- Unmapped: 14 ⚠️
+- Mapped to phases: 14
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after initial definition*
+*Last updated: 2026-04-05 after roadmap initialization*
