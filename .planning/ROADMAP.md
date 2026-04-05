@@ -44,7 +44,12 @@ Plans:
   1. Client can submit async collection jobs using one canonical job type set accepted by request DTOs and dispatch logic.
   2. Client can retrieve job status and cancellation responses that use the same canonical vocabulary shown at job creation.
   3. Contributor can inspect a submitted job in the database and API responses without translating between parallel alias names.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — public job type/status core cleanup and dispatch-only alias separation
+- [ ] 02-02-PLAN.md — canonical-only jobs API read/cancel cutover with migration-backed lifecycle normalization
+- [ ] 02-03-PLAN.md — async collection receipt-to-job-detail vocabulary proof and runtime/stats cleanup
 
 ### Phase 3: Unified Bootstrap
 **Goal**: Operator가 unified migration chain만으로 새 데이터베이스를 준비하고, 앱이 그 상태를 startup에서 검증한다.
@@ -95,7 +100,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Runtime Guardrails | 3/3 | Verified | 2026-04-05 |
-| 2. Job Vocabulary | 0/TBD | Not started | - |
+| 2. Job Vocabulary | 0/3 | Planned | - |
 | 3. Unified Bootstrap | 0/TBD | Not started | - |
 | 4. Runner Boundary | 0/TBD | Not started | - |
 | 5. Collection Seams | 0/TBD | Not started | - |
