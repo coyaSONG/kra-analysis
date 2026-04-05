@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Runtime Guardrails** - health, logging, auth wiring을 현재 FastAPI 런타임 계약으로 고정한다.
 - [x] **Phase 2: Job Vocabulary** - async job 생성과 조회 응답이 하나의 작업 vocabulary를 사용하게 만든다.
-- [ ] **Phase 3: Unified Bootstrap** - fresh DB bootstrap과 startup migration 검증을 unified chain 기준으로 고정한다.
+- [x] **Phase 3: Unified Bootstrap** - fresh DB bootstrap과 startup migration 검증을 unified chain 기준으로 고정한다.
 - [ ] **Phase 4: Runner Boundary** - in-process job 실행 경계를 명시하고 handler 변경 비용을 줄인다.
 - [ ] **Phase 5: Collection Seams** - collection 책임을 더 작은 경계로 분리하면서 기존 API 계약을 유지한다.
 - [ ] **Phase 6: Contract Truth Docs** - schema, data lifecycle, 운영 명령 문서를 현재 코드 기준으로 일치시킨다.
@@ -62,10 +62,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — unified manifest truth and runner wiring as the single schema source of truth
-- [ ] 03-02-PLAN.md — fail-closed startup guard for manifest drift and mixed legacy/unified state
-- [ ] 03-03-PLAN.md — fresh-bootstrap proof harness and CI non-test bootstrap verification
-- [ ] 03-04-PLAN.md — operator entrypoint cleanup for migration-first bootstrap commands
+- [x] 03-01-PLAN.md — unified manifest truth and runner wiring as the single schema source of truth
+- [x] 03-02-PLAN.md — fail-closed startup guard for manifest drift and mixed legacy/unified state
+- [x] 03-03-PLAN.md — fresh-bootstrap proof harness and CI non-test bootstrap verification
+- [x] 03-04-PLAN.md — operator entrypoint cleanup for migration-first bootstrap commands
 
 ### Phase 4: Runner Boundary
 **Goal**: Contributor가 async job handling을 하나의 실행 경계에서 바꾸되 기존 jobs API 동작은 유지할 수 있다.
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Runtime Guardrails | 3/3 | Verified | 2026-04-05 |
 | 2. Job Vocabulary | 3/3 | Verified | 2026-04-05 |
-| 3. Unified Bootstrap | 0/4 | Not started | - |
+| 3. Unified Bootstrap | 4/4 | Verified | 2026-04-05 |
 | 4. Runner Boundary | 0/TBD | Not started | - |
 | 5. Collection Seams | 0/TBD | Not started | - |
 | 6. Contract Truth Docs | 0/TBD | Not started | - |

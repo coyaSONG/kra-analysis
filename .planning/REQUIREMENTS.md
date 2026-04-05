@@ -19,8 +19,8 @@
 
 ### Schema Bootstrap
 
-- [ ] **SCHEMA-01**: Operator can bootstrap a fresh database from the unified migration chain without relying on `create_all()` in the production path.
-- [ ] **SCHEMA-02**: App startup rejects missing or unexpected migration state against one canonical manifest in non-test environments.
+- [x] **SCHEMA-01**: Operator can bootstrap a fresh database from the unified migration chain without relying on `create_all()` in the production path.
+- [x] **SCHEMA-02**: App startup rejects missing or unexpected migration state against one canonical manifest in non-test environments.
 - [ ] **SCHEMA-03**: Contributor can identify the authoritative schema baseline and migration flow from code and docs without consulting legacy branches.
 
 ### Collection Boundaries
@@ -68,8 +68,8 @@
 | HEALTH-03 | Phase 1 | Complete |
 | JOBS-01 | Phase 2 | Complete |
 | JOBS-02 | Phase 2 | Complete |
-| SCHEMA-01 | Phase 3 | Pending |
-| SCHEMA-02 | Phase 3 | Pending |
+| SCHEMA-01 | Phase 3 | Complete |
+| SCHEMA-02 | Phase 3 | Complete |
 | JOBS-03 | Phase 4 | Pending |
 | COLL-01 | Phase 5 | Pending |
 | COLL-02 | Phase 5 | Pending |
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after Phase 2 verification*
+*Last updated: 2026-04-05 after Phase 3 verification*

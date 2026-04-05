@@ -17,12 +17,13 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 - ✓ `POST /api/v2/collection/result`로 경주 결과와 배당 데이터를 별도 수집할 수 있다 — existing
 - ✓ API key 보호 경로와 `/health`, `/health/detailed`, `/metrics` 운영 엔드포인트가 존재한다 — existing
 - ✓ `packages/scripts`에서 평가, 프롬프트 개선, 실험 보조 워크플로를 실행할 수 있다 — existing
+- ✓ Redis degrade, health, logging, auth wiring이 하나의 일관된 런타임 계약으로 동작한다 — validated in Phase 1
 - ✓ 작업 타입과 작업 상태 vocabulary가 DB, DTO, 서비스, 라우터, 문서에서 하나로 통일된다 — validated in Phase 2
+- ✓ 새 데이터베이스 bootstrap과 startup schema verification이 active unified migration manifest 하나에 고정된다 — validated in Phase 3
 
 ### Active
 
-- [ ] Redis degrade, health, logging, auth wiring이 하나의 일관된 런타임 계약으로 동작한다
-- [ ] 새 데이터베이스를 unified migration chain만으로 bootstrap할 수 있고 canonical schema source of truth가 명확해진다
+- [ ] async job handling boundary를 하나의 canonical dispatch seam으로 격리하면서 현재 `/api/v2/jobs/*` 동작 계약은 유지한다
 - [ ] collection 도메인 책임이 더 작은 경계로 분리되면서 기존 API 동작 계약은 유지된다
 - [ ] README, API 가이드, 운영 문서가 실제 활성 구조와 명령만 설명한다
 
@@ -43,8 +44,8 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 
 ## Current State
 
-- Phase 2 complete — jobs create/read/cancel and async collection follow-up now share one canonical public vocabulary.
-- Next focus is Phase 3, which locks unified migration bootstrap and startup schema verification to the active migration manifest.
+- Phase 3 complete — unified bootstrap, startup guard, CI proof, operator entrypoints가 모두 active migration manifest path로 수렴했다.
+- Next focus is Phase 4, which isolates the in-process runner boundary without changing current `/api/v2/jobs/*` behavior.
 
 ## Constraints
 
@@ -59,10 +60,10 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| 현재 초기화 범위는 "플랫폼 안정화 및 계약 통일"로 둔다 | 기존 코드와 문서가 이미 이 방향으로 수렴하고 있고, 현재 리스크가 기능 부족보다 계약 분열에서 크기 때문이다 | — Pending |
-| 브라운필드 초기화로 취급하고 기존 동작을 Validated requirements로 기록한다 | 이미 제공 중인 수집/작업/결과/실험 기능을 기준선으로 삼아야 이후 개선 범위를 정확히 나눌 수 있기 때문이다 | — Pending |
-| active schema baseline은 unified migration 계열을 기준으로 정리한다 | 현재 ORM과 운영 경로가 legacy baseline보다 unified 쪽에 더 가깝기 때문이다 | — Pending |
-| planning 문서는 git에 커밋한다 | 이 저장소는 이미 `.planning` 산출물을 추적하고 있고, GSD 워크플로 복원성에도 유리하기 때문이다 | — Pending |
+| 현재 초기화 범위는 "플랫폼 안정화 및 계약 통일"로 둔다 | 기존 코드와 문서가 이미 이 방향으로 수렴하고 있고, 현재 리스크가 기능 부족보다 계약 분열에서 크기 때문이다 | Accepted — v1 roadmap baseline |
+| 브라운필드 초기화로 취급하고 기존 동작을 Validated requirements로 기록한다 | 이미 제공 중인 수집/작업/결과/실험 기능을 기준선으로 삼아야 이후 개선 범위를 정확히 나눌 수 있기 때문이다 | Accepted — existing runtime capabilities recorded as validated baseline |
+| active schema baseline은 unified migration 계열을 기준으로 정리한다 | 현재 ORM과 운영 경로가 legacy baseline보다 unified 쪽에 더 가깝기 때문이다 | Confirmed in Phase 3 — active manifest chain is the only bootstrap truth and mixed legacy/unified state fails closed |
+| planning 문서는 git에 커밋한다 | 이 저장소는 이미 `.planning` 산출물을 추적하고 있고, GSD 워크플로 복원성에도 유리하기 때문이다 | Accepted — planning state and verification artifacts remain repo-tracked |
 
 ## Evolution
 
@@ -82,4 +83,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after Phase 2 completion*
+*Last updated: 2026-04-05 after Phase 3 verification*
