@@ -13,8 +13,8 @@
 
 ### Job Contract
 
-- [ ] **JOBS-01**: Client can submit async collection jobs using one canonical job type vocabulary accepted by request DTOs, persisted rows, and dispatch logic.
-- [ ] **JOBS-02**: Client can retrieve job status and cancellation responses that use the same canonical vocabulary as job creation.
+- [x] **JOBS-01**: Client can submit async collection jobs using one canonical job type vocabulary accepted by request DTOs, persisted rows, and dispatch logic.
+- [x] **JOBS-02**: Client can retrieve job status and cancellation responses that use the same canonical vocabulary as job creation.
 - [ ] **JOBS-03**: Contributor can add or update job handling without maintaining parallel alias maps across router, DTO, ORM, and service layers.
 
 ### Schema Bootstrap
@@ -66,8 +66,8 @@
 | HEALTH-01 | Phase 1 | Complete |
 | HEALTH-02 | Phase 1 | Complete |
 | HEALTH-03 | Phase 1 | Complete |
-| JOBS-01 | Phase 2 | Pending |
-| JOBS-02 | Phase 2 | Pending |
+| JOBS-01 | Phase 2 | Complete |
+| JOBS-02 | Phase 2 | Complete |
 | SCHEMA-01 | Phase 3 | Pending |
 | SCHEMA-02 | Phase 3 | Pending |
 | JOBS-03 | Phase 4 | Pending |
@@ -85,4 +85,4 @@
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after Phase 1 verification*
+*Last updated: 2026-04-05 after Phase 2 verification*

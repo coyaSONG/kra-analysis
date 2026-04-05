@@ -17,11 +17,11 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 - ✓ `POST /api/v2/collection/result`로 경주 결과와 배당 데이터를 별도 수집할 수 있다 — existing
 - ✓ API key 보호 경로와 `/health`, `/health/detailed`, `/metrics` 운영 엔드포인트가 존재한다 — existing
 - ✓ `packages/scripts`에서 평가, 프롬프트 개선, 실험 보조 워크플로를 실행할 수 있다 — existing
+- ✓ 작업 타입과 작업 상태 vocabulary가 DB, DTO, 서비스, 라우터, 문서에서 하나로 통일된다 — validated in Phase 2
 
 ### Active
 
 - [ ] Redis degrade, health, logging, auth wiring이 하나의 일관된 런타임 계약으로 동작한다
-- [ ] 작업 타입과 작업 상태 vocabulary가 DB, DTO, 서비스, 라우터, 문서에서 하나로 통일된다
 - [ ] 새 데이터베이스를 unified migration chain만으로 bootstrap할 수 있고 canonical schema source of truth가 명확해진다
 - [ ] collection 도메인 책임이 더 작은 경계로 분리되면서 기존 API 동작 계약은 유지된다
 - [ ] README, API 가이드, 운영 문서가 실제 활성 구조와 명령만 설명한다
@@ -40,6 +40,11 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 - `.planning/codebase/*.md` 기준으로 현재 주요 리스크는 in-process 작업 실행기, 분열된 job vocabulary, legacy/unified migration 공존, 비대한 `CollectionService`, 드리프트된 문서다.
 - `docs/plans/2026-03-19-architecture-remediation-execplan.md`는 현재 액티브 개선 방향을 가장 구체적으로 설명하는 canonical 실행 문서다.
 - 이 프로젝트는 "새 제품을 만든다"기보다 "이미 동작 중인 데이터 수집/실험 플랫폼을 단일 계약 시스템으로 정리한다"는 성격이 강하다.
+
+## Current State
+
+- Phase 2 complete — jobs create/read/cancel and async collection follow-up now share one canonical public vocabulary.
+- Next focus is Phase 3, which locks unified migration bootstrap and startup schema verification to the active migration manifest.
 
 ## Constraints
 
@@ -77,4 +82,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after initialization*
+*Last updated: 2026-04-05 after Phase 2 completion*
