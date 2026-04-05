@@ -83,6 +83,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "learning_rate=0.05, positive_weight=1.0, add:weather_code"
+    "last_mutation": "baseline-seed"
   }
 }
