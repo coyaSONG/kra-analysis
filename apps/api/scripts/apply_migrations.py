@@ -23,6 +23,7 @@ from config import settings
 from infrastructure.migration_manifest import (
     get_active_migration_names,
     get_active_migration_paths,
+    get_inactive_migration_names,
     get_required_migration_head,
 )
 
@@ -269,8 +270,31 @@ def validate_manifest_files() -> list[Path]:
     paths = get_active_migration_paths()
     missing = [path.name for path in paths if not path.exists()]
     if missing:
-        raise RuntimeError(f"Manifest references missing migrations: {missing}")
+        raise RuntimeError(
+            "Manifest references missing active migrations: "
+            f"{missing} (required head={get_required_migration_head()})"
+        )
     return paths
+
+
+def print_manifest_contract(migration_files: list[Path]) -> None:
+    active_names = get_active_migration_names()
+    inactive_names = get_inactive_migration_names()
+    required_head = get_required_migration_head()
+
+    print(f"\n활성 manifest 마이그레이션 {len(migration_files)}개:")
+    for migration_name in active_names:
+        print(f"   - {migration_name}")
+
+    if required_head:
+        print(f"\nActive head: {required_head}")
+        print(f"Required head: {required_head}")
+
+    if inactive_names:
+        print("\nInactive legacy migration files:")
+        for migration_name in inactive_names:
+            print(f"   - {migration_name}")
+        print("   ↳ 위 파일들은 참고용 legacy baseline이며 적용 대상이 아닙니다.")
 
 
 async def main():
@@ -308,18 +332,7 @@ async def main():
         print(f"\n⚠️  마이그레이션 파일이 없습니다: {migrations_dir}")
         sys.exit(0)
 
-    print(f"\n활성 마이그레이션 파일 {len(migration_files)}개:")
-    for f in migration_files:
-        print(f"   - {f.name}")
-    inactive = sorted(
-        path.name
-        for path in migrations_dir.glob("*.sql")
-        if path.name not in get_active_migration_names()
-    )
-    if inactive:
-        print("\n비활성/legacy 마이그레이션 파일:")
-        for name in inactive:
-            print(f"   - {name}")
+    print_manifest_contract(migration_files)
 
     # 연결
     print("\n데이터베이스 연결 중...")
@@ -337,7 +350,7 @@ async def main():
         has_tables = await check_migration_status(conn)
         required_head = get_required_migration_head()
         if required_head:
-            print(f"\n정답 migration head: {required_head}")
+            print(f"\n활성 manifest required head: {required_head}")
 
         # 사용자 확인
         if not args.dry_run:
