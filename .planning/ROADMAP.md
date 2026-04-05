@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Operator can call `/health/detailed` while Redis is unavailable and still receive HTTP 200 with an explicit degraded Redis status.
   2. Operator can inspect runtime logs and tests and see one canonical request logging path that redacts sensitive fields consistently.
   3. Contributor can trace one auth contract across dependency, policy, and accounting code without type mismatches.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — degraded Redis health contract and explicit component-state regression coverage
+- [ ] 01-02-PLAN.md — canonical request logging middleware and request-id propagation unification
+- [ ] 01-03-PLAN.md — principal-first auth boundary cleanup with accounting/resource-access regressions
 
 ### Phase 2: Job Vocabulary
 **Goal**: Client가 job 생성, 상태 조회, 취소 응답에서 같은 작업 타입과 상태 vocabulary를 본다.
@@ -89,7 +94,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Runtime Guardrails | 0/TBD | Not started | - |
+| 1. Runtime Guardrails | 0/3 | Not started | - |
 | 2. Job Vocabulary | 0/TBD | Not started | - |
 | 3. Unified Bootstrap | 0/TBD | Not started | - |
 | 4. Runner Boundary | 0/TBD | Not started | - |
