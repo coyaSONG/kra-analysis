@@ -28,6 +28,24 @@ TrainerStatsFetcher = Callable[
     [str, str, AsyncSession | None], Awaitable[dict[str, Any]]
 ]
 
+_DEFAULT_JOCKEY_STATS: dict[str, Any] = {
+    "recent_win_rate": 0.15,
+    "career_win_rate": 0.12,
+    "total_wins": 0,
+    "total_races": 0,
+    "recent_races": 0,
+}
+
+_DEFAULT_TRAINER_STATS: dict[str, Any] = {
+    "recent_win_rate": 0.18,
+    "career_win_rate": 0.16,
+    "total_wins": 0,
+    "total_races": 0,
+    "recent_races": 0,
+    "plc_rate": 0.35,
+    "meet": "",
+}
+
 
 async def enrich_data(
     data: dict[str, Any],
@@ -43,14 +61,36 @@ async def enrich_data(
     """Apply enrichment to race data using injected fetch/calculation functions."""
     try:
         horses = data.get("horses", [])
-        race_date = data.get("race_date")
+        race_date = data.get("race_date") or data.get("date")
+
+        # --- Phase 2: prefetch past performances (1 DB query) ---
+        perf_map = await prefetch_past_performances(race_date, db)
 
         for horse in horses:
             horse_no = horse.get("hr_no") or horse.get("horse_no")
+            horse_no_str = str(horse_no) if horse_no else None
+            # chul_no is race entry number (1-15), used as key in result_data
+            chul_no_str = str(horse.get("chul_no", "")) or None
 
-            if horse_no:
+            if perf_map is not None and (chul_no_str or horse_no_str):
+                past_performances = (
+                    perf_map.get(chul_no_str, [])
+                    if chul_no_str
+                    else perf_map.get(horse_no_str, [])
+                )
+                if not past_performances and horse_no_str:
+                    past_performances = await get_horse_past_performances(
+                        horse_no_str, race_date, db
+                    )
+                if past_performances:
+                    horse["past_stats"] = calculate_performance_stats_fn(
+                        past_performances
+                    )
+                else:
+                    horse["past_stats"] = get_default_stats_fn()
+            elif horse_no_str:
                 past_performances = await get_horse_past_performances(
-                    horse_no, race_date, db
+                    horse_no_str, race_date, db
                 )
                 if past_performances:
                     horse["past_stats"] = calculate_performance_stats_fn(
@@ -61,16 +101,28 @@ async def enrich_data(
             else:
                 horse["past_stats"] = get_default_stats_fn()
 
-            jockey_no = horse.get("jk_no") or horse.get("jockey_no")
-            trainer_no = horse.get("tr_no") or horse.get("trainer_no")
+            # --- Extract jockey/trainer stats from embedded detail data ---
+            # basic_data already contains jkDetail/trDetail from collection
+            jk_detail = horse.get("jkDetail")
+            tr_detail = horse.get("trDetail")
 
-            if jockey_no:
-                horse["jockey_stats"] = await get_jockey_stats(jockey_no, race_date, db)
+            if jk_detail:
+                horse["jockey_stats"] = _extract_jockey_stats(jk_detail)
+            else:
+                jockey_no = horse.get("jk_no") or horse.get("jockey_no")
+                if jockey_no:
+                    horse["jockey_stats"] = await get_jockey_stats(
+                        jockey_no, race_date, db
+                    )
 
-            if trainer_no:
-                horse["trainer_stats"] = await get_trainer_stats(
-                    trainer_no, race_date, db
-                )
+            if tr_detail:
+                horse["trainer_stats"] = _extract_trainer_stats(tr_detail)
+            else:
+                trainer_no = horse.get("tr_no") or horse.get("trainer_no")
+                if trainer_no:
+                    horse["trainer_stats"] = await get_trainer_stats(
+                        trainer_no, race_date, db
+                    )
 
         weather = data.get("weather", {})
         weather_impact = analyze_weather_impact_fn(weather)
@@ -84,6 +136,102 @@ async def enrich_data(
     except Exception as exc:
         logger.error("Enrichment logic failed", error=str(exc))
         raise
+
+
+def _extract_jockey_stats(jk_detail: dict[str, Any]) -> dict[str, Any]:
+    """Extract jockey stats from embedded jkDetail in basic_data."""
+    rc_cnt_t = jk_detail.get("rc_cnt_t", 0)
+    ord1_cnt_t = jk_detail.get("ord1_cnt_t", 0)
+    win_rate_t = jk_detail.get("win_rate_t")
+    win_rate_y = jk_detail.get("win_rate_y")
+    return {
+        "recent_win_rate": float(win_rate_y) / 100
+        if win_rate_y
+        else (float(ord1_cnt_t) / rc_cnt_t if rc_cnt_t else 0),
+        "career_win_rate": float(win_rate_t) / 100
+        if win_rate_t
+        else (float(ord1_cnt_t) / rc_cnt_t if rc_cnt_t else 0),
+        "total_wins": ord1_cnt_t,
+        "total_races": rc_cnt_t,
+        "recent_races": jk_detail.get("rc_cnt_y", 0),
+    }
+
+
+def _extract_trainer_stats(tr_detail: dict[str, Any]) -> dict[str, Any]:
+    """Extract trainer stats from embedded trDetail in basic_data."""
+    rc_cnt_t = tr_detail.get("rc_cnt_t", 0)
+    ord1_cnt_t = tr_detail.get("ord1_cnt_t", 0)
+    win_rate_t = tr_detail.get("win_rate_t")
+    win_rate_y = tr_detail.get("win_rate_y")
+    plc_rate_t = tr_detail.get("plc_rate_t")
+    return {
+        "recent_win_rate": float(win_rate_y) / 100
+        if win_rate_y
+        else (float(ord1_cnt_t) / rc_cnt_t if rc_cnt_t else 0),
+        "career_win_rate": float(win_rate_t) / 100
+        if win_rate_t
+        else (float(ord1_cnt_t) / rc_cnt_t if rc_cnt_t else 0),
+        "total_wins": ord1_cnt_t,
+        "total_races": rc_cnt_t,
+        "recent_races": tr_detail.get("rc_cnt_y", 0),
+        "plc_rate": float(plc_rate_t) / 100 if plc_rate_t else 0.0,
+        "meet": tr_detail.get("meet", ""),
+    }
+
+
+async def prefetch_past_performances(
+    race_date: str | None, db: AsyncSession | None
+) -> dict[str, list[dict[str, Any]]] | None:
+    """Prefetch all past performances for a race date in a single DB query.
+
+    Returns a dict mapping horse_no -> list of performance records,
+    or None if prefetch is not possible.
+    """
+    if not race_date or db is None:
+        return None
+
+    try:
+        current_date = datetime.strptime(race_date, "%Y%m%d")
+        three_months_ago = current_date - relativedelta(months=3)
+        three_months_ago_str = three_months_ago.strftime("%Y%m%d")
+
+        result = await db.execute(
+            select(Race.date, Race.meet, Race.race_number, Race.result_data)
+            .where(
+                and_(
+                    Race.date >= three_months_ago_str,
+                    Race.date < race_date,
+                    Race.result_status == DataStatus.COLLECTED,
+                )
+            )
+            .order_by(Race.date.desc())
+        )
+        rows = result.all()
+
+        perf_map: dict[str, list[dict[str, Any]]] = {}
+        for row in rows:
+            horses = RaceProjectionAdapter.extract_result_horses(row.result_data)
+            for horse in horses:
+                horse_no = horse.get("hr_no") or str(horse.get("chulNo", ""))
+                if not horse_no:
+                    continue
+                perf_map.setdefault(horse_no, []).append(
+                    {
+                        "date": row.date,
+                        "meet": row.meet,
+                        "race_no": row.race_number,
+                        "position": horse.get("ord", 0),
+                        "win_odds": horse.get("win_odds", 0),
+                        "rating": horse.get("rating", 0),
+                        "weight": horse.get("weight", 0),
+                        "jockey": horse.get("jk_name", horse.get("jkName", "")),
+                        "trainer": horse.get("tr_name", horse.get("trName", "")),
+                    }
+                )
+        return perf_map
+    except Exception as exc:
+        logger.warning(f"Failed to prefetch past performances: {exc}")
+        return None
 
 
 async def get_horse_past_performances(
@@ -187,7 +335,7 @@ async def get_jockey_stats(
     """Fetch normalized jockey statistics."""
     _ = race_date, db
     try:
-        jockey_info = await kra_api.get_jockey_info(jockey_no, use_cache=False)
+        jockey_info = await kra_api.get_jockey_info(jockey_no)
         normalized_jockey = KRAResponseAdapter.normalize_jockey_info(jockey_info)
         if normalized_jockey:
             jk_data = convert_api_to_internal(normalized_jockey["raw_data"])
@@ -199,22 +347,10 @@ async def get_jockey_stats(
                 "recent_races": jk_data.get("rc_cnt_y", 0),
             }
 
-        return {
-            "recent_win_rate": 0.15,
-            "career_win_rate": 0.12,
-            "total_wins": 0,
-            "total_races": 0,
-            "recent_races": 0,
-        }
+        return dict(_DEFAULT_JOCKEY_STATS)
     except Exception as exc:
         logger.warning(f"Failed to get jockey stats: {exc}")
-        return {
-            "recent_win_rate": 0.15,
-            "career_win_rate": 0.12,
-            "total_wins": 0,
-            "total_races": 0,
-            "recent_races": 0,
-        }
+        return dict(_DEFAULT_JOCKEY_STATS)
 
 
 async def get_trainer_stats(
@@ -223,7 +359,7 @@ async def get_trainer_stats(
     """Fetch normalized trainer statistics."""
     _ = race_date, db
     try:
-        trainer_info = await kra_api.get_trainer_info(trainer_no, use_cache=False)
+        trainer_info = await kra_api.get_trainer_info(trainer_no)
         normalized_trainer = KRAResponseAdapter.normalize_trainer_info(trainer_info)
         if normalized_trainer:
             tr_data = convert_api_to_internal(normalized_trainer["raw_data"])
@@ -237,26 +373,10 @@ async def get_trainer_stats(
                 "meet": tr_data.get("meet", ""),
             }
 
-        return {
-            "recent_win_rate": 0.18,
-            "career_win_rate": 0.16,
-            "total_wins": 0,
-            "total_races": 0,
-            "recent_races": 0,
-            "plc_rate": 0.35,
-            "meet": "",
-        }
+        return dict(_DEFAULT_TRAINER_STATS)
     except Exception as exc:
         logger.warning(f"Failed to get trainer stats: {exc}")
-        return {
-            "recent_win_rate": 0.18,
-            "career_win_rate": 0.16,
-            "total_wins": 0,
-            "total_races": 0,
-            "recent_races": 0,
-            "plc_rate": 0.35,
-            "meet": "",
-        }
+        return dict(_DEFAULT_TRAINER_STATS)
 
 
 def analyze_weather_impact(weather: dict[str, Any]) -> dict[str, Any]:
