@@ -15,3 +15,4 @@
 
 ## Reviews
 - [Codex 리뷰: DB 구조 분석](review-2026-03-15-codex-data-analysis.md) — 초기 분석 오류 교정, 구현 플랜 검증, 4건 피드백 반영
+- [GPT-5.4 Pro: 예측 전략 컨설팅](review-2026-03-15-gpt54-prediction-strategy.md) — 신규 8개 API 활용법, 피처 엔지니어링, CatBoost→triplet re-ranker 로드맵, leakage 경고
