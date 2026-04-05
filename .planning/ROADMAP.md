@@ -59,7 +59,13 @@ Plans:
   1. Operator can bootstrap a fresh database from the unified migration chain without relying on `create_all()` in the production path.
   2. App startup rejects missing or unexpected migration state against one canonical manifest in non-test environments.
   3. Operator can prove empty-database bootstrap with a documented migration-first verification path.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — unified manifest truth and runner wiring as the single schema source of truth
+- [ ] 03-02-PLAN.md — fail-closed startup guard for manifest drift and mixed legacy/unified state
+- [ ] 03-03-PLAN.md — fresh-bootstrap proof harness and CI non-test bootstrap verification
+- [ ] 03-04-PLAN.md — operator entrypoint cleanup for migration-first bootstrap commands
 
 ### Phase 4: Runner Boundary
 **Goal**: Contributor가 async job handling을 하나의 실행 경계에서 바꾸되 기존 jobs API 동작은 유지할 수 있다.
@@ -101,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Runtime Guardrails | 3/3 | Verified | 2026-04-05 |
 | 2. Job Vocabulary | 3/3 | Verified | 2026-04-05 |
-| 3. Unified Bootstrap | 0/TBD | Not started | - |
+| 3. Unified Bootstrap | 0/4 | Not started | - |
 | 4. Runner Boundary | 0/TBD | Not started | - |
 | 5. Collection Seams | 0/TBD | Not started | - |
 | 6. Contract Truth Docs | 0/TBD | Not started | - |
