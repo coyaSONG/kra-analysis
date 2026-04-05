@@ -88,6 +88,8 @@ async def test_odds_collected_on_successful_result(db_session):
     # result_status는 COLLECTED 유지
     await db_session.refresh(race)
     assert race.result_status == DataStatus.COLLECTED
+    assert race.result_data["top3"] == [3, 1, 5]
+    assert [horse["chulNo"] for horse in race.result_data["horses"]] == [3, 1, 5]
 
 
 @pytest.mark.asyncio
@@ -159,4 +161,5 @@ async def test_odds_unsuccessful_response_does_not_block_result(db_session):
     assert result["odds"]["collected"] is False
     await db_session.refresh(race)
     assert race.result_status == DataStatus.COLLECTED
-    assert race.result_data == [3, 1, 5]
+    assert race.result_data["top3"] == [3, 1, 5]
+    assert race.result_data["horses"][0]["ord"] == 1

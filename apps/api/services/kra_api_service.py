@@ -8,22 +8,23 @@ from typing import Any
 
 import httpx
 import structlog
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
 
 from adapters.kra_response_adapter import KRAResponseAdapter
 from config import settings
+from infrastructure.kra_api.core import (
+    KRAApiRequestError,
+    KRARequestPolicy,
+    build_httpx_client_kwargs,
+    cache_ttl_for,
+    request_json_with_retry,
+)
 from infrastructure.redis_client import CacheService
 
 logger = structlog.get_logger()
 _cache_failure_streak = 0
 
 
-class KRAAPIError(Exception):
+class KRAAPIError(KRAApiRequestError):
     """KRA API 관련 오류"""
 
     pass
@@ -33,23 +34,19 @@ class KRAAPIService:
     """KRA API 통신 서비스"""
 
     def __init__(self):
-        # Decode the API key if it's URL encoded
-        from urllib.parse import unquote
-
-        self.base_url = settings.kra_api_base_url
-        self.api_key = unquote(settings.kra_api_key)
-        self.timeout = settings.kra_api_timeout
+        self._policy = KRARequestPolicy(
+            base_url=settings.kra_api_base_url,
+            api_key=settings.kra_api_key,
+            timeout=settings.kra_api_timeout,
+            max_retries=settings.kra_api_max_retries,
+            verify_ssl=settings.kra_api_verify_ssl,
+            user_agent=f"{settings.app_name}/{settings.version}",
+        )
         # Don't initialize cache service in constructor
         self._cache_service = None
 
         # HTTP 클라이언트 설정
-        self.client = httpx.AsyncClient(
-            timeout=httpx.Timeout(self.timeout),
-            headers={
-                "Accept": "application/json",
-                "User-Agent": f"{settings.app_name}/{settings.version}",
-            },
-        )
+        self.client = httpx.AsyncClient(**build_httpx_client_kwargs(self._policy))
 
     @property
     def cache_service(self):
@@ -106,33 +103,6 @@ class KRAAPIService:
         except Exception as e:
             self._log_cache_failure("write", cache_key, e)
 
-    def _log_rate_limit_headers(self, response: httpx.Response) -> None:
-        headers = getattr(response, "headers", None)
-        if headers is None:
-            return
-
-        request = getattr(response, "request", None)
-        rate_limit_headers = {
-            "rate_limit_limit": headers.get("X-RateLimit-Limit"),
-            "rate_limit_remaining": headers.get("X-RateLimit-Remaining"),
-            "rate_limit_reset": headers.get("X-RateLimit-Reset"),
-            "retry_after": headers.get("Retry-After"),
-        }
-        rate_limit_headers = {
-            key: value for key, value in rate_limit_headers.items() if value is not None
-        }
-        if rate_limit_headers:
-            logger.info(
-                "KRA API rate limit headers",
-                url=str(request.url) if request is not None else None,
-                **rate_limit_headers,
-            )
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type((httpx.HTTPError, KRAAPIError)),
-    )
     async def _make_request(
         self,
         endpoint: str,
@@ -152,48 +122,18 @@ class KRAAPIService:
         Returns:
             API 응답 데이터
         """
-        url = f"{self.base_url}/{endpoint}"
-
-        # API 키 추가
-        if params is None:
-            params = {}
-        params["serviceKey"] = self.api_key
-
         try:
-            response = await self.client.request(
-                method=method, url=url, params=params, json=data
+            return await request_json_with_retry(
+                self.client,
+                self._policy,
+                endpoint,
+                method=method,
+                params=params,
+                data=data,
             )
-            self._log_rate_limit_headers(response)
-
-            # 응답 검증
-            response.raise_for_status()
-
-            # JSON 파싱
-            result = response.json()
-
-            # KRA API 오류 체크
-            if result.get("status") == "error":
-                raise KRAAPIError(
-                    f"KRA API error: {result.get('message', 'Unknown error')}"
-                )
-
-            return result
-
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                "KRA API HTTP error",
-                status_code=e.response.status_code,
-                url=str(e.request.url),
-                response_text=e.response.text[:500],
-            )
-            raise KRAAPIError(
-                f"HTTP {e.response.status_code}: {e.response.text[:200]}"
-            ) from e
-
-        except httpx.HTTPError as e:
-            logger.error("KRA API connection error", error=str(e))
-            raise KRAAPIError(f"Connection error: {str(e)}") from e
-
+        except KRAApiRequestError as e:
+            logger.error("KRA API request failed", endpoint=endpoint, error=str(e))
+            raise KRAAPIError(str(e)) from e
         except Exception as e:
             logger.error("Unexpected error in KRA API request", error=str(e))
             raise KRAAPIError(f"Unexpected error: {str(e)}") from e
@@ -239,7 +179,7 @@ class KRAAPIService:
 
         # 캐시 저장 (1시간)
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=3600)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("race_info"))
 
         return result
 
@@ -292,7 +232,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("horse_info"))
 
         return result
 
@@ -327,7 +267,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("jockey_info"))
 
         return result
 
@@ -362,7 +302,7 @@ class KRAAPIService:
 
         # 캐시 저장 (24시간)
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("trainer_info"))
 
         return result
 
@@ -389,7 +329,7 @@ class KRAAPIService:
         result = await self._make_request(endpoint="API189_1/Track_1", params=params)
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=3600)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("track_info"))
 
         return result
 
@@ -415,7 +355,7 @@ class KRAAPIService:
         result = await self._make_request(endpoint="API72_2/racePlan_2", params=params)
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("race_plan"))
 
         return result
 
@@ -443,7 +383,9 @@ class KRAAPIService:
         )
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=1800)
+            await self._set_cached(
+                cache_key, result, ttl=cache_ttl_for("cancelled_horses")
+            )
 
         return result
 
@@ -471,7 +413,7 @@ class KRAAPIService:
         )
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("jockey_stats"))
 
         return result
 
@@ -499,7 +441,7 @@ class KRAAPIService:
         )
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=86400)
+            await self._set_cached(cache_key, result, ttl=cache_ttl_for("owner_info"))
 
         return result
 
@@ -526,7 +468,9 @@ class KRAAPIService:
         )
 
         if use_cache:
-            await self._set_cached(cache_key, result, ttl=21600)
+            await self._set_cached(
+                cache_key, result, ttl=cache_ttl_for("training_status")
+            )
 
         return result
 

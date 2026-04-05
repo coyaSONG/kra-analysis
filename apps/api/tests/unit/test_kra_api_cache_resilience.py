@@ -1,6 +1,7 @@
 import httpx
 import pytest
 
+from infrastructure.kra_api import core as kra_core
 from services import kra_api_service as kra_api_service_module
 from services.kra_api_service import KRAAPIService
 
@@ -90,7 +91,7 @@ async def test_make_request_logs_rate_limit_headers(monkeypatch):
 
     monkeypatch.setattr(service.client, "request", fake_request)
     monkeypatch.setattr(
-        kra_api_service_module.logger,
+        kra_core.logger,
         "info",
         lambda event, **kwargs: info_calls.append((event, kwargs)),
     )

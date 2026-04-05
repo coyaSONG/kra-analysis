@@ -11,6 +11,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.kra_response_adapter import KRAResponseAdapter
+from adapters.race_projection_adapter import RaceProjectionAdapter
 from models.database_models import DataStatus, Race
 from services.kra_api_service import KRAAPIService
 from utils.field_mapping import convert_api_to_internal
@@ -112,11 +113,9 @@ async def get_horse_past_performances(
 
         performances = []
         for race in races:
-            if not race.result_data:
-                continue
-            horses = race.result_data.get("horses", [])
+            horses = RaceProjectionAdapter.extract_result_horses(race.result_data)
             for horse in horses:
-                if horse.get("hr_no") == horse_no:
+                if horse.get("hr_no") == horse_no or str(horse.get("chulNo")) == horse_no:
                     performances.append(
                         {
                             "date": race.date,
@@ -126,8 +125,8 @@ async def get_horse_past_performances(
                             "win_odds": horse.get("win_odds", 0),
                             "rating": horse.get("rating", 0),
                             "weight": horse.get("weight", 0),
-                            "jockey": horse.get("jk_name", ""),
-                            "trainer": horse.get("tr_name", ""),
+                            "jockey": horse.get("jk_name", horse.get("jkName", "")),
+                            "trainer": horse.get("tr_name", horse.get("trName", "")),
                         }
                     )
                     break

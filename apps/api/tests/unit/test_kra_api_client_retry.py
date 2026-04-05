@@ -5,6 +5,7 @@ import httpx
 import pytest
 
 from infrastructure.kra_api import client as kra_client_module
+from infrastructure.kra_api import core as kra_core
 
 
 def _make_response(
@@ -41,13 +42,13 @@ async def test_make_request_retries_429_with_retry_after(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        async def get(self, url, params):
+        async def request(self, method, url, params=None, json=None):
             response = responses[call_count["value"]]
             call_count["value"] += 1
             return response
 
     monkeypatch.setattr(kra_client_module.httpx, "AsyncClient", FakeAsyncClient)
-    monkeypatch.setattr(kra_client_module.asyncio, "sleep", sleep)
+    monkeypatch.setattr(kra_core.asyncio, "sleep", sleep)
     monkeypatch.setattr(kra_client_module.settings, "kra_api_key", "test-api-key")
     monkeypatch.setattr(kra_client_module.settings, "kra_api_max_retries", 2)
 
@@ -75,12 +76,12 @@ async def test_make_request_raises_auth_error_without_retry_on_401(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        async def get(self, url, params):
+        async def request(self, method, url, params=None, json=None):
             call_count["value"] += 1
             return _make_response(401, {"error": "unauthorized"})
 
     monkeypatch.setattr(kra_client_module.httpx, "AsyncClient", FakeAsyncClient)
-    monkeypatch.setattr(kra_client_module.asyncio, "sleep", sleep)
+    monkeypatch.setattr(kra_core.asyncio, "sleep", sleep)
     monkeypatch.setattr(kra_client_module.settings, "kra_api_key", "test-api-key")
     monkeypatch.setattr(kra_client_module.settings, "kra_api_max_retries", 3)
 
@@ -114,13 +115,13 @@ async def test_make_request_retries_5xx_with_exponential_backoff(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        async def get(self, url, params):
+        async def request(self, method, url, params=None, json=None):
             response = responses[call_count["value"]]
             call_count["value"] += 1
             return response
 
     monkeypatch.setattr(kra_client_module.httpx, "AsyncClient", FakeAsyncClient)
-    monkeypatch.setattr(kra_client_module.asyncio, "sleep", sleep)
+    monkeypatch.setattr(kra_core.asyncio, "sleep", sleep)
     monkeypatch.setattr(kra_client_module.settings, "kra_api_key", "test-api-key")
     monkeypatch.setattr(kra_client_module.settings, "kra_api_max_retries", 3)
 

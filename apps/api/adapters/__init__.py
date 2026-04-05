@@ -4,5 +4,6 @@ Adapters 패키지
 """
 
 from .kra_response_adapter import KRAResponseAdapter
+from .race_projection_adapter import RaceProjectionAdapter
 
-__all__ = ["KRAResponseAdapter"]
+__all__ = ["KRAResponseAdapter", "RaceProjectionAdapter"]

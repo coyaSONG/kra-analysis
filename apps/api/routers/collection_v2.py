@@ -3,14 +3,11 @@
 경주 데이터 수집, 전처리, 강화, 결과 수집 엔드포인트
 """
 
-import uuid
-from typing import cast
-
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies.auth import require_api_key
+from dependencies.auth import AuthenticatedPrincipal, require_action
 from infrastructure.database import get_db
 from models.collection_dto import (
     CollectionRequest,
@@ -19,6 +16,7 @@ from models.collection_dto import (
     ResultCollectionRequest,
 )
 from services.collection_service import CollectionService
+from services.collection_workflow import CollectionWorkflow
 from services.job_service import JobService
 from services.kra_api_service import KRAAPIService, get_kra_api_service
 from services.result_collection_service import (
@@ -38,6 +36,7 @@ router = APIRouter(
 
 # JobService 인스턴스
 job_service = JobService()
+collection_workflow = CollectionWorkflow(job_service)
 result_collection_service = ResultCollectionService()
 
 
@@ -50,61 +49,21 @@ result_collection_service = ResultCollectionService()
 async def collect_race_data(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(require_action("collection.collect")),
     kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 데이터 수집"""
     try:
-        # CollectionService 사용
-        collection_service = CollectionService(kra_api)
+        plan = collection_workflow.build_batch_plan(request)
+        outcome = await collection_workflow.collect_batch(plan, db, kra_api)
 
-        # 경주 번호가 지정되지 않았으면 1-15 전체
-        race_numbers = request.race_numbers or list(range(1, 16))
-
-        results = []
-        errors = []
-        logger.info(
-            f"Collecting races for {request.date}, meet {request.meet}, races: {race_numbers}"
-        )
-
-        for race_no in race_numbers:
-            try:
-                result = await collection_service.collect_race_data(
-                    request.date,
-                    request.meet,
-                    race_no,
-                    db,  # Pass as integer
-                )
-                results.append(result)
-                logger.info(f"Successfully collected race {race_no}")
-            except Exception as e:
-                logger.error(f"Failed to collect race {race_no}: {e}", exc_info=True)
-                errors.append({"race_no": race_no, "error": str(e)})
-
-        if not results and errors:
+        if outcome.status == "error":
             raise HTTPException(
                 status_code=502,
-                detail={
-                    "message": "All requested races failed to collect",
-                    "errors": errors,
-                },
+                detail={"message": outcome.message, "errors": outcome.errors},
             )
 
-        response_status = "success" if not errors else "partial"
-        response_message = f"Collected {len(results)} races"
-        if errors:
-            response_message = (
-                f"Collected {len(results)} races, failed {len(errors)} races"
-            )
-
-        return CollectionResponse(
-            job_id=None,
-            status=response_status,
-            message=response_message,
-            estimated_time=None,
-            webhook_url=None,
-            data=results,
-        )
+        return outcome.to_response()
 
     except HTTPException:
         raise
@@ -123,34 +82,17 @@ async def collect_race_data(
 async def collect_race_data_async(
     request: CollectionRequest,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(
+        require_action("collection.collect_async")
+    ),
 ):
     """경주 데이터 비동기 수집"""
     try:
-        _ = str(uuid.uuid4())
-        race_numbers = request.race_numbers or list(range(1, 16))
-        parameters = {
-            "race_date": request.date,
-            "meet": request.meet,
-            "race_numbers": race_numbers,
-        }
-
-        job = await job_service.create_job(
-            job_type="batch",
-            parameters=parameters,
-            user_id=api_key,
+        plan = collection_workflow.build_batch_plan(request)
+        return await collection_workflow.submit_batch_job(
+            plan,
+            owner_ref=principal.owner_ref,
             db=db,
-        )
-        job_id = cast(str, job.job_id)
-        await job_service.start_job(job_id, db)
-
-        return CollectionResponse(
-            job_id=job_id,
-            status="accepted",
-            message="Collection job started",
-            webhook_url=f"/api/v2/jobs/{job_id}",
-            data=None,
-            estimated_time=5,
         )
     except Exception as e:
         logger.error(f"Async collection failed: {e}")
@@ -167,7 +109,9 @@ async def get_collection_status(
     date: str,
     meet: int,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(
+        require_action("collection.status.read")
+    ),
 ):
     """수집 상태 조회"""
     try:
@@ -187,7 +131,9 @@ async def get_collection_status(
 async def collect_race_result(
     request: ResultCollectionRequest,
     db: AsyncSession = Depends(get_db),
-    api_key: str = Depends(require_api_key),
+    principal: AuthenticatedPrincipal = Depends(
+        require_action("collection.result.collect")
+    ),
     kra_api: KRAAPIService = Depends(get_kra_api_service),
 ):
     """경주 결과 수집 - KRA API에서 결과를 가져와 races.result_data에 저장"""

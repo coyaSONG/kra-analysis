@@ -7,10 +7,10 @@ import pytest
 async def test_collect_race_data_async_error(monkeypatch, authenticated_client):
     import routers.collection_v2 as r
 
-    def boom():
-        raise RuntimeError("uuid fail")
+    async def boom(*args, **kwargs):
+        raise RuntimeError("submit fail")
 
-    monkeypatch.setattr(r.uuid, "uuid4", boom)
+    monkeypatch.setattr(r.collection_workflow, "submit_batch_job", boom)
 
     resp = await authenticated_client.post(
         "/api/v2/collection/async",
@@ -25,11 +25,10 @@ async def test_collect_race_data_async_error(monkeypatch, authenticated_client):
 async def test_collect_race_data_top_level_error(monkeypatch, authenticated_client):
     import routers.collection_v2 as r
 
-    class BadService:
-        def __init__(self, *a, **k):
-            raise RuntimeError("init fail")
+    async def boom(*args, **kwargs):
+        raise RuntimeError("workflow fail")
 
-    monkeypatch.setattr(r, "CollectionService", BadService)
+    monkeypatch.setattr(r.collection_workflow, "collect_batch", boom)
 
     resp = await authenticated_client.post(
         "/api/v2/collection/", json={"date": "20240719", "meet": 1, "race_numbers": [1]}

@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from adapters.kra_response_adapter import KRAResponseAdapter
+from adapters.race_projection_adapter import RaceProjectionAdapter
 from models.database_models import DataStatus, Race
 from services.kra_api_service import KRAAPIService
 from utils.field_mapping import POOL_NAME_MAP, VALID_POOLS
@@ -87,7 +88,9 @@ class ResultCollectionService:
             if race is None:
                 raise ResultNotFoundError(f"경주를 찾을 수 없습니다: {race_id}")
 
-            race.result_data = top3
+            race.result_data = RaceProjectionAdapter.build_result_projection(
+                top3, result_items=sorted_items
+            )
             race.result_status = DataStatus.COLLECTED
             race.result_collected_at = datetime.now(UTC).replace(tzinfo=None)
             race.updated_at = datetime.now(UTC).replace(tzinfo=None)

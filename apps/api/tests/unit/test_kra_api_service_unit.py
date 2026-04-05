@@ -1,6 +1,9 @@
+from unittest.mock import AsyncMock
+
 import httpx
 import pytest
 
+from infrastructure.kra_api import core as kra_core
 from services.kra_api_service import KRAAPIError, KRAAPIService
 
 
@@ -54,10 +57,13 @@ async def test_get_race_info_http_error(monkeypatch):
 
     monkeypatch.setattr(svc.client, "request", fake_request)
 
-    # Tenacity wraps repeated failures into RetryError
-    import tenacity
+    monkeypatch.setattr(
+        kra_core.logger,
+        "error",
+        lambda event, **kwargs: None,
+    )
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(KRAAPIError, match="HTTP 400"):
         await svc.get_race_info("20240719", "1", 1, use_cache=False)
 
 
@@ -71,10 +77,15 @@ async def test_get_race_info_connection_error(monkeypatch):
         raise httpx.HTTPError("boom")
 
     monkeypatch.setattr(svc.client, "request", fake_request)
+    monkeypatch.setattr(kra_core.asyncio, "sleep", AsyncMock())
 
-    import tenacity
+    monkeypatch.setattr(
+        kra_core.logger,
+        "error",
+        lambda event, **kwargs: None,
+    )
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(KRAAPIError, match="Connection error"):
         await svc.get_race_info("20240719", "1", 1, use_cache=False)
 
 

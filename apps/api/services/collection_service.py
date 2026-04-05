@@ -804,28 +804,13 @@ class CollectionService:
     async def collect_batch_races(
         self, race_date: str, meet: int, race_numbers: list[int], db: AsyncSession
     ) -> dict[int, dict[str, Any]]:
-        """
-        여러 경주 일괄 수집
-
-        Args:
-            race_date: 경주 날짜
-            meet: 경마장 코드
-            race_numbers: 경주 번호 리스트
-            db: 데이터베이스 세션
-
-        Returns:
-            경주 번호별 수집 결과
-        """
-        results = {}
-
+        """Backward-compatible batch collector preserving instance-level seams."""
+        results: dict[int, dict[str, Any]] = {}
         for race_no in race_numbers:
             try:
                 result = await self.collect_race_data(race_date, meet, race_no, db)
                 results[race_no] = {"status": "success", "data": result}
-            except Exception as e:
-                logger.error(
-                    "Batch collection failed for race", race_no=race_no, error=str(e)
-                )
-                results[race_no] = {"status": "error", "error": str(e)}
+            except Exception as exc:
+                results[race_no] = {"status": "error", "error": str(exc)}
 
         return results

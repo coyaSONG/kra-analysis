@@ -40,7 +40,7 @@ async def test_kra_api_client_uses_configured_ssl_verification(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             return False
 
-        async def get(self, url, params):
+        async def request(self, method, url, params=None, json=None):
             captured["url"] = url
             captured["params"] = params
             return FakeResponse()

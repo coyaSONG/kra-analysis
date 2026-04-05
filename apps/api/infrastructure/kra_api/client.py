@@ -1,43 +1,41 @@
 import asyncio
-import email.utils
-import warnings
-import xml.etree.ElementTree as ET
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote
 
 import httpx
 import structlog
 
 from config import settings
-
-if not settings.kra_api_verify_ssl:
-    warnings.filterwarnings("ignore", message="Unverified HTTPS request")
-
+from infrastructure.kra_api.core import (
+    KRAApiAuthenticationError as _KRAApiAuthenticationError,
+)
+from infrastructure.kra_api.core import (
+    KRAApiRateLimitError as _KRAApiRateLimitError,
+)
+from infrastructure.kra_api.core import (
+    KRAApiRequestError,
+    KRARequestPolicy,
+    build_httpx_client_kwargs,
+    request_json_with_retry,
+)
 
 logger = structlog.get_logger()
 
-
-class KRAApiClientError(Exception):
-    """KRA API client base exception."""
-
-
-class KRAApiAuthenticationError(KRAApiClientError):
-    """Raised when KRA API credentials are invalid or forbidden."""
-
-
-class KRAApiRateLimitError(KRAApiClientError):
-    """Raised when KRA API rate limit is exceeded."""
+KRAApiClientError = KRAApiRequestError
+KRAApiAuthenticationError = _KRAApiAuthenticationError
+KRAApiRateLimitError = _KRAApiRateLimitError
 
 
 class KRAApiClient:
     def __init__(self):
-        self.base_url = settings.kra_api_base_url
-        self.api_key = settings.kra_api_key
-        self.timeout = settings.kra_api_timeout
-        self.max_retries = settings.kra_api_max_retries
-        self.verify_ssl = settings.kra_api_verify_ssl
+        self._policy = KRARequestPolicy(
+            base_url=settings.kra_api_base_url,
+            api_key=settings.kra_api_key,
+            timeout=settings.kra_api_timeout,
+            max_retries=settings.kra_api_max_retries,
+            verify_ssl=settings.kra_api_verify_ssl,
+        )
+        self.verify_ssl = self._policy.verify_ssl
 
         # API 엔드포인트별 경로
         self.endpoints = {
@@ -56,134 +54,14 @@ class KRAApiClient:
         self.data_base_path = Path("data")
         self.cache_base_path = self.data_base_path / "cache"
 
-    def _xml_to_dict(self, element) -> dict[str, Any]:
-        """XML Element를 딕셔너리로 변환합니다."""
-        result = {}
-
-        # 속성 처리
-        if element.attrib:
-            result.update(element.attrib)
-
-        # 텍스트 내용이 있는 경우
-        if element.text and element.text.strip():
-            # 자식 요소가 없으면 텍스트만 반환
-            if not list(element):
-                return element.text.strip()
-            else:
-                result["text"] = element.text.strip()
-
-        # 자식 요소 처리
-        children: dict[str, Any] = {}
-        for child in element:
-            child_data = self._xml_to_dict(child)
-            if child.tag in children:
-                # 같은 태그가 여러 개인 경우 리스트로 처리
-                if not isinstance(children[child.tag], list):
-                    children[child.tag] = [children[child.tag]]
-                children[child.tag].append(child_data)
-            else:
-                children[child.tag] = child_data
-
-        result.update(children)
-        return result if result else {}
-
-    def _get_retry_delay(
-        self, attempt: int, response: httpx.Response | None = None
-    ) -> float:
-        """HTTP 상태에 따른 재시도 대기 시간을 계산합니다."""
-        if response is not None and response.status_code == 429:
-            retry_after = response.headers.get("Retry-After")
-            if retry_after:
-                try:
-                    return max(0.0, float(retry_after))
-                except ValueError:
-                    retry_at = email.utils.parsedate_to_datetime(retry_after)
-                    if retry_at is not None:
-                        if retry_at.tzinfo is None:
-                            retry_at = retry_at.replace(tzinfo=UTC)
-                        return max(0.0, (retry_at - datetime.now(UTC)).total_seconds())
-
-        return float(2**attempt)
-
     async def _make_request(
         self, endpoint: str, params: dict[str, Any]
     ) -> dict[str, Any]:
         """KRA API에 요청을 보내고 응답을 반환합니다."""
-        url = f"{self.base_url}{endpoint}"
-
-        # 서비스 키 추가 (URL 디코딩 필요)
-        params["serviceKey"] = unquote(self.api_key) if self.api_key else None
-
-        # JSON 응답 요청
-        params["_type"] = "json"
-
-        # httpx 클라이언트 설정
-        # KRA API는 특정 SSL/TLS 설정이 필요함
-        async with httpx.AsyncClient(
-            timeout=self.timeout,
-            verify=self.verify_ssl,
-            follow_redirects=True,
-            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
-            # HTTP/2 비활성화 (일부 정부 API와 호환성 문제)
-            http2=False,
-        ) as client:
-            for attempt in range(self.max_retries):
-                try:
-                    response = await client.get(url, params=params)
-                    response.raise_for_status()
-
-                    # JSON 응답 처리
-                    if params.get("_type") == "json":
-                        return response.json()
-
-                    # XML 응답 처리 (fallback)
-                    root = ET.fromstring(response.text)
-                    return self._xml_to_dict(root)
-
-                except httpx.HTTPStatusError as e:
-                    status_code = e.response.status_code
-                    logger.warning(
-                        "KRA API request failed",
-                        endpoint=endpoint,
-                        attempt=attempt + 1,
-                        status_code=status_code,
-                        error=str(e),
-                    )
-
-                    if status_code in {401, 403}:
-                        raise KRAApiAuthenticationError(
-                            f"KRA API authentication failed with status {status_code}"
-                        ) from e
-
-                    should_retry = status_code == 429 or 500 <= status_code < 600
-                    if not should_retry:
-                        raise
-
-                    if attempt < self.max_retries - 1:
-                        await asyncio.sleep(
-                            self._get_retry_delay(attempt, response=e.response)
-                        )
-                    elif status_code == 429:
-                        raise KRAApiRateLimitError(
-                            "KRA API rate limit exceeded after retries"
-                        ) from e
-                    else:
-                        raise
-
-                except httpx.HTTPError as e:
-                    logger.warning(
-                        "KRA API request failed",
-                        endpoint=endpoint,
-                        attempt=attempt + 1,
-                        error=str(e),
-                    )
-
-                    if attempt < self.max_retries - 1:
-                        await asyncio.sleep(self._get_retry_delay(attempt))
-                    else:
-                        raise
-
-        raise RuntimeError("All retries exhausted")
+        async with httpx.AsyncClient(**build_httpx_client_kwargs(self._policy)) as client:
+            return await request_json_with_retry(
+                client, self._policy, endpoint, params=params
+            )
 
     async def get_race_detail(
         self, date: str, meet: int, race_no: int
