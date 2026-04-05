@@ -5,7 +5,6 @@ Data Processing Pipeline
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.collection_service import CollectionService
 from services.kra_api_service import KRAAPIService
 
 from .base import Pipeline, PipelineBuilder, PipelineContext
@@ -42,13 +41,17 @@ class DataProcessingPipeline:
         Returns:
             구성된 파이프라인
         """
-        collection_service = CollectionService(kra_api_service)
-
         pipeline = (
             PipelineBuilder("standard_data_processing")
             .add_stage(CollectionStage(kra_api_service, db_session))
-            .add_stage(PreprocessingStage())
-            .add_stage(EnrichmentStage(collection_service, db_session))
+            .add_stage(PreprocessingStage(kra_api_service, db_session))
+            .add_stage(
+                EnrichmentStage(
+                    collection_service=None,
+                    db_session=db_session,
+                    kra_api_service=kra_api_service,
+                )
+            )
             .add_stage(ValidationStage(min_horses, min_quality_score))
             .build()
         )
@@ -72,7 +75,7 @@ class DataProcessingPipeline:
         pipeline = (
             PipelineBuilder("collection_only")
             .add_stage(CollectionStage(kra_api_service, db_session))
-            .add_stage(PreprocessingStage())
+            .add_stage(PreprocessingStage(kra_api_service, db_session))
             .build()
         )
 
@@ -95,11 +98,15 @@ class DataProcessingPipeline:
         Returns:
             보강 전용 파이프라인
         """
-        collection_service = CollectionService(kra_api_service)
-
         pipeline = (
             PipelineBuilder("enrichment_only")
-            .add_stage(EnrichmentStage(collection_service, db_session))
+            .add_stage(
+                EnrichmentStage(
+                    collection_service=None,
+                    db_session=db_session,
+                    kra_api_service=kra_api_service,
+                )
+            )
             .add_stage(
                 ValidationStage(min_horses=1, min_quality_score=min_quality_score)
             )

@@ -4,7 +4,7 @@
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 import structlog
@@ -40,7 +40,15 @@ from services.collection_enrichment import (
 )
 from services.collection_preprocessing import preprocess_data as preprocess_data_helper
 from services.kra_api_service import KRAAPIService
-from utils.field_mapping import POOL_NAME_MAP, VALID_POOLS, convert_api_to_internal
+from services.race_processing_workflow import (
+    CollectOddsCommand,
+    CollectRaceCommand,
+    MaterializeRaceCommand,
+    RaceKey,
+    RaceProcessingWorkflow,
+    build_race_processing_workflow,
+)
+from utils.field_mapping import convert_api_to_internal
 
 logger = structlog.get_logger()
 _HORSE_FAILURE_THRESHOLD = 0.5
@@ -57,6 +65,38 @@ class CollectionService:
     def __init__(self, kra_api_service: KRAAPIService):
         self.kra_api = kra_api_service
         self.cache_service = CacheService()
+
+    def _build_workflow(self, db: AsyncSession) -> RaceProcessingWorkflow:
+        async def save_collection(payload: dict[str, Any]) -> None:
+            await self._save_race_data(payload, db)
+
+        async def save_collection_failure(
+            key: RaceKey, race_info: dict[str, Any] | None, reason: str
+        ) -> None:
+            await self._save_collection_failure(
+                key.race_date,
+                key.meet,
+                key.race_number,
+                race_info,
+                db,
+                reason,
+            )
+
+        async def preprocess_payload(payload: dict[str, Any]) -> dict[str, Any]:
+            return await self._preprocess_data(payload)
+
+        async def enrich_payload(payload: dict[str, Any]) -> dict[str, Any]:
+            return await self._enrich_data(payload, db)
+
+        return build_race_processing_workflow(
+            self.kra_api,
+            db,
+            preprocess_payload_fn=preprocess_payload,
+            enrich_payload_fn=enrich_payload,
+            collect_horse_details_fn=self._collect_horse_details,
+            save_collection_fn=save_collection,
+            save_collection_failure_fn=save_collection_failure,
+        )
 
     @staticmethod
     async def get_collection_status(
@@ -166,6 +206,7 @@ class CollectionService:
         Returns:
             수집된 경주 데이터
         """
+        workflow = self._build_workflow(db)
         try:
             logger.info(
                 "Starting race data collection",
@@ -173,189 +214,20 @@ class CollectionService:
                 meet=meet,
                 race_no=race_no,
             )
-
-            # 기본 경주 정보 수집 (캐시 활성화)
-            race_info = await self.kra_api.get_race_info(race_date, str(meet), race_no)
-
-            # === 신규 경주 단위 API 수집 ===
-            # 경주 계획표 (API72_2)
-            race_plan_data = {}
-            try:
-                race_plan_response = await self.kra_api.get_race_plan(
-                    race_date, str(meet)
+            collected = await workflow.collect(
+                CollectRaceCommand(
+                    key=RaceKey(race_date=race_date, meet=meet, race_number=race_no),
+                    horse_failure_threshold=_HORSE_FAILURE_THRESHOLD,
                 )
-                if KRAResponseAdapter.is_successful_response(race_plan_response):
-                    plans = KRAResponseAdapter.extract_items(race_plan_response)
-                    for plan in plans:
-                        if plan.get("rcNo") == race_no:
-                            race_plan_data = convert_api_to_internal(plan)
-                            break
-            except Exception as e:
-                logger.warning("Failed to get race plan", error=str(e))
-
-            # 경주로 정보 (API189_1)
-            track_data = {}
-            try:
-                track_response = await self.kra_api.get_track_info(race_date, str(meet))
-                if KRAResponseAdapter.is_successful_response(track_response):
-                    tracks = KRAResponseAdapter.extract_items(track_response)
-                    for t in tracks:
-                        if t.get("rcNo") == race_no:
-                            track_data = convert_api_to_internal(t)
-                            break
-            except Exception as e:
-                logger.warning("Failed to get track info", error=str(e))
-
-            # 출전 취소 정보 (API9_1)
-            cancelled_horses_data: list[dict[str, Any]] = []
-            try:
-                cancel_response = await self.kra_api.get_cancelled_horses(
-                    race_date, str(meet)
-                )
-                if KRAResponseAdapter.is_successful_response(cancel_response):
-                    cancels = KRAResponseAdapter.extract_items(cancel_response)
-                    cancelled_horses_data = [
-                        convert_api_to_internal(c)
-                        for c in cancels
-                        if c.get("rcNo") == race_no
-                    ]
-            except Exception as e:
-                logger.warning("Failed to get cancelled horses", error=str(e))
-
-            # 조교 현황 (API329)
-            training_map: dict[str, dict[str, Any]] = {}
-            try:
-                training_response = await self.kra_api.get_training_status(race_date)
-                if KRAResponseAdapter.is_successful_response(training_response):
-                    trainings = KRAResponseAdapter.extract_items(training_response)
-                    for tr in trainings:
-                        hr_name = tr.get("hrnm", "")
-                        if hr_name:
-                            training_map[hr_name] = convert_api_to_internal(tr)
-            except Exception as e:
-                logger.warning("Failed to get training status", error=str(e))
-
-            # 마필별 상세 정보 수집
-            horses_data = []
-            if not race_info or not KRAResponseAdapter.is_successful_response(
-                race_info
-            ):
-                await self._save_collection_failure(
-                    race_date,
-                    meet,
-                    race_no,
-                    race_info,
-                    db,
-                    "KRA API returned an unsuccessful race response",
-                )
-                raise ValueError(
-                    f"Race data is unavailable for {race_date} {meet}-{race_no}"
-                )
-
-            normalized_race = KRAResponseAdapter.normalize_race_info(race_info)
-            horses = normalized_race["horses"]
-            if not horses:
-                await self._save_collection_failure(
-                    race_date,
-                    meet,
-                    race_no,
-                    race_info,
-                    db,
-                    "KRA API returned no race items",
-                )
-                raise ValueError(f"Race data is empty for {race_date} {meet}-{race_no}")
-
-            failed_horses: list[dict[str, Any]] = []
-            for horse in horses:
-                # Convert API camelCase to internal snake_case
-                horse_converted = convert_api_to_internal(horse)
-                try:
-                    horse_detail = await self._collect_horse_details(
-                        horse_converted, meet
-                    )
-                    horses_data.append(horse_detail)
-                except Exception as exc:
-                    horse_no = horse_converted.get("hr_no")
-                    logger.warning(
-                        "Skipping horse after detail collection failure",
-                        race_date=race_date,
-                        meet=meet,
-                        race_no=race_no,
-                        horse_no=horse_no,
-                        error=str(exc),
-                    )
-                    failed_horses.append(
-                        {
-                            "horse_no": horse_no,
-                            "horse_name": horse_converted.get("hr_name"),
-                            "error": str(exc),
-                        }
-                    )
-
-            if not horses_data or (
-                len(failed_horses) / len(horses) >= _HORSE_FAILURE_THRESHOLD
-            ):
-                reason = (
-                    f"Too many horse detail collection failures: "
-                    f"{len(failed_horses)}/{len(horses)}"
-                )
-                await self._save_collection_failure(
-                    race_date,
-                    meet,
-                    race_no,
-                    race_info,
-                    db,
-                    reason,
-                )
-                raise ValueError(reason)
-
-            # training 정보 매칭 (hrName 기반, API329에 hrNo 미제공)
-            unmatched_horses = []
-            for horse_data in horses_data:
-                hr_name = horse_data.get("hr_name", "")
-                if hr_name and hr_name in training_map:
-                    horse_data["training"] = training_map[hr_name]
-                elif hr_name and training_map:
-                    unmatched_horses.append(hr_name)
-            if unmatched_horses:
-                logger.warning(
-                    "Training data unmatched horses",
-                    unmatched=unmatched_horses,
-                    available=list(training_map.keys())[:10],
-                )
-
-            # 데이터 통합
-            collected_data = {
-                # compatibility fields expected by tests
-                "race_date": race_date,
-                "race_no": race_no,
-                # internal canonical fields
-                "date": race_date,
-                "meet": meet,
-                "race_number": race_no,
-                "race_info": race_info,
-                "race_plan": race_plan_data,
-                "track": track_data,
-                "cancelled_horses": cancelled_horses_data,
-                "horses": horses_data,
-                "failed_horses": failed_horses,
-                "status": "partial_failure" if failed_horses else "success",
-                "collected_at": datetime.now(UTC).isoformat(),
-            }
-
-            # 데이터베이스 저장
-            await self._save_race_data(collected_data, db)
-
+            )
             logger.info(
                 "Race data collection completed",
                 race_date=race_date,
                 meet=meet,
                 race_no=race_no,
-                horses_count=len(horses_data),
+                horses_count=len(collected.payload.get("horses", [])),
             )
-
-            return collected_data
-
+            return collected.payload
         except Exception as e:
             logger.error(
                 "Race data collection failed",
@@ -542,77 +414,25 @@ class CollectionService:
         meet: int,
         race_no: int,
         db: AsyncSession,
-        source: str = "API160_1",
+        source: Literal["API160_1", "API301"] = "API160_1",
     ) -> dict[str, Any]:
         """배당률 데이터 수집 및 race_odds 테이블 UPSERT"""
-        from sqlalchemy.dialects.postgresql import insert as pg_insert
-
-        from models.database_models import RaceOdds
-
-        valid_sources = {"API160_1", "API301"}
-        if source not in valid_sources:
-            return {
-                "race_id": f"{race_date}_{meet}_{race_no}",
-                "inserted_count": 0,
-                "error": f"Invalid source: {source}. Must be one of {valid_sources}",
-            }
-
-        race_id = f"{race_date}_{meet}_{race_no}"
-
-        if source == "API160_1":
-            response = await self.kra_api.get_final_odds(
-                race_date, str(meet), race_no=race_no
+        workflow = self._build_workflow(db)
+        result = await workflow.collect_odds(
+            CollectOddsCommand(
+                key=RaceKey(race_date=race_date, meet=meet, race_number=race_no),
+                source=source,
             )
+        )
+        payload = {
+            "race_id": result.race_id,
+            "inserted_count": result.inserted_count,
+        }
+        if result.error:
+            payload["error"] = result.error
         else:
-            response = await self.kra_api.get_final_odds_total(
-                race_date, str(meet), race_no=race_no
-            )
-
-        if not KRAResponseAdapter.is_successful_response(response):
-            return {
-                "race_id": race_id,
-                "inserted_count": 0,
-                "error": "API response failed",
-            }
-
-        items = KRAResponseAdapter.extract_items(response)
-
-        rows = []
-        for item in items:
-            pool_raw = item.get("pool", "")
-            pool = POOL_NAME_MAP.get(pool_raw, pool_raw)
-            if pool not in VALID_POOLS:
-                continue
-            rows.append(
-                {
-                    "race_id": race_id,
-                    "pool": pool,
-                    "chul_no": item.get("chulNo", 0),
-                    "chul_no2": item.get("chulNo2", 0),
-                    "chul_no3": item.get("chulNo3", 0),
-                    "odds": item.get("odds", 0),
-                    "rc_date": race_date,
-                    "source": source,
-                }
-            )
-
-        if rows:
-            try:
-                stmt = pg_insert(RaceOdds).values(rows)
-                stmt = stmt.on_conflict_do_update(
-                    constraint="uq_race_odds_entry",
-                    set_={"odds": stmt.excluded.odds, "collected_at": func.now()},
-                )
-                await db.execute(stmt)
-                await db.commit()
-            except Exception as e:
-                logger.error(
-                    "Failed to upsert race odds", race_id=race_id, error=str(e)
-                )
-                await db.rollback()
-                return {"race_id": race_id, "inserted_count": 0, "error": str(e)}
-
-        return {"race_id": race_id, "inserted_count": len(rows), "source": source}
+            payload["source"] = result.source
+        return payload
 
     async def _save_race_data(self, data: dict[str, Any], db: AsyncSession) -> None:
         """경주 데이터 데이터베이스 저장"""
@@ -678,29 +498,12 @@ class CollectionService:
         Returns:
             전처리된 데이터
         """
+        workflow = self._build_workflow(db)
         try:
-            # 경주 데이터 로드
-            result = await db.execute(select(Race).where(Race.race_id == race_id))
-            race = result.scalar_one_or_none()
-
-            if not race:
-                raise ValueError(f"Race not found: {race_id}")
-
-            basic_data = race.basic_data
-
-            # 전처리 수행
-            preprocessed = await self._preprocess_data(basic_data)
-
-            # 저장 - basic_data는 유지하고 preprocessed는 enriched_data에 저장
-            race.enriched_data = preprocessed
-            race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = _utcnow()
-            race.updated_at = _utcnow()
-
-            await db.commit()
-
-            return preprocessed
-
+            materialized = await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="preprocessed")
+            )
+            return materialized.payload
         except Exception as e:
             logger.error("Preprocessing failed", race_id=race_id, error=str(e))
             await db.rollback()
@@ -721,30 +524,12 @@ class CollectionService:
         Returns:
             강화된 데이터
         """
+        workflow = self._build_workflow(db)
         try:
-            # 경주 데이터 로드
-            result = await db.execute(select(Race).where(Race.race_id == race_id))
-            race = result.scalar_one_or_none()
-
-            if not race:
-                raise ValueError(f"Race not found: {race_id}")
-
-            # Use enriched_data if exists, otherwise basic_data, then raw_data (for tests)
-            base_data = race.enriched_data or race.basic_data or race.raw_data
-
-            # 강화 수행
-            enriched = await self._enrich_data(base_data, db)
-
-            # 저장
-            race.enriched_data = enriched
-            race.enrichment_status = DataStatus.ENRICHED
-            race.enriched_at = _utcnow()
-            race.updated_at = _utcnow()
-
-            await db.commit()
-
-            return enriched
-
+            materialized = await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="enriched")
+            )
+            return materialized.payload
         except Exception as e:
             logger.error("Enrichment failed", race_id=race_id, error=str(e))
             await db.rollback()

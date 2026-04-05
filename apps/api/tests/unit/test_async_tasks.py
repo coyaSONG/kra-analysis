@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from models.database_models import DataStatus, Job, JobLog, JobStatus, JobType, Race
+from models.database_models import Job, JobLog, JobStatus, JobType
 from services.job_contract import apply_job_shadow_fields
 from tasks import async_tasks
 
@@ -55,20 +56,22 @@ async def test_collect_race_data_updates_job_and_writes_log(
     )
     _FakeKRA.instances = []
 
-    class FakeCollectionService:
-        def __init__(self, kra_api):
-            self.kra_api = kra_api
-
-        async def collect_race_data(self, race_date, meet, race_no, db):
-            return {
-                "race_date": race_date,
-                "meet": meet,
-                "race_no": race_no,
-                "horses": [{"hr_no": "001"}],
-            }
-
     monkeypatch.setattr(async_tasks, "KRAAPIService", _FakeKRA)
-    monkeypatch.setattr(async_tasks, "CollectionService", FakeCollectionService)
+
+    class FakeWorkflow:
+        async def collect(self, cmd):
+            return SimpleNamespace(
+                payload={
+                    "race_date": cmd.key.race_date,
+                    "meet": cmd.key.meet,
+                    "race_no": cmd.key.race_number,
+                    "horses": [{"hr_no": "001"}],
+                }
+            )
+
+    monkeypatch.setattr(
+        async_tasks, "_build_workflow", lambda kra_api, db: FakeWorkflow()
+    )
 
     result = await async_tasks.collect_race_data(
         "20240719",
@@ -118,15 +121,15 @@ async def test_collect_race_data_marks_job_failed_on_service_error(
     )
     _FakeKRA.instances = []
 
-    class FakeCollectionService:
-        def __init__(self, kra_api):
-            self.kra_api = kra_api
+    monkeypatch.setattr(async_tasks, "KRAAPIService", _FakeKRA)
 
-        async def collect_race_data(self, race_date, meet, race_no, db):
+    class FakeWorkflow:
+        async def collect(self, cmd):
             raise RuntimeError("collection exploded")
 
-    monkeypatch.setattr(async_tasks, "KRAAPIService", _FakeKRA)
-    monkeypatch.setattr(async_tasks, "CollectionService", FakeCollectionService)
+    monkeypatch.setattr(
+        async_tasks, "_build_workflow", lambda kra_api, db: FakeWorkflow()
+    )
 
     with pytest.raises(RuntimeError, match="collection exploded"):
         await async_tasks.collect_race_data(
@@ -225,34 +228,26 @@ async def test_full_pipeline_runs_all_steps_and_updates_job(
     _FakeKRA.instances = []
     step_calls = []
 
-    class FakeCollectionService:
-        def __init__(self, kra_api):
-            self.kra_api = kra_api
-
-        async def collect_race_data(self, race_date, meet, race_no, db):
-            step_calls.append("collect")
-            db.add(
-                Race(
-                    race_id="race-20240719-1-9",
-                    date=race_date,
-                    meet=meet,
-                    race_number=race_no,
-                    collection_status=DataStatus.COLLECTED,
-                    basic_data={"race_no": race_no},
-                )
-            )
-            await db.flush()
-
-        async def preprocess_race_data(self, race_id, db):
-            step_calls.append(("preprocess", race_id))
-            return {"preprocessed": True}
-
-        async def enrich_race_data(self, race_id, db):
-            step_calls.append(("enrich", race_id))
-            return {"enriched": True}
-
     monkeypatch.setattr(async_tasks, "KRAAPIService", _FakeKRA)
-    monkeypatch.setattr(async_tasks, "CollectionService", FakeCollectionService)
+
+    class FakeWorkflow:
+        async def collect(self, cmd):
+            step_calls.append("collect")
+            return SimpleNamespace(
+                payload={"race_no": cmd.key.race_number},
+                race_id="race-20240719-1-9",
+            )
+
+        async def materialize(self, cmd):
+            if cmd.target == "preprocessed":
+                step_calls.append(("preprocess", cmd.race_id))
+                return SimpleNamespace(payload={"preprocessed": True})
+            step_calls.append(("enrich", cmd.race_id))
+            return SimpleNamespace(payload={"enriched": True})
+
+    monkeypatch.setattr(
+        async_tasks, "_build_workflow", lambda kra_api, db: FakeWorkflow()
+    )
 
     result = await async_tasks.full_pipeline(
         "20240719",

@@ -7,15 +7,24 @@ from datetime import UTC, datetime
 from typing import Any
 
 import structlog
-from sqlalchemy import and_, select
+from sqlalchemy import select
 
 from infrastructure.database import async_session_maker
-from models.database_models import Job, JobLog, Race
-from services.collection_service import CollectionService
+from models.database_models import Job, JobLog
 from services.job_contract import apply_job_shadow_fields
 from services.kra_api_service import KRAAPIService
+from services.race_processing_workflow import (
+    CollectRaceCommand,
+    MaterializeRaceCommand,
+    RaceKey,
+    build_race_processing_workflow,
+)
 
 logger = structlog.get_logger()
+
+
+def _build_workflow(kra_api: KRAAPIService, db):
+    return build_race_processing_workflow(kra_api, db)
 
 
 # ---------------------------------------------------------------------------
@@ -114,10 +123,12 @@ async def collect_race_data(
                 await _update_job_status(job_id, "processing", task_id=task_id)
 
             kra_api = KRAAPIService()
-            collection_service = CollectionService(kra_api)
+            workflow = _build_workflow(kra_api, db)
 
-            result = await collection_service.collect_race_data(
-                race_date, meet, race_no, db
+            result = await workflow.collect(
+                CollectRaceCommand(
+                    key=RaceKey(race_date=race_date, meet=meet, race_number=race_no)
+                )
             )
 
             payload = {
@@ -125,7 +136,7 @@ async def collect_race_data(
                 "race_date": race_date,
                 "meet": meet,
                 "race_no": race_no,
-                "data": result,
+                "data": result.payload,
             }
 
             if job_id:
@@ -192,11 +203,13 @@ async def preprocess_race_data(
                 await _update_job_status(job_id, "processing", task_id=task_id)
 
             kra_api = KRAAPIService()
-            collection_service = CollectionService(kra_api)
+            workflow = _build_workflow(kra_api, db)
 
-            result = await collection_service.preprocess_race_data(race_id, db)
+            result = await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="preprocessed")
+            )
 
-            payload = {"status": "success", "race_id": race_id, "data": result}
+            payload = {"status": "success", "race_id": race_id, "data": result.payload}
 
             if job_id:
                 await _add_job_log(
@@ -248,11 +261,13 @@ async def enrich_race_data(
                 await _update_job_status(job_id, "processing", task_id=task_id)
 
             kra_api = KRAAPIService()
-            collection_service = CollectionService(kra_api)
+            workflow = _build_workflow(kra_api, db)
 
-            result = await collection_service.enrich_race_data(race_id, db)
+            result = await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="enriched")
+            )
 
-            payload = {"status": "success", "race_id": race_id, "data": result}
+            payload = {"status": "success", "race_id": race_id, "data": result.payload}
 
             if job_id:
                 await _add_job_log(
@@ -358,7 +373,7 @@ async def full_pipeline(
     kra_api: KRAAPIService | None = KRAAPIService()
     async with async_session_maker() as db:
         try:
-            collection_service = CollectionService(kra_api)
+            workflow = _build_workflow(kra_api, db)
 
             if job_id:
                 await _update_job_status(job_id, "processing", task_id=task_id)
@@ -369,23 +384,12 @@ async def full_pipeline(
                     job_id, "info", "Starting data collection", {"step": "collect"}
                 )
 
-            await collection_service.collect_race_data(race_date, meet, race_no, db)
-
-            # Find the race_id
-            result = await db.execute(
-                select(Race).where(
-                    and_(
-                        Race.date == race_date,
-                        Race.meet == meet,
-                        Race.race_number == race_no,
-                    )
+            collected = await workflow.collect(
+                CollectRaceCommand(
+                    key=RaceKey(race_date=race_date, meet=meet, race_number=race_no)
                 )
             )
-            race = result.scalar_one_or_none()
-            if not race:
-                raise ValueError("Race not found after collection")
-
-            race_id = race.id
+            race_id = collected.race_id
 
             # 2. Preprocess
             if job_id:
@@ -393,7 +397,9 @@ async def full_pipeline(
                     job_id, "info", "Starting preprocessing", {"step": "preprocess"}
                 )
 
-            await collection_service.preprocess_race_data(race_id, db)
+            await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="preprocessed")
+            )
 
             # 3. Enrich
             if job_id:
@@ -401,7 +407,9 @@ async def full_pipeline(
                     job_id, "info", "Starting enrichment", {"step": "enrich"}
                 )
 
-            await collection_service.enrich_race_data(race_id, db)
+            await workflow.materialize(
+                MaterializeRaceCommand(race_id=race_id, target="enriched")
+            )
 
             # Done
             payload = {

@@ -81,7 +81,6 @@ class TestCollectionStage:
     @pytest.mark.asyncio
     async def test_execute_success(self, collection_stage, pipeline_context):
         """CollectionStage should execute successfully"""
-        # Mock the collection service
         mock_collected_data = {
             "race_date": "20240101",
             "meet": 1,
@@ -89,15 +88,18 @@ class TestCollectionStage:
             "horses": [{"hr_no": "001", "hr_name": "Test Horse", "win_odds": 5.2}],
         }
 
-        collection_stage.collection_service.collect_race_data = AsyncMock(
-            return_value=mock_collected_data
+        fake_workflow = Mock()
+        fake_workflow.collect = AsyncMock(
+            return_value=Mock(payload=mock_collected_data)
         )
+        collection_stage.workflow_factory = Mock(return_value=fake_workflow)
 
         result = await collection_stage.execute(pipeline_context)
 
         assert result.status == StageStatus.COMPLETED
         assert pipeline_context.raw_data == mock_collected_data
         assert result.metadata["horses_count"] == 1
+        fake_workflow.collect.assert_awaited_once()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -105,9 +107,9 @@ class TestCollectionStage:
     @pytest.mark.asyncio
     async def test_execute_failure(self, collection_stage, pipeline_context):
         """CollectionStage should handle execution failure"""
-        collection_stage.collection_service.collect_race_data = AsyncMock(
-            side_effect=Exception("Collection failed")
-        )
+        fake_workflow = Mock()
+        fake_workflow.collect = AsyncMock(side_effect=Exception("Collection failed"))
+        collection_stage.workflow_factory = Mock(return_value=fake_workflow)
 
         result = await collection_stage.execute(pipeline_context)
 
@@ -132,6 +134,25 @@ class TestCollectionStage:
         pipeline_context.raw_data = {"some": "data"}
         await collection_stage.rollback(pipeline_context)
         assert pipeline_context.raw_data is None
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_execute_legacy_fallback(self, collection_stage, pipeline_context):
+        """CollectionStage should fall back to collection service when workflow is disabled"""
+        collection_stage.workflow_factory = None
+        collection_stage.collection_service.collect_race_data = AsyncMock(
+            return_value={
+                "race_date": "20240101",
+                "meet": 1,
+                "race_number": 5,
+                "horses": [{"hr_no": "001", "hr_name": "Test Horse", "win_odds": 5.2}],
+            }
+        )
+
+        result = await collection_stage.execute(pipeline_context)
+
+        assert result.status == StageStatus.COMPLETED
+        collection_stage.collection_service.collect_race_data.assert_awaited_once()
 
 
 class TestPreprocessingStage:

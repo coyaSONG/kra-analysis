@@ -16,6 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from services.collection_service import CollectionService
 from services.job_service import JobService
 from services.kra_api_service import KRAAPIService, get_kra_api_service
+from services.race_processing_workflow import (
+    CollectRaceCommand,
+    RaceKey,
+    build_race_processing_workflow,
+)
 from services.result_collection_service import ResultCollectionService
 
 _DEFAULT_RACE_NUMBERS = list(range(1, 16))
@@ -91,24 +96,30 @@ class CollectionCommands:
     async def _get_kra_api(self) -> KRAAPIService:
         return await get_kra_api_service()
 
+    def _build_workflow(self, kra_api: KRAAPIService, db: AsyncSession):
+        return build_race_processing_workflow(kra_api, db)
+
     async def collect_batch(
         self, request: BatchCollectInput, *, db: AsyncSession
     ) -> CollectionOutcome:
         kra_api = await self._get_kra_api()
-        collection_service = CollectionService(kra_api)
+        workflow = self._build_workflow(kra_api, db)
 
         results: list[dict[str, Any]] = []
         errors: list[dict[str, Any]] = []
 
         for race_no in _normalize_race_numbers(request.race_numbers):
             try:
-                result = await collection_service.collect_race_data(
-                    request.race_date,
-                    request.meet,
-                    race_no,
-                    db,
+                result = await workflow.collect(
+                    CollectRaceCommand(
+                        key=RaceKey(
+                            race_date=request.race_date,
+                            meet=request.meet,
+                            race_number=race_no,
+                        )
+                    )
                 )
-                results.append(result)
+                results.append(result.payload)
             except Exception as exc:
                 errors.append({"race_no": race_no, "error": str(exc)})
 

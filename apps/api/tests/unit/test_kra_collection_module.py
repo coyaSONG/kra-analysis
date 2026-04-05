@@ -15,25 +15,19 @@ async def test_collection_commands_collect_batch_returns_partial(monkeypatch):
     async def fake_get_kra_api_service():
         return Mock(name="kra_api")
 
-    class FakeCollectionService:
-        def __init__(self, kra_api):
-            self.kra_api = kra_api
-
-        async def collect_race_data(self, race_date, meet, race_no, db):
-            if race_no == 2:
+    class FakeWorkflow:
+        async def collect(self, cmd):
+            if cmd.key.race_number == 2:
                 raise RuntimeError("boom")
-            return {"race_no": race_no}
+            return Mock(payload={"race_no": cmd.key.race_number})
 
     monkeypatch.setattr(
         "services.kra_collection_module.get_kra_api_service",
         fake_get_kra_api_service,
     )
-    monkeypatch.setattr(
-        "services.kra_collection_module.CollectionService",
-        FakeCollectionService,
-    )
 
     commands = CollectionCommands()
+    monkeypatch.setattr(commands, "_build_workflow", lambda kra_api, db: FakeWorkflow())
     outcome = await commands.collect_batch(
         BatchCollectInput(race_date="20240719", meet=1, race_numbers=[1, 2, 3]),
         db=Mock(),

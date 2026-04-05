@@ -10,6 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.collection_service import CollectionService
 from services.kra_api_service import KRAAPIService
+from services.race_processing_workflow import (
+    CollectRaceCommand,
+    MaterializeRaceCommand,
+    RaceKey,
+    build_race_processing_workflow,
+)
 
 from .base import PipelineContext, PipelineStage, StageResult, StageStatus
 
@@ -22,6 +28,10 @@ class CollectionStage(PipelineStage):
         self.kra_api_service = kra_api_service
         self.db_session = db_session
         self.collection_service = CollectionService(kra_api_service)
+        self.workflow_factory = build_race_processing_workflow
+
+    def _build_workflow(self):
+        return self.workflow_factory(self.kra_api_service, self.db_session)
 
     async def validate_prerequisites(self, context: PipelineContext) -> bool:
         """전제조건 검증: API 서비스와 DB 세션 확인"""
@@ -55,13 +65,26 @@ class CollectionStage(PipelineStage):
                 race_number=context.race_number,
             )
 
-            # 기존 CollectionService 활용
-            collected_data = await self.collection_service.collect_race_data(
-                race_date=context.race_date,
-                meet=context.meet,
-                race_no=context.race_number,
-                db=self.db_session,
-            )
+            if self.workflow_factory:
+                workflow = self._build_workflow()
+                collected_data = (
+                    await workflow.collect(
+                        CollectRaceCommand(
+                            key=RaceKey(
+                                race_date=context.race_date,
+                                meet=context.meet,
+                                race_number=context.race_number,
+                            )
+                        )
+                    )
+                ).payload
+            else:
+                collected_data = await self.collection_service.collect_race_data(
+                    race_date=context.race_date,
+                    meet=context.meet,
+                    race_no=context.race_number,
+                    db=self.db_session,
+                )
 
             # 컨텍스트에 데이터 저장
             context.raw_data = collected_data
@@ -124,8 +147,20 @@ class CollectionStage(PipelineStage):
 class PreprocessingStage(PipelineStage):
     """데이터 전처리 단계"""
 
-    def __init__(self):
+    def __init__(
+        self,
+        kra_api_service: KRAAPIService | None = None,
+        db_session: AsyncSession | None = None,
+    ):
         super().__init__("preprocessing")
+        self.kra_api_service = kra_api_service
+        self.db_session = db_session
+        self.workflow_factory = build_race_processing_workflow
+
+    def _build_workflow(self):
+        if not self.kra_api_service or not self.db_session:
+            raise RuntimeError("Workflow prerequisites not available")
+        return self.workflow_factory(self.kra_api_service, self.db_session)
 
     async def validate_prerequisites(self, context: PipelineContext) -> bool:
         """전제조건 검증: 수집 데이터 존재 여부"""
@@ -145,7 +180,18 @@ class PreprocessingStage(PipelineStage):
             self.logger.info("Starting data preprocessing")
 
             raw_data = context.raw_data
-            preprocessed_data = self._preprocess_data(raw_data)
+            if self.kra_api_service and self.db_session and self.workflow_factory:
+                workflow = self._build_workflow()
+                preprocessed_data = (
+                    await workflow.materialize(
+                        MaterializeRaceCommand(
+                            race_id=context.get_race_id(),
+                            target="preprocessed",
+                        )
+                    )
+                ).payload
+            else:
+                preprocessed_data = self._preprocess_data(raw_data)
 
             # 컨텍스트에 전처리된 데이터 저장
             context.preprocessed_data = preprocessed_data
@@ -217,10 +263,22 @@ class PreprocessingStage(PipelineStage):
 class EnrichmentStage(PipelineStage):
     """데이터 보강 단계"""
 
-    def __init__(self, collection_service: CollectionService, db_session: AsyncSession):
+    def __init__(
+        self,
+        collection_service: CollectionService | None,
+        db_session: AsyncSession,
+        kra_api_service: KRAAPIService | None = None,
+    ):
         super().__init__("enrichment")
         self.collection_service = collection_service
         self.db_session = db_session
+        self.kra_api_service = kra_api_service
+        self.workflow_factory = build_race_processing_workflow
+
+    def _build_workflow(self):
+        if not self.kra_api_service:
+            raise RuntimeError("KRA API service not available")
+        return self.workflow_factory(self.kra_api_service, self.db_session)
 
     async def validate_prerequisites(self, context: PipelineContext) -> bool:
         """전제조건 검증: 전처리 데이터 존재 여부"""
@@ -228,7 +286,7 @@ class EnrichmentStage(PipelineStage):
             self.logger.error("No preprocessed data available for enrichment")
             return False
 
-        if not self.collection_service:
+        if not self.collection_service and not self.kra_api_service:
             self.logger.error("Collection service not available")
             return False
 
@@ -241,10 +299,20 @@ class EnrichmentStage(PipelineStage):
 
             race_id = context.get_race_id()
 
-            # 기존 EnrichmentService 활용
-            enriched_data = await self.collection_service.enrich_race_data(
-                race_id=race_id, db=self.db_session
-            )
+            if self.kra_api_service and self.workflow_factory:
+                workflow = self._build_workflow()
+                enriched_data = (
+                    await workflow.materialize(
+                        MaterializeRaceCommand(
+                            race_id=race_id,
+                            target="enriched",
+                        )
+                    )
+                ).payload
+            else:
+                enriched_data = await self.collection_service.enrich_race_data(
+                    race_id=race_id, db=self.db_session
+                )
 
             # 컨텍스트에 보강된 데이터 저장
             context.enriched_data = enriched_data
