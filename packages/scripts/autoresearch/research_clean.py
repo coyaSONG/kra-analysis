@@ -508,8 +508,28 @@ def evaluate(config_path: Path) -> dict:
     dev_probs = model.predict_proba(X[dev_mask])[:, 1]
     test_probs = model.predict_proba(X[test_mask])[:, 1]
 
+    dev_summary = _summarize(
+        groups[dev_mask],
+        [chuls[idx] for idx, flag in enumerate(dev_mask) if flag],
+        dev_probs,
+        dev_answers,
+    )
+    test_summary = _summarize(
+        groups[test_mask],
+        [chuls[idx] for idx, flag in enumerate(test_mask) if flag],
+        test_probs,
+        test_answers,
+    )
+    robust_exact_rate = round(
+        min(dev_summary["exact_3of3_rate"], test_summary["exact_3of3_rate"]), 6
+    )
+    blended_exact_rate = round(
+        (dev_summary["exact_3of3_rate"] + test_summary["exact_3of3_rate"]) / 2, 6
+    )
+
     return {
         "config_path": str(config_path),
+        "config": config,
         "feature_count": len(features),
         "split": split,
         "model": config["model"],
@@ -517,18 +537,16 @@ def evaluate(config_path: Path) -> dict:
             **_snapshot_order_alignment(races, answers),
             "all_missing_features": _all_missing_features(X, features),
         },
-        "dev": _summarize(
-            groups[dev_mask],
-            [chuls[idx] for idx, flag in enumerate(dev_mask) if flag],
-            dev_probs,
-            dev_answers,
-        ),
-        "test": _summarize(
-            groups[test_mask],
-            [chuls[idx] for idx, flag in enumerate(test_mask) if flag],
-            test_probs,
-            test_answers,
-        ),
+        "summary": {
+            "robust_exact_rate": robust_exact_rate,
+            "blended_exact_rate": blended_exact_rate,
+            "dev_test_gap": round(
+                abs(dev_summary["exact_3of3_rate"] - test_summary["exact_3of3_rate"]),
+                6,
+            ),
+        },
+        "dev": dev_summary,
+        "test": test_summary,
     }
 
 
