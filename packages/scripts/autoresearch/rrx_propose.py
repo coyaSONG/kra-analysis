@@ -50,6 +50,29 @@ CORE_FEATURES = [
 ]
 
 
+def _find_runs_dir(start: Path) -> Path | None:
+    current = start.resolve()
+    for candidate in (current, *current.parents):
+        runs_dir = candidate / ".ralph" / "runs"
+        if runs_dir.exists():
+            return runs_dir
+    return None
+
+
+def _has_accepted_run(start: Path) -> bool:
+    runs_dir = _find_runs_dir(start)
+    if runs_dir is None:
+        return False
+    for run_file in sorted(runs_dir.glob("run-*.json")):
+        try:
+            payload = json.loads(run_file.read_text())
+        except Exception:
+            continue
+        if payload.get("status") == "accepted":
+            return True
+    return False
+
+
 def _mutate_hgb(params: dict, rng: random.Random) -> list[str]:
     notes: list[str] = []
     if rng.random() < 0.6:
@@ -115,6 +138,18 @@ def main() -> None:
     config_path = Path(args.config)
     config = json.loads(config_path.read_text())
     rng = random.Random(args.seed)
+
+    if not _has_accepted_run(Path.cwd()):
+        config["notes"]["last_mutation"] = "baseline-seed"
+        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n")
+        print(
+            json.dumps(
+                {"config": str(config_path), "mutation": ["baseline-seed"]},
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return
 
     notes: list[str] = []
     if rng.random() < 0.25:
