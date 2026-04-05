@@ -1,105 +1,93 @@
-# KRA Race Prediction REST API (v2)
+# KRA FastAPI API
 
-FastAPI 기반 경마 데이터 수집·작업 관리 REST API 서버(v2)입니다. v2는 `/api/v2/collection` 및 `/api/v2/jobs` 네임스페이스를 제공합니다.
+이 앱은 현재 저장소의 활성 런타임입니다. 엔트리포인트는 `main_v2.py`이며, `collection`, `jobs`, `health`, `metrics` 라우터를 제공합니다.
 
-## 기술 스택
+## 현재 런타임 요약
 
-- **FastAPI**: 웹 프레임워크
-- **Supabase**: 데이터베이스 및 실시간 기능
-- **Claude Code CLI**: AI 예측 엔진
-- **Redis**: 캐싱 및 작업 큐
-- **Celery**: 비동기 작업 처리
+- 프레임워크: FastAPI
+- 데이터베이스: PostgreSQL + SQLAlchemy async ORM
+- 캐시/상태 저장: Redis
+- 작업 실행: 인프로세스 `asyncio` background task
+- 외부 연동: KRA 공공데이터 API
 
-## 설치 및 설정
+중요: 과거 문서에 등장하는 Celery 기반 비동기 작업 구조는 현재 활성 구현이 아닙니다. 현재 `jobs` 실행은 `apps/api/infrastructure/background_tasks.py`를 통해 동작합니다.
 
-### 실행 (uv 권장) 🚀
+## 설치와 실행
 
-[uv](https://github.com/astral-sh/uv)는 Rust로 작성된 초고속 Python 패키지 매니저입니다.
+### 의존성 설치
 
 ```bash
-# uv 설치
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# 의존성 설치 (프로젝트 루트 → 앱 디렉토리)
 cd apps/api
-uv sync && uv sync --dev
+uv sync --group dev
+```
 
-# 개발 서버 (기본 8000)
+저장소 루트에서 워크스페이스 의존성도 설치해야 합니다.
+
+```bash
+pnpm install
+```
+
+### 환경 변수
+
+`apps/api/.env.template`를 복사해 `.env`를 만듭니다.
+
+```bash
+cd apps/api
+cp .env.template .env
+```
+
+주요 항목:
+
+- `DATABASE_URL`
+- `REDIS_URL`
+- `SECRET_KEY`
+- `VALID_API_KEYS`
+- `KRA_API_KEY`
+- `KRA_API_VERIFY_SSL`
+
+Supabase 연결과 DB 설정 상세는 [SUPABASE_SETUP.md](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/SUPABASE_SETUP.md)에 정리했습니다.
+
+### 개발 서버
+
+```bash
+cd apps/api
 uv run uvicorn main_v2:app --reload --port 8000
 ```
 
-모노레포 스크립트로도 실행할 수 있습니다:
+또는 저장소 루트에서:
 
 ```bash
-# 저장소 루트에서 실행
-pnpm -w -F @apps/api dev   # uvicorn main_v2:app --port 8000
+pnpm -w -F @apps/api dev
 ```
 
-자세한 uv 사용법은 [README-uv.md](./README-uv.md)를 참조하세요.
+## 활성 엔드포인트
 
-### pip 사용 (대안)
+기본 URL은 `http://localhost:8000`입니다.
 
-```bash
-# 가상환경 생성 및 활성화
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
+- `GET /` 기본 정보
+- `GET /health`
+- `GET /health/detailed`
+- `GET /metrics`
+- `POST /api/v2/collection/`
+- `POST /api/v2/collection/async`
+- `GET /api/v2/collection/status`
+- `POST /api/v2/collection/result`
+- `GET /api/v2/jobs/`
+- `GET /api/v2/jobs/{job_id}`
+- `POST /api/v2/jobs/{job_id}/cancel`
 
-# 의존성 설치
-pip install -r requirements.txt
-```
+Swagger 문서:
 
-### 환경 변수 설정
+- `http://localhost:8000/docs`
+- `http://localhost:8000/redoc`
 
-`.env` 파일을 생성하고 다음 내용을 추가합니다:
+## 인증
 
-`.env.example`를 참고하여 `.env`를 생성하세요. 필수/주요 항목:
+보호된 엔드포인트는 `X-API-Key` 헤더를 사용합니다.
 
-- `SECRET_KEY` (필수)
-- `DATABASE_URL` (예: `postgresql+asyncpg://user:pass@localhost:5432/kra`)
-- `REDIS_URL` (예: `redis://localhost:6379/0`)
-- `PORT` (개발 기본 8000)
-- `VALID_API_KEYS` (선택: JSON 배열 또는 콤마 구분, 미설정 시 개발 모드에서 `test-api-key-123456789` 기본값 사용)
-- `KRA_API_KEY` (선택: 공공데이터 API 키)
+개발 환경에서는 `VALID_API_KEYS`를 설정하지 않으면 기본 테스트 키가 허용될 수 있습니다. 운영 환경에서는 반드시 명시적으로 설정해야 합니다.
 
-### 데이터베이스 설정 (선택)
-
-Supabase 대시보드에서 SQL 에디터를 열고 `migrations/001_initial_schema.sql` 파일의 내용을 실행합니다.
-
-### 서버 실행
-
-```bash
-# 개발 모드
-uv run uvicorn main_v2:app --reload --port 8000
-
-# 프로덕션 모드
-uv run uvicorn main_v2:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-## API 엔드포인트 (v2)
-
-### 기본 정보
-
-- Base URL(개발): `http://localhost:8000`
-- Docs: `http://localhost:8000/docs`, ReDoc: `http://localhost:8000/redoc`
-- 인증: 모든 보호 엔드포인트는 헤더 `X-API-Key` 필요
-
-### Collection
-
-1) 경주 데이터 수집 (동기)
-
-```
-POST /api/v2/collection/
-Headers: X-API-Key: test-api-key-123456789
-Body:
-{
-  "date": "20250622",
-  "meet": 1,
-  "race_numbers": [1,2,3],
-  "options": { "enrich": true, "get_results": false }
-}
-```
-
-예시(curl)
+예시:
 
 ```bash
 curl -X POST http://localhost:8000/api/v2/collection/ \
@@ -108,163 +96,79 @@ curl -X POST http://localhost:8000/api/v2/collection/ \
   -d '{"date":"20250622","meet":1,"race_numbers":[1,2,3]}'
 ```
 
-2) 경주 데이터 수집 (비동기)
+## 작업과 수집 API 메모
 
-```
-POST /api/v2/collection/async
-Headers: X-API-Key: ...
-```
+- 동기 수집은 즉시 결과를 반환합니다.
+- 비동기 수집은 `jobs` API로 추적합니다.
+- 현재 작업 타입 계약은 정리 대상입니다. 문서상 의미와 내부 dispatcher vocabulary가 완전히 통일된 상태는 아닙니다.
+- `/api/v2/collection/result`는 경주 결과만 별도로 수집합니다.
 
-응답 예시
+현재 구조의 제약:
 
-```json
-{
-  "job_id": "06c2...",
-  "status": "accepted",
-  "message": "Collection job started",
-  "webhook_url": "/api/v2/jobs/06c2...",
-  "estimated_time": 5
-}
-```
+- 작업 실행기는 durable queue가 아니라 API 프로세스 내부 task입니다.
+- Redis와 상세 헬스체크, logging wiring, migration 기준선은 정리 작업이 진행 중입니다.
 
-3) 수집 상태 조회
+## 데이터베이스와 마이그레이션
 
-```
-GET /api/v2/collection/status?date=20250622&meet=1
-Headers: X-API-Key: ...
-```
-
-### Jobs
-
-- 목록 조회
-```
-GET /api/v2/jobs/?status=processing&job_type=collection&limit=20&offset=0
-Headers: X-API-Key: ...
-```
-
-- 상세 조회
-```
-GET /api/v2/jobs/{job_id}
-Headers: X-API-Key: ...
-```
-
-- 취소
-```
-POST /api/v2/jobs/{job_id}/cancel
-Headers: X-API-Key: ...
-```
-
-### Health
-
-- `GET /` 기본 정보, `GET /health` 헬스체크, `GET /health/detailed`(DB/Redis 상태 포함)
-
-### 운영 진단 (DB/수집 상태)
+새 환경에서는 최신 migration 경로를 먼저 확인하세요.
 
 ```bash
-# DB 연결 + jobs/races 테이블 + 작업 상태 카운트 점검
-uv run python scripts/check_collection_status_db.py
+cd apps/api
+uv run python scripts/apply_migrations.py
+```
 
-# 특정 날짜/경마장 수집 집계 점검
+현재 기준선으로 보는 파일은 `migrations/001_unified_schema.sql`입니다. 저장소 안에는 legacy baseline도 남아 있으므로 `001_initial_schema.sql`을 현재 기준처럼 취급하면 안 됩니다. 배경은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
+
+## 운영 점검 명령
+
+```bash
+cd apps/api
+uv run pytest -q
+uv run python scripts/check_collection_status_db.py
 uv run python scripts/check_collection_status_db.py --date 20260214 --meet 1
 ```
 
-`--date`와 `--meet`를 함께 주면 `/api/v2/collection/status`와 동일한 집계 기준으로
-`total_races`, `collected_races`, `enriched_races`, `status`를 CLI에서 바로 확인할 수 있습니다.
+## 프로젝트 구조
 
-## 인증 가이드
-
-- 요청 헤더 `X-API-Key` 필요. 개발/테스트 환경에서는 기본 키 `test-api-key-123456789`가 자동 허용됩니다.
-- 운영 환경에서는 환경변수 `VALID_API_KEYS`에 JSON 배열 또는 콤마 구분 문자열로 키 목록을 설정하세요.
-
-## 개발 가이드
-
-### 프로젝트 구조 (요약)
-
-```
+```text
 apps/api/
-├── main_v2.py        # 활성 런타임 진입점
-├── routers/          # API 라우터
+├── main_v2.py
+├── routers/
 │   ├── collection_v2.py
 │   ├── jobs_v2.py
-│   └── race.py       # legacy v1 (비활성)
-├── services/         # 서비스 계층
+│   ├── health.py
+│   ├── metrics.py
+│   └── race.py                 # legacy v1, 비활성
+├── services/
 │   ├── collection_service.py
+│   ├── result_collection_service.py
 │   ├── job_service.py
 │   ├── kra_api_service.py
-│   └── race_service.py # legacy v1 (비활성)
-├── infrastructure/   # DB/Redis/외부 연동
-├── middleware/       # 공통 미들웨어
-├── models/           # 스키마/모델
-└── tests/            # 테스트
+│   └── race_service.py         # legacy v1, 비활성
+├── infrastructure/
+├── middleware/
+├── models/
+├── migrations/
+├── scripts/
+└── tests/
 ```
 
-### 새로운 엔드포인트 추가 (가이드)
-
-1. 서비스 로직 구현 (`services/`)
-2. 라우터 추가 (`routers/`)
-3. `main_v2.py`에 라우터 등록
-4. 테스트 추가 (`tests/`)
-
-### 테스트
+## 테스트
 
 ```bash
-# 전체 테스트
+cd apps/api
 uv run pytest -q
-
-# 커버리지 확인
 uv run pytest --cov=. --cov-report=html
 ```
 
-## Legacy v1 정책
-
-- v1 레거시 모듈: `routers/race.py`, `services/race_service.py`
-- 활성 런타임(`main_v2.py`)에는 v1 라우터를 등록하지 않습니다.
-- 상세 정책: `apps/api/docs/LEGACY_V1_POLICY.md`
-
-## 배포
-
-### Docker를 사용한 배포
+저장소 루트에서도 실행할 수 있습니다.
 
 ```bash
-# 이미지 빌드
-docker build -t kra-api .
-
-# 컨테이너 실행
-docker run -p 8000:8000 --env-file .env kra-api
+pnpm -F @apps/api test
 ```
 
-### Docker Compose
+## 관련 문서
 
-```bash
-# 전체 스택 실행 (API + Redis + Celery)
-docker-compose up -d
-```
-
-## 모니터링
-
-- 로그: 구조화된 JSON 로그 출력
-- 메트릭: Prometheus 형식 (`/metrics`)
-- 헬스체크: `/health`
-
-## 주의사항
-
-1. **API 키 보안**: 프로덕션 환경에서는 반드시 환경 변수 사용
-2. **Rate Limiting**: KRA API 제한 준수 (분당 100회)
-3. **Claude Code CLI**: Claude Max 구독 필요
-4. **데이터 캐싱**: 7일간 말/기수/조교사 정보 캐싱
-
-## 문제 해결
-
-### Claude Code CLI 연결 오류
-- Claude Code가 설치되어 있는지 확인
-- `CLAUDE_CODE_PATH` 환경 변수 확인
-- Claude에 로그인되어 있는지 확인
-
-### Supabase 연결 오류
-- Supabase URL과 키가 올바른지 확인
-- 네트워크 연결 확인
-- RLS 정책 확인
-
-### Redis 연결 오류
-- Redis 서버가 실행 중인지 확인
-- 연결 URL이 올바른지 확인
+- [Legacy v1 정책](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/LEGACY_V1_POLICY.md)
+- [Supabase 설정 가이드](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/SUPABASE_SETUP.md)
+- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)

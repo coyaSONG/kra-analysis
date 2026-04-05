@@ -6,9 +6,10 @@
 
 ## ⚠️ 현재 상태
 
-- **연결 상태**: ❌ 미연결 (환경 변수 미설정)
-- **마이그레이션**: ⚠️ 적용 필요
-- **아키텍처**: 🟡 이중 시스템 (SQLAlchemy + Supabase Client)
+- 이 앱의 활성 런타임은 `main_v2.py`입니다.
+- 현재 데이터 접근의 중심은 `SQLAlchemy + PostgreSQL`입니다.
+- Supabase는 PostgreSQL 호스팅과 키 관리 관점에서 사용하지만, 오래된 문서에 있는 "이중 시스템" 설명은 현재 구조를 정확히 설명하지 않습니다.
+- 마이그레이션 기준선 정리는 진행 중이며, 최신 방향은 `001_unified_schema.sql` 계열을 기준으로 봐야 합니다.
 
 ## 📋 사전 준비
 
@@ -183,6 +184,8 @@ KRA API Key: 설정됨
 
 ### 4단계: 데이터베이스 마이그레이션
 
+주의: 저장소에는 legacy baseline과 unified baseline이 함께 남아 있습니다. 새 환경에서는 현재 활성 기준선으로 보는 `migrations/001_unified_schema.sql` 계열을 우선 확인하세요. `001_initial_schema.sql`은 현재 운영 모델과 직접 일치하는 기준선이 아닙니다.
+
 #### 4-1. 마이그레이션 미리보기 (DRY RUN)
 
 ```bash
@@ -207,10 +210,7 @@ python3 scripts/apply_migrations.py
 Supabase 마이그레이션 적용
 ================================================================================
 
-발견된 마이그레이션 파일 3개:
-   - 001_initial_schema.sql
-   - 002_add_missing_columns.sql
-   - 003_align_with_sqlalchemy_models.sql
+발견된 마이그레이션 파일 N개
 
 데이터베이스 연결 중...
 ✅ 연결 성공
@@ -220,13 +220,13 @@ Supabase 마이그레이션 적용
 ================================================================================
 ℹ️  테이블이 없습니다. 새로운 데이터베이스입니다.
 
-적용 중: 003_align_with_sqlalchemy_models.sql
+적용 중: 001_unified_schema.sql 또는 그 이후 증분 migration
 --------------------------------------------------------------------------------
 SQL 미리보기:
   DO $$
   BEGIN
   ...
-✅ 003_align_with_sqlalchemy_models.sql 적용 완료
+✅ 001_unified_schema.sql 또는 후속 증분 migration 적용 완료
 
 ================================================================================
 스키마 검증
@@ -234,25 +234,23 @@ SQL 미리보기:
 
 필수 테이블 확인:
    ✅ races
-   ✅ race_results
    ✅ predictions
-   ✅ collection_jobs
-   ✅ horse_cache
-   ✅ jockey_cache
-   ✅ trainer_cache
-   ✅ prompt_versions
-   ✅ performance_analysis
+   ✅ jobs
+   ✅ job_logs
+   ✅ api_keys
+   ✅ prompt_templates
 
-Row Level Security 정책:
-   ✅ races: Enable all for authenticated users
-   ✅ race_results: Enable all for authenticated users
-   ...
+검증 포인트:
+   ✅ 핵심 테이블 생성
+   ✅ 주요 컬럼 존재
+   ✅ 앱 기동 가능
+   ✅ `scripts/check_collection_status_db.py` 실행 가능
 
 ================================================================================
 결과 요약
 ================================================================================
-총 마이그레이션: 3개
-성공: 3개
+총 마이그레이션: N개
+성공: N개
 실패/스킵: 0개
 
 🎉 모든 마이그레이션이 성공적으로 적용되었습니다!
@@ -260,9 +258,9 @@ Row Level Security 정책:
 
 #### 4-4. 주의사항
 
-⚠️ **003_align_with_sqlalchemy_models.sql**는 기존 테이블을 삭제합니다!
-- 데이터가 있는 프로덕션 환경에서는 **주의**
-- 백업 권장: 마이그레이션 파일 내 주석 처리된 백업 코드 활성화
+⚠️ legacy와 unified baseline이 섞인 데이터베이스에서는 자동 진행하지 마세요.
+- 기존 데이터가 있으면 먼저 백업합니다.
+- `001_initial_schema.sql` 계열과 `001_unified_schema.sql` 계열이 동시에 보이면 수동 점검 후 진행합니다.
 
 ---
 
@@ -272,7 +270,7 @@ Row Level Security 정책:
 
 ```bash
 cd apps/api
-python3 main_v2.py
+uv run uvicorn main_v2:app --reload --port 8000
 ```
 
 #### 5-2. 예상 로그
@@ -300,7 +298,7 @@ curl http://localhost:8000/health/detailed
   "status": "healthy",
   "database": "healthy",
   "redis": "healthy",
-  "celery": "unknown",
+  "background_tasks": "healthy",
   "timestamp": 1727721234.567,
   "version": "2.0.0"
 }
@@ -333,51 +331,9 @@ curl -X POST http://localhost:8000/api/v2/collection/ \
 
 ## 🏗️ 아키텍처 이해
 
-### 현재 이중 시스템
+현재 활성 런타임은 `main_v2.py`이며, 핵심 경로는 `collection_v2`, `jobs_v2`, `health`, `metrics` 라우터입니다. 데이터 접근의 기준은 `SQLAlchemy async ORM + PostgreSQL`입니다. Supabase는 PostgreSQL 호스팅과 키 관리 관점에서 이해하는 것이 맞고, 과거 문서에 있던 "legacy/modern 이중 시스템" 그림은 현재 구조를 정확히 설명하지 않습니다.
 
-```
-┌─────────────────────────────────────────────────┐
-│                 API 서버                         │
-├─────────────────────────────────────────────────┤
-│                                                  │
-│  ┌──────────────────┐    ┌──────────────────┐  │
-│  │  Legacy System   │    │  Modern System   │  │
-│  │  (race.py)       │    │  (collection_v2) │  │
-│  │                  │    │                  │  │
-│  │  RaceService     │    │  CollectionSvc   │  │
-│  └────────┬─────────┘    └────────┬─────────┘  │
-│           │                       │             │
-│           │                       │             │
-│  ┌────────▼─────────┐    ┌────────▼─────────┐  │
-│  │ Supabase Client  │    │   SQLAlchemy     │  │
-│  │  (supabase-py)   │    │   + asyncpg      │  │
-│  └────────┬─────────┘    └────────┬─────────┘  │
-│           │                       │             │
-└───────────┼───────────────────────┼─────────────┘
-            │                       │
-            └───────────┬───────────┘
-                        │
-            ┌───────────▼──────────┐
-            │  Supabase PostgreSQL │
-            │  [YOUR_SUPABASE_PROJECT_ID]│
-            └──────────────────────┘
-```
-
-### 권장 사항
-
-**단기**: 두 시스템 유지 (현재)
-- Legacy 코드는 in-memory fallback 사용
-- Modern 코드는 SQLAlchemy로 DB 접근
-
-**중기**: SQLAlchemy로 통일
-- `race_service.py` 리팩토링
-- Supabase Client 제거 또는 Read-only로 제한
-
-**장기**: Supabase 기능 활용
-- Row Level Security (RLS)
-- Realtime 구독
-- Edge Functions
-- Storage
+현재 저장소에는 legacy v1 코드가 남아 있지만 활성 라우터에는 등록되지 않습니다. 상세 정책은 `apps/api/docs/LEGACY_V1_POLICY.md`를 참고하세요.
 
 ---
 
@@ -395,11 +351,8 @@ curl -X POST http://localhost:8000/api/v2/collection/ \
 ### 로컬 로그
 
 ```bash
-# API 로그
-tail -f logs/api.log
-
-# 구조화된 로그 (JSON)
-tail -f logs/api.log | jq .
+# uvicorn 실행 로그 확인
+uv run uvicorn main_v2:app --reload --port 8000
 ```
 
 ---
@@ -438,8 +391,10 @@ python3 scripts/test_db_connection.py
 # Option 1: 테이블 삭제 (데이터 유실!)
 # Supabase Dashboard > SQL Editor
 DROP TABLE IF EXISTS races CASCADE;
-DROP TABLE IF EXISTS race_results CASCADE;
-# ...
+DROP TABLE IF EXISTS jobs CASCADE;
+DROP TABLE IF EXISTS job_logs CASCADE;
+DROP TABLE IF EXISTS races CASCADE;
+DROP TABLE IF EXISTS predictions CASCADE;
 
 # Option 2: 마이그레이션 파일 수정
 # IF NOT EXISTS 조건 확인
@@ -456,7 +411,7 @@ DROP TABLE IF EXISTS race_results CASCADE;
 # 1. 현재 스키마 확인
 psql "$DATABASE_URL" -c "\d races"
 
-# 2. 003 마이그레이션 재적용
+# 2. 최신 migration 경로 재적용
 python3 scripts/apply_migrations.py
 ```
 
@@ -490,5 +445,5 @@ python3 scripts/apply_migrations.py
 1. ✅ 데이터베이스 연결 완료
 2. ✅ 마이그레이션 적용 완료
 3. 🔄 실제 데이터 수집 테스트
-4. 🔄 Legacy 시스템 마이그레이션 계획
+4. 🔄 legacy 문서/스키마 정리 계획
 5. 🔄 프로덕션 배포 준비
