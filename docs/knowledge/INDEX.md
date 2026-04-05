@@ -12,6 +12,7 @@
 - [구간 통과 데이터 누수](discovery-2026-03-15-sectional-data-leakage.md) — sjG1fOrd 등 27개 필드가 경주 후 데이터, FORBIDDEN 목록에 추가
 - [hrDetail 동결 스냅샷](discovery-2026-03-15-hrdetail-stale-snapshot.md) — hrDetail/jkDetail/trDetail은 1회 수집 후 갱신 안 됨, 경주 결과 미반영
 - [신규 KRA API 8건 통합](discovery-2026-03-15-new-api-integration.md) — collect_race_data에 6개 API 자동 통합 + collect_race_odds 신규 메서드 (API160_1/API301)
+- [아키텍처 리팩터링 레거시 맵](discovery-2026-03-21-architecture-refactoring-legacy-map.md) — A~I 리팩터링 후 레거시가 된 코드 9건 식별 및 향후 작업 가이드
 
 ## Reviews
 - [Codex 리뷰: DB 구조 분석](review-2026-03-15-codex-data-analysis.md) — 초기 분석 오류 교정, 구현 플랜 검증, 4건 피드백 반영

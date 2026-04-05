@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 
+from config import Settings
 from infrastructure.kra_api.core import (
     KRARequestPolicy,
     build_httpx_client_kwargs,
@@ -94,3 +95,17 @@ async def test_request_json_with_retry_retries_429_with_retry_after(monkeypatch)
     assert result["response"]["header"]["resultCode"] == "00"
     assert call_count["value"] == 2
     sleep.assert_awaited_once_with(7.0)
+
+
+@pytest.mark.unit
+def test_settings_disallow_disabling_kra_ssl_outside_development(monkeypatch):
+    monkeypatch.setenv("VALID_API_KEYS", '["prod-key-1234567890"]')
+
+    with pytest.raises(
+        ValueError,
+        match="KRA_API_VERIFY_SSL can only be disabled in development environment",
+    ):
+        Settings(
+            environment="production",
+            kra_api_verify_ssl=False,
+        )
