@@ -1,56 +1,42 @@
 #!/bin/bash
+set -euo pipefail
 
-echo "🚀 KRA Race Prediction API 설정 시작..."
+echo "KRA FastAPI API setup 시작"
 
-# uv 설치 확인
-if ! command -v uv &> /dev/null; then
-    echo "📦 uv가 설치되어 있지 않습니다. 설치를 시작합니다..."
+if ! command -v uv >/dev/null 2>&1; then
+    echo "uv가 없어 설치합니다..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.cargo/bin:$PATH"
 else
-    echo "✅ uv가 이미 설치되어 있습니다."
+    echo "uv가 이미 설치되어 있습니다."
 fi
 
-# Python 3.11 설치 확인
-echo "🐍 Python 3.11 확인 중..."
-uv python install 3.11
+echo "Python 3.13 확인 중..."
+uv python install 3.13
 
-# 의존성 설치
-echo "📚 의존성 설치 중..."
-uv sync --dev
+echo "의존성 설치 중..."
+uv sync --group dev
 
-# .env 파일 생성
 if [ ! -f .env ]; then
-    echo "🔧 .env 파일 생성 중..."
-    cat > .env << EOF
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key  # Optional
-
-# KRA API
-KRA_API_KEY=your_kra_api_key
-
-# Redis
-REDIS_URL=redis://localhost:6379/0
-
-# Security
-SECRET_KEY=$(openssl rand -hex 32)
-
-# Claude Code CLI
-CLAUDE_CODE_PATH=$(which claude-code || echo "/usr/local/bin/claude-code")
-EOF
-    echo "⚠️  .env 파일이 생성되었습니다. 실제 값으로 업데이트해주세요!"
+    cp .env.template .env
+    echo ".env를 .env.template에서 생성했습니다. 실제 값으로 채워 주세요."
 else
-    echo "✅ .env 파일이 이미 존재합니다."
+    echo ".env 파일이 이미 존재합니다."
 fi
 
-echo ""
-echo "✨ 설정이 완료되었습니다!"
-echo ""
-echo "다음 단계:"
-echo "1. .env 파일을 열어 실제 API 키와 URL을 입력하세요"
-echo "2. Supabase 대시보드에서 migrations/001_initial_schema.sql을 실행하세요"
-echo "3. 서버를 실행하세요: uv run uvicorn api.main:app --reload"
-echo ""
-echo "📚 API 문서: http://localhost:8000/docs"
+cat <<'EOF'
+
+다음 단계:
+1. `.env`에서 DATABASE_URL, SUPABASE_*, SECRET_KEY, VALID_API_KEYS를 채웁니다.
+2. `uv run python3 scripts/apply_migrations.py`
+3. `uv run pytest -q tests/integration/test_bootstrap_manifest.py tests/integration/test_startup_manifest_rejection.py -o addopts=''`
+4. `uv run uvicorn main_v2:app --reload --port 8000`
+
+주의:
+- mixed legacy/unified schema state는 startup에서 fail closed 됩니다.
+- legacy baseline이 섞인 DB 상태가 보이면 정리 후 manifest path를 다시 적용하세요.
+
+문서:
+- Swagger: http://localhost:8000/docs
+- Supabase 설정 가이드: ./docs/SUPABASE_SETUP.md
+EOF
