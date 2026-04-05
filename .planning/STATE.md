@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 1 verified complete, Phase 2 discussion pending
-last_updated: "2026-04-05T06:08:42Z"
-last_activity: 2026-04-05 — Phase 1 runtime guardrails passed full API verification including repo-wide `uv run pytest -q`; next step is Phase 2 job vocabulary discussion.
+stopped_at: Phase 2 context gathered
+last_updated: "2026-04-05T06:27:25.409Z"
+last_activity: 2026-04-05 — Phase 2 job vocabulary context gathered; planning can start with locked decisions for external type/status semantics and cutover policy.
 progress:
   total_phases: 6
   completed_phases: 1
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 
 Phase: 2 of 6 (Job Vocabulary)
 Plan: 0 of TBD in current phase
-Status: Phase 1 verified complete, Phase 2 not started
-Last activity: 2026-04-05 — Phase 1 runtime guardrails passed full API verification including repo-wide `uv run pytest -q`; next step is Phase 2 job vocabulary discussion.
+Status: Context gathered, ready for planning
+Last activity: 2026-04-05 — Phase 2 job vocabulary context gathered; planning can start with locked decisions for external type/status semantics and cutover policy.
 
 Progress: [█░░░░░░░░░] 17%
 
@@ -74,6 +74,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-04-05T06:08:42Z
-Stopped at: Phase 1 verified complete, Phase 2 discussion pending
-Resume file: .planning/ROADMAP.md
+Last session: 2026-04-05T06:27:25.406Z
+Stopped at: Phase 2 context gathered
+Resume file: .planning/phases/02-job-vocabulary/02-CONTEXT.md
