@@ -20,8 +20,6 @@
     "rating",
     "wgBudam",
     "wgHr_value",
-    "winOdds",
-    "plcOdds",
     "age",
     "draw_no",
     "class_code",
@@ -34,10 +32,12 @@
     "jockey_place_rate",
     "trainer_win_rate",
     "trainer_place_rate",
+    "horse_top3_skill",
+    "jk_skill",
+    "tr_skill",
     "rest_days",
     "jockey_recent_win_rate",
     "rating_rank",
-    "odds_rank",
     "age_prime",
     "year_place_rate",
     "total_place_rate",
@@ -53,7 +53,6 @@
     "tr_place_rate_y",
     "rating_rr",
     "wgBudam_rr",
-    "plcOdds_rr",
     "horse_place_rate_rr",
     "jockey_place_rate_rr",
     "trainer_place_rate_rr",
@@ -62,7 +61,7 @@
     "draw_rr"
   ],
   "notes": {
-    "goal": "Leakage-free exact 3-of-3 optimization",
-    "last_mutation": "baseline-seed-reset"
+    "goal": "Leakage-free early prediction exact 3-of-3 optimization",
+    "last_mutation": "baseline-seed-reset-early"
   }
 }

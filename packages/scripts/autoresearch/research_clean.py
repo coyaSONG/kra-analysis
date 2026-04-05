@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import re
+import sys
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +20,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
 SNAPSHOT_DIR = Path(__file__).resolve().parent / "snapshots"
+SCRIPT_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.append(str(SCRIPT_ROOT))
 
 SAFE_FEATURES = [
     "rating",
@@ -59,6 +65,24 @@ SAFE_FEATURES = [
     "burden_ratio",
     "hr_starts_y",
     "hr_starts_t",
+    "horse_top3_skill",
+    "horse_starts_y",
+    "horse_low_sample",
+    "jk_skill",
+    "tr_skill",
+    "horse_skill_rank",
+    "jk_skill_rank",
+    "tr_skill_rank",
+    "wg_budam_rank",
+    "gap_3rd_4th",
+    "field_size_live",
+    "wet_track",
+    "cancelled_count",
+    "training_score",
+    "days_since_training",
+    "recent_training",
+    "owner_win_rate",
+    "owner_skill",
     "jk_place_rate_y",
     "tr_place_rate_y",
     "rating_rr",
@@ -72,6 +96,19 @@ SAFE_FEATURES = [
     "total_place_rate_rr",
     "draw_rr",
 ]
+
+MARKET_FEATURES = {
+    "winOdds",
+    "plcOdds",
+    "odds_rank",
+    "winOdds_rr",
+    "plcOdds_rr",
+}
+
+
+def _compute_race_features(horses: list[dict]) -> list[dict]:
+    module = importlib.import_module("feature_engineering")
+    return module.compute_race_features(horses)
 
 
 def _safe_float(value, default=np.nan) -> float:
@@ -214,7 +251,12 @@ def _build_feature_rows(races: list[dict], answers: dict[str, list[int]]) -> lis
     rows: list[dict] = []
     for race in races:
         info = race.get("race_info") or {}
-        horses = _pre_race_horse_order(race["horses"])
+        horses = deepcopy(_pre_race_horse_order(race["horses"]))
+        refreshed = _compute_race_features(deepcopy(horses))
+        for horse, fresh in zip(horses, refreshed, strict=False):
+            existing_features = horse.get("computed_features") or {}
+            fresh_features = fresh.get("computed_features") or {}
+            horse["computed_features"] = {**fresh_features, **existing_features}
         actual = set(answers.get(race["race_id"], [])[:3])
         local_rows: list[dict] = []
 
@@ -284,6 +326,38 @@ def _build_feature_rows(races: list[dict], answers: dict[str, list[int]]) -> lis
                     "burden_ratio": _safe_float(features.get("burden_ratio")),
                     "hr_starts_y": _safe_float(horse_detail.get("rcCntY")),
                     "hr_starts_t": _safe_float(horse_detail.get("rcCntT")),
+                    "horse_top3_skill": _safe_float(features.get("horse_top3_skill")),
+                    "horse_starts_y": _safe_float(features.get("horse_starts_y")),
+                    "horse_low_sample": 1.0
+                    if features.get("horse_low_sample") is True
+                    else 0.0
+                    if features.get("horse_low_sample") is False
+                    else np.nan,
+                    "jk_skill": _safe_float(features.get("jk_skill")),
+                    "tr_skill": _safe_float(features.get("tr_skill")),
+                    "horse_skill_rank": _safe_float(features.get("horse_skill_rank")),
+                    "jk_skill_rank": _safe_float(features.get("jk_skill_rank")),
+                    "tr_skill_rank": _safe_float(features.get("tr_skill_rank")),
+                    "wg_budam_rank": _safe_float(features.get("wg_budam_rank")),
+                    "gap_3rd_4th": _safe_float(features.get("gap_3rd_4th")),
+                    "field_size_live": _safe_float(features.get("field_size_live")),
+                    "wet_track": 1.0
+                    if features.get("wet_track") is True
+                    else 0.0
+                    if features.get("wet_track") is False
+                    else np.nan,
+                    "cancelled_count": _safe_float(features.get("cancelled_count")),
+                    "training_score": _safe_float(features.get("training_score")),
+                    "days_since_training": _safe_float(
+                        features.get("days_since_training")
+                    ),
+                    "recent_training": 1.0
+                    if features.get("recent_training") is True
+                    else 0.0
+                    if features.get("recent_training") is False
+                    else np.nan,
+                    "owner_win_rate": _safe_float(features.get("owner_win_rate")),
+                    "owner_skill": _safe_float(features.get("owner_skill")),
                     "jk_place_rate_y": _place_rate(
                         jockey.get("ord1CntY"),
                         jockey.get("ord2CntY"),
@@ -531,6 +605,7 @@ def evaluate(config_path: Path) -> dict:
         "config_path": str(config_path),
         "config": config,
         "feature_count": len(features),
+        "market_feature_count": len([f for f in features if f in MARKET_FEATURES]),
         "split": split,
         "model": config["model"],
         "integrity": {
@@ -540,6 +615,7 @@ def evaluate(config_path: Path) -> dict:
         "summary": {
             "robust_exact_rate": robust_exact_rate,
             "blended_exact_rate": blended_exact_rate,
+            "early_primary_exact_rate": robust_exact_rate,
             "dev_test_gap": round(
                 abs(dev_summary["exact_3of3_rate"] - test_summary["exact_3of3_rate"]),
                 6,
