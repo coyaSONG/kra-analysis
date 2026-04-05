@@ -4,8 +4,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from infrastructure.migration_manifest import get_required_migration_head
 from models.database_models import Job, JobStatus, JobType
 from services.job_service import JobService
+
+
+@pytest.mark.unit
+def test_required_migration_head_tracks_canonical_job_status_backfill():
+    assert get_required_migration_head() == "006_canonical_job_status_backfill.sql"
 
 
 @pytest.mark.unit
