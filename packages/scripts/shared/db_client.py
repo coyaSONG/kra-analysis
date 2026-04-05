@@ -182,6 +182,88 @@ class RaceDBClient:
 
         return []
 
+    def get_past_top3_stats_for_race(
+        self,
+        hr_nos: list[str],
+        race_date: str,
+        lookback_days: int = 90,
+    ) -> dict[str, dict[str, Any]]:
+        """경주 출전마 전체의 최근 top3 통계를 한 번에 조회
+
+        Args:
+            hr_nos: 조회할 말 번호 리스트
+            race_date: 기준 날짜 (YYYYMMDD) — 이 날짜 이전만 조회 (leakage 방지)
+            lookback_days: 조회 기간 (일)
+
+        Returns:
+            {hr_no: {recent_race_count, recent_win_count, recent_top3_count,
+                     recent_win_rate, recent_top3_rate}}
+        """
+        if not hr_nos:
+            return {}
+
+        from collections import defaultdict
+        from datetime import datetime, timedelta
+
+        dt = datetime.strptime(race_date, "%Y%m%d")
+        start_date = (dt - timedelta(days=lookback_days)).strftime("%Y%m%d")
+
+        # 중복 제거
+        hr_nos = list(set(hr_nos))
+
+        query = """
+            SELECT elem->>'hr_no' as hr_no,
+                   (elem->>'chul_no')::int as chul_no,
+                   r.result_data,
+                   r.date
+            FROM races r, jsonb_array_elements(r.basic_data->'horses') as elem
+            WHERE r.collection_status = 'collected'
+              AND r.result_status = 'collected'
+              AND r.result_data IS NOT NULL
+              AND r.date >= %s AND r.date < %s
+              AND elem->>'hr_no' = ANY(%s::text[])
+              AND COALESCE((elem->>'win_odds')::numeric, 0) > 0
+        """
+
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, (start_date, race_date, hr_nos))
+            rows = cur.fetchall()
+
+        # 말별 집계
+        counts: dict[str, dict[str, int]] = defaultdict(
+            lambda: {"races": 0, "wins": 0, "top3": 0}
+        )
+
+        for row in rows:
+            hr_no = row["hr_no"]
+            chul_no = row["chul_no"]
+            result_data = row["result_data"]
+
+            # result_data 파싱 방어
+            if isinstance(result_data, str):
+                result_data = json.loads(result_data)
+            top3 = result_data if isinstance(result_data, list) else []
+
+            counts[hr_no]["races"] += 1
+            if top3 and chul_no in top3:
+                counts[hr_no]["top3"] += 1
+                if top3[0] == chul_no:
+                    counts[hr_no]["wins"] += 1
+
+        # 통계 계산
+        stats: dict[str, dict[str, Any]] = {}
+        for hr_no, c in counts.items():
+            race_count = c["races"]
+            stats[hr_no] = {
+                "recent_race_count": race_count,
+                "recent_win_count": c["wins"],
+                "recent_top3_count": c["top3"],
+                "recent_win_rate": c["wins"] / race_count if race_count > 0 else 0,
+                "recent_top3_rate": c["top3"] / race_count if race_count > 0 else 0,
+            }
+
+        return stats
+
     def close(self):
         if self._conn and not self._conn.closed:
             self._conn.close()
