@@ -1,0 +1,47 @@
+schemaVersion: "0.1"
+
+project:
+  name: kra-autoresearch-clean
+  artifact: generic
+  baselineRef: main
+  workspace: git
+
+scope:
+  allowedGlobs:
+    - "packages/scripts/autoresearch/clean_model_config.json"
+    - ".ralph/**"
+  maxFilesChanged: 5
+  maxLineDelta: 200
+
+proposer:
+  type: command
+  command: "uv run python packages/scripts/autoresearch/rrx_propose.py --config packages/scripts/autoresearch/clean_model_config.json"
+
+experiment:
+  run:
+    command: "uv run python packages/scripts/autoresearch/research_clean.py --config packages/scripts/autoresearch/clean_model_config.json --output .ralph/outputs/research_clean.json"
+  outputs:
+    - id: clean_research
+      path: .ralph/outputs/research_clean.json
+
+metrics:
+  catalog:
+    - id: dev_exact_rate
+      kind: numeric
+      direction: maximize
+      extractor:
+        type: command
+        command: "uv run python - <<'PY'\nimport json\nfrom pathlib import Path\npayload = json.loads(Path('.ralph/outputs/research_clean.json').read_text())\nprint(payload['dev']['exact_3of3_rate'])\nPY"
+        parser: plain_number
+
+frontier:
+  strategy: single_best
+  primaryMetric: dev_exact_rate
+
+ratchet:
+  type: epsilon_improve
+  metric: dev_exact_rate
+  epsilon: 0
+
+storage:
+  root: .ralph

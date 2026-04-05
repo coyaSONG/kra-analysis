@@ -1,0 +1,61 @@
+{
+  "dataset": "full_year_2025",
+  "split": {
+    "train_end": "20250930",
+    "dev_end": "20251130",
+    "test_start": "20251201"
+  },
+  "model": {
+    "kind": "hgb",
+    "positive_class_weight": 1.0,
+    "params": {
+      "max_depth": 4,
+      "learning_rate": 0.03,
+      "max_iter": 300,
+      "min_samples_leaf": 20,
+      "l2_regularization": 0.0
+    }
+  },
+  "features": [
+    "rating",
+    "wgBudam",
+    "winOdds",
+    "plcOdds",
+    "age",
+    "horse_win_rate",
+    "horse_place_rate",
+    "jockey_win_rate",
+    "jockey_place_rate",
+    "trainer_win_rate",
+    "trainer_place_rate",
+    "rest_days",
+    "jockey_recent_win_rate",
+    "rating_rank",
+    "odds_rank",
+    "age_prime",
+    "year_place_rate",
+    "total_place_rate",
+    "jockey_total_place_rate",
+    "trainer_total_place_rate",
+    "field_size",
+    "is_handicap",
+    "dist",
+    "is_sprint",
+    "is_mile",
+    "is_route",
+    "is_large",
+    "rating_rr",
+    "wgBudam_rr",
+    "winOdds_rr",
+    "plcOdds_rr",
+    "horse_place_rate_rr",
+    "jockey_place_rate_rr",
+    "trainer_place_rate_rr",
+    "year_place_rate_rr",
+    "total_place_rate_rr"
+  ],
+  "notes": {
+    "goal": "Leakage-free exact 3-of-3 optimization",
+    "last_mutation": "baseline"
+  }
+}
