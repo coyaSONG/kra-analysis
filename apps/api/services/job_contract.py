@@ -30,16 +30,16 @@ def normalize_job_kind(value: object) -> str:
     raw = value.value if hasattr(value, "value") else str(value)
     alias_map: dict[str, str] = {
         "collection": "collection",
-        "collect_race": DispatchAction.COLLECT_RACE.value,
-        "preprocess_race": DispatchAction.PREPROCESS_RACE.value,
+        "collect_race": "collection",
+        "preprocess_race": "collection",
         "enrichment": "enrichment",
-        "enrich_race": DispatchAction.ENRICH_RACE.value,
+        "enrich_race": "enrichment",
         "analysis": "analysis",
         "prediction": "prediction",
         "improvement": "improvement",
-        "batch": DispatchAction.BATCH_COLLECT.value,
-        "batch_collect": DispatchAction.BATCH_COLLECT.value,
-        "full_pipeline": DispatchAction.FULL_PIPELINE.value,
+        "batch": "batch",
+        "batch_collect": "batch",
+        "full_pipeline": "batch",
     }
     try:
         return alias_map[raw]

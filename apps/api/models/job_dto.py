@@ -26,11 +26,9 @@ class JobStatus(str, Enum):
     PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"
-    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    RETRYING = "retrying"
 
 
 class Job(BaseModel):

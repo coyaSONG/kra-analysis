@@ -82,11 +82,9 @@ class JobStatus(str, enum.Enum):
     PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"
-    RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
-    RETRYING = "retrying"
 
 
 class JobType(str, enum.Enum):
