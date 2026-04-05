@@ -211,7 +211,7 @@ async def test_batch_collect_marks_job_completed_when_all_items_succeed(
         ).scalar_one()
 
     assert job.status == JobStatus.COMPLETED
-    assert job.job_kind_v2 == "batch_collect"
+    assert job.job_kind_v2 == "batch"
     assert job.lifecycle_state_v2 == "completed"
     assert job.result["status"] == "completed"
     assert job.error_message is None

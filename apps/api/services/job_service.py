@@ -27,6 +27,24 @@ from services.job_contract import (
 
 logger = structlog.get_logger()
 
+PUBLIC_JOB_STATUSES = (
+    "pending",
+    "queued",
+    "processing",
+    "completed",
+    "failed",
+    "cancelled",
+)
+
+PUBLIC_JOB_TYPES = (
+    "collection",
+    "batch",
+    "enrichment",
+    "analysis",
+    "prediction",
+    "improvement",
+)
+
 type DispatchJobType = Literal[
     "collection",
     "collect_race",
@@ -527,27 +545,13 @@ class JobService:
 
             # 상태별 작업 수
             status_counts = {}
-            for status in [
-                "pending",
-                "queued",
-                "processing",
-                "completed",
-                "failed",
-                "cancelled",
-            ]:
+            for status in PUBLIC_JOB_STATUSES:
                 result = await db.execute(base_query.where(Job.status == status))
                 status_counts[status] = len(result.scalars().all())
 
             # 작업 유형별 수
             type_counts = {}
-            for job_type in [
-                "collection",
-                "batch",
-                "enrichment",
-                "analysis",
-                "prediction",
-                "improvement",
-            ]:
+            for job_type in PUBLIC_JOB_TYPES:
                 result = await db.execute(base_query.where(Job.type == job_type))
                 type_counts[job_type] = len(result.scalars().all())
 

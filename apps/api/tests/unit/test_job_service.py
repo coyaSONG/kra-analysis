@@ -26,7 +26,9 @@ async def test_create_job(db_session):
         db=db_session,
     )
     assert job.job_id
-    assert str(job.type.value if hasattr(job.type, "value") else job.type) == "collection"
+    assert (
+        str(job.type.value if hasattr(job.type, "value") else job.type) == "collection"
+    )
     assert job.parameters["meet"] == 1
     assert job.job_kind_v2 == "collection"
     assert job.lifecycle_state_v2 == "pending"
@@ -289,6 +291,44 @@ async def test_list_jobs_with_total_normalizes_internal_type_filter_to_public_ba
 
     assert total == 1
     assert [job.job_id for job in paged_jobs] == [batch_job.job_id]
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_get_job_statistics_counts_public_job_types_only(db_session):
+    service = JobService()
+    db_session.add_all(
+        [
+            Job(
+                type=JobType.COLLECTION,
+                status=JobStatus.COMPLETED,
+                parameters={"idx": 1},
+                created_by="tester",
+            ),
+            Job(
+                type=JobType.BATCH,
+                status=JobStatus.PROCESSING,
+                parameters={"idx": 2},
+                created_by="tester",
+            ),
+            Job(
+                type=JobType.BATCH,
+                status=JobStatus.FAILED,
+                parameters={"idx": 3},
+                created_by="tester",
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    stats = await service.get_job_statistics(db_session)
+
+    assert stats["total_jobs"] == 3
+    assert stats["status_counts"]["processing"] == 1
+    assert stats["type_counts"]["collection"] == 1
+    assert stats["type_counts"]["batch"] == 2
+    assert "batch_collect" not in stats["type_counts"]
+    assert "collect_race" not in stats["type_counts"]
 
 
 @pytest.mark.unit
