@@ -28,6 +28,8 @@ def test_validate_report_v2_accepts_complete_report() -> None:
             "avg_execution_time": 1.2,
             "error_stats": {},
             "detailed_results": [],
+            "dataset_metadata": {"source": "RaceDBClient.find_races", "race_count": 2},
+            "feature_schema_version": "race-eval-v1",
         },
         metrics={
             "log_loss": 0.5,
@@ -47,3 +49,5 @@ def test_validate_report_v2_accepts_complete_report() -> None:
 
     assert ok is True
     assert errors == []
+    assert report["dataset_metadata"]["race_count"] == 2
+    assert report["feature_schema_version"] == "race-eval-v1"

@@ -300,11 +300,18 @@ def predict(race_data: dict, call_llm) -> dict:
     Returns:
         {"predicted": [1, 5, 3], "confidence": 0.72, "reasoning": "..."}
     """
-    heuristic = _heuristic_prediction(race_data)
-    if len(heuristic["predicted"]) == 3:
-        return heuristic
-
     features = select_features(race_data)
     system, user = build_prompt(features)
-    response = call_llm(system, user)
-    return parse_response(response)
+    try:
+        response = call_llm(system, user)
+    except Exception:
+        return _heuristic_prediction(race_data)
+
+    parsed = parse_response(response)
+    if parsed.get("predicted"):
+        return parsed
+
+    if not str(response).strip():
+        return _heuristic_prediction(race_data)
+
+    return parsed

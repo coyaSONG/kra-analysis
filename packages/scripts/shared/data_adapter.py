@@ -11,6 +11,8 @@ DB basic_data 구조:
 
 from typing import Any
 
+from shared.read_contract import RaceSnapshot
+
 
 def _snake_to_camel(name: str) -> str:
     """snake_case → camelCase 변환"""
@@ -35,15 +37,26 @@ def _convert_dict_keys_to_camel(d: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def convert_basic_data_to_enriched_format(basic_data: dict) -> dict | None:
-    """DB basic_data를 평가 스크립트가 기대하는 enriched 포맷으로 변환
+def _extract_basic_data(source: dict | RaceSnapshot | None) -> dict | None:
+    if source is None:
+        return None
+    if isinstance(source, RaceSnapshot):
+        return source.basic_data
+    return source
+
+
+def convert_snapshot_to_enriched_format(
+    snapshot: dict | RaceSnapshot | None,
+) -> dict | None:
+    """공통 read DTO 또는 raw basic_data를 평가 스크립트 포맷으로 변환
 
     Args:
-        basic_data: DB races.basic_data 컬럼 값
+        snapshot: `RaceSnapshot` 또는 raw `basic_data` dict
 
     Returns:
         {response: {body: {items: {item: [...]}}}} 형태 또는 None
     """
+    basic_data = _extract_basic_data(snapshot)
     if not basic_data:
         return None
 
@@ -100,3 +113,8 @@ def convert_basic_data_to_enriched_format(basic_data: dict) -> dict | None:
         merged_items.append(merged)
 
     return {"response": {"body": {"items": {"item": merged_items}}}}
+
+
+def convert_basic_data_to_enriched_format(basic_data: dict | RaceSnapshot) -> dict | None:
+    """Backward-compatible wrapper for legacy callers."""
+    return convert_snapshot_to_enriched_format(basic_data)

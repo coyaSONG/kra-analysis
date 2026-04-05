@@ -11,6 +11,8 @@ import psycopg2
 import psycopg2.extras
 from dotenv import dotenv_values
 
+from shared.read_contract import RaceKey, RaceSnapshot, normalize_result_data
+
 
 def _load_database_url() -> str:
     """apps/api/.env에서 DATABASE_URL 로드"""
@@ -45,20 +47,34 @@ class RaceDBClient:
             self._conn = psycopg2.connect(self._database_url)
         return self._conn
 
-    def find_races(
+    def _fetch_race_rows(
+        self,
+        query: str,
+        params: list[Any],
+    ) -> list[dict[str, Any]]:
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(query, params)
+            return list(cur.fetchall())
+
+    def _legacy_rows_to_race_keys(
+        self, rows: list[dict[str, Any]]
+    ) -> list[RaceKey]:
+        return [
+            RaceKey(
+                race_id=str(row["race_id"]),
+                race_date=str(row["date"]),
+                meet=int(row["meet"]),
+                race_number=int(row["race_number"]),
+            )
+            for row in rows
+        ]
+
+    def find_race_keys(
         self,
         date_filter: str | None = None,
         limit: int | None = None,
-    ) -> list[dict[str, Any]]:
-        """수집 완료된 경주 목록 조회
-
-        Args:
-            date_filter: 특정 날짜 필터 (YYYYMMDD)
-            limit: 최대 조회 수
-
-        Returns:
-            [{race_id, race_date, race_no, meet}, ...]
-        """
+    ) -> list[RaceKey]:
+        """수집 완료된 경주를 공통 read DTO로 조회."""
         query = """
             SELECT race_id, date, meet, race_number
             FROM races
@@ -76,20 +92,24 @@ class RaceDBClient:
             query += " LIMIT %s"
             params.append(limit)
 
-        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, params)
-            rows = cur.fetchall()
+        rows = self._fetch_race_rows(query, params)
+        return self._legacy_rows_to_race_keys(rows)
 
-        meet_map = {1: "서울", 2: "제주", 3: "부산경남"}
-        return [
-            {
-                "race_id": row["race_id"],
-                "race_date": row["date"],
-                "race_no": str(row["race_number"]),
-                "meet": meet_map.get(row["meet"], "서울"),
-            }
-            for row in rows
-        ]
+    def find_races(
+        self,
+        date_filter: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """수집 완료된 경주 목록 조회
+
+        Args:
+            date_filter: 특정 날짜 필터 (YYYYMMDD)
+            limit: 최대 조회 수
+
+        Returns:
+            [{race_id, race_date, race_no, meet}, ...]
+        """
+        return [key.to_legacy_dict() for key in self.find_race_keys(date_filter, limit)]
 
     def find_races_with_results(
         self,
@@ -115,20 +135,33 @@ class RaceDBClient:
             query += " LIMIT %s"
             params.append(limit)
 
-        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(query, params)
-            rows = cur.fetchall()
+        rows = self._fetch_race_rows(query, params)
+        return [key.to_legacy_dict() for key in self._legacy_rows_to_race_keys(rows)]
 
-        meet_map = {1: "서울", 2: "제주", 3: "부산경남"}
-        return [
-            {
-                "race_id": row["race_id"],
-                "race_date": row["date"],
-                "race_no": str(row["race_number"]),
-                "meet": meet_map.get(row["meet"], "서울"),
-            }
-            for row in rows
-        ]
+    def load_race_snapshot(self, race_id: str) -> RaceSnapshot | None:
+        """공통 read DTO로 경주 row를 로드."""
+        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT race_id,
+                       date,
+                       meet,
+                       race_number,
+                       collection_status,
+                       result_status,
+                       basic_data,
+                       result_data
+                FROM races
+                WHERE race_id = %s
+            """,
+                (race_id,),
+            )
+            row = cur.fetchone()
+
+        if not row:
+            return None
+
+        return RaceSnapshot.from_row(row)
 
     def load_race_basic_data(self, race_id: str) -> dict | None:
         """경주 basic_data 로드 (raw JSON)
@@ -136,17 +169,11 @@ class RaceDBClient:
         Returns:
             basic_data dict 또는 None
         """
-        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(
-                "SELECT basic_data FROM races WHERE race_id = %s",
-                (race_id,),
-            )
-            row = cur.fetchone()
-
-        if not row or not row["basic_data"]:
+        snapshot = self.load_race_snapshot(race_id)
+        if not snapshot or not snapshot.basic_data:
             return None
 
-        data = row["basic_data"]
+        data = snapshot.basic_data
         # psycopg2가 JSON을 자동 파싱하지 않는 경우 대비
         if isinstance(data, str):
             data = json.loads(data)
@@ -158,29 +185,11 @@ class RaceDBClient:
         Returns:
             [1위번호, 2위번호, 3위번호] 또는 []
         """
-        with self.conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            cur.execute(
-                "SELECT result_data FROM races WHERE race_id = %s AND result_status = 'collected'",
-                (race_id,),
-            )
-            row = cur.fetchone()
-
-        if not row or not row["result_data"]:
+        snapshot = self.load_race_snapshot(race_id)
+        if not snapshot or snapshot.result_status != "collected":
             return []
 
-        result_data = row["result_data"]
-        if isinstance(result_data, str):
-            result_data = json.loads(result_data)
-
-        # result_data가 이미 [1위, 2위, 3위] 형태인 경우
-        if isinstance(result_data, list):
-            return result_data
-
-        # result_data가 dict인 경우 top3 키 확인
-        if isinstance(result_data, dict):
-            return result_data.get("top3", [])
-
-        return []
+        return normalize_result_data(snapshot.result_data)
 
     def get_past_top3_stats_for_race(
         self,
@@ -237,12 +246,7 @@ class RaceDBClient:
         for row in rows:
             hr_no = row["hr_no"]
             chul_no = row["chul_no"]
-            result_data = row["result_data"]
-
-            # result_data 파싱 방어
-            if isinstance(result_data, str):
-                result_data = json.loads(result_data)
-            top3 = result_data if isinstance(result_data, list) else []
+            top3 = normalize_result_data(row["result_data"])
 
             counts[hr_no]["races"] += 1
             if top3 and chul_no in top3:

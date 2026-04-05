@@ -18,6 +18,8 @@ REQUIRED_TOP_KEYS = {
     "avg_execution_time",
     "error_stats",
     "detailed_results",
+    "dataset_metadata",
+    "feature_schema_version",
     "metrics_v2",
     "leakage_check",
     "promotion_context",
@@ -57,6 +59,8 @@ def build_report_v2(
         "avg_execution_time": float(summary.get("avg_execution_time", 0.0)),
         "error_stats": summary.get("error_stats", {}),
         "detailed_results": summary.get("detailed_results", []),
+        "dataset_metadata": summary.get("dataset_metadata", {}),
+        "feature_schema_version": summary.get("feature_schema_version", "unknown"),
     }
 
     normalized_metrics = {

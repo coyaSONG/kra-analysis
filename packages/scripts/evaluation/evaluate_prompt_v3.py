@@ -8,7 +8,6 @@
 
 import argparse
 import json
-import re
 import sys
 import threading
 import time
@@ -20,14 +19,18 @@ from typing import Any
 
 # shared 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from evaluation.data_loading import RaceEvaluationDataLoader
 from evaluation.ensemble import SelfConsistencyEnsemble
 from evaluation.leakage_checks import check_detailed_results_for_leakage
 from evaluation.metrics import compute_prediction_quality_metrics
 from evaluation.mlflow_tracker import ExperimentTracker
+from evaluation.prediction_service import (
+    build_prediction_prompt,
+    normalize_prediction_payload,
+    parse_prediction_output,
+)
 from evaluation.report_schema import build_report_v2, validate_report_v2
-from feature_engineering import compute_race_features
 from shared.claude_client import ClaudeClient
-from shared.data_adapter import convert_basic_data_to_enriched_format
 from shared.db_client import RaceDBClient
 from shared.llm_client import LLMClient
 
@@ -69,6 +72,9 @@ class PromptEvaluatorV3:
 
         # DB 클라이언트
         self.db_client = RaceDBClient()
+        self.data_loader = RaceEvaluationDataLoader(
+            self.db_client, with_past_stats=with_past_stats
+        )
 
         # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
@@ -83,6 +89,22 @@ class PromptEvaluatorV3:
 
         if jury_enabled:
             self._init_jury(jury_models or ["claude", "codex", "gemini"], jury_weights)
+
+    def _build_dataset_metadata(
+        self, races: list[dict[str, Any]], *, limit: int | None
+    ) -> dict[str, Any]:
+        if hasattr(self.data_loader, "build_dataset_metadata"):
+            metadata = self.data_loader.build_dataset_metadata(races, limit=limit)
+            if isinstance(metadata, dict):
+                return metadata
+        return {
+            "source": type(self.db_client).__name__,
+            "requested_limit": limit,
+            "race_count": len(races),
+            "race_ids": [str(race.get("race_id")) for race in races if race.get("race_id")],
+            "feature_schema_version": "unknown",
+            "with_past_stats": self.with_past_stats,
+        }
 
     def _init_jury(
         self, model_names: list[str], weights: dict[str, float] | None = None
@@ -107,91 +129,11 @@ class PromptEvaluatorV3:
 
     def find_test_races(self, limit: int = None) -> list[dict[str, Any]]:
         """DB에서 수집 완료된 경주 찾기"""
-        races = self.db_client.find_races(limit=limit)
-        print(f"테스트할 경주: {len(races)}개 (DB 데이터)")
-        return races
+        return self.data_loader.find_test_races(limit=limit)
 
     def load_race_data(self, race_info: dict) -> dict | None:
         """DB에서 경주 데이터 로드"""
-        try:
-            basic_data = self.db_client.load_race_basic_data(race_info["race_id"])
-            if not basic_data:
-                return None
-
-            # DB 데이터를 평가 스크립트 호환 포맷으로 변환
-            data = convert_basic_data_to_enriched_format(basic_data)
-            if not data:
-                return None
-
-            # API 응답 형식에서 실제 데이터 추출
-            items = data["response"]["body"]["items"]["item"]
-
-            # 데이터 정리
-            horses = []
-            for item in items:
-                # 기권/제외 말 필터링
-                if item.get("winOdds", 999) == 0:
-                    continue
-
-                horse = {
-                    "chulNo": item["chulNo"],
-                    "hrName": item["hrName"],
-                    "hrNo": item["hrNo"],
-                    "jkName": item["jkName"],
-                    "jkNo": item["jkNo"],
-                    "trName": item["trName"],
-                    "trNo": item["trNo"],
-                    "wgBudam": item.get("wgBudam", 0),
-                    "winOdds": item["winOdds"],
-                    "plcOdds": item.get("plcOdds", 0),
-                    "rating": item.get("rating", 0),
-                    "rank": item.get("rank", ""),
-                    "age": item.get("age", 0),
-                    "sex": item.get("sex", ""),
-                    # 보강된 데이터
-                    "hrDetail": item.get("hrDetail", {}),
-                    "jkDetail": item.get("jkDetail", {}),
-                    "trDetail": item.get("trDetail", {}),
-                }
-
-                horses.append(horse)
-
-            # Past Stats 주입 (A/B 테스트용)
-            if self.with_past_stats:
-                hr_nos = [h["hrNo"] for h in horses if h.get("hrNo")]
-                race_date = items[0]["rcDate"]
-                past_stats = self.db_client.get_past_top3_stats_for_race(
-                    hr_nos=hr_nos,
-                    race_date=race_date,
-                    lookback_days=90,
-                )
-                for horse in horses:
-                    hr_no = horse.get("hrNo", "")
-                    if hr_no in past_stats:
-                        horse["past_stats"] = past_stats[hr_no]
-
-            # Feature Engineering: 파생 피처 계산
-            horses = compute_race_features(horses)
-
-            # 경주 정보 구성
-            race_data = {
-                "raceInfo": {
-                    "rcDate": items[0]["rcDate"],
-                    "rcNo": items[0]["rcNo"],
-                    "rcName": items[0].get("rcName", ""),
-                    "rcDist": items[0]["rcDist"],
-                    "track": items[0].get("track", ""),
-                    "weather": items[0].get("weather", ""),
-                    "meet": items[0]["meet"],
-                },
-                "horses": horses,
-            }
-
-            return race_data
-
-        except Exception as e:
-            print(f"데이터 로드 오류: {e}")
-            return None
+        return self.data_loader.load_race_data(race_info)
 
     def run_claude_prediction(
         self, race_data: dict, race_id: str
@@ -205,23 +147,7 @@ class PromptEvaluatorV3:
             prompt_template = f.read()
 
         # 프롬프트 구성
-        prompt = f"""{prompt_template}
-
-경주 데이터:
-```json
-{json.dumps(race_data, ensure_ascii=False, indent=2)}
-```
-
-다음 JSON 형식으로 예측 결과를 제공하세요:
-{{
-  "selected_horses": [
-    {{"chulNo": 번호, "hrName": "말이름"}},
-    {{"chulNo": 번호, "hrName": "말이름"}},
-    {{"chulNo": 번호, "hrName": "말이름"}}
-  ],
-  "confidence": 70,
-  "reasoning": "1위 인기마 포함, 기수 성적 우수"
-}}"""
+        prompt = build_prediction_prompt(prompt_template, race_data)
 
         try:
             # Claude CLI를 통한 예측 호출 (Opus 모델, 구독 플랜)
@@ -242,12 +168,7 @@ class PromptEvaluatorV3:
                 return None, error_type
 
             # 응답 텍스트에서 JSON 파싱
-            prediction = self._parse_stream_json(response_text, execution_time)
-            if prediction:
-                return prediction, error_type
-
-            # 파싱 실패 시 일반 출력으로 시도
-            prediction = self._parse_regular_output(response_text, execution_time)
+            prediction = parse_prediction_output(response_text, execution_time)
             if prediction:
                 return prediction, error_type
 
@@ -314,124 +235,12 @@ class PromptEvaluatorV3:
         return merged, "success"
 
     def _parse_stream_json(self, output: str, execution_time: float) -> dict | None:
-        """CLI 응답 텍스트에서 JSON 파싱 (직접 JSON 또는 코드블록)"""
-        try:
-            # 1. 응답 전체가 직접 JSON인 경우
-            try:
-                data = json.loads(output.strip())
-                if isinstance(data, dict):
-                    if "selected_horses" in data or "predicted" in data:
-                        data["execution_time"] = execution_time
-                        if "predicted" in data and "selected_horses" not in data:
-                            data["selected_horses"] = [
-                                {"chulNo": no} for no in data["predicted"]
-                            ]
-                        return data
-            except json.JSONDecodeError:
-                pass
-
-            # 2. 코드블록 내 JSON 추출 시도
-            code_block_match = re.search(
-                r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
-            )
-            if code_block_match:
-                try:
-                    prediction = json.loads(code_block_match.group(1))
-                    prediction["execution_time"] = execution_time
-                    if "selected_horses" not in prediction:
-                        if "predicted" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["predicted"]
-                            ]
-                        elif "prediction" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["prediction"]
-                            ]
-                    return prediction
-                except json.JSONDecodeError:
-                    pass
-
-            # 3. 코드블록 없으면 직접 JSON 추출 시도
-            json_match = re.search(
-                r'\{[^{}]*"(?:selected_horses|predicted|prediction)"[^{}]*\}',
-                output,
-                re.DOTALL,
-            )
-            if json_match:
-                try:
-                    prediction = json.loads(json_match.group())
-                    prediction["execution_time"] = execution_time
-                    if "selected_horses" not in prediction:
-                        if "predicted" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["predicted"]
-                            ]
-                        elif "prediction" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["prediction"]
-                            ]
-                    return prediction
-                except json.JSONDecodeError:
-                    pass
-
-        except Exception as e:
-            print(f"JSON 파싱 오류: {e}")
-
-        return None
+        """CLI 응답 텍스트에서 JSON 파싱 (기존 호환용 래퍼)"""
+        return parse_prediction_output(output, execution_time)
 
     def _parse_regular_output(self, output: str, execution_time: float) -> dict | None:
         """일반 텍스트 출력 파싱 (폴백) - 가장 바깥쪽 JSON 매칭"""
-        try:
-            # 코드블록 내 JSON
-            code_block_match = re.search(
-                r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL
-            )
-            if code_block_match:
-                try:
-                    prediction = json.loads(code_block_match.group(1))
-                    prediction["execution_time"] = execution_time
-                    # predicted 또는 prediction 필드를 selected_horses로 변환
-                    if "selected_horses" not in prediction:
-                        if "predicted" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["predicted"]
-                            ]
-                        elif "prediction" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["prediction"]
-                            ]
-                    return prediction
-                except Exception:
-                    pass
-
-            # 일반 JSON (selected_horses, predicted 또는 prediction)
-            json_match = re.search(
-                r'\{.*"(?:selected_horses|predicted|prediction)".*?\}',
-                output,
-                re.DOTALL,
-            )
-            if json_match:
-                try:
-                    prediction = json.loads(json_match.group())
-                    prediction["execution_time"] = execution_time
-                    # predicted 또는 prediction 필드를 selected_horses로 변환
-                    if "selected_horses" not in prediction:
-                        if "predicted" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["predicted"]
-                            ]
-                        elif "prediction" in prediction:
-                            prediction["selected_horses"] = [
-                                {"chulNo": no} for no in prediction["prediction"]
-                            ]
-                    return prediction
-                except Exception:
-                    pass
-
-        except Exception as e:
-            print(f"Regular 파싱 오류: {e}")
-
-        return None
+        return parse_prediction_output(output, execution_time)
 
     def run_jury_prediction(
         self, race_data: dict, race_id: str
@@ -446,23 +255,7 @@ class PromptEvaluatorV3:
         with open(self.prompt_path, encoding="utf-8") as f:
             prompt_template = f.read()
 
-        prompt = f"""{prompt_template}
-
-경주 데이터:
-```json
-{json.dumps(race_data, ensure_ascii=False, indent=2)}
-```
-
-다음 JSON 형식으로 예측 결과를 제공하세요:
-{{
-  "selected_horses": [
-    {{"chulNo": 번호, "hrName": "말이름"}},
-    {{"chulNo": 번호, "hrName": "말이름"}},
-    {{"chulNo": 번호, "hrName": "말이름"}}
-  ],
-  "confidence": 70,
-  "reasoning": "1위 인기마 포함, 기수 성적 우수"
-}}"""
+        prompt = build_prediction_prompt(prompt_template, race_data)
 
         # Jury 심의: 모든 모델에 동일 프롬프트 병렬 전송
         verdict = self.jury.deliberate(prompt, timeout=3000)
@@ -474,14 +267,10 @@ class PromptEvaluatorV3:
             # fallback: 성공한 응답이 1개라도 있으면 단독 사용
             if verdict.successful_responses:
                 resp = verdict.successful_responses[0]
-                parsed = LLMClient.parse_json(resp.text) if resp.text else None
+                parsed = parse_prediction_output(resp.text, 0) if resp.text else None
                 if parsed:
                     execution_time = time.time() - start_time
-                    parsed["execution_time"] = execution_time
-                    if "selected_horses" not in parsed and "predicted" in parsed:
-                        parsed["selected_horses"] = [
-                            {"chulNo": no} for no in parsed["predicted"]
-                        ]
+                    parsed = normalize_prediction_payload(parsed, execution_time)
                     if "selected_horses" in parsed:
                         return parsed, "success"
             return None, "jury_quorum_failed"
@@ -492,10 +281,7 @@ class PromptEvaluatorV3:
             if not resp.text:
                 continue
 
-            parsed = LLMClient.parse_json(resp.text)
-            if not parsed:
-                # 기존 파싱 폴백
-                parsed = self._parse_stream_json(resp.text, 0)
+            parsed = parse_prediction_output(resp.text, 0)
 
             if parsed:
                 predicted = []
@@ -675,6 +461,7 @@ class PromptEvaluatorV3:
 
         # 테스트 레이스 찾기
         test_races = self.find_test_races(limit=test_limit)
+        dataset_metadata = self._build_dataset_metadata(test_races, limit=test_limit)
 
         results = []
         total_races = len(test_races)
@@ -773,6 +560,10 @@ class PromptEvaluatorV3:
                 else 0
             ),
             "detailed_results": results,
+            "dataset_metadata": dataset_metadata,
+            "feature_schema_version": dataset_metadata.get(
+                "feature_schema_version", "unknown"
+            ),
         }
 
         metrics_v2 = compute_prediction_quality_metrics(
@@ -802,6 +593,10 @@ class PromptEvaluatorV3:
             promotion_context={
                 "selection_gate": "strict",
                 "metrics_profile": self.metrics_profile,
+                "dataset_metadata": dataset_metadata,
+                "feature_schema_version": dataset_metadata.get(
+                    "feature_schema_version", "unknown"
+                ),
             },
         )
         schema_valid, schema_errors = validate_report_v2(report_v2)
@@ -822,6 +617,10 @@ class PromptEvaluatorV3:
                     "total_races": total_races,
                     "max_workers": max_workers,
                     "model": "claude-opus-4-20250918",
+                    "feature_schema_version": dataset_metadata.get(
+                        "feature_schema_version", "unknown"
+                    ),
+                    "dataset_race_count": dataset_metadata.get("race_count", 0),
                 }
             )
 
