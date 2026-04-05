@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 2 context gathered
-last_updated: "2026-04-05T06:27:25.409Z"
-last_activity: 2026-04-05 — Phase 2 job vocabulary context gathered; planning can start with locked decisions for external type/status semantics and cutover policy.
+stopped_at: Phase 2 plans finalized
+last_updated: "2026-04-05T07:10:00.000Z"
+last_activity: 2026-04-05 — Phase 2 planning finalized with three execution plans covering canonical job vocabulary core cleanup, jobs API cutover, and async collection/runtime cleanup.
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
+  total_plans: 6
   completed_plans: 3
   percent: 17
 ---
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 2 of 6 (Job Vocabulary)
-Plan: 0 of TBD in current phase
-Status: Context gathered, ready for planning
-Last activity: 2026-04-05 — Phase 2 job vocabulary context gathered; planning can start with locked decisions for external type/status semantics and cutover policy.
+Plan: 0 of 3 in current phase
+Status: Plans finalized, ready to execute
+Last activity: 2026-04-05 — Phase 2 planning finalized with three execution plans covering canonical job vocabulary core cleanup, jobs API cutover, and async collection/runtime cleanup.
 
 Progress: [█░░░░░░░░░] 17%
 
@@ -45,6 +45,7 @@ Progress: [█░░░░░░░░░] 17%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Runtime Guardrails | 3 | complete | verified |
+| 2. Job Vocabulary | 0 of 3 | planned | - |
 
 **Recent Trend:**
 
@@ -75,5 +76,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-04-05T06:27:25.406Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-job-vocabulary/02-CONTEXT.md
+Stopped at: Phase 2 plans finalized
+Resume file: .planning/phases/02-job-vocabulary/02-01-PLAN.md
