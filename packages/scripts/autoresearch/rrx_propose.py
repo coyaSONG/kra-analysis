@@ -59,6 +59,16 @@ CORE_FEATURES = [
     "plcOdds",
     "age",
     "draw_no",
+    "class_code",
+    "track_pct",
+    "budam_code",
+    "rest_risk_code",
+    "allowance_flag",
+    "year_place_rate",
+    "total_place_rate",
+    "jk_place_rate_y",
+    "tr_place_rate_y",
+    "draw_rr",
     "rating_rank",
     "odds_rank",
     "age_prime",
@@ -91,19 +101,19 @@ def _has_accepted_run(start: Path) -> bool:
 def _mutate_hgb(params: dict, rng: random.Random) -> list[str]:
     notes: list[str] = []
     if rng.random() < 0.6:
-        params["max_depth"] = rng.choice([3, 4, 5, 6, None])
+        params["max_depth"] = rng.choice([4, 5, 6])
         notes.append(f"max_depth={params['max_depth']}")
     if rng.random() < 0.6:
-        params["learning_rate"] = rng.choice([0.01, 0.02, 0.03, 0.05, 0.07, 0.1])
+        params["learning_rate"] = rng.choice([0.03, 0.05, 0.07])
         notes.append(f"learning_rate={params['learning_rate']}")
     if rng.random() < 0.6:
-        params["max_iter"] = rng.choice([150, 200, 250, 300, 400, 500])
+        params["max_iter"] = rng.choice([500, 600, 700])
         notes.append(f"max_iter={params['max_iter']}")
     if rng.random() < 0.6:
-        params["min_samples_leaf"] = rng.choice([10, 15, 20, 25, 30, 40, 50])
+        params["min_samples_leaf"] = rng.choice([15, 20, 25])
         notes.append(f"min_samples_leaf={params['min_samples_leaf']}")
     if rng.random() < 0.4:
-        params["l2_regularization"] = rng.choice([0.0, 0.01, 0.03, 0.1, 0.3, 1.0])
+        params["l2_regularization"] = rng.choice([0.1, 0.3, 0.6])
         notes.append(f"l2={params['l2_regularization']}")
     return notes
 
@@ -131,7 +141,7 @@ def _mutate_features(
     selected = set(features)
     mutation_notes: list[str] = []
 
-    for _ in range(rng.randint(1, 3)):
+    for _ in range(rng.randint(0, 2)):
         candidate = rng.choice(OPTIONAL_FEATURES)
         if candidate in selected and len(selected) > len(CORE_FEATURES) + 5:
             selected.remove(candidate)
@@ -167,8 +177,8 @@ def main() -> None:
         return
 
     notes: list[str] = []
-    if rng.random() < 0.25:
-        config["model"]["kind"] = rng.choice(["hgb", "rf", "et", "logreg"])
+    if rng.random() < 0.1:
+        config["model"]["kind"] = rng.choice(["hgb", "rf"])
         notes.append(f"kind={config['model']['kind']}")
 
     kind = config["model"]["kind"]
@@ -188,9 +198,7 @@ def main() -> None:
         notes.extend(_mutate_logreg(params, rng))
 
     if rng.random() < 0.6:
-        config["model"]["positive_class_weight"] = rng.choice(
-            [1.0, 1.5, 2.0, 2.5, 3.0, 4.0]
-        )
+        config["model"]["positive_class_weight"] = rng.choice([1.0, 1.1, 1.25])
         notes.append(f"positive_weight={config['model']['positive_class_weight']}")
 
     features, feature_notes = _mutate_features(config["features"], rng)
