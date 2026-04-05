@@ -15,6 +15,7 @@ from sqlalchemy.pool import NullPool
 from config import settings
 from infrastructure.migration_manifest import (
     get_active_migration_names,
+    get_legacy_conflict_tables,
     get_required_migration_head,
 )
 
@@ -102,6 +103,20 @@ async def get_applied_migrations() -> dict[str, str]:
         return {row[0]: row[1] for row in result.all()}
 
 
+async def get_public_table_names() -> set[str]:
+    async with engine.connect() as conn:
+        result = await conn.execute(
+            text(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+            """
+            )
+        )
+        return {row[0] for row in result.all()}
+
+
 async def require_migration_manifest() -> None:
     required_names = get_active_migration_names()
     if not required_names:
@@ -115,16 +130,34 @@ async def require_migration_manifest() -> None:
             "Run scripts/apply_migrations.py before starting the app."
         ) from exc
 
-    missing = [name for name in required_names if name not in applied]
-    unexpected = [name for name in applied if name not in required_names]
-    if missing or unexpected:
+    missing = sorted(name for name in required_names if name not in applied)
+    if missing:
         raise RuntimeError(
             "Database migration manifest mismatch: "
-            f"missing={missing}, unexpected={unexpected}. "
+            f"missing manifest rows={missing}. "
             "Run scripts/apply_migrations.py before starting the app."
         )
 
-    applied_head = max(applied)
+    unexpected = sorted(name for name in applied if name not in required_names)
+    if unexpected:
+        raise RuntimeError(
+            "Database migration manifest mismatch: "
+            f"unexpected migration names={unexpected}. "
+            "Run scripts/apply_migrations.py before starting the app."
+        )
+
+    public_tables = await get_public_table_names()
+    legacy_conflicts = sorted(
+        table for table in get_legacy_conflict_tables() if table in public_tables
+    )
+    if legacy_conflicts:
+        raise RuntimeError(
+            "Database mixed legacy/unified state detected: "
+            f"legacy tables={legacy_conflicts}. "
+            "Run scripts/apply_migrations.py before starting the app."
+        )
+
+    applied_head = sorted(applied)[-1]
     required_head = get_required_migration_head()
     if applied_head != required_head:
         raise RuntimeError(
