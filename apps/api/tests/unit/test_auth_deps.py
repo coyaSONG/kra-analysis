@@ -1,15 +1,18 @@
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from fastapi import HTTPException
 
 from config import settings
+from dependencies import auth as auth_dep
 from dependencies.auth import (
     APIKeyBackendError,
     AuthenticatedPrincipal,
     check_resource_access,
     create_access_token,
     get_current_user,
+    require_action,
     require_api_key,
     require_api_key_record,
     require_permissions,
@@ -19,6 +22,7 @@ from dependencies.auth import (
 )
 from models.database_models import APIKey as DBAPIKey
 from models.database_models import Job
+from policy.principal import PolicyLimits
 
 
 @pytest.mark.asyncio
@@ -84,24 +88,57 @@ async def test_require_principal_returns_normalized_principal(db_session):
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_require_permissions_allow_and_forbid(db_session):
-    # Prepare API key object with write permission
-    api_key_obj = DBAPIKey(
-        key="k1",
-        name="tester",
-        is_active=True,
-        permissions=["read", "write"],
+    principal = AuthenticatedPrincipal(
+        principal_id="api_key:k1",
+        subject_id="tester",
+        owner_ref="k1",
+        credential_id="k1",
+        display_name="tester",
+        auth_method="api_key",
+        permissions=frozenset({"read", "write"}),
+        limits=PolicyLimits(),
     )
-    db_session.add(api_key_obj)
-    await db_session.commit()
 
-    # Allowed
-    ok = await require_permissions(["write"], api_key_obj=api_key_obj, db=db_session)
-    assert ok is not None
+    ok = await require_permissions(["write"], principal=principal)
+    assert ok is principal
 
-    # Forbidden
     with pytest.raises(HTTPException) as ex:
-        await require_permissions(["admin"], api_key_obj=api_key_obj, db=db_session)
+        await require_permissions(["admin"], principal=principal)
     assert ex.value.status_code == 403
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_require_action_sets_request_state(monkeypatch):
+    principal = AuthenticatedPrincipal(
+        principal_id="api_key:test-key",
+        subject_id="test-key",
+        owner_ref="test-key",
+        credential_id="test-key",
+        display_name="tester",
+        auth_method="api_key",
+        permissions=frozenset({"jobs.list"}),
+        limits=PolicyLimits(),
+    )
+    reservation = SimpleNamespace(action="jobs.list", units=1)
+    request = SimpleNamespace(state=SimpleNamespace())
+
+    async def fake_authorize(_principal, _action):
+        return None
+
+    async def fake_reserve(_principal, _action):
+        return reservation
+
+    monkeypatch.setattr(auth_dep._policy_authorizer, "authorize", fake_authorize)
+    monkeypatch.setattr(auth_dep._usage_accountant, "reserve", fake_reserve)
+
+    dependency = require_action("jobs.list")
+    result = await dependency(request=request, principal=principal)
+
+    assert result is principal
+    assert request.state.principal is principal
+    assert request.state.policy_action == "jobs.list"
+    assert request.state.usage_reservation is reservation
 
 
 @pytest.mark.asyncio
@@ -166,22 +203,51 @@ async def test_require_api_key_backend_error_returns_503(monkeypatch, db_session
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_check_resource_access_paths(db_session):
-    # Admin path
-    admin_key = DBAPIKey(key="adm", name="admin", is_active=True, permissions=["admin"])
-    assert await check_resource_access("race", "rid", admin_key, db_session) is True
+    admin_principal = AuthenticatedPrincipal(
+        principal_id="api_key:adm",
+        subject_id="admin",
+        owner_ref="adm",
+        credential_id="adm",
+        display_name="admin",
+        auth_method="api_key",
+        permissions=frozenset({"admin"}),
+        limits=PolicyLimits(),
+    )
+    assert (
+        await check_resource_access("race", "rid", admin_principal, db_session) is True
+    )
 
-    # Race read path
-    reader_key = DBAPIKey(key="r1", name="reader", is_active=True, permissions=["read"])
-    assert await check_resource_access("race", "rid", reader_key, db_session) is True
+    reader_principal = AuthenticatedPrincipal(
+        principal_id="api_key:r1",
+        subject_id="reader",
+        owner_ref="r1",
+        credential_id="r1",
+        display_name="reader",
+        auth_method="api_key",
+        permissions=frozenset({"read"}),
+        limits=PolicyLimits(),
+    )
+    assert (
+        await check_resource_access("race", "rid", reader_principal, db_session) is True
+    )
 
-    # Job owner path
     owner_name = "creator"
     job = Job(type="collection", status="pending", parameters={}, created_by=owner_name)
     db_session.add(job)
     await db_session.commit()
     await db_session.refresh(job)
 
-    owner_key = DBAPIKey(
-        key="own", name=owner_name, is_active=True, permissions=["read"]
+    owner_principal = AuthenticatedPrincipal(
+        principal_id="api_key:own",
+        subject_id="own",
+        owner_ref="own",
+        credential_id="own",
+        display_name=owner_name,
+        auth_method="api_key",
+        permissions=frozenset({"read"}),
+        limits=PolicyLimits(),
     )
-    assert await check_resource_access("job", job.job_id, owner_key, db_session) is True
+    assert (
+        await check_resource_access("job", job.job_id, owner_principal, db_session)
+        is True
+    )

@@ -6,6 +6,25 @@ from dependencies.auth import check_resource_access, require_resource_access
 from infrastructure.database import get_db
 from models.database_models import APIKey as DBAPIKey
 from models.database_models import Job, JobStatus, JobType, Prediction
+from policy.principal import AuthenticatedPrincipal, PolicyLimits
+
+
+def _principal(
+    *,
+    owner_ref: str,
+    display_name: str | None,
+    permissions: list[str] | None = None,
+) -> AuthenticatedPrincipal:
+    return AuthenticatedPrincipal(
+        principal_id=f"api_key:{owner_ref}",
+        subject_id=owner_ref,
+        owner_ref=owner_ref,
+        credential_id=owner_ref,
+        display_name=display_name,
+        auth_method="api_key",
+        permissions=frozenset(permissions or []),
+        limits=PolicyLimits(),
+    )
 
 
 @pytest.mark.asyncio
@@ -22,11 +41,12 @@ async def test_check_resource_access_prediction_true(db_session):
     db_session.add(p)
     await db_session.commit()
 
-    class AK:
-        permissions = []
-        name = "x"
-
-    ok = await check_resource_access("prediction", "pred-1", AK(), db_session)
+    ok = await check_resource_access(
+        "prediction",
+        "pred-1",
+        _principal(owner_ref="principal-x", display_name="x"),
+        db_session,
+    )
     assert ok is True
 
 
@@ -44,11 +64,12 @@ async def test_check_resource_access_prediction_denies_non_owner(db_session):
     db_session.add(p)
     await db_session.commit()
 
-    class AK:
-        permissions = []
-        name = "other-user"
-
-    ok = await check_resource_access("prediction", "pred-2", AK(), db_session)
+    ok = await check_resource_access(
+        "prediction",
+        "pred-2",
+        _principal(owner_ref="other-user", display_name="other-user"),
+        db_session,
+    )
     assert ok is False
 
 

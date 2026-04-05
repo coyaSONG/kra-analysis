@@ -2,26 +2,35 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from middleware.logging import LoggingMiddleware
+from middleware import logging as logging_middleware
+from middleware.logging import RequestLoggingMiddleware
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_logging_middleware_error_path():
+async def test_request_logging_error_path_logs_request_failed(monkeypatch):
     app = FastAPI()
-    app.add_middleware(LoggingMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
+
+    errors = []
+
+    def fake_error(event, **kwargs):
+        errors.append((event, kwargs))
+
+    monkeypatch.setattr(logging_middleware.logger, "error", fake_error)
 
     @app.get("/err")
     async def err():
         raise RuntimeError("boom")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://test",
     ) as ac:
-        try:
-            await ac.get("/err")
-            # Some stacks may return a 500 Response; if so, test is already covered elsewhere
-        except Exception as e:
-            # Error propagated; LoggingMiddleware should have logged and re-raised
-            assert "boom" in str(e)
+        response = await ac.get("/err")
+
+    assert response.status_code == 500
+    failed = next(kwargs for event, kwargs in errors if event == "request_failed")
+    assert failed["path"] == "/err"
+    assert failed["method"] == "GET"
+    assert failed["error"] == "boom"

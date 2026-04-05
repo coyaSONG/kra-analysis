@@ -8,30 +8,62 @@ class FailPing:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_detailed_health_redis_unhealthy(api_app, authenticated_client):
-    # Override dependency to simulate redis with failing ping
-    def override():
-        return FailPing()
-
-    # FastAPI override
+async def test_detailed_health_redis_error(api_app, authenticated_client):
     import routers.health as health_router
 
-    api_app.dependency_overrides[health_router.get_optional_redis] = override
+    api_app.dependency_overrides[health_router.get_optional_redis] = lambda: FailPing()
     try:
-        r = await authenticated_client.get("/health/detailed")
-        assert r.status_code == 200
-        data = r.json()
-        assert data["redis"] == "unhealthy"
+        response = await authenticated_client.get("/health/detailed")
     finally:
         api_app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "degraded"
+    assert data["redis"] == "error"
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
+async def test_detailed_health_redis_unavailable_when_dependency_missing(
+    api_app, authenticated_client
+):
+    import routers.health as health_router
+
+    api_app.dependency_overrides[health_router.get_optional_redis] = lambda: None
+    try:
+        response = await authenticated_client.get("/health/detailed")
+    finally:
+        api_app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "degraded"
+    assert data["redis"] == "unavailable"
+
+
 @pytest.mark.asyncio
+@pytest.mark.unit
+async def test_detailed_health_fake_redis_without_ping_is_unavailable(
+    api_app, authenticated_client
+):
+    import routers.health as health_router
+
+    api_app.dependency_overrides[health_router.get_optional_redis] = lambda: object()
+    try:
+        response = await authenticated_client.get("/health/detailed")
+    finally:
+        api_app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "degraded"
+    assert data["redis"] == "unavailable"
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
 async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
-    # Patch DB health to False
     import routers.health as health_router
 
     async def bad_db(*_args, **_kwargs):
@@ -39,7 +71,9 @@ async def test_detailed_health_db_unhealthy(monkeypatch, authenticated_client):
 
     monkeypatch.setattr(health_router, "check_database_connection", bad_db)
 
-    r = await authenticated_client.get("/health/detailed")
-    assert r.status_code == 200
-    data = r.json()
+    response = await authenticated_client.get("/health/detailed")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "degraded"
     assert data["database"] == "unhealthy"

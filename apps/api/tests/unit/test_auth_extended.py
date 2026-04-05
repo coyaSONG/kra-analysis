@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 
 from dependencies import auth as auth_dep
 from models.database_models import APIKey, Job, Prediction
+from policy.principal import AuthenticatedPrincipal, PolicyLimits
 
 
 @pytest.mark.unit
@@ -163,45 +164,51 @@ async def test_get_current_user(monkeypatch, db_session):
 @pytest.mark.asyncio
 async def test_require_permissions_allow_and_deny(db_session):
     """require_permissions allows when permission present and denies when missing."""
-    api_key = APIKey(
-        key="perm-key-123456",
-        name="PermUser",
-        is_active=True,
-        permissions=["read"],
-        created_at=datetime.now(UTC),
+    principal = AuthenticatedPrincipal(
+        principal_id="api_key:perm-key-123456",
+        subject_id="PermUser",
+        owner_ref="perm-key-123456",
+        credential_id="perm-key-123456",
+        display_name="PermUser",
+        auth_method="api_key",
+        permissions=frozenset({"read"}),
+        limits=PolicyLimits(),
     )
 
-    # When permission is present
-    allowed = await auth_dep.require_permissions(["read"], api_key, db_session)
-    assert allowed is api_key
+    allowed = await auth_dep.require_permissions(["read"], principal)
+    assert allowed is principal
 
-    # When permission is missing
     with pytest.raises(HTTPException) as exc:
-        await auth_dep.require_permissions(["admin"], api_key, db_session)
+        await auth_dep.require_permissions(["admin"], principal)
     assert exc.value.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_check_resource_access_paths(db_session):
-    # race: requires read permission
-    api_key = APIKey(
-        key="k1-1234567890", name="u1", is_active=True, permissions=["read"]
+    principal = AuthenticatedPrincipal(
+        principal_id="api_key:k1-1234567890",
+        subject_id="u1",
+        owner_ref="k1-1234567890",
+        credential_id="k1-1234567890",
+        display_name="u1",
+        auth_method="api_key",
+        permissions=frozenset({"read"}),
+        limits=PolicyLimits(),
     )
     assert (
-        await auth_dep.check_resource_access("race", "r1", api_key, db_session) is True
+        await auth_dep.check_resource_access("race", "r1", principal, db_session)
+        is True
     )
 
-    # job: only creator can access
     job = Job(type="collection", status="completed", parameters={}, created_by="u1")
     db_session.add(job)
     await db_session.commit()
     assert (
-        await auth_dep.check_resource_access("job", job.job_id, api_key, db_session)
+        await auth_dep.check_resource_access("job", job.job_id, principal, db_session)
         is True
     )
 
-    # prediction: only creator can access
     pred = Prediction(
         prediction_id="p1",
         race_id="r1",
@@ -212,6 +219,6 @@ async def test_check_resource_access_paths(db_session):
     db_session.add(pred)
     await db_session.commit()
     assert (
-        await auth_dep.check_resource_access("prediction", "p1", api_key, db_session)
+        await auth_dep.check_resource_access("prediction", "p1", principal, db_session)
         is True
     )

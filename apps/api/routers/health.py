@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from bootstrap.runtime import AppRuntime, get_runtime
 from config import settings
 from infrastructure.database import check_database_connection, get_db
-from infrastructure.redis_client import check_redis_connection, get_redis
+from infrastructure.redis_client import get_redis
 
 router = APIRouter()
 
@@ -33,28 +33,20 @@ async def detailed_health_check(
 ):
     """의존성 상태를 포함한 상세 헬스체크"""
     db_ok = await check_database_connection(db)
-    redis_ok = False
-    try:
-        if redis:
-            if hasattr(redis, "ping"):
-                try:
-                    ping_result = redis.ping()
-                    if inspect.isawaitable(ping_result):
-                        await ping_result
-                    redis_ok = True
-                except Exception:
-                    redis_ok = False
-            else:
-                redis_ok = True
-        else:
-            redis_ok = await check_redis_connection()
-    except Exception:
-        redis_ok = False
+    redis_status = "unavailable"
+    if redis is not None and hasattr(redis, "ping"):
+        try:
+            ping_result = redis.ping()
+            if inspect.isawaitable(ping_result):
+                await ping_result
+            redis_status = "healthy"
+        except Exception:
+            redis_status = "error"
 
     background_stats = runtime.observability.get_task_stats()
     return runtime.observability.build_health_snapshot(
         db_ok=db_ok,
-        redis_ok=redis_ok,
+        redis_status=redis_status,
         background_status=background_stats["status"],
         version=settings.version,
         now=time.time(),

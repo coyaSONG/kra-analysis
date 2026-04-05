@@ -5,10 +5,12 @@ from models.database_models import Job, JobStatus, JobType, UsageEvent
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_jobs_list_persists_usage_event(authenticated_client, db_session):
     response = await authenticated_client.get("/api/v2/jobs/")
 
     assert response.status_code == 200
+    assert response.headers.get("X-Request-ID")
     events = (await db_session.execute(select(UsageEvent))).scalars().all()
     assert len(events) == 1
     assert events[0].action == "jobs.list"
@@ -16,9 +18,11 @@ async def test_jobs_list_persists_usage_event(authenticated_client, db_session):
     assert events[0].status_code == 200
     assert events[0].outcome == "success"
     assert events[0].path == "/api/v2/jobs/"
+    assert events[0].request_id == response.headers["X-Request-ID"]
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_jobs_read_persists_usage_event(authenticated_client, db_session):
     job = Job(
         type=JobType.COLLECTION,
@@ -32,6 +36,7 @@ async def test_jobs_read_persists_usage_event(authenticated_client, db_session):
     response = await authenticated_client.get(f"/api/v2/jobs/{job.job_id}")
 
     assert response.status_code == 200
+    assert response.headers.get("X-Request-ID")
     events = (
         (
             await db_session.execute(
@@ -47,3 +52,4 @@ async def test_jobs_read_persists_usage_event(authenticated_client, db_session):
     assert events[0].action == "jobs.read"
     assert events[0].status_code == 200
     assert events[0].path == f"/api/v2/jobs/{job.job_id}"
+    assert events[0].request_id == response.headers["X-Request-ID"]

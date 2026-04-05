@@ -20,9 +20,6 @@ class PolicyAccountingMiddleware(BaseHTTPMiddleware):
         self._accountant = UsageAccountant()
 
     async def dispatch(self, request, call_next):
-        if not getattr(request.state, "request_id", None):
-            request.state.request_id = str(uuid.uuid4())
-
         response = None
         error_detail = None
         status_code = 500
@@ -35,6 +32,11 @@ class PolicyAccountingMiddleware(BaseHTTPMiddleware):
             error_detail = str(exc)
             raise
         finally:
+            if not getattr(request.state, "request_id", None):
+                request.state.request_id = request.headers.get("X-Request-ID") or str(
+                    uuid.uuid4()
+                )
+
             if response is not None and not response.headers.get("X-Request-ID"):
                 response.headers["X-Request-ID"] = request.state.request_id
 

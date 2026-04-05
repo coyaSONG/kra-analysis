@@ -2,15 +2,14 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from middleware.logging import LoggingMiddleware
+from middleware.logging import RequestLoggingMiddleware
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-@pytest.mark.asyncio
-async def test_logging_middleware_logs_body():
+async def test_request_logging_preserves_request_body_for_downstream_handlers():
     app = FastAPI()
-    app.add_middleware(LoggingMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
 
     @app.post("/echo")
     async def echo(item: dict):
@@ -19,6 +18,7 @@ async def test_logging_middleware_logs_body():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        r = await ac.post("/echo", json={"a": 1})
-        assert r.status_code == 200
-        assert r.json() == {"a": 1}
+        response = await ac.post("/echo", json={"a": 1})
+
+    assert response.status_code == 200
+    assert response.json() == {"a": 1}

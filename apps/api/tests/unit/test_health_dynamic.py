@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_detailed_health_uses_background_task_status(
-    monkeypatch, authenticated_client, api_app
+    authenticated_client, api_app
 ):
     import routers.health as health_router
     from bootstrap.runtime import AppRuntime, ObservabilityFacade, get_runtime
@@ -14,7 +14,7 @@ async def test_detailed_health_uses_background_task_status(
             self,
             *,
             db_ok: bool,
-            redis_ok: bool,
+            redis_status: str,
             background_status: str,
             version: str,
             now: float | None = None,
@@ -22,7 +22,7 @@ async def test_detailed_health_uses_background_task_status(
             return {
                 "status": "degraded",
                 "database": "healthy" if db_ok else "unhealthy",
-                "redis": "healthy" if redis_ok else "unhealthy",
+                "redis": redis_status,
                 "background_tasks": background_status,
                 "timestamp": 1.0,
                 "version": version,
@@ -54,7 +54,7 @@ async def test_detailed_health_uses_background_task_status(
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_detailed_health_reports_healthy_background_tasks(
-    monkeypatch, authenticated_client, api_app
+    authenticated_client, api_app
 ):
     import routers.health as health_router
     from bootstrap.runtime import AppRuntime, ObservabilityFacade, get_runtime
@@ -81,3 +81,4 @@ async def test_detailed_health_reports_healthy_background_tasks(
     assert data["background_tasks"] == "healthy"
     assert data["database"] == "healthy"
     assert data["redis"] == "healthy"
+    assert data["status"] == "healthy"

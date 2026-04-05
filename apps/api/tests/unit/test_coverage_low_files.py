@@ -99,7 +99,7 @@ class TestDetailedHealthBranches:
         try:
             r = await authenticated_client.get("/health/detailed")
             assert r.status_code == 200
-            assert r.json()["redis"] == "unhealthy"
+            assert r.json()["redis"] == "error"
         finally:
             api_app.dependency_overrides.pop(health_mod.get_optional_redis, None)
 
@@ -115,24 +115,20 @@ class TestDetailedHealthBranches:
         try:
             r = await authenticated_client.get("/health/detailed")
             assert r.status_code == 200
-            # redis has no ping attr -> redis_ok = True
-            assert r.json()["redis"] == "healthy"
+            assert r.json()["redis"] == "unavailable"
         finally:
             api_app.dependency_overrides.pop(health_mod.get_optional_redis, None)
 
-    async def test_redis_is_none_falls_back_to_check_redis_connection(
-        self, api_app, authenticated_client, monkeypatch
+    async def test_redis_is_none_reports_unavailable(
+        self, api_app, authenticated_client
     ):
         import routers.health as health_mod
 
         api_app.dependency_overrides[health_mod.get_optional_redis] = lambda: None
-        monkeypatch.setattr(
-            health_mod, "check_redis_connection", AsyncMock(return_value=False)
-        )
         try:
             r = await authenticated_client.get("/health/detailed")
             assert r.status_code == 200
-            assert r.json()["redis"] == "unhealthy"
+            assert r.json()["redis"] == "unavailable"
         finally:
             api_app.dependency_overrides.pop(health_mod.get_optional_redis, None)
 

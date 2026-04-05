@@ -53,6 +53,12 @@ def _mask_sensitive_fields(data: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _mask_payload(data: Any) -> Any:
+    if isinstance(data, Mapping):
+        return _mask_sensitive_fields(data)
+    return data
+
+
 def increment_request_count() -> None:
     global _request_count
     _request_count += 1
@@ -62,18 +68,16 @@ def get_request_count() -> int:
     return _request_count
 
 
-class LoggingMiddleware(BaseHTTPMiddleware):
-    """구조화된 로깅 미들웨어"""
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    """상세 요청/응답 로깅 미들웨어"""
 
     async def dispatch(self, request: Request, call_next):
-        # 요청 ID 생성
+        increment_request_count()
         request_id = str(uuid.uuid4())
         request_id_var.set(request_id)
-
-        # 시작 시간
+        request.state.request_id = request_id
         start_time = time.time()
 
-        # 요청 정보 추출
         request_info: dict[str, Any] = {
             "request_id": request_id,
             "method": request.method,
@@ -83,61 +87,10 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             "client_host": request.client.host if request.client else None,
             "user_agent": request.headers.get("user-agent", ""),
         }
-
-        # API 키 확인 (헤더에서)
         if "x-api-key" in request.headers:
             request_info["has_api_key"] = True
 
-        # 요청 로깅
         logger.info("request_started", **request_info)
-
-        # 에러 처리
-        response = None
-        error_occurred = False
-        error_detail = None
-
-        try:
-            # 요청 처리
-            response = await call_next(request)
-
-        except Exception as e:
-            error_occurred = True
-            error_detail = str(e)
-            logger.error(
-                "request_failed",
-                request_id=request_id,
-                error=error_detail,
-                exc_info=True,
-            )
-            raise
-
-        finally:
-            # 처리 시간 계산
-            duration = time.time() - start_time
-
-            # 응답 로깅
-            if response:
-                logger.info(
-                    "request_completed",
-                    request_id=request_id,
-                    method=request.method,
-                    path=request.url.path,
-                    status_code=response.status_code,
-                    duration_ms=round(duration * 1000, 2),
-                    error=error_occurred,
-                )
-
-                # 응답 헤더에 요청 ID 추가
-                response.headers["X-Request-ID"] = request_id
-
-        return response
-
-
-class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """상세 요청/응답 로깅 미들웨어"""
-
-    async def dispatch(self, request: Request, call_next):
-        increment_request_count()
 
         # 요청 바디 읽기 (주의: 메모리 사용)
         request_body = None
@@ -157,15 +110,51 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         if request_body and len(request_body) < 10000:  # 10KB 제한
             try:
                 body_json = json.loads(request_body)
-                logger.debug("request_body", path=request.url.path, body=body_json)
+                logger.debug(
+                    "request_body",
+                    request_id=request_id,
+                    path=request.url.path,
+                    body=_mask_payload(body_json),
+                )
             except Exception:
                 logger.debug(
                     "request_body_raw",
+                    request_id=request_id,
                     path=request.url.path,
                     body_length=len(request_body),
                 )
 
-        # 응답 처리
-        response = await call_next(request)
+        response = None
+        error_detail = None
+        try:
+            response = await call_next(request)
+            duration = time.time() - start_time
+            logger.info(
+                "request_completed",
+                request_id=request_id,
+                method=request.method,
+                path=request.url.path,
+                status_code=response.status_code,
+                duration_ms=round(duration * 1000, 2),
+                error=False,
+            )
+            if not response.headers.get("X-Request-ID"):
+                response.headers["X-Request-ID"] = request_id
+            return response
+        except Exception as exc:
+            error_detail = str(exc)
+            duration = time.time() - start_time
+            logger.error(
+                "request_failed",
+                request_id=request_id,
+                method=request.method,
+                path=request.url.path,
+                duration_ms=round(duration * 1000, 2),
+                error=error_detail,
+                exc_info=True,
+            )
+            raise
 
-        return response
+
+class LoggingMiddleware(RequestLoggingMiddleware):
+    """Backward-compatible alias for the canonical request logging middleware."""

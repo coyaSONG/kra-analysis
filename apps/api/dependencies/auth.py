@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 import structlog
 from fastapi import Depends, Header, HTTPException, Request, status
+from fastapi.params import Depends as DependsMarker
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError, JWTError
 from sqlalchemy import or_, select
@@ -31,6 +32,10 @@ _usage_accountant = UsageAccountant()
 
 class APIKeyBackendError(RuntimeError):
     """Raised when API key verification cannot reach or update backing storage."""
+
+
+def _resolve_dep_arg(value):
+    return None if isinstance(value, DependsMarker) else value
 
 
 def _resolve_presented_api_key(
@@ -195,20 +200,28 @@ def require_action(action: PolicyAction):
 
 async def require_permissions(
     required_permissions: list[str],
-    api_key_obj: APIKey = Depends(require_api_key_record),
-    db: AsyncSession = Depends(get_db),
-) -> APIKey:
+    principal: AuthenticatedPrincipal | None = Depends(require_principal),
+    api_key_obj=None,
+) -> AuthenticatedPrincipal | APIKey:
     """특정 권한 필요 의존성"""
-    # api_key_obj is already validated by require_api_key dependency
+    principal = _resolve_dep_arg(principal)
+    api_key_obj = _resolve_dep_arg(api_key_obj)
 
-    # 권한 확인
-    user_permissions: list[str] = api_key_obj.permissions or []
-    if not all(perm in user_permissions for perm in required_permissions):
+    if api_key_obj is not None and principal is None:
+        user_permissions = api_key_obj.permissions or []
+        if not all(perm in user_permissions for perm in required_permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+            )
+        return api_key_obj
+
+    assert principal is not None
+    if not all(perm in principal.permissions for perm in required_permissions):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
         )
 
-    return api_key_obj
+    return principal
 
 
 # JWT 토큰 관련 (선택적 구현)
@@ -262,33 +275,48 @@ async def get_current_user(
 
 # 권한 체크 데코레이터 (편의 함수)
 async def _require_admin_permissions(
-    api_key_obj: APIKey = Depends(require_api_key_record),
-    db: AsyncSession = Depends(get_db),
-) -> APIKey:
+    principal: AuthenticatedPrincipal | None = Depends(require_principal),
+    api_key_obj=None,
+    db: AsyncSession | None = None,
+) -> AuthenticatedPrincipal | APIKey:
     """관리자 권한 확인"""
-    return await require_permissions(["admin"], api_key_obj, db)
+    return await require_permissions(["admin"], principal, api_key_obj)
 
 
 async def _require_write_permissions(
-    api_key_obj: APIKey = Depends(require_api_key_record),
-    db: AsyncSession = Depends(get_db),
-) -> APIKey:
+    principal: AuthenticatedPrincipal | None = Depends(require_principal),
+    api_key_obj=None,
+    db: AsyncSession | None = None,
+) -> AuthenticatedPrincipal | APIKey:
     """쓰기 권한 확인"""
-    return await require_permissions(["write"], api_key_obj, db)
+    return await require_permissions(["write"], principal, api_key_obj)
 
 
-def require_admin(api_key_obj: APIKey = Depends(_require_admin_permissions)):
+def require_admin(
+    principal: AuthenticatedPrincipal | None = Depends(_require_admin_permissions),
+    api_key_obj=None,
+):
     """관리자 권한 필요"""
-    return api_key_obj
+    principal = _resolve_dep_arg(principal)
+    api_key_obj = _resolve_dep_arg(api_key_obj)
+    return api_key_obj if api_key_obj is not None else principal
 
 
-def require_write(api_key_obj: APIKey = Depends(_require_write_permissions)):
+def require_write(
+    principal: AuthenticatedPrincipal | None = Depends(_require_write_permissions),
+    api_key_obj=None,
+):
     """쓰기 권한 필요"""
-    return api_key_obj
+    principal = _resolve_dep_arg(principal)
+    api_key_obj = _resolve_dep_arg(api_key_obj)
+    return api_key_obj if api_key_obj is not None else principal
 
 
 async def check_resource_access(
-    resource_type: str, resource_id: str, api_key: APIKey, db: AsyncSession
+    resource_type: str,
+    resource_id: str,
+    principal: AuthenticatedPrincipal,
+    db: AsyncSession,
 ) -> bool:
     """
     리소스 접근 권한 확인
@@ -303,19 +331,24 @@ async def check_resource_access(
         접근 가능 여부
     """
     # 관리자는 모든 리소스 접근 가능
-    if "admin" in (api_key.permissions or []):
+    if "admin" in principal.permissions:
         return True
 
     owner_candidates = tuple(
         candidate
-        for candidate in {getattr(api_key, "key", None), getattr(api_key, "name", None)}
+        for candidate in {
+            principal.owner_ref,
+            principal.credential_id,
+            principal.display_name,
+            principal.subject_id,
+        }
         if isinstance(candidate, str) and candidate
     )
 
     # 리소스별 접근 권한 체크
     if resource_type == "race":
         # 경주 데이터는 읽기 권한만 있으면 접근 가능
-        return "read" in (api_key.permissions or [])
+        return "read" in principal.permissions
 
     elif resource_type == "job":
         # 작업은 생성자만 접근 가능
@@ -367,9 +400,18 @@ def require_resource_access(resource_type: str, resource_id_param: str = "resour
 
     async def dependency(
         request: Request,
-        api_key_obj: APIKey = Depends(require_api_key_record),
+        principal: AuthenticatedPrincipal | None = Depends(require_principal),
+        api_key_obj=None,
         db: AsyncSession = Depends(get_db),
     ):
+        principal = _resolve_dep_arg(principal)
+        api_key_obj = _resolve_dep_arg(api_key_obj)
+        effective_principal = principal
+        if effective_principal is None and api_key_obj is not None:
+            effective_principal = _build_principal_from_api_key(
+                str(api_key_obj.key), api_key_obj, is_environment_key=False
+            )
+
         resource_id = request.path_params.get(resource_id_param)
 
         if not resource_id:
@@ -379,7 +421,7 @@ def require_resource_access(resource_type: str, resource_id_param: str = "resour
             )
 
         has_access = await check_resource_access(
-            resource_type, resource_id, api_key_obj, db
+            resource_type, resource_id, effective_principal or api_key_obj, db
         )
 
         if not has_access:
@@ -388,6 +430,12 @@ def require_resource_access(resource_type: str, resource_id_param: str = "resour
                 detail=f"Access denied to {resource_type} resource",
             )
 
+        if api_key_obj is not None:
+            return api_key_obj
+
+        if effective_principal is not None:
+            request.state.principal = effective_principal
+            return effective_principal
         return api_key_obj
 
     return dependency

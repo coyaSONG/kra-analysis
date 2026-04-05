@@ -319,7 +319,7 @@ class TestDetailedHealthCheckDirect:
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_redis_ping_raises(self, monkeypatch):
-        """Line 45-46: redis.ping() raises -> redis_ok=False"""
+        """redis.ping() raises -> explicit error state."""
         from routers import health as health_mod
 
         monkeypatch.setattr(
@@ -337,12 +337,13 @@ class TestDetailedHealthCheckDirect:
             runtime=self._make_runtime(),
         )
 
-        assert result["redis"] == "unhealthy"
+        assert result["redis"] == "error"
+        assert result["status"] == "degraded"
 
     @pytest.mark.asyncio
     @pytest.mark.unit
     async def test_redis_no_ping_attr(self, monkeypatch):
-        """Line 47-48: redis has no ping attr -> redis_ok=True"""
+        """An object without ping is treated as unavailable, not healthy."""
         from routers import health as health_mod
 
         monkeypatch.setattr(
@@ -359,19 +360,17 @@ class TestDetailedHealthCheckDirect:
             runtime=self._make_runtime(),
         )
 
-        assert result["redis"] == "healthy"
+        assert result["redis"] == "unavailable"
+        assert result["status"] == "degraded"
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_redis_none_falls_back_to_check(self, monkeypatch):
-        """Line 49-50: redis is None -> check_redis_connection()"""
+    async def test_redis_none_reports_unavailable(self, monkeypatch):
+        """A missing optional dependency is surfaced as unavailable."""
         from routers import health as health_mod
 
         monkeypatch.setattr(
             health_mod, "check_database_connection", AsyncMock(return_value=True)
-        )
-        monkeypatch.setattr(
-            health_mod, "check_redis_connection", AsyncMock(return_value=True)
         )
         monkeypatch.setattr(health_mod.settings, "version", "test")
 
@@ -381,21 +380,17 @@ class TestDetailedHealthCheckDirect:
             runtime=self._make_runtime(),
         )
 
-        assert result["redis"] == "healthy"
+        assert result["redis"] == "unavailable"
+        assert result["status"] == "degraded"
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_redis_none_check_raises(self, monkeypatch):
-        """Line 51-52: check_redis_connection() raises -> redis_ok=False"""
+    async def test_redis_none_keeps_degraded_without_fallback_probe(self, monkeypatch):
+        """A missing Redis dependency does not trigger a second probe path."""
         from routers import health as health_mod
 
         monkeypatch.setattr(
             health_mod, "check_database_connection", AsyncMock(return_value=True)
-        )
-        monkeypatch.setattr(
-            health_mod,
-            "check_redis_connection",
-            AsyncMock(side_effect=ConnectionError("refused")),
         )
         monkeypatch.setattr(health_mod.settings, "version", "test")
 
@@ -405,7 +400,8 @@ class TestDetailedHealthCheckDirect:
             runtime=self._make_runtime(),
         )
 
-        assert result["redis"] == "unhealthy"
+        assert result["redis"] == "unavailable"
+        assert result["status"] == "degraded"
 
 
 # ===================================================================

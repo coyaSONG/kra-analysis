@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
+from middleware import logging as logging_middleware
 from models.database_models import DataStatus, Job, JobStatus, JobType, Race
 
 
@@ -36,6 +37,54 @@ class TestHealthEndpoints:
         assert data["database"] == "healthy"
         assert data["redis"] == "healthy"
         assert "background_tasks" in data
+
+    @pytest.mark.integration
+    async def test_detailed_health_check_reports_degraded_redis_error(
+        self, authenticated_client: AsyncClient, api_app
+    ):
+        import routers.health as health_router
+
+        class FailPing:
+            def ping(self):
+                raise RuntimeError("redis down")
+
+        api_app.dependency_overrides[health_router.get_optional_redis] = (
+            lambda: FailPing()
+        )
+        try:
+            response = await authenticated_client.get("/health/detailed")
+        finally:
+            api_app.dependency_overrides.clear()
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "degraded"
+        assert data["redis"] == "error"
+
+    @pytest.mark.integration
+    async def test_health_check_request_id_logging(
+        self, monkeypatch, authenticated_client: AsyncClient
+    ):
+        captured = []
+
+        def fake_info(event, **kwargs):
+            captured.append((event, kwargs))
+
+        monkeypatch.setattr(logging_middleware.logger, "info", fake_info)
+
+        response = await authenticated_client.get("/health")
+
+        assert response.status_code == 200
+        request_id = response.headers["X-Request-ID"]
+        started = next(
+            kwargs for event, kwargs in captured if event == "request_started"
+        )
+        completed = next(
+            kwargs for event, kwargs in captured if event == "request_completed"
+        )
+        assert started["request_id"] == request_id
+        assert completed["request_id"] == request_id
+        assert completed["path"] == "/health"
 
 
 class TestCollectionEndpoints:

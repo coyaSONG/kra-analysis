@@ -31,7 +31,7 @@ class ObservabilityFacade:
         self,
         *,
         db_ok: bool,
-        redis_ok: bool,
+        redis_status: str,
         background_status: str,
         version: str,
         now: float | None = None,
@@ -39,13 +39,13 @@ class ObservabilityFacade:
         timestamp = time.time() if now is None else now
         overall_status = (
             "healthy"
-            if db_ok and redis_ok and background_status == "healthy"
+            if db_ok and redis_status == "healthy" and background_status == "healthy"
             else "degraded"
         )
         return {
             "status": overall_status,
             "database": "healthy" if db_ok else "unhealthy",
-            "redis": "healthy" if redis_ok else "unhealthy",
+            "redis": redis_status,
             "background_tasks": background_status,
             "timestamp": timestamp,
             "version": version,

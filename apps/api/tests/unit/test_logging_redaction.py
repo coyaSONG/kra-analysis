@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from middleware import logging as logging_middleware
-from middleware.logging import LoggingMiddleware
+from middleware.logging import RequestLoggingMiddleware
 
 
 @pytest.mark.unit
@@ -27,9 +27,9 @@ def test_mask_sensitive_fields_redacts_only_sensitive_keys():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_logging_middleware_masks_sensitive_headers_and_query_params(monkeypatch):
+async def test_request_logging_masks_sensitive_headers_and_query_params(monkeypatch):
     app = FastAPI()
-    app.add_middleware(LoggingMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
 
     captured = []
 
@@ -68,3 +68,41 @@ async def test_logging_middleware_masks_sensitive_headers_and_query_params(monke
     assert request_started["headers"]["x-request-source"] == "dashboard"
     assert request_started["user_agent"] == "test-client"
     assert request_started["has_api_key"] is True
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_request_logging_masks_small_json_body(monkeypatch):
+    app = FastAPI()
+    app.add_middleware(RequestLoggingMiddleware)
+
+    debug_events = []
+
+    def fake_debug(event, **kwargs):
+        debug_events.append((event, kwargs))
+
+    monkeypatch.setattr(logging_middleware.logger, "debug", fake_debug)
+
+    @app.post("/echo")
+    async def echo(item: dict):
+        return item
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.post(
+            "/echo",
+            json={
+                "api_key": "secret-12345",
+                "authorization": "Bearer top-secret-token",
+                "page": 1,
+            },
+        )
+
+    assert response.status_code == 200
+    request_body = next(
+        kwargs for event, kwargs in debug_events if event == "request_body"
+    )
+    assert request_body["body"]["api_key"] == "secr***"
+    assert request_body["body"]["authorization"] == "Bear***"
+    assert request_body["body"]["page"] == 1
