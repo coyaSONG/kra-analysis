@@ -17,7 +17,7 @@ scope:
     - "packages/scripts/autoresearch/run_rrx_propose.sh"
     - ".ralph/**"
   maxFilesChanged: 5
-  maxLineDelta: 200
+  maxLineDelta: 300
 
 proposer:
   type: command
