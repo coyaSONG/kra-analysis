@@ -83,6 +83,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "l2_regularization=0.4"
+    "last_mutation": "baseline-seed"
   }
 }
