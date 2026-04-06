@@ -49,5 +49,11 @@ ratchet:
   metric: dev_exact_rate
   epsilon: 0
 
+stopping:
+  target:
+    metric: dev_exact_rate
+    op: ">="
+    value: 0.8
+
 storage:
   root: .ralph
