@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 from pathlib import Path
 
 from research_clean import SAFE_FEATURES
+from rrx_propose_llm import generate_llm_proposal
 
 # Early-prediction search must stay non-market, but the previous proposer was
 # too narrow to justify long plateau runs. Expand around the current frontier
@@ -42,6 +44,15 @@ FEATURE_BUNDLES = {
     "legacy_totals": ["jockey_total_place_rate", "trainer_total_place_rate"],
 }
 
+ALLOWED_HGB_PARAM_VALUES = {
+    "max_depth": [4, 5, 6, 7, 8, None],
+    "learning_rate": [0.03, 0.04, 0.05, 0.06, 0.08],
+    "max_iter": [400, 500, 600, 700, 800],
+    "min_samples_leaf": [15, 20, 25, 30, 35, 40],
+    "l2_regularization": [0.2, 0.3, 0.4, 0.5, 0.6, 0.8],
+}
+ALLOWED_POSITIVE_WEIGHTS = [0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
+
 
 def _find_runs_dir(start: Path) -> Path | None:
     current = start.resolve()
@@ -64,6 +75,41 @@ def _has_accepted_run(start: Path) -> bool:
         if payload.get("status") == "accepted":
             return True
     return False
+
+
+def _load_recent_runs(start: Path, limit: int = 8) -> list[dict]:
+    runs_dir = _find_runs_dir(start)
+    if runs_dir is None:
+        return []
+    selected: list[dict] = []
+    for run_file in sorted(runs_dir.glob("run-*.json"))[-limit:]:
+        try:
+            payload = json.loads(run_file.read_text())
+        except Exception:
+            continue
+        if payload.get("status") not in {"rejected", "accepted"}:
+            continue
+        mutation: list[str] = []
+        log_path = ((payload.get("logs") or {}).get("proposeStdoutPath")) or ""
+        if log_path:
+            try:
+                proposal_log = json.loads(Path(log_path).read_text())
+                raw_mutation = proposal_log.get("mutation") or []
+                if isinstance(raw_mutation, list):
+                    mutation = [str(item) for item in raw_mutation]
+            except Exception:
+                mutation = []
+        selected.append(
+            {
+                "runId": payload.get("runId"),
+                "status": payload.get("status"),
+                "value": (
+                    ((payload.get("metrics") or {}).get("dev_exact_rate")) or {}
+                ).get("value"),
+                "mutation": mutation,
+            }
+        )
+    return selected
 
 
 def _mutate_hgb(params: dict, rng: random.Random) -> list[str]:
@@ -141,6 +187,48 @@ def _mutate_features(
     return ordered, deduped_notes
 
 
+def _apply_llm_mutation(config: dict, recent_runs: list[dict]) -> list[str]:
+    notes: list[str] = []
+    proposal = generate_llm_proposal(
+        config=config,
+        allowed_optional_features=OPTIONAL_FEATURES,
+        bundles=FEATURE_BUNDLES,
+        recent_runs=recent_runs,
+    )
+
+    params = config["model"].setdefault("params", {})
+    for key, allowed_values in ALLOWED_HGB_PARAM_VALUES.items():
+        if key not in proposal.params:
+            continue
+        value = proposal.params[key]
+        if value in allowed_values:
+            params[key] = value
+            notes.append(f"llm:{key}={value}")
+
+    weight = proposal.positive_class_weight
+    if weight in ALLOWED_POSITIVE_WEIGHTS:
+        config["model"]["positive_class_weight"] = weight
+        notes.append(f"llm:positive_weight={weight}")
+
+    selected = set(config["features"])
+    for feature in proposal.drop_features:
+        if feature in selected:
+            selected.remove(feature)
+            notes.append(f"llm:drop:{feature}")
+    for feature in proposal.add_features:
+        if feature not in selected:
+            selected.add(feature)
+            notes.append(f"llm:add:{feature}")
+
+    if not any(feature in selected for feature in OPTIONAL_FEATURES):
+        _apply_bundle(selected, "skill_ranks", True, notes)
+
+    config["features"] = [feature for feature in SAFE_FEATURES if feature in selected]
+    rationale = proposal.rationale or "llm-proposed bounded mutation"
+    notes.append(f"llm:rationale:{rationale}")
+    return list(dict.fromkeys(notes))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -150,6 +238,9 @@ def main() -> None:
     config_path = Path(args.config)
     config = json.loads(config_path.read_text())
     rng = random.Random(args.seed)
+    mode = os.environ.get("RRX_PROPOSER_MODE", "hybrid").strip().lower()
+    llm_ratio = float(os.environ.get("RRX_LLM_RATIO", "0.3"))
+    recent_runs = _load_recent_runs(Path.cwd())
 
     if not _has_accepted_run(Path.cwd()):
         baseline_note = "baseline-seed"
@@ -174,17 +265,36 @@ def main() -> None:
     params.setdefault("max_iter", 600)
     params.setdefault("min_samples_leaf", 30)
     params.setdefault("l2_regularization", 0.3)
-    notes.extend(_mutate_hgb(params, rng))
+    use_llm = mode == "llm" or (mode == "hybrid" and rng.random() < llm_ratio)
 
-    if rng.random() < 0.7:
-        config["model"]["positive_class_weight"] = rng.choice(
-            [0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
-        )
-        notes.append(f"positive_weight={config['model']['positive_class_weight']}")
+    if use_llm:
+        try:
+            notes.extend(_apply_llm_mutation(config, recent_runs))
+        except Exception as exc:
+            notes.append(f"llm:fallback:{type(exc).__name__}")
+            notes.extend(_mutate_hgb(params, rng))
+            if rng.random() < 0.7:
+                config["model"]["positive_class_weight"] = rng.choice(
+                    ALLOWED_POSITIVE_WEIGHTS
+                )
+                notes.append(
+                    f"positive_weight={config['model']['positive_class_weight']}"
+                )
+            features, feature_notes = _mutate_features(config["features"], rng)
+            config["features"] = features
+            notes.extend(feature_notes)
+    else:
+        notes.extend(_mutate_hgb(params, rng))
+        if rng.random() < 0.7:
+            config["model"]["positive_class_weight"] = rng.choice(
+                ALLOWED_POSITIVE_WEIGHTS
+            )
+            notes.append(f"positive_weight={config['model']['positive_class_weight']}")
+        features, feature_notes = _mutate_features(config["features"], rng)
+        config["features"] = features
+        notes.extend(feature_notes)
 
-    features, feature_notes = _mutate_features(config["features"], rng)
-    config["features"] = features
-    notes.extend(feature_notes)
+    config["notes"]["proposer_mode"] = "llm" if use_llm else "random"
     config["notes"]["last_mutation"] = ", ".join(notes)
 
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n")
