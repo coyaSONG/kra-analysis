@@ -23,11 +23,11 @@ scope:
 
 proposer:
   type: command
-  command: "/Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_propose.sh"
+  command: "sh /Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_propose.sh"
 
 experiment:
   run:
-    command: "/Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_experiment.sh"
+    command: "sh /Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_experiment.sh"
   outputs:
     - id: holdout_seed_summary
       path: .ralph/outputs/holdout_seed_summary_report.json
@@ -39,7 +39,7 @@ metrics:
       direction: maximize
       extractor:
         type: command
-        command: "/Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_metric.sh"
+        command: "sh /Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_metric.sh"
         parser: plain_number
 
 frontier:
