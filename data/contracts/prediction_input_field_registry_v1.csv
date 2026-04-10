@@ -1,0 +1,71 @@
+prediction_input_name,metadata_schema_version,field_path,field_role,source_api,source_field,availability_stage,validation_status,operational_status,train_inference_flag,value_type,mutable_after_publish,notes
+age,prerace-field-metadata-v1,model_input.age,source,API214_1,horses[].age,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+age_prime,prerace-field-metadata-v1,model_input.age_prime,derived,INTERNAL,horses[].computed_features.age_prime,L0,documented,허용,ALLOW,scalar,가변,age 기반 전성기 나이 플래그
+allowance_flag,prerace-field-metadata-v1,model_input.allowance_flag,derived,API214_1,horses[].wg_budam_bigo,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+budam_code,prerace-field-metadata-v1,model_input.budam_code,derived,INTERNAL,race_plan.budam,L-1,documented,허용,ALLOW,scalar,가변,부담조건 코드화; 현재 구현은 race_info raw 참조 경로와 분리 필요
+burden_ratio,prerace-field-metadata-v1,model_input.burden_ratio,derived,INTERNAL,horses[].computed_features.burden_ratio,L0,documented,허용,ALLOW,scalar,가변,wg_budam/wg_hr 기반 파생
+cancelled_count,prerace-field-metadata-v1,model_input.cancelled_count,derived,INTERNAL,horses[].computed_features.cancelled_count,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,취소마 수
+class_code,prerace-field-metadata-v1,model_input.class_code,derived,INTERNAL,horses[].class_rank,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+days_since_training,prerace-field-metadata-v1,model_input.days_since_training,derived,INTERNAL,horses[].computed_features.days_since_training,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,직전 조교 경과일
+dist,prerace-field-metadata-v1,model_input.dist,source,API72_2,race_plan.rc_dist,L-1,documented,허용,ALLOW,scalar,가변,거리 직접 사용; 현재 구현은 race_info raw 참조 경로와 분리 필요
+draw_no,prerace-field-metadata-v1,model_input.draw_no,derived,API214_1,horses[].chul_no,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+draw_rr,prerace-field-metadata-v1,model_input.draw_rr,derived,INTERNAL,model_input.draw_no,L0,documented,허용,ALLOW,scalar,가변,draw_no race-relative 정규화
+field_size,prerace-field-metadata-v1,model_input.field_size,derived,INTERNAL,horses[].computed_features.field_size,L0,documented,허용,ALLOW,scalar,가변,출전마 수 파생
+field_size_live,prerace-field-metadata-v1,model_input.field_size_live,derived,INTERNAL,horses[].computed_features.field_size_live,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,취소 반영 실출전 두수
+gap_3rd_4th,prerace-field-metadata-v1,model_input.gap_3rd_4th,derived,INTERNAL,horses[].computed_features.gap_3rd_4th,L0,documented,허용,ALLOW,scalar,가변,상위권 스킬 격차
+horse_low_sample,prerace-field-metadata-v1,model_input.horse_low_sample,derived,INTERNAL,horses[].computed_features.horse_low_sample|horses[].hrDetail.rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+horse_place_rate,prerace-field-metadata-v1,model_input.horse_place_rate,derived,INTERNAL,horses[].computed_features.horse_place_rate|horses[].hrDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+horse_place_rate_rr,prerace-field-metadata-v1,model_input.horse_place_rate_rr,derived,INTERNAL,model_input.horse_place_rate|race-relative rank,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+horse_skill_rank,prerace-field-metadata-v1,model_input.horse_skill_rank,derived,INTERNAL,horses[].computed_features.horse_skill_rank,L0,documented,허용,ALLOW,scalar,가변,horse_top3_skill 순위
+horse_starts_y,prerace-field-metadata-v1,model_input.horse_starts_y,derived,INTERNAL,horses[].computed_features.horse_starts_y|horses[].hrDetail.rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+horse_top3_skill,prerace-field-metadata-v1,model_input.horse_top3_skill,derived,INTERNAL,horses[].computed_features.horse_top3_skill|horses[].hrDetail.*,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+horse_win_rate,prerace-field-metadata-v1,model_input.horse_win_rate,derived,INTERNAL,horses[].computed_features.horse_win_rate|horses[].hrDetail.ord1CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+hr_starts_t,prerace-field-metadata-v1,model_input.hr_starts_t,derived,INTERNAL,horses[].hrDetail.rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+hr_starts_y,prerace-field-metadata-v1,model_input.hr_starts_y,derived,INTERNAL,horses[].hrDetail.rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+is_handicap,prerace-field-metadata-v1,model_input.is_handicap,derived,INTERNAL,race_plan.budam,L-1,documented,허용,ALLOW,scalar,가변,핸디캡 여부; 현재 구현은 race_info raw 참조 경로와 분리 필요
+is_large,prerace-field-metadata-v1,model_input.is_large,derived,INTERNAL,model_input.field_size,L0,documented,허용,ALLOW,scalar,가변,field_size 기반 대두수 플래그
+is_mile,prerace-field-metadata-v1,model_input.is_mile,derived,INTERNAL,race_plan.rc_dist,L-1,documented,허용,ALLOW,scalar,가변,거리 구간 파생; 현재 구현은 race_info raw 참조 경로와 분리 필요
+is_route,prerace-field-metadata-v1,model_input.is_route,derived,INTERNAL,race_plan.rc_dist,L-1,documented,허용,ALLOW,scalar,가변,거리 구간 파생; 현재 구현은 race_info raw 참조 경로와 분리 필요
+is_sprint,prerace-field-metadata-v1,model_input.is_sprint,derived,INTERNAL,race_plan.rc_dist,L-1,documented,허용,ALLOW,scalar,가변,거리 구간 파생; 현재 구현은 race_info raw 참조 경로와 분리 필요
+jk_place_rate_y,prerace-field-metadata-v1,model_input.jk_place_rate_y,derived,INTERNAL,model_input.jk_place_rate_y|horses[].jkDetail.ord1CntY|ord2CntY|ord3CntY|rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jk_skill,prerace-field-metadata-v1,model_input.jk_skill,derived,INTERNAL,horses[].computed_features.jk_skill|horses[].jkStats.*|horses[].jkDetail.*,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jk_skill_rank,prerace-field-metadata-v1,model_input.jk_skill_rank,derived,INTERNAL,horses[].computed_features.jk_skill_rank,L0,documented,허용,ALLOW,scalar,가변,jk_skill 순위
+jockey_form,prerace-field-metadata-v1,model_input.jockey_form,derived,INTERNAL,horses[].computed_features.jockey_form|horses[].jkDetail.winRateY|winRateT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jockey_place_rate,prerace-field-metadata-v1,model_input.jockey_place_rate,derived,INTERNAL,horses[].computed_features.jockey_place_rate|horses[].jkDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jockey_place_rate_rr,prerace-field-metadata-v1,model_input.jockey_place_rate_rr,derived,INTERNAL,model_input.jockey_place_rate|race-relative rank,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jockey_recent_win_rate,prerace-field-metadata-v1,model_input.jockey_recent_win_rate,derived,INTERNAL,horses[].computed_features.jockey_recent_win_rate|horses[].jkDetail.ord1CntY|rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jockey_total_place_rate,prerace-field-metadata-v1,model_input.jockey_total_place_rate,derived,INTERNAL,model_input.jockey_total_place_rate|horses[].jkDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+jockey_win_rate,prerace-field-metadata-v1,model_input.jockey_win_rate,derived,INTERNAL,horses[].computed_features.jockey_win_rate|horses[].jkDetail.ord1CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+odds_rank,prerace-field-metadata-v1,model_input.odds_rank,derived,INTERNAL,horses[].computed_features.odds_rank,?,pending_measurement,보류,HOLD,scalar,가변,odds 의존 파생이므로 보류
+owner_skill,prerace-field-metadata-v1,model_input.owner_skill,derived,INTERNAL,horses[].computed_features.owner_skill|horses[].owDetail.ord1CntY|rcCntY|ord1CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+owner_win_rate,prerace-field-metadata-v1,model_input.owner_win_rate,derived,INTERNAL,horses[].computed_features.owner_win_rate|horses[].owDetail.ord1CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+plcOdds,prerace-field-metadata-v1,model_input.plcOdds,source,API214_1,horses[].plc_odds,?,pending_measurement,보류,HOLD,scalar,가변,공개 시점 실측 전까지 보류
+plcOdds_rr,prerace-field-metadata-v1,model_input.plcOdds_rr,derived,INTERNAL,model_input.plcOdds|race-relative rank,?,pending_measurement,보류,HOLD,scalar,가변,odds 의존 race-relative 파생이므로 보류
+rating,prerace-field-metadata-v1,model_input.rating,source,API214_1,horses[].rating,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+rating_rank,prerace-field-metadata-v1,model_input.rating_rank,derived,INTERNAL,horses[].computed_features.rating_rank,L0,documented,허용,ALLOW,scalar,가변,동일 경주 내 rating 순위
+rating_rr,prerace-field-metadata-v1,model_input.rating_rr,derived,INTERNAL,model_input.rating,L0,documented,허용,ALLOW,scalar,가변,rating race-relative 정규화
+recent_training,prerace-field-metadata-v1,model_input.recent_training,derived,INTERNAL,horses[].computed_features.recent_training,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,최근 조교 여부
+rest_days,prerace-field-metadata-v1,model_input.rest_days,derived,INTERNAL,horses[].ilsu,L0,documented,허용,ALLOW,scalar,가변,ilsu 직접 사용
+rest_risk_code,prerace-field-metadata-v1,model_input.rest_risk_code,derived,INTERNAL,horses[].computed_features.rest_risk,L0,documented,허용,ALLOW,scalar,가변,ilsu 기반 휴양 리스크 코드화
+sex_code,prerace-field-metadata-v1,model_input.sex_code,derived,API214_1,horses[].sex,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+total_place_rate,prerace-field-metadata-v1,model_input.total_place_rate,derived,INTERNAL,model_input.total_place_rate|horses[].hrDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+total_place_rate_rr,prerace-field-metadata-v1,model_input.total_place_rate_rr,derived,INTERNAL,model_input.total_place_rate|race-relative rank,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+tr_place_rate_y,prerace-field-metadata-v1,model_input.tr_place_rate_y,derived,INTERNAL,model_input.tr_place_rate_y|horses[].trDetail.ord1CntY|ord2CntY|ord3CntY|rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+tr_skill,prerace-field-metadata-v1,model_input.tr_skill,derived,INTERNAL,horses[].computed_features.tr_skill|horses[].trDetail.*,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+tr_skill_rank,prerace-field-metadata-v1,model_input.tr_skill_rank,derived,INTERNAL,horses[].computed_features.tr_skill_rank,L0,documented,허용,ALLOW,scalar,가변,tr_skill 순위
+track_pct,prerace-field-metadata-v1,model_input.track_pct,derived,INTERNAL,track.water_percent,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,주로 수분율 수치화
+trainer_place_rate,prerace-field-metadata-v1,model_input.trainer_place_rate,derived,INTERNAL,horses[].computed_features.trainer_place_rate|horses[].trDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+trainer_place_rate_rr,prerace-field-metadata-v1,model_input.trainer_place_rate_rr,derived,INTERNAL,model_input.trainer_place_rate|race-relative rank,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+trainer_total_place_rate,prerace-field-metadata-v1,model_input.trainer_total_place_rate,derived,INTERNAL,model_input.trainer_total_place_rate|horses[].trDetail.ord1CntT|ord2CntT|ord3CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+trainer_win_rate,prerace-field-metadata-v1,model_input.trainer_win_rate,derived,INTERNAL,horses[].computed_features.trainer_win_rate|horses[].trDetail.ord1CntT|rcCntT,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+training_score,prerace-field-metadata-v1,model_input.training_score,derived,INTERNAL,horses[].computed_features.training_score,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,조교 현황 평점
+weather_code,prerace-field-metadata-v1,model_input.weather_code,derived,INTERNAL,track.weather,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,날씨 코드화
+wet_track,prerace-field-metadata-v1,model_input.wet_track,derived,INTERNAL,horses[].computed_features.wet_track,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,track.track 기반 습윤 주로 여부
+wgBudam,prerace-field-metadata-v1,model_input.wgBudam,source,API214_1,horses[].wg_budam,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+wgBudam_rr,prerace-field-metadata-v1,model_input.wgBudam_rr,derived,INTERNAL,model_input.wgBudam,L0,documented,허용,ALLOW,scalar,가변,wgBudam race-relative 정규화
+wgHr_value,prerace-field-metadata-v1,model_input.wgHr_value,derived,INTERNAL,horses[].wg_hr,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
+wg_budam_rank,prerace-field-metadata-v1,model_input.wg_budam_rank,derived,INTERNAL,horses[].computed_features.wg_budam_rank,L0,documented,허용,ALLOW,scalar,가변,부담중량 순위
+winOdds,prerace-field-metadata-v1,model_input.winOdds,source,API214_1,horses[].win_odds,?,pending_measurement,보류,HOLD,scalar,가변,공개 시점 실측 전까지 보류
+winOdds_rr,prerace-field-metadata-v1,model_input.winOdds_rr,derived,INTERNAL,model_input.winOdds|race-relative rank,?,pending_measurement,보류,HOLD,scalar,가변,odds 의존 race-relative 파생이므로 보류
+year_place_rate,prerace-field-metadata-v1,model_input.year_place_rate,derived,INTERNAL,model_input.year_place_rate|horses[].hrDetail.ord1CntY|ord2CntY|ord3CntY|rcCntY,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
+year_place_rate_rr,prerace-field-metadata-v1,model_input.year_place_rate_rr,derived,INTERNAL,model_input.year_place_rate|race-relative rank,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,재조회 의존,과거 재조회 오염 방지를 위해 당시 저장본만 허용
