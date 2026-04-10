@@ -3,7 +3,7 @@ schemaVersion: "0.1"
 project:
   name: kra-autoresearch-clean
   artifact: generic
-  baselineRef: main
+  baselineRef: rrx-holdout-baseline-20260411
   workspace: git
 
 scope:
