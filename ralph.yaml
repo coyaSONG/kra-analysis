@@ -17,6 +17,7 @@ scope:
     - "packages/scripts/autoresearch/run_rrx_metric.sh"
     - "packages/scripts/autoresearch/run_rrx_propose.sh"
     - ".ralph/**"
+    - ".ralph-holdout/**"
   maxFilesChanged: 5
   maxLineDelta: 300
 
@@ -57,4 +58,4 @@ stopping:
     value: 0.7
 
 storage:
-  root: .ralph
+  root: .ralph-holdout
