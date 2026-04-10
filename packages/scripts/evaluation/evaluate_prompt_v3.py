@@ -22,10 +22,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from evaluation.data_loading import RaceEvaluationDataLoader
 from evaluation.ensemble import SelfConsistencyEnsemble
 from evaluation.leakage_checks import check_detailed_results_for_leakage
-from evaluation.metrics import compute_prediction_quality_metrics
+from evaluation.metrics import (
+    compute_prediction_quality_metrics,
+    is_ordered_topk_exact_match,
+    is_unordered_topk_exact_match,
+)
 from evaluation.mlflow_tracker import ExperimentTracker
 from evaluation.prediction_service import (
     build_prediction_prompt,
+    finalize_prediction_payload,
     normalize_prediction_payload,
     parse_prediction_output,
 )
@@ -33,6 +38,10 @@ from evaluation.report_schema import build_report_v2, validate_report_v2
 from shared.claude_client import ClaudeClient
 from shared.db_client import RaceDBClient
 from shared.llm_client import LLMClient
+from shared.prediction_input_schema import (
+    build_alternative_ranking_dataset_metadata,
+    validate_alternative_ranking_dataset_metadata,
+)
 
 
 class PromptEvaluatorV3:
@@ -96,17 +105,16 @@ class PromptEvaluatorV3:
         if hasattr(self.data_loader, "build_dataset_metadata"):
             metadata = self.data_loader.build_dataset_metadata(races, limit=limit)
             if isinstance(metadata, dict):
-                return metadata
-        return {
-            "source": type(self.db_client).__name__,
-            "requested_limit": limit,
-            "race_count": len(races),
-            "race_ids": [
+                return validate_alternative_ranking_dataset_metadata(metadata)
+        return build_alternative_ranking_dataset_metadata(
+            source=type(self.db_client).__name__,
+            dataset_name="live_db_evaluation",
+            requested_limit=limit,
+            race_ids=[
                 str(race.get("race_id")) for race in races if race.get("race_id")
             ],
-            "feature_schema_version": "unknown",
-            "with_past_stats": self.with_past_stats,
-        }
+            with_past_stats=self.with_past_stats,
+        )
 
     def _init_jury(
         self, model_names: list[str], weights: dict[str, float] | None = None
@@ -128,6 +136,64 @@ class PromptEvaluatorV3:
         if clients:
             self.jury = LLMJury(clients)
             self.jury_ensemble = JuryEnsemble(model_weights=weights)
+
+    @staticmethod
+    def _default_fallback_meta() -> dict[str, Any]:
+        return {
+            "available": False,
+            "applied": False,
+            "reason_code": None,
+            "reason": None,
+            "source": None,
+            "details": None,
+        }
+
+    def _aggregate_member_fallback_meta(
+        self, predictions: list[dict[str, Any]], *, source: str
+    ) -> dict[str, Any]:
+        metas: list[dict[str, Any]] = []
+        for prediction in predictions:
+            raw_meta = prediction.get("fallback_meta")
+            if isinstance(raw_meta, dict):
+                metas.append(raw_meta)
+
+        if not metas:
+            return self._default_fallback_meta()
+
+        available_count = sum(1 for meta in metas if bool(meta.get("available")))
+        applied_count = sum(1 for meta in metas if bool(meta.get("applied")))
+        reason_codes = sorted(
+            {
+                str(meta.get("reason_code"))
+                for meta in metas
+                if meta.get("reason_code") is not None
+            }
+        )
+        details = {
+            "member_count": len(metas),
+            "available_count": available_count,
+            "applied_count": applied_count,
+            "reason_codes": reason_codes,
+        }
+
+        if applied_count == 0:
+            return {
+                "available": available_count > 0,
+                "applied": False,
+                "reason_code": None,
+                "reason": None,
+                "source": source,
+                "details": details,
+            }
+
+        return {
+            "available": True,
+            "applied": True,
+            "reason_code": "AGGREGATED_MEMBER_FALLBACK",
+            "reason": f"{applied_count}/{len(metas)} member predictions used fallback ranking.",
+            "source": source,
+            "details": details,
+        }
 
     def find_test_races(self, limit: int = None) -> list[dict[str, Any]]:
         """DB에서 수집 완료된 경주 찾기"""
@@ -170,7 +236,11 @@ class PromptEvaluatorV3:
                 return None, error_type
 
             # 응답 텍스트에서 JSON 파싱
-            prediction = parse_prediction_output(response_text, execution_time)
+            prediction = parse_prediction_output(
+                response_text,
+                execution_time,
+                race_data=race_data,
+            )
             if prediction:
                 return prediction, error_type
 
@@ -218,11 +288,22 @@ class PromptEvaluatorV3:
         # Aggregate
         aggregated = self.ensemble.aggregate_predictions(pred_dicts)
 
-        # Build result dict matching expected format
-        merged = predictions[0].copy()  # Use first as base
-        merged["selected_horses"] = [{"chulNo": no} for no in aggregated["predicted"]]
-        merged["predicted"] = aggregated["predicted"]
-        merged["confidence"] = aggregated["confidence"]
+        merged = normalize_prediction_payload(
+            {
+                "selected_horses": [{"chulNo": no} for no in aggregated["predicted"]],
+                "predicted": aggregated["predicted"],
+                "confidence": aggregated["confidence"],
+                "reasoning": predictions[0].get("reasoning", ""),
+                "fallback_meta": self._aggregate_member_fallback_meta(
+                    predictions, source="self_consistency_ensemble"
+                ),
+            },
+            execution_time=sum(
+                float(prediction.get("execution_time", 0.0))
+                for prediction in predictions
+            ),
+            race_data=race_data,
+        )
         merged["ensemble_meta"] = {
             "k": self.ensemble_k,
             "collected": len(predictions),
@@ -269,23 +350,33 @@ class PromptEvaluatorV3:
             # fallback: 성공한 응답이 1개라도 있으면 단독 사용
             if verdict.successful_responses:
                 resp = verdict.successful_responses[0]
-                parsed = parse_prediction_output(resp.text, 0) if resp.text else None
+                parsed = (
+                    parse_prediction_output(resp.text, 0, race_data=race_data)
+                    if resp.text
+                    else None
+                )
                 if parsed:
                     execution_time = time.time() - start_time
-                    parsed = normalize_prediction_payload(parsed, execution_time)
+                    parsed = normalize_prediction_payload(
+                        parsed,
+                        execution_time,
+                        race_data=race_data,
+                    )
                     if "selected_horses" in parsed:
                         return parsed, "success"
             return None, "jury_quorum_failed"
 
         # 각 성공 응답에서 예측 JSON 파싱
         model_predictions: dict[str, dict] = {}
+        parsed_predictions: list[dict[str, Any]] = []
         for resp in verdict.successful_responses:
             if not resp.text:
                 continue
 
-            parsed = parse_prediction_output(resp.text, 0)
+            parsed = parse_prediction_output(resp.text, 0, race_data=race_data)
 
             if parsed:
+                parsed_predictions.append(parsed)
                 predicted = []
                 if "selected_horses" in parsed:
                     predicted = [h["chulNo"] for h in parsed["selected_horses"]]
@@ -302,35 +393,41 @@ class PromptEvaluatorV3:
 
         if len(model_predictions) < 2:
             # 파싱 가능한 응답이 2개 미만
-            if model_predictions:
+            if parsed_predictions:
                 # 1개만 성공한 경우 단독 사용
-                single = next(iter(model_predictions.values()))
                 execution_time = time.time() - start_time
-                result = {
-                    "selected_horses": [{"chulNo": no} for no in single["predicted"]],
-                    "predicted": single["predicted"],
-                    "confidence": single["confidence"],
-                    "execution_time": execution_time,
-                }
-                return result, "success"
+                return (
+                    normalize_prediction_payload(
+                        parsed_predictions[0],
+                        execution_time,
+                        race_data=race_data,
+                    ),
+                    "success",
+                )
             return None, "jury_parse_failed"
 
         # 앙상블 집계
         aggregation = self.jury_ensemble.aggregate(model_predictions)
         execution_time = time.time() - start_time
 
-        result = {
-            "selected_horses": [{"chulNo": no} for no in aggregation.predicted],
-            "predicted": aggregation.predicted,
-            "confidence": aggregation.confidence,
-            "execution_time": execution_time,
-            "jury_meta": {
-                "model_predictions": aggregation.model_predictions,
-                "vote_counts": aggregation.vote_counts,
-                "agreement_level": aggregation.agreement_level,
-                "agreement_score": aggregation.agreement_score,
-                "consistency_score": aggregation.consistency_score,
+        result = normalize_prediction_payload(
+            {
+                "selected_horses": [{"chulNo": no} for no in aggregation.predicted],
+                "predicted": aggregation.predicted,
+                "confidence": aggregation.confidence,
+                "fallback_meta": self._aggregate_member_fallback_meta(
+                    parsed_predictions, source="jury_ensemble"
+                ),
             },
+            execution_time,
+            race_data=race_data,
+        )
+        result["jury_meta"] = {
+            "model_predictions": aggregation.model_predictions,
+            "vote_counts": aggregation.vote_counts,
+            "agreement_level": aggregation.agreement_level,
+            "agreement_score": aggregation.agreement_score,
+            "consistency_score": aggregation.consistency_score,
         }
 
         return result, "success"
@@ -370,6 +467,8 @@ class PromptEvaluatorV3:
         if not actual:
             return {
                 "correct_count": 0,
+                "unordered_top3_exact_match": False,
+                "ordered_top3_exact_match": False,
                 "base_score": 0,
                 "bonus": 0,
                 "total_score": 0,
@@ -377,19 +476,26 @@ class PromptEvaluatorV3:
                 "status": "no_result",
             }
 
-        # 적중 개수
-        correct_count = len(set(predicted) & set(actual))
+        predicted_top3 = predicted[:3]
+        actual_top3 = actual[:3]
+
+        # 적중 개수는 상위 3두만 기준으로 계산
+        correct_count = len(set(predicted_top3) & set(actual_top3))
+        exact_match = is_unordered_topk_exact_match(predicted_top3, actual_top3)
+        ordered_exact_match = is_ordered_topk_exact_match(predicted_top3, actual_top3)
 
         # 기본 점수
         base_score = correct_count * 33.33
 
         # 보너스 (3마리 모두 적중)
-        bonus = 10 if correct_count == 3 else 0
+        bonus = 10 if exact_match else 0
 
         total_score = base_score + bonus
 
         return {
             "correct_count": correct_count,
+            "unordered_top3_exact_match": exact_match,
+            "ordered_top3_exact_match": ordered_exact_match,
             "base_score": base_score,
             "bonus": bonus,
             "total_score": total_score,
@@ -400,6 +506,71 @@ class PromptEvaluatorV3:
     def _convert_race_data_for_v5(self, race_data: dict) -> dict:
         """v5 insight_analyzer 호환 형식으로 race_data 변환"""
         return self.data_loader.build_v5_race_data(race_data)
+
+    def _build_error_result(
+        self,
+        race_id: str,
+        error_type: str,
+        race_data: dict[str, Any] | None = None,
+        prediction: dict[str, Any] | None = None,
+        actual: list[int] | None = None,
+        reward: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        v5_race_data = (
+            self._convert_race_data_for_v5(race_data)
+            if race_data is not None
+            else {"entries": [], "race_info": {}}
+        )
+        predicted_horses: list[int] = []
+        if prediction is not None:
+            raw_selected_horses = prediction.get("selected_horses") or []
+            if isinstance(raw_selected_horses, list):
+                predicted_horses = [
+                    int(horse["chulNo"])
+                    for horse in raw_selected_horses
+                    if isinstance(horse, dict) and "chulNo" in horse
+                ]
+
+            if not predicted_horses:
+                raw_predicted = (
+                    prediction.get("predicted") or prediction.get("top3") or []
+                )
+                if isinstance(raw_predicted, list):
+                    predicted_horses = [
+                        int(chul_no)
+                        for chul_no in raw_predicted
+                        if isinstance(chul_no, int) or str(chul_no).isdigit()
+                    ]
+
+        return {
+            "race_id": race_id,
+            "top3": predicted_horses,
+            "predicted": predicted_horses,
+            "actual": actual or [],
+            "fallback_used": bool(
+                prediction and prediction.get("fallback_used", False)
+            ),
+            "fallback_reason_code": prediction.get("fallback_reason_code")
+            if prediction
+            else None,
+            "fallback_reason": prediction.get("fallback_reason")
+            if prediction
+            else None,
+            "fallback_meta": prediction.get(
+                "fallback_meta", self._default_fallback_meta()
+            )
+            if prediction
+            else self._default_fallback_meta(),
+            "prediction": prediction,
+            "error_type": error_type,
+            "reward": reward or {"status": "error", "correct_count": 0},
+            "hit": False,
+            "ordered_hit": False,
+            "confidence": prediction.get("confidence", 0) if prediction else 0,
+            "reasoning": prediction.get("reasoning", "") if prediction else "",
+            "execution_time": prediction.get("execution_time", 0) if prediction else 0,
+            "race_data": v5_race_data,
+        }
 
     def process_single_race(self, race_info: dict, race_data: dict) -> dict | None:
         """단일 경주 처리"""
@@ -412,13 +583,24 @@ class PromptEvaluatorV3:
         prediction, error_type = self.run_prediction_with_retry(race_data, race_id)
 
         if prediction is None:
-            return {
-                "race_id": race_id,
-                "prediction": None,
-                "error_type": error_type,
-                "reward": {"status": "error"},
-                "race_data": v5_race_data,
-            }
+            return self._build_error_result(
+                race_id=race_id,
+                error_type=error_type,
+                race_data=race_data,
+            )
+
+        finalized_prediction = finalize_prediction_payload(
+            prediction,
+            race_data=race_data,
+            execution_time=float(prediction.get("execution_time", 0.0)),
+        )
+        if finalized_prediction is None:
+            return self._build_error_result(
+                race_id=race_id,
+                error_type="prediction_output_contract_error",
+                race_data=race_data,
+            )
+        prediction = finalized_prediction
 
         # 예측 결과 추출
         predicted_horses = [h["chulNo"] for h in prediction["selected_horses"]]
@@ -427,16 +609,45 @@ class PromptEvaluatorV3:
         actual_result = self.extract_actual_result(race_info)
 
         # 보상 계산
-        reward = self.calculate_reward(predicted_horses, actual_result)
+        try:
+            reward = self.calculate_reward(predicted_horses, actual_result)
+        except Exception as e:
+            print(f"  점수 산출 오류: {race_id} - {e}")
+            return self._build_error_result(
+                race_id=race_id,
+                error_type="score_error",
+                race_data=race_data,
+                prediction=prediction,
+                actual=actual_result,
+                reward={
+                    "correct_count": 0,
+                    "unordered_top3_exact_match": False,
+                    "ordered_top3_exact_match": False,
+                    "base_score": 0,
+                    "bonus": 0,
+                    "total_score": 0,
+                    "hit_rate": 0,
+                    "status": "score_fallback",
+                },
+            )
 
         return {
             "race_id": race_id,
+            "top3": predicted_horses,
             "predicted": predicted_horses,
             "actual": actual_result,
             "reward": reward,
+            "hit": reward.get("unordered_top3_exact_match", False),
+            "ordered_hit": reward.get("ordered_top3_exact_match", False),
             "confidence": prediction.get("confidence", 0),
             "reasoning": prediction.get("reasoning", ""),
             "execution_time": prediction.get("execution_time", 0),
+            "fallback_used": bool(prediction.get("fallback_used", False)),
+            "fallback_reason_code": prediction.get("fallback_reason_code"),
+            "fallback_reason": prediction.get("fallback_reason"),
+            "fallback_meta": prediction.get(
+                "fallback_meta", self._default_fallback_meta()
+            ),
             "prediction": prediction,
             "error_type": error_type,
             "race_data": v5_race_data,
@@ -452,8 +663,6 @@ class PromptEvaluatorV3:
 
         results = []
         total_races = len(test_races)
-        successful_predictions = 0
-        total_correct_horses = 0
 
         print(f"\n{self.prompt_version} 평가 시작 (Anthropic SDK)...")
         print(f"테스트 경주 수: {total_races}")
@@ -475,6 +684,17 @@ class PromptEvaluatorV3:
                         self.process_single_race, race_info, race_data
                     )
                     future_to_race[future] = race_info
+                else:
+                    self.error_stats["data_load_error"] += 1
+                    result = self._build_error_result(
+                        race_id=race_info["race_id"],
+                        error_type="data_load_error",
+                    )
+                    results.append(result)
+                    completed_count += 1
+                    print(
+                        f"[{completed_count}/{total_races}] ✗ {race_info['race_id']} - 에러: data_load_error | 진행률: {completed_count / total_races * 100:.1f}%"
+                    )
 
             # 결과 수집
             for _i, future in enumerate(as_completed(future_to_race)):
@@ -483,12 +703,6 @@ class PromptEvaluatorV3:
                     result = future.result()
                     if result:
                         results.append(result)
-
-                        # 통계 업데이트
-                        if result["prediction"] is not None:
-                            if result["reward"]["correct_count"] == 3:
-                                successful_predictions += 1
-                            total_correct_horses += result["reward"]["correct_count"]
 
                         completed_count += 1
                         elapsed = time.time() - start_time
@@ -525,6 +739,10 @@ class PromptEvaluatorV3:
 
         # 전체 요약
         valid_results = [r for r in results if r["prediction"] is not None]
+        successful_predictions = sum(1 for r in results if r.get("hit"))
+        total_correct_horses = sum(
+            int((r.get("reward") or {}).get("correct_count", 0)) for r in results
+        )
         summary: dict[str, Any] = {
             "prompt_version": self.prompt_version,
             "test_date": timestamp,
@@ -532,9 +750,7 @@ class PromptEvaluatorV3:
             "valid_predictions": len(valid_results),
             "successful_predictions": successful_predictions,
             "success_rate": (
-                successful_predictions / len(valid_results) * 100
-                if valid_results
-                else 0
+                successful_predictions / total_races * 100 if total_races else 0
             ),
             "average_correct_horses": (
                 total_correct_horses / len(valid_results) if valid_results else 0
@@ -558,6 +774,7 @@ class PromptEvaluatorV3:
             topk_values=self.topk_values,
             ece_bins=self.ece_bins,
             defer_threshold=self.defer_threshold,
+            reference_race_ids=dataset_metadata.get("race_ids"),
         )
         metrics_v2["json_valid_rate"] = (
             len(valid_results) / total_races if total_races > 0 else 0.0
@@ -627,6 +844,9 @@ class PromptEvaluatorV3:
                     "top3": metrics_v2["topk"].get("top_3", 0.0),
                     "avg_roi": metrics_v2["roi"].get("avg_roi", 0.0),
                     "coverage": metrics_v2["coverage"],
+                    "ordered_race_hit_rate": metrics_v2.get(
+                        "ordered_race_hit_rate", 0.0
+                    ),
                 }
             )
 
@@ -679,6 +899,33 @@ class PromptEvaluatorV3:
             print(f"  - top3: {metrics_v2.get('topk', {}).get('top_3', 0.0):.4f}")
             print(f"  - avg_roi: {metrics_v2.get('roi', {}).get('avg_roi', 0.0):.4f}")
             print(f"  - coverage: {metrics_v2.get('coverage', 0.0):.4f}")
+            print(
+                f"  - prediction_coverage: "
+                f"{metrics_v2.get('prediction_coverage', 0.0):.4f} "
+                f"({metrics_v2.get('predicted_race_count', 0)} / "
+                f"{metrics_v2.get('expected_race_count', 0)})"
+            )
+            print(
+                f"  - missing_predictions: "
+                f"{metrics_v2.get('missing_prediction_count', 0)}"
+            )
+            print(
+                f"  - race_hit_rate: {metrics_v2.get('race_hit_rate', 0.0):.4f} "
+                f"({metrics_v2.get('race_hit_count', 0)} / {summary['total_races']})"
+            )
+            print(
+                f"  - ordered_race_hit_rate: "
+                f"{metrics_v2.get('ordered_race_hit_rate', 0.0):.4f} "
+                f"({metrics_v2.get('ordered_race_hit_count', 0)} / {summary['total_races']})"
+            )
+            missing_prediction_race_ids = metrics_v2.get(
+                "missing_prediction_race_ids", []
+            )
+            if missing_prediction_race_ids:
+                print(
+                    "  - missing_prediction_race_ids: "
+                    + ", ".join(str(race_id) for race_id in missing_prediction_race_ids)
+                )
 
         leakage_check = summary.get("leakage_check")
         if leakage_check:

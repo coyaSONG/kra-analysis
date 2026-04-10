@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from shared.prediction_input_schema import validate_alternative_ranking_dataset_metadata
+
 REQUIRED_TOP_KEYS = {
     "report_version",
     "prompt_version",
@@ -34,7 +36,18 @@ REQUIRED_METRIC_KEYS = {
     "coverage",
     "deferred_count",
     "samples",
+    "prediction_coverage",
+    "expected_race_count",
+    "predicted_race_count",
+    "missing_prediction_count",
+    "missing_prediction_race_ids",
+    "unexpected_prediction_count",
+    "unexpected_prediction_race_ids",
     "json_valid_rate",
+    "race_hit_count",
+    "race_hit_rate",
+    "ordered_race_hit_count",
+    "ordered_race_hit_rate",
 }
 
 
@@ -72,7 +85,25 @@ def build_report_v2(
         "coverage": float(metrics.get("coverage", 0.0)),
         "deferred_count": int(metrics.get("deferred_count", 0)),
         "samples": int(metrics.get("samples", 0)),
+        "prediction_coverage": float(metrics.get("prediction_coverage", 0.0)),
+        "expected_race_count": int(metrics.get("expected_race_count", 0)),
+        "predicted_race_count": int(metrics.get("predicted_race_count", 0)),
+        "missing_prediction_count": int(metrics.get("missing_prediction_count", 0)),
+        "missing_prediction_race_ids": [
+            str(race_id) for race_id in metrics.get("missing_prediction_race_ids", [])
+        ],
+        "unexpected_prediction_count": int(
+            metrics.get("unexpected_prediction_count", 0)
+        ),
+        "unexpected_prediction_race_ids": [
+            str(race_id)
+            for race_id in metrics.get("unexpected_prediction_race_ids", [])
+        ],
         "json_valid_rate": float(metrics.get("json_valid_rate", 0.0)),
+        "race_hit_count": int(metrics.get("race_hit_count", 0)),
+        "race_hit_rate": float(metrics.get("race_hit_rate", 0.0)),
+        "ordered_race_hit_count": int(metrics.get("ordered_race_hit_count", 0)),
+        "ordered_race_hit_rate": float(metrics.get("ordered_race_hit_rate", 0.0)),
     }
 
     payload = {
@@ -109,5 +140,25 @@ def validate_report_v2(report: dict[str, Any]) -> tuple[bool, list[str]]:
     else:
         if "passed" not in leakage or "issues" not in leakage:
             errors.append("leakage_check must contain 'passed' and 'issues'")
+
+    dataset_metadata = report.get("dataset_metadata", {})
+    if not isinstance(dataset_metadata, dict):
+        errors.append("dataset_metadata must be a dict")
+    else:
+        try:
+            normalized_metadata = validate_alternative_ranking_dataset_metadata(
+                dataset_metadata
+            )
+        except ValueError as exc:
+            errors.append(str(exc))
+        else:
+            report["dataset_metadata"] = normalized_metadata
+            if (
+                report.get("feature_schema_version")
+                != normalized_metadata["feature_schema_version"]
+            ):
+                errors.append(
+                    "feature_schema_version must match dataset_metadata.feature_schema_version"
+                )
 
     return len(errors) == 0, errors

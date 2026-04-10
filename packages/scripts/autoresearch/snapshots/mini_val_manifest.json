@@ -1,0 +1,1239 @@
+{
+  "format_version": "holdout-dataset-manifest-v1",
+  "dataset": "mini_val",
+  "created_at": "2026-03-15T16:53:28.623357",
+  "race_count": 200,
+  "strict_race_count": 200,
+  "dataset_metadata": {
+    "source": "offline_evaluation_snapshot_legacy_bootstrap",
+    "dataset_name": "mini_val",
+    "requested_limit": null,
+    "race_ids": [
+      "20250905_3_5",
+      "20250905_3_6",
+      "20250905_3_7",
+      "20250905_3_8",
+      "20250906_1_1",
+      "20250906_1_2",
+      "20250906_1_3",
+      "20250906_1_4",
+      "20250906_1_5",
+      "20250906_1_6",
+      "20250906_1_7",
+      "20250906_1_8",
+      "20250906_1_9",
+      "20250906_1_10",
+      "20250906_1_11",
+      "20250907_1_1",
+      "20250907_1_2",
+      "20250907_1_3",
+      "20250907_1_4",
+      "20250907_1_5",
+      "20250907_1_6",
+      "20250907_1_7",
+      "20250907_1_8",
+      "20250907_1_9",
+      "20250907_1_10",
+      "20250907_3_1",
+      "20250907_3_2",
+      "20250907_3_3",
+      "20250907_3_4",
+      "20250907_3_5",
+      "20250907_3_6",
+      "20250912_3_1",
+      "20250912_3_2",
+      "20250912_3_3",
+      "20250912_3_4",
+      "20250912_3_5",
+      "20250912_3_6",
+      "20250912_3_7",
+      "20250912_3_8",
+      "20250913_1_1",
+      "20250913_1_2",
+      "20250913_1_3",
+      "20250913_1_4",
+      "20250913_1_5",
+      "20250913_1_6",
+      "20250913_1_7",
+      "20250913_1_8",
+      "20250913_1_9",
+      "20250913_1_10",
+      "20250914_1_1",
+      "20250914_1_2",
+      "20250914_1_3",
+      "20250914_1_4",
+      "20250914_1_5",
+      "20250914_1_6",
+      "20250914_1_7",
+      "20250914_1_8",
+      "20250914_1_9",
+      "20250914_1_10",
+      "20250914_1_11",
+      "20250914_3_1",
+      "20250914_3_2",
+      "20250914_3_3",
+      "20250914_3_4",
+      "20250914_3_5",
+      "20250914_3_6",
+      "20250919_3_1",
+      "20250919_3_2",
+      "20250919_3_3",
+      "20250919_3_4",
+      "20250919_3_5",
+      "20250919_3_6",
+      "20250919_3_7",
+      "20250919_3_8",
+      "20250920_1_1",
+      "20250920_1_2",
+      "20250920_1_3",
+      "20250920_1_4",
+      "20250920_1_5",
+      "20250920_1_6",
+      "20250920_1_7",
+      "20250920_1_8",
+      "20250920_1_9",
+      "20250920_1_10",
+      "20250921_1_1",
+      "20250921_1_2",
+      "20250921_1_3",
+      "20250921_1_4",
+      "20250921_1_5",
+      "20250921_1_6",
+      "20250921_1_7",
+      "20250921_1_8",
+      "20250921_1_9",
+      "20250921_1_10",
+      "20250921_1_11",
+      "20250921_3_1",
+      "20250921_3_2",
+      "20250921_3_3",
+      "20250921_3_4",
+      "20250921_3_5",
+      "20250921_3_6",
+      "20250926_3_1",
+      "20250926_3_2",
+      "20250926_3_3",
+      "20250926_3_4",
+      "20250926_3_5",
+      "20250926_3_6",
+      "20250926_3_7",
+      "20250926_3_8",
+      "20250927_1_1",
+      "20250927_1_2",
+      "20250927_1_3",
+      "20250927_1_4",
+      "20250927_1_5",
+      "20250927_1_6",
+      "20250927_1_7",
+      "20250927_1_8",
+      "20250927_1_9",
+      "20250927_1_10",
+      "20250928_1_1",
+      "20250928_1_2",
+      "20250928_1_3",
+      "20250928_1_4",
+      "20250928_1_5",
+      "20250928_1_6",
+      "20250928_1_7",
+      "20250928_1_8",
+      "20250928_1_9",
+      "20250928_1_10",
+      "20250928_1_11",
+      "20250928_3_1",
+      "20250928_3_2",
+      "20250928_3_3",
+      "20250928_3_4",
+      "20250928_3_5",
+      "20250928_3_6",
+      "20251002_3_1",
+      "20251002_3_2",
+      "20251002_3_3",
+      "20251002_3_4",
+      "20251002_3_5",
+      "20251002_3_6",
+      "20251002_3_7",
+      "20251002_3_8",
+      "20251003_1_1",
+      "20251003_1_2",
+      "20251003_1_3",
+      "20251003_1_4",
+      "20251003_1_5",
+      "20251003_1_6",
+      "20251003_1_7",
+      "20251003_1_8",
+      "20251003_1_9",
+      "20251003_1_10",
+      "20251003_1_11",
+      "20251004_1_1",
+      "20251004_1_2",
+      "20251004_1_3",
+      "20251004_1_4",
+      "20251004_1_5",
+      "20251004_1_6",
+      "20251004_1_7",
+      "20251004_1_8",
+      "20251004_1_9",
+      "20251004_1_10",
+      "20251004_1_11",
+      "20251004_3_1",
+      "20251004_3_2",
+      "20251004_3_3",
+      "20251004_3_4",
+      "20251004_3_5",
+      "20251004_3_6",
+      "20251017_3_1",
+      "20251017_3_2",
+      "20251017_3_3",
+      "20251017_3_4",
+      "20251017_3_5",
+      "20251017_3_6",
+      "20251017_3_7",
+      "20251017_3_8",
+      "20251018_1_1",
+      "20251018_1_2",
+      "20251018_1_3",
+      "20251018_1_4",
+      "20251018_1_5",
+      "20251018_1_6",
+      "20251018_1_7",
+      "20251018_1_8",
+      "20251018_1_9",
+      "20251018_1_10",
+      "20251018_1_11",
+      "20251019_1_1",
+      "20251019_1_2",
+      "20251019_1_3",
+      "20251019_1_4",
+      "20251019_1_5",
+      "20251019_1_6",
+      "20251019_1_7",
+      "20251019_1_8",
+      "20251019_1_9"
+    ],
+    "with_past_stats": false
+  },
+  "filter_policy": {
+    "source_filter_basis": "entry_finalized_at",
+    "required_pre_cutoff": true,
+    "hard_required_sources": [
+      "API214_1",
+      "API72_2",
+      "API189_1",
+      "API9_1"
+    ],
+    "payload_shape": "legacy-race-array",
+    "bootstrap_note": "generated from legacy checked-in snapshot because dataset-side manifest was missing"
+  },
+  "replay_status_counts": {
+    "legacy_snapshot_without_manifest": 200
+  },
+  "audit": {
+    "legacy_bootstrap": true,
+    "warning": "checked-in snapshot lacked per-race snapshot_meta; regenerate snapshots for full timing audit coverage"
+  },
+  "candidate_selection_audit": {
+    "legacy_bootstrap": true
+  },
+  "races": [
+    {
+      "race_id": "20250905_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250905_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250905_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250905_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250906_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250907_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250912_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250913_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250914_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250919_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250920_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250921_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250926_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250927_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20250928_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251002_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251003_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251004_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251017_3_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_10",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251018_1_11",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_1",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_2",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_3",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_4",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_5",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_6",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_7",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_8",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    },
+    {
+      "race_id": "20251019_1_9",
+      "replay_status": "legacy_snapshot_without_manifest",
+      "include_in_strict_dataset": true
+    }
+  ]
+}

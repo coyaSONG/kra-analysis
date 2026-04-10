@@ -10,6 +10,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from feature_engineering import compute_features
 from shared.db_client import RaceDBClient
+from shared.read_contract import RaceSourceLookup
+
+LOOKUP = RaceSourceLookup(
+    race_id="race-current",
+    race_date="20250201",
+    entry_snapshot_at="2025-02-01T10:00:00+09:00",
+)
 
 
 class TestGetPastTop3StatsForRace:
@@ -46,7 +53,7 @@ class TestGetPastTop3StatsForRace:
 
         result = db.get_past_top3_stats_for_race(
             hr_nos=["A"],
-            race_date="20250201",
+            lookup=LOOKUP,
             lookback_days=90,
         )
 
@@ -65,7 +72,7 @@ class TestGetPastTop3StatsForRace:
 
         result = db.get_past_top3_stats_for_race(
             hr_nos=["X"],
-            race_date="20250201",
+            lookup=LOOKUP,
             lookback_days=90,
         )
 
@@ -77,7 +84,7 @@ class TestGetPastTop3StatsForRace:
 
         result = db.get_past_top3_stats_for_race(
             hr_nos=[],
-            race_date="20250201",
+            lookup=LOOKUP,
         )
 
         assert result == {}
@@ -98,26 +105,34 @@ class TestGetPastTop3StatsForRace:
 
         result = db.get_past_top3_stats_for_race(
             hr_nos=["B"],
-            race_date="20250201",
+            lookup=LOOKUP,
         )
 
         assert result["B"]["recent_top3_count"] == 1
 
     def test_leakage_prevention(self):
-        """race_date 이전 경주만 조회하는지 확인 (쿼리 파라미터 검증)"""
+        """race_date 이전 + snapshot cutoff 이전 결과만 조회하는지 확인"""
         db = self._make_client()
         mock_cursor = self._make_cursor(db, [])
 
         db.get_past_top3_stats_for_race(
             hr_nos=["A"],
-            race_date="20250501",
+            lookup=RaceSourceLookup(
+                race_id="race-20250501",
+                race_date="20250501",
+                entry_snapshot_at="2025-05-01T10:00:00+09:00",
+            ),
             lookback_days=90,
         )
 
         call_args = mock_cursor.execute.call_args
+        executed_sql = call_args[0][0]
         params = call_args[0][1]
+        assert "result_collected_at" in executed_sql
+        assert "updated_at" in executed_sql
         assert "20250501" in params  # race_date (상한, exclusive)
         assert "20250131" in params  # ~90일 전 (하한)
+        assert str(params[2]).startswith("2025-05-01 10:00:00")
 
     def test_multiple_horses(self):
         """여러 말의 통계가 독립적으로 계산"""
@@ -132,7 +147,7 @@ class TestGetPastTop3StatsForRace:
 
         result = db.get_past_top3_stats_for_race(
             hr_nos=["A", "B"],
-            race_date="20250201",
+            lookup=LOOKUP,
         )
 
         assert result["A"]["recent_race_count"] == 2

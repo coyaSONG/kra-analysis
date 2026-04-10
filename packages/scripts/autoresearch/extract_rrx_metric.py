@@ -3,35 +3,46 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+REPORT_PATH = Path(".ralph/outputs/holdout_seed_summary_report.json")
+
 
 def main() -> None:
-    payload = json.loads(Path(".ralph/outputs/research_clean.json").read_text())
-    integrity = payload.get("integrity", {})
-    missing_features = integrity.get("all_missing_features") or []
-    normalized_match_rate = float(integrity.get("normalized_first3_match_rate", 0.0))
-    market_feature_count = int(payload.get("market_feature_count", 0))
-
-    if missing_features:
+    if not REPORT_PATH.exists():
         print(0)
         return
 
-    if normalized_match_rate > 0.05:
+    payload = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
+    gate = payload.get("gate") or {}
+    verification_verdict = payload.get("verification_verdict") or {}
+    validation_overview = payload.get("validation_overview") or {}
+    execution_journal_validation = validation_overview.get("execution_journal") or {}
+    repository_validation = validation_overview.get("seed_result_repository") or {}
+
+    if gate.get("metric") != "lowest_overall_holdout_hit_rate":
         print(0)
         return
 
-    if market_feature_count > 0:
+    if verification_verdict.get("status") != "PASS":
         print(0)
         return
 
-    summary = payload.get("summary") or {}
-    print(
-        summary.get(
-            "overfit_safe_exact_rate",
-            summary.get(
-                "early_primary_exact_rate", summary.get("robust_exact_rate", 0)
-            ),
-        )
-    )
+    if not execution_journal_validation.get("ok"):
+        print(0)
+        return
+
+    if not repository_validation.get("ok"):
+        print(0)
+        return
+
+    actual = gate.get("actual")
+    if actual is None:
+        print(0)
+        return
+
+    try:
+        print(float(actual))
+    except (TypeError, ValueError):
+        print(0)
 
 
 if __name__ == "__main__":

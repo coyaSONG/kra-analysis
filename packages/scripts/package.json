@@ -8,6 +8,8 @@
     "evaluate:help": "echo 'Usage: pnpm --filter=@repo/scripts evaluate:v3 <version> <promptFile> <raceCount> <parallel>'",
     "evaluate:v3": "python3 evaluation/evaluate_prompt_v3.py",
     "evaluate:predict-only": "python3 evaluation/predict_only_test.py",
+    "evaluate:seed-job": "uv run python3 -m autoresearch.evaluation_orchestrator",
+    "evaluate:seed-matrix": "uv run python3 -m autoresearch.seed_matrix_runner",
     "improve:help": "echo 'Usage: pnpm --filter=@repo/scripts improve:v5 <promptFile> <date/all> [options]'",
     "improve:v5": "python3 prompt_improvement/recursive_prompt_improvement_v5.py",
     "improve:analyze": "python3 prompt_improvement/analyze_enriched_patterns.py",

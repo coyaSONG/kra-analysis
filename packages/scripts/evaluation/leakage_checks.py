@@ -5,45 +5,28 @@ from __future__ import annotations
 import re
 from typing import Any
 
-# --- 구간 통과 데이터 필드 자동 생성 ---
-# 패턴: {prefix}G{1-8}f{suffix}, {prefix}S1f{suffix}, {prefix}_{1-4}c{suffix}
-# prefix: sj(서울지방), bu(부산경남), se(서울)
-# suffix: Ord(순위), AccTime(누적시간), GTime(구간시간)
-_PREFIXES = ("sj", "bu", "se")
-_GATES = tuple(f"G{i}f" for i in range(1, 9)) + ("S1f",)
-_CORNERS = tuple(f"_{i}c" for i in range(1, 5))
-_SUFFIXES = ("Ord", "AccTime", "GTime")
-
-_SECTIONAL_FIELDS = frozenset(
-    f"{prefix}{segment}{suffix}"
-    for prefix in _PREFIXES
-    for segment in (*_GATES, *_CORNERS)
-    for suffix in _SUFFIXES
+from shared.prerace_field_validation_metaschema import (
+    forbidden_post_race_validation_rows,
 )
 
-# 경주 결과/사후 확정 필드
-_RESULT_FIELDS = frozenset(
-    {
-        "rank",
-        "ord",
-        "rcTime",
-        "result",
-        "resultTime",
-        "finish_position",
-        "top3",
-        "actual_result",
-        "dividend",
-        "payout",
-        "diffUnit",
-        "rankRise",
-    }
+_FORBIDDEN_ROWS = forbidden_post_race_validation_rows()
+
+FORBIDDEN_POST_RACE_FIELDS = frozenset(
+    identifier
+    for row in _FORBIDDEN_ROWS
+    if row.identifier_kind in {"leaf_key", "prefix_path"}
+    for identifier in (row.identifier_pattern, *row.identifier_aliases)
+    if identifier
 )
 
-FORBIDDEN_POST_RACE_FIELDS = _RESULT_FIELDS | _SECTIONAL_FIELDS
+FORBIDDEN_POST_RACE_SOURCE_TAGS = frozenset(
+    tag for row in _FORBIDDEN_ROWS for tag in row.identifier_source_tags if tag
+)
 
-# 패턴 기반 2차 검증 (명시적 목록에 없는 필드도 감지)
-_SECTIONAL_PATTERN = re.compile(
-    r"^(sj|bu|se)(G[1-8]f|S[12]f|_[1-4]c)(Ord|AccTime|GTime)$"
+_FORBIDDEN_PATTERNS = tuple(
+    re.compile(row.identifier_pattern)
+    for row in _FORBIDDEN_ROWS
+    if row.identifier_kind == "regex_pattern"
 )
 
 
@@ -58,10 +41,10 @@ def _is_meaningful(value: Any) -> bool:
 
 
 def _is_forbidden(key: str) -> bool:
-    """명시적 목록 + 패턴 기반 2차 검증."""
+    """검증 규격에 등록된 exact/prefix key와 regex 패턴을 함께 검사한다."""
     if key in FORBIDDEN_POST_RACE_FIELDS:
         return True
-    return bool(_SECTIONAL_PATTERN.match(key))
+    return any(pattern.match(key) for pattern in _FORBIDDEN_PATTERNS)
 
 
 def _scan_forbidden_fields(obj: Any, path: str, issues: set[str]) -> None:

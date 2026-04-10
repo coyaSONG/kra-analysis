@@ -6,14 +6,12 @@
 
 import argparse
 import ast
-import hashlib
 import json
+import math
 import subprocess
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 # ============================================================
 # 프로젝트 경로 설정
@@ -22,13 +20,31 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent
 SNAPSHOTS_DIR = SCRIPT_DIR / "snapshots"
+SNAPSHOT_DATASETS = ("mini_val", "holdout")
 
 sys.path.insert(0, str(PROJECT_ROOT / "packages" / "scripts"))
 
-from evaluation.leakage_checks import FORBIDDEN_POST_RACE_FIELDS  # noqa: E402
-from feature_engineering import compute_race_features  # noqa: E402
-from shared.data_adapter import convert_basic_data_to_enriched_format  # noqa: E402
-from shared.db_client import RaceDBClient  # noqa: E402
+try:
+    import offline_evaluation_dataset_job as _offline_dataset_job  # noqa: E402
+except (
+    ModuleNotFoundError
+):  # pragma: no cover - import path differs between script/test contexts
+    from autoresearch import (
+        offline_evaluation_dataset_job as _offline_dataset_job,  # noqa: E402
+    )
+from shared.model_score_status_schema import (  # noqa: E402
+    STATUS_CODES,
+    STATUS_SPEC_BY_CODE,
+    ScoreComputationResult,
+)
+
+_build_snapshot_bundle_impl = _offline_dataset_job.build_snapshot_bundle
+_build_snapshot_race_data = _offline_dataset_job.build_snapshot_race_data
+_check_snapshot_reproducibility_impl = (
+    _offline_dataset_job.check_snapshot_reproducibility
+)
+create_snapshot = _offline_dataset_job.create_offline_evaluation_dataset
+strip_forbidden_fields = _offline_dataset_job.strip_forbidden_fields
 
 # ============================================================
 # Import Guard
@@ -80,152 +96,86 @@ def set_match_score(predicted: list[int], actual: list[int]) -> float:
 
 
 # ============================================================
-# Snapshot
+# Snapshot Compatibility
 # ============================================================
 
 
-def strip_forbidden_fields(data: dict) -> dict:
-    """forbidden fields 제거 + rank→class_rank rename. 재귀적."""
-    cleaned: dict[str, Any] = {}
-    for key, value in data.items():
-        if key == "rank":
-            # rank는 사전 등급(class rating) → class_rank로 보존
-            cleaned["class_rank"] = value
-        elif key in FORBIDDEN_POST_RACE_FIELDS:
-            continue  # 제거
-        elif isinstance(value, dict):
-            cleaned[key] = strip_forbidden_fields(value)
-        elif isinstance(value, list):
-            cleaned[key] = [
-                strip_forbidden_fields(item) if isinstance(item, dict) else item
-                for item in value
+class _InlineSnapshotQueryPort:
+    """prepare.py 내부 호환용 in-memory query port."""
+
+    def __init__(self, race_snapshots: list[object]):
+        self._race_snapshots = list(race_snapshots)
+        self._snapshot_by_id = {
+            snapshot.race_id: snapshot
+            for snapshot in self._race_snapshots
+            if hasattr(snapshot, "race_id")
+        }
+
+    def find_race_snapshots(
+        self,
+        date_filter: str | None = None,
+        limit: int | None = None,
+    ) -> list[object]:
+        snapshots = self._race_snapshots
+        if date_filter:
+            snapshots = [
+                snapshot
+                for snapshot in snapshots
+                if hasattr(snapshot, "race_date") and snapshot.race_date == date_filter
             ]
-        else:
-            cleaned[key] = value
-    return cleaned
+        if limit is not None:
+            snapshots = snapshots[:limit]
+        return list(snapshots)
 
-
-def _extract_race_data(enriched: dict) -> dict:
-    """enriched 형식에서 flat race_data dict 추출.
-    raw item의 전체 필드를 보존하고 forbidden fields만 제거."""
-    items = enriched["response"]["body"]["items"]["item"]
-
-    # raceInfo 구성 (첫 item의 경주 정보)
-    first = items[0]
-    race_info = {
-        "rcDate": first.get("rcDate", ""),
-        "rcNo": first.get("rcNo", ""),
-        "meet": first.get("meet", ""),
-        "rcDist": first.get("rcDist", ""),
-        "track": first.get("track", ""),
-        "weather": first.get("weather", ""),
-        "budam": first.get("budam", ""),
-        "ageCond": first.get("ageCond", ""),
-    }
-
-    # 말별 데이터 (raw 전체 보존 + winOdds=0 필터)
-    horses = []
-    for item in items:
-        win_odds = item.get("winOdds", 0)
-        try:
-            if float(win_odds) == 0:
-                continue  # 기권/제외마
-        except (TypeError, ValueError):
-            continue
-
-        horse = strip_forbidden_fields(item)
-        horses.append(horse)
-
-    # compute_race_features: 개별 피처 + odds_rank, rating_rank 일괄 계산
-    horses = compute_race_features(horses)
-
-    return {
-        "race_info": race_info,
-        "horses": horses,
-    }
-
-
-def create_snapshot(force: bool = False) -> None:
-    """DB에서 경주 데이터를 읽어 고정 snapshot 생성"""
-    SNAPSHOTS_DIR.mkdir(exist_ok=True)
-
-    if (SNAPSHOTS_DIR / "mini_val.json").exists() and not force:
-        print("Snapshot already exists. Use --force-recreate to regenerate.")
-        return
-
-    db = RaceDBClient()
-    try:
-        races = db.find_races_with_results()
-        print(f"Found {len(races)} races with results")
-
-        if len(races) < 700:
-            print(f"ERROR: Need >= 700 races, got {len(races)}")
-            sys.exit(1)
-
-        # walk-forward split: [...][mini_val 200][holdout 500]
-        holdout_races = races[-500:]
-        mini_val_races = races[-700:-500]
-
-        answer_key: dict[str, Any] = {"meta": {}, "mini_val": {}, "holdout": {}}
-        snapshots: dict[str, list[dict]] = {"mini_val": [], "holdout": []}
-
-        for mode, race_list in [
-            ("mini_val", mini_val_races),
-            ("holdout", holdout_races),
-        ]:
-            for race_meta in race_list:
-                race_id = race_meta["race_id"]
-                basic_data = db.load_race_basic_data(race_id)
-                if not basic_data:
-                    continue
-
-                enriched = convert_basic_data_to_enriched_format(basic_data)
-                if not enriched:
-                    continue
-
-                race_data = _extract_race_data(enriched)
-                race_data["race_id"] = race_id
-                race_data["race_date"] = race_meta["race_date"]
-                race_data["meet"] = race_meta["meet"]
-                snapshots[mode].append(race_data)
-
-                # answer_key
-                result = db.get_race_result(race_id)
-                if result:
-                    answer_key[mode][race_id] = result
-
-        # 개수 검증
-        mv_count = len(snapshots["mini_val"])
-        ho_count = len(snapshots["holdout"])
-        if mv_count < 150:
-            print(
-                f"ERROR: mini_val has only {mv_count} races (need >= 150). "
-                f"Check DB for missing basic_data or failed conversions."
+    def load_race_basic_data(self, race_id: str, *, lookup) -> dict | None:
+        snapshot = self._snapshot_by_id.get(race_id)
+        if snapshot is None:
+            return None
+        if not hasattr(lookup, "race_id") or lookup.race_id != race_id:
+            lookup_race_id = lookup.race_id if hasattr(lookup, "race_id") else None
+            raise ValueError(
+                f"lookup.race_id {lookup_race_id!r} does not match {race_id!r}"
             )
-            sys.exit(1)
-        if ho_count < 400:
-            print(
-                f"ERROR: holdout has only {ho_count} races (need >= 400). "
-                f"Check DB for missing basic_data or failed conversions."
-            )
-            sys.exit(1)
+        return snapshot.basic_data if hasattr(snapshot, "basic_data") else None
 
-        # 메타데이터
-        now = datetime.now().isoformat()
-        for mode in ("mini_val", "holdout"):
-            content = json.dumps(snapshots[mode], ensure_ascii=False)
-            sha = hashlib.sha256(content.encode()).hexdigest()[:16]
-            with open(SNAPSHOTS_DIR / f"{mode}.json", "w") as f:
-                f.write(content)
-            print(f"{mode}: {len(snapshots[mode])} races (sha256={sha})")
+    def close(self) -> None:
+        return None
 
-        answer_key["meta"] = {"created_at": now}
-        with open(SNAPSHOTS_DIR / "answer_key.json", "w") as f:
-            json.dump(answer_key, f, ensure_ascii=False, indent=2)
 
-        print(f"Snapshot created at {SNAPSHOTS_DIR}")
-    finally:
-        db.close()
+def _build_snapshot_bundle(
+    race_snapshots: list[object],
+    *,
+    manifest_created_at=None,
+    holdout_minimum_race_count: int = 50,
+    mini_val_minimum_race_count: int = 20,
+) -> dict:
+    query_port = _InlineSnapshotQueryPort(race_snapshots)
+    return _build_snapshot_bundle_impl(
+        race_snapshots,
+        query_port=query_port,
+        manifest_created_at=manifest_created_at,
+        holdout_minimum_race_count=holdout_minimum_race_count,
+        mini_val_minimum_race_count=mini_val_minimum_race_count,
+    )
+
+
+def check_snapshot_reproducibility(
+    race_snapshots: list[object],
+    *,
+    manifest_created_at=None,
+    holdout_minimum_race_count: int = 50,
+    mini_val_minimum_race_count: int = 20,
+    reference_bundle: dict | None = None,
+) -> dict:
+    query_port = _InlineSnapshotQueryPort(race_snapshots)
+    return _check_snapshot_reproducibility_impl(
+        race_snapshots,
+        query_port=query_port,
+        manifest_created_at=manifest_created_at,
+        holdout_minimum_race_count=holdout_minimum_race_count,
+        mini_val_minimum_race_count=mini_val_minimum_race_count,
+        reference_bundle=reference_bundle,
+    )
 
 
 # ============================================================
@@ -287,49 +237,119 @@ def _call_llm(system: str, user: str) -> str:
 # ============================================================
 
 
+_STATUS_CODE_SET = frozenset(STATUS_CODES)
+_STATUS_FAIL_ACTUAL_TOP3_MISSING = "FAIL_ACTUAL_TOP3_MISSING"
+_STATUS_FAIL_ACTUAL_TOP3_INVALID = "FAIL_ACTUAL_TOP3_INVALID"
+_STATUS_FAIL_PREDICTION_PAYLOAD_MISSING = "FAIL_PREDICTION_PAYLOAD_MISSING"
+_STATUS_MISSING_PREDICTED_TOP3 = "MISSING_PREDICTED_TOP3"
+_STATUS_FAIL_PREDICTED_TOP3_INVALID = "FAIL_PREDICTED_TOP3_INVALID"
+_STATUS_MISSING_CONFIDENCE = "MISSING_CONFIDENCE"
+_STATUS_FAIL_CONFIDENCE_INVALID = "FAIL_CONFIDENCE_INVALID"
+_STATUS_DEFERRED_LOW_CONFIDENCE = "DEFERRED_LOW_CONFIDENCE"
+_STATUS_SCORED_OK = "SCORED_OK"
+_MISSING = object()
+
+
+def _score_result(
+    status_code: str,
+    *,
+    normalized_confidence: float | None = None,
+    set_match: float = 0.0,
+    correct_count: int = 0,
+) -> dict:
+    if status_code not in _STATUS_CODE_SET:
+        raise ValueError(f"Unknown score status_code: {status_code}")
+    return ScoreComputationResult(
+        race_status=STATUS_SPEC_BY_CODE[status_code],
+        normalized_confidence=normalized_confidence,
+        set_match=set_match,
+        correct_count=correct_count,
+    ).to_dict()
+
+
+def _empty_score(status_code: str) -> dict:
+    return _score_result(status_code)
+
+
+def _normalize_top3_numbers(value: object) -> list[int] | None:
+    if not isinstance(value, list) or len(value) != 3:
+        return None
+
+    normalized: list[int] = []
+    for item in value:
+        try:
+            number = int(item)
+        except (TypeError, ValueError):
+            return None
+        if number <= 0:
+            return None
+        normalized.append(number)
+
+    if len(set(normalized)) != 3:
+        return None
+    return normalized
+
+
+def _normalize_confidence(value: object) -> float | None:
+    if value in (_MISSING, None, ""):
+        return None
+
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError):
+        return None
+
+    if not math.isfinite(normalized):
+        return None
+
+    if normalized > 1.0:
+        normalized = normalized / 100.0
+
+    if normalized < 0.0 or normalized > 1.0:
+        return None
+
+    return normalized
+
+
 def compute_score(prediction: dict, actual: list[int]) -> dict:
     """예측 결과를 채점"""
-    # 스키마 검증
-    if not isinstance(prediction, dict) or "predicted" not in prediction:
-        return {
-            "json_ok": False,
-            "deferred": False,
-            "set_match": 0.0,
-            "correct_count": 0,
-        }
+    normalized_actual = _normalize_top3_numbers(actual)
+    if not isinstance(actual, list) or len(actual) != 3:
+        return _empty_score(_STATUS_FAIL_ACTUAL_TOP3_MISSING)
+    if normalized_actual is None:
+        return _empty_score(_STATUS_FAIL_ACTUAL_TOP3_INVALID)
 
-    predicted = prediction.get("predicted", [])
-    confidence = prediction.get("confidence", 0.0)
+    if not isinstance(prediction, dict):
+        return _empty_score(_STATUS_FAIL_PREDICTION_PAYLOAD_MISSING)
+    if "predicted" not in prediction:
+        return _empty_score(_STATUS_MISSING_PREDICTED_TOP3)
 
-    # confidence 정규화: 72 → 0.72 (LLM이 0~100 스케일로 반환하는 경우 대응)
-    try:
-        confidence = float(confidence)
-        if confidence > 1.0:
-            confidence = confidence / 100.0
-    except (TypeError, ValueError):
-        confidence = 0.0
+    normalized_predicted = _normalize_top3_numbers(prediction.get("predicted"))
+    if normalized_predicted is None:
+        return _empty_score(_STATUS_FAIL_PREDICTED_TOP3_INVALID)
 
-    if not isinstance(predicted, list) or len(predicted) != 3:
-        return {
-            "json_ok": False,
-            "deferred": False,
-            "set_match": 0.0,
-            "correct_count": 0,
-        }
+    raw_confidence = prediction.get("confidence", _MISSING)
+    if raw_confidence in (_MISSING, None, ""):
+        return _empty_score(_STATUS_MISSING_CONFIDENCE)
+
+    normalized_confidence = _normalize_confidence(raw_confidence)
+    if normalized_confidence is None:
+        return _empty_score(_STATUS_FAIL_CONFIDENCE_INVALID)
 
     # defer 판정
-    deferred = confidence < DEFER_THRESHOLD
+    deferred = normalized_confidence < DEFER_THRESHOLD
 
     # set_match 계산
-    sm = set_match_score(predicted, actual)
-    correct = len(set(predicted[:3]) & set(actual[:3]))
+    sm = set_match_score(normalized_predicted, normalized_actual)
+    correct = len(set(normalized_predicted[:3]) & set(normalized_actual[:3]))
+    status_code = _STATUS_DEFERRED_LOW_CONFIDENCE if deferred else _STATUS_SCORED_OK
 
-    return {
-        "json_ok": True,
-        "deferred": deferred,
-        "set_match": sm,
-        "correct_count": correct,
-    }
+    return _score_result(
+        status_code,
+        normalized_confidence=normalized_confidence,
+        set_match=sm,
+        correct_count=correct,
+    )
 
 
 def print_score_line(results: list[dict]) -> None:
@@ -340,19 +360,86 @@ def print_score_line(results: list[dict]) -> None:
         return
 
     json_ok_count = sum(1 for r in results if r["json_ok"])
-    deferred_count = sum(1 for r in results if r["deferred"])
     valid = [r for r in results if r["json_ok"] and not r["deferred"]]
+    coverage_validation = build_coverage_validation_result(results)
 
     sm = sum(r["set_match"] for r in valid) / len(valid) if valid else 0.0
     avg_correct = sum(r["correct_count"] for r in valid) / len(valid) if valid else 0.0
     json_ok_pct = json_ok_count / total * 100
-    coverage_pct = (total - deferred_count) / total * 100
+    coverage_pct = coverage_validation["coverage_pct"]
 
     print(
         f"set_match={sm:.3f} | avg_correct={avg_correct:.2f} | "
         f"json_ok={json_ok_pct:.0f}% | coverage={coverage_pct:.0f}% | "
         f"races={total}"
     )
+
+
+def build_coverage_validation_result(
+    results: list[dict],
+    *,
+    races: list[dict] | None = None,
+    threshold_pct: float = 80.0,
+) -> dict:
+    """커버리지 게이트용 구조화 결과를 생성한다."""
+
+    total_count = len(results)
+    race_lookup: dict[int, str] = {}
+    if races:
+        for index, race in enumerate(races):
+            if not isinstance(race, dict):
+                continue
+            race_lookup[index] = str(race.get("race_id") or "unknown")
+
+    missing_items: list[dict[str, object]] = []
+    for index, result in enumerate(results):
+        score_aggregated = bool(
+            result.get(
+                "score_aggregated", result.get("json_ok") and not result.get("deferred")
+            )
+        )
+        if score_aggregated:
+            continue
+
+        race_id = race_lookup.get(index)
+        if race_id is None:
+            race_id = str(result.get("race_id") or "unknown")
+
+        missing_items.append(
+            {
+                "result_index": index,
+                "race_id": race_id,
+                "status_code": result.get("status_code"),
+                "status_class": result.get("status_class"),
+                "status_reason": result.get("status_reason"),
+                "fallback_action": result.get("fallback_action"),
+            }
+        )
+
+    missing_count = len(missing_items)
+    covered_count = total_count - missing_count
+    coverage_pct = (covered_count / total_count * 100.0) if total_count else 0.0
+
+    payload = {
+        "gate": "coverage",
+        "threshold_pct": threshold_pct,
+        "total_count": total_count,
+        "covered_count": covered_count,
+        "missing_count": missing_count,
+        "coverage_pct": coverage_pct,
+        "passed": missing_count == 0 and coverage_pct >= threshold_pct,
+        "missing_items": missing_items,
+    }
+
+    if missing_count > 0:
+        payload["failure"] = {
+            "reason_code": "COVERAGE_MISSING_ITEMS",
+            "reason": "Coverage validation found one or more races without an aggregated prediction.",
+            "missing_count": missing_count,
+            "missing_items": missing_items,
+        }
+
+    return payload
 
 
 # ============================================================
@@ -399,12 +486,7 @@ def evaluate(mode: str = "mini_val") -> None:
             score = compute_score(prediction, actual)
         except Exception as e:
             print(f"  [{i + 1}/{len(races)}] {race_id}: ERROR - {e}")
-            score = {
-                "json_ok": False,
-                "deferred": False,
-                "set_match": 0.0,
-                "correct_count": 0,
-            }
+            score = _empty_score(_STATUS_FAIL_PREDICTION_PAYLOAD_MISSING)
         else:
             status = "DEFER" if score["deferred"] else f"{score['correct_count']}/3"
             print(f"  [{i + 1}/{len(races)}] {race_id}: {status}")
@@ -424,8 +506,8 @@ def evaluate(mode: str = "mini_val") -> None:
     # Hard gate 검사
     total = len(results)
     json_ok_pct = sum(1 for r in results if r["json_ok"]) / total * 100 if total else 0
-    deferred_count = sum(1 for r in results if r["deferred"])
-    coverage_pct = (total - deferred_count) / total * 100 if total else 0
+    coverage_validation = build_coverage_validation_result(results, races=races)
+    coverage_pct = coverage_validation["coverage_pct"]
 
     gates_passed = True
     if timed_out:
@@ -438,6 +520,16 @@ def evaluate(mode: str = "mini_val") -> None:
         gates_passed = False
     if coverage_pct < 80:
         print(f"HARD GATE FAIL: coverage={coverage_pct:.0f}% < 80%")
+        gates_passed = False
+    if coverage_validation["missing_count"] > 0:
+        print("HARD GATE FAIL: coverage missing items detected")
+        print(
+            json.dumps(
+                coverage_validation["failure"],
+                ensure_ascii=False,
+                sort_keys=True,
+            )
+        )
         gates_passed = False
 
     if gates_passed:

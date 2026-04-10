@@ -6,8 +6,11 @@ import os
 import random
 from pathlib import Path
 
-from research_clean import SAFE_FEATURES
 from rrx_propose_llm import generate_llm_proposal
+from shared.prediction_input_schema import (
+    ALTERNATIVE_RANKING_ALLOWED_FEATURES,
+    validate_alternative_ranking_feature_names,
+)
 
 # Early-prediction search must stay non-market, but the previous proposer was
 # too narrow to justify long plateau runs. Expand around the current frontier
@@ -52,6 +55,8 @@ ALLOWED_HGB_PARAM_VALUES = {
     "l2_regularization": [0.2, 0.3, 0.4, 0.5, 0.6, 0.8],
 }
 ALLOWED_POSITIVE_WEIGHTS = [0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
+OPERATIONAL_FEATURE_SPACE = tuple(ALTERNATIVE_RANKING_ALLOWED_FEATURES)
+_OPERATIONAL_FEATURE_SET = frozenset(OPERATIONAL_FEATURE_SPACE)
 
 
 def _find_runs_dir(start: Path) -> Path | None:
@@ -158,7 +163,7 @@ def _apply_bundle(
 def _mutate_features(
     features: list[str], rng: random.Random
 ) -> tuple[list[str], list[str]]:
-    selected = set(features)
+    selected = {feature for feature in features if feature in _OPERATIONAL_FEATURE_SET}
     mutation_notes: list[str] = []
 
     bundle_names = list(FEATURE_BUNDLES)
@@ -183,7 +188,8 @@ def _mutate_features(
 
     deduped_notes = list(dict.fromkeys(mutation_notes))
 
-    ordered = [feature for feature in SAFE_FEATURES if feature in selected]
+    ordered = [feature for feature in OPERATIONAL_FEATURE_SPACE if feature in selected]
+    validate_alternative_ranking_feature_names(ordered)
     return ordered, deduped_notes
 
 
@@ -210,7 +216,9 @@ def _apply_llm_mutation(config: dict, recent_runs: list[dict]) -> list[str]:
         config["model"]["positive_class_weight"] = weight
         notes.append(f"llm:positive_weight={weight}")
 
-    selected = set(config["features"])
+    selected = {
+        feature for feature in config["features"] if feature in _OPERATIONAL_FEATURE_SET
+    }
     for feature in proposal.drop_features:
         if feature in selected:
             selected.remove(feature)
@@ -223,7 +231,10 @@ def _apply_llm_mutation(config: dict, recent_runs: list[dict]) -> list[str]:
     if not any(feature in selected for feature in OPTIONAL_FEATURES):
         _apply_bundle(selected, "skill_ranks", True, notes)
 
-    config["features"] = [feature for feature in SAFE_FEATURES if feature in selected]
+    config["features"] = [
+        feature for feature in OPERATIONAL_FEATURE_SPACE if feature in selected
+    ]
+    validate_alternative_ranking_feature_names(config["features"])
     rationale = proposal.rationale or "llm-proposed bounded mutation"
     notes.append(f"llm:rationale:{rationale}")
     return list(dict.fromkeys(notes))

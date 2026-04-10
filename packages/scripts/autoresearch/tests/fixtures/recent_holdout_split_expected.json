@@ -1,0 +1,216 @@
+{
+  "holdout": {
+    "excluded_race_dates": [],
+    "exclusion_reason_counts": {},
+    "format_version": "holdout-split-manifest-v1",
+    "included_race_ids": [
+      "20250105_1_1",
+      "20250105_3_1",
+      "20250106_1_1",
+      "20250106_3_1"
+    ],
+    "manifest_sha256": "dee3240066e10acdab6a6d168398349a04bd3a3dd0b5e9d72079619cb9719476",
+    "metadata": {
+      "data_snapshot": {
+        "data_as_of": "2025-01-06T10:36:00+09:00",
+        "entry_snapshot_as_of": "2025-01-06T10:35:00+09:00",
+        "results_as_of": "2026-04-10T12:00:00+09:00"
+      },
+      "manifest_created_at": "2026-04-10T12:00:00+09:00",
+      "period": {
+        "accumulation_direction": "backward_from_latest_complete_date",
+        "end_date": "2025-01-06",
+        "latest_complete_race_date": "2025-01-06",
+        "race_count": 4,
+        "race_date_count": 2,
+        "start_date": "2025-01-05"
+      },
+      "rule": {
+        "batch_race_selection_policy_version": "kra-batch-race-selection-policy-v1",
+        "entry_finalization_rule_version": "holdout-entry-finalization-rule-v1",
+        "rule_path": "docs/recent-holdout-split-rule.md",
+        "rule_version": "recent-holdout-split-rule-v1"
+      },
+      "seed": {
+        "evaluation_seeds": [
+          11,
+          17,
+          23,
+          31,
+          37,
+          41,
+          47,
+          53,
+          59,
+          61
+        ],
+        "selection_seed": null,
+        "selection_seed_invariant": true
+      }
+    },
+    "parameters": {
+      "active_runner_rule": "candidate_filter_minimum_info_fallback_v1",
+      "allow_intra_day_cut": false,
+      "boundary_unit": "race_date",
+      "dataset": "holdout",
+      "leakage_policy_version": "leakage-checks-v1",
+      "minimum_race_count": 4,
+      "require_complete_race_dates": true,
+      "selection_method": "time_ordered_complete_date_accumulation",
+      "target_label": "unordered_top3"
+    },
+    "race_input_snapshot_map": {
+      "20250105_1_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-05T10:30:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-05T10:30:00+09:00",
+          "snapshot_ready_at": "2025-01-05T10:30:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:f5458466afa93211"
+      },
+      "20250105_3_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-05T10:35:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-05T10:35:00+09:00",
+          "snapshot_ready_at": "2025-01-05T10:35:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:d960685d7dfcd902"
+      },
+      "20250106_1_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-06T10:30:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-06T10:30:00+09:00",
+          "snapshot_ready_at": "2025-01-06T10:30:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:dba556b4c0c4fb5d"
+      },
+      "20250106_3_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-06T10:35:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-06T10:35:00+09:00",
+          "snapshot_ready_at": "2025-01-06T10:35:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:0609c5cd0d6a5812"
+      }
+    }
+  },
+  "mini_val": {
+    "excluded_race_dates": [],
+    "exclusion_reason_counts": {},
+    "format_version": "holdout-split-manifest-v1",
+    "included_race_ids": [
+      "20250103_1_1",
+      "20250103_3_1",
+      "20250104_1_1",
+      "20250104_3_1"
+    ],
+    "manifest_sha256": "86b48b51df4b18c9ad0db9ef3eb42a80ac7aa944cf65eb1423a861100dcd91db",
+    "metadata": {
+      "data_snapshot": {
+        "data_as_of": "2025-01-04T10:36:00+09:00",
+        "entry_snapshot_as_of": "2025-01-04T10:35:00+09:00",
+        "results_as_of": "2026-04-10T12:00:00+09:00"
+      },
+      "manifest_created_at": "2026-04-10T12:00:00+09:00",
+      "period": {
+        "accumulation_direction": "backward_from_latest_complete_date",
+        "end_date": "2025-01-04",
+        "latest_complete_race_date": "2025-01-04",
+        "race_count": 4,
+        "race_date_count": 2,
+        "start_date": "2025-01-03"
+      },
+      "rule": {
+        "batch_race_selection_policy_version": "kra-batch-race-selection-policy-v1",
+        "entry_finalization_rule_version": "holdout-entry-finalization-rule-v1",
+        "rule_path": "docs/recent-holdout-split-rule.md",
+        "rule_version": "recent-holdout-split-rule-v1"
+      },
+      "seed": {
+        "evaluation_seeds": [
+          11,
+          17,
+          23,
+          31,
+          37,
+          41,
+          47,
+          53,
+          59,
+          61
+        ],
+        "selection_seed": null,
+        "selection_seed_invariant": true
+      }
+    },
+    "parameters": {
+      "active_runner_rule": "candidate_filter_minimum_info_fallback_v1",
+      "allow_intra_day_cut": false,
+      "boundary_unit": "race_date",
+      "dataset": "mini_val",
+      "leakage_policy_version": "leakage-checks-v1",
+      "minimum_race_count": 4,
+      "require_complete_race_dates": true,
+      "selection_method": "time_ordered_complete_date_accumulation",
+      "target_label": "unordered_top3"
+    },
+    "race_input_snapshot_map": {
+      "20250103_1_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-03T10:30:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-03T10:30:00+09:00",
+          "snapshot_ready_at": "2025-01-03T10:30:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:1e798f92ccc523de"
+      },
+      "20250103_3_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-03T10:35:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-03T10:35:00+09:00",
+          "snapshot_ready_at": "2025-01-03T10:35:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:e12e44f508b24574"
+      },
+      "20250104_1_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-04T10:30:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-04T10:30:00+09:00",
+          "snapshot_ready_at": "2025-01-04T10:30:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:2fe1e7b25c2edf90"
+      },
+      "20250104_3_1": {
+        "snapshot_generation_basis": {
+          "entry_finalized_at": "2025-01-04T10:35:00+09:00",
+          "selected_timestamp_field": "basic_data.collected_at",
+          "selected_timestamp_value": "2025-01-04T10:35:00+09:00",
+          "snapshot_ready_at": "2025-01-04T10:35:00+09:00",
+          "source_filter_basis": "entry_finalized_at",
+          "timestamp_source": "snapshot_collected_at"
+        },
+        "snapshot_id": "holdout-input-v1:60f4db1bca0530f9"
+      }
+    }
+  }
+}

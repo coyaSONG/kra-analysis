@@ -5,7 +5,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from evaluation.leakage_checks import check_detailed_results_for_leakage
+from evaluation.leakage_checks import (
+    FORBIDDEN_POST_RACE_FIELDS,
+    FORBIDDEN_POST_RACE_SOURCE_TAGS,
+    check_detailed_results_for_leakage,
+)
 
 
 def test_leakage_check_flags_forbidden_post_race_fields() -> None:
@@ -44,3 +48,16 @@ def test_leakage_check_passes_when_no_forbidden_fields_exist() -> None:
 
     assert report["passed"] is True
     assert report["issues"] == []
+
+
+def test_raw_leakage_catalog_keeps_known_result_and_label_keys_blocked() -> None:
+    assert {"rank", "top3", "actual_result"} <= FORBIDDEN_POST_RACE_FIELDS
+    assert {
+        "ord",
+        "ordBigo",
+        "diffUnit",
+        "rankRise",
+        "resultTime",
+    } <= FORBIDDEN_POST_RACE_FIELDS
+    assert {"race_odds", "dividend", "payout"} <= FORBIDDEN_POST_RACE_FIELDS
+    assert FORBIDDEN_POST_RACE_SOURCE_TAGS == {"post_entry_only"}

@@ -31,6 +31,8 @@ package = false  # 이것은 스크립트 모음이지 패키지가 아닙니다
 # 평가 스크립트
 evaluate-v3 = "evaluation.evaluate_prompt_v3:main"
 evaluate-predict = "evaluation.predict_only_test:main"
+evaluate-seed-job = "autoresearch.evaluation_orchestrator:main"
+evaluate-seed-matrix = "autoresearch.seed_matrix_runner:main"
 
 # 개선 스크립트
 improve-v5 = "prompt_improvement.recursive_prompt_improvement_v5:main"

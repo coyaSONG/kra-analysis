@@ -7,7 +7,10 @@ import re
 import sys
 from collections import defaultdict
 from copy import deepcopy
+from datetime import datetime
+from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from sklearn.ensemble import (
@@ -24,78 +27,39 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.append(str(SCRIPT_ROOT))
 
-SAFE_FEATURES = [
-    "rating",
-    "wgBudam",
-    "wgHr_value",
-    "winOdds",
-    "plcOdds",
-    "age",
-    "draw_no",
-    "sex_code",
-    "weather_code",
-    "track_pct",
-    "class_code",
-    "budam_code",
-    "rest_risk_code",
-    "allowance_flag",
-    "horse_win_rate",
-    "horse_place_rate",
-    "jockey_win_rate",
-    "jockey_place_rate",
-    "trainer_win_rate",
-    "trainer_place_rate",
-    "jockey_form",
-    "rest_days",
-    "jockey_recent_win_rate",
-    "rating_rank",
-    "odds_rank",
-    "age_prime",
-    "year_place_rate",
-    "total_place_rate",
-    "jockey_total_place_rate",
-    "trainer_total_place_rate",
-    "field_size",
-    "is_handicap",
-    "dist",
-    "is_sprint",
-    "is_mile",
-    "is_route",
-    "is_large",
-    "burden_ratio",
-    "hr_starts_y",
-    "hr_starts_t",
-    "horse_top3_skill",
-    "horse_starts_y",
-    "horse_low_sample",
-    "jk_skill",
-    "tr_skill",
-    "horse_skill_rank",
-    "jk_skill_rank",
-    "tr_skill_rank",
-    "wg_budam_rank",
-    "gap_3rd_4th",
-    "field_size_live",
-    "wet_track",
-    "cancelled_count",
-    "training_score",
-    "days_since_training",
-    "recent_training",
-    "owner_win_rate",
-    "owner_skill",
-    "jk_place_rate_y",
-    "tr_place_rate_y",
-    "rating_rr",
-    "wgBudam_rr",
-    "winOdds_rr",
-    "plcOdds_rr",
-    "horse_place_rate_rr",
-    "jockey_place_rate_rr",
-    "trainer_place_rate_rr",
-    "year_place_rate_rr",
-    "total_place_rate_rr",
-    "draw_rr",
-]
+from evaluation.leakage_checks import check_detailed_results_for_leakage  # noqa: E402
+from shared.alternative_ranking import rank_race_entries  # noqa: E402
+from shared.prediction_input_schema import (  # noqa: E402
+    ALTERNATIVE_RANKING_ALLOWED_FEATURES,
+    PREDICTION_INPUT_NAMES,
+    build_alternative_ranking_rows_for_race,
+    normalize_alternative_ranking_row,
+    validate_alternative_ranking_dataset_rows,
+    validate_alternative_ranking_feature_names,
+)
+from shared.prerace_field_policy import (  # noqa: E402
+    filter_prerace_payload,
+    validate_operational_dataset_payload,
+)
+
+from autoresearch.dataset_artifacts import (  # noqa: E402
+    OfflineEvaluationDatasetArtifacts,
+    load_offline_evaluation_dataset,
+    resolve_offline_evaluation_dataset_artifacts,
+)
+from autoresearch.parameter_context import (  # noqa: E402
+    EvaluationModelParameters,
+    EvaluationParameterContext,
+    load_evaluation_parameter_context,
+    resolve_runtime_seed_parameters,
+)
+from autoresearch.reproducibility import (  # noqa: E402
+    write_research_evaluation_bundle,
+)
+from autoresearch.split_plan import build_temporal_split_plan  # noqa: E402
+
+SAFE_FEATURES = list(PREDICTION_INPUT_NAMES)
+OPERATIONAL_FEATURES = list(ALTERNATIVE_RANKING_ALLOWED_FEATURES)
 
 MARKET_FEATURES = {
     "winOdds",
@@ -104,6 +68,55 @@ MARKET_FEATURES = {
     "winOdds_rr",
     "plcOdds_rr",
 }
+
+VALIDATION_ISSUE_PREVIEW_LIMIT = 5
+
+
+class PredictionCoverageError(RuntimeError):
+    """Raised when an evaluation window does not emit a valid top-3 prediction for every race."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason_code: str = "prediction_coverage_validation_failed",
+        missing_race_ids: list[str] | None = None,
+        incomplete_top3_race_ids: list[str] | None = None,
+        expected_race_count: int | None = None,
+        predicted_race_count: int | None = None,
+        train_end: str | None = None,
+        eval_start: str | None = None,
+        eval_end: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.reason_code = reason_code
+        self.missing_race_ids = tuple(missing_race_ids or ())
+        self.incomplete_top3_race_ids = tuple(incomplete_top3_race_ids or ())
+        self.expected_race_count = expected_race_count
+        self.predicted_race_count = predicted_race_count
+        self.train_end = train_end
+        self.eval_start = eval_start
+        self.eval_end = eval_end
+
+    def to_failure_details(self) -> dict[str, Any]:
+        return {
+            "reason_code": self.reason_code,
+            "reason": (
+                "Coverage validation failed because one or more races did not emit "
+                "a complete unordered top-3 prediction."
+            ),
+            "missing_count": len(self.missing_race_ids),
+            "missing_items": list(self.missing_race_ids),
+            "incomplete_top3_count": len(self.incomplete_top3_race_ids),
+            "incomplete_top3_race_ids": list(self.incomplete_top3_race_ids),
+            "expected_race_count": self.expected_race_count,
+            "predicted_race_count": self.predicted_race_count,
+            "evaluation_window": {
+                "train_end": self.train_end,
+                "eval_start": self.eval_start,
+                "eval_end": self.eval_end,
+            },
+        }
 
 
 def _compute_race_features(horses: list[dict]) -> list[dict]:
@@ -225,6 +238,74 @@ def _pre_race_horse_order(horses: list[dict]) -> list[dict]:
     )
 
 
+def _is_blank_like(value: object) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() == ""
+    if isinstance(value, float):
+        return not np.isfinite(value)
+    return False
+
+
+def _stable_json(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def _coerce_chul_no(value: object) -> int | None:
+    if isinstance(value, bool) or value in ("", None):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if np.isfinite(value) and value.is_integer():
+            return int(value)
+        return None
+    match = re.search(r"\d+", str(value))
+    if not match:
+        return None
+    return int(match.group(0))
+
+
+def _normalize_race_date_text(
+    value: object,
+    *,
+    race_id: str | None = None,
+) -> str:
+    candidates = [value]
+    if race_id:
+        candidates.append(race_id)
+
+    for candidate in candidates:
+        if candidate in ("", None):
+            continue
+        digits = "".join(ch for ch in str(candidate) if ch.isdigit())
+        if len(digits) >= 8:
+            return digits[:8]
+
+    raise ValueError(
+        f"Unable to resolve canonical race_date: race_id={race_id!r}, value={value!r}"
+    )
+
+
+def _population_score(value: object) -> int:
+    if isinstance(value, dict):
+        return sum(_population_score(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return sum(_population_score(item) for item in value)
+    return 0 if _is_blank_like(value) else 1
+
+
+def _select_canonical_record(candidates: list[dict]) -> dict:
+    if not candidates:
+        raise ValueError("Cannot select canonical record from empty candidates")
+    ordered = sorted(
+        (deepcopy(candidate) for candidate in candidates),
+        key=lambda candidate: (-_population_score(candidate), _stable_json(candidate)),
+    )
+    return ordered[0]
+
+
 def _percentile_rank(values: list[float], reverse: bool = False) -> list[float]:
     arr = np.asarray(values, dtype=float)
     fill = -999999.0 if reverse else 999999.0
@@ -245,166 +326,201 @@ def _validate_features(features: list[str]) -> None:
     unknown = sorted(set(features) - set(SAFE_FEATURES))
     if unknown:
         raise ValueError(f"Unknown or forbidden features requested: {unknown}")
+    validate_alternative_ranking_feature_names(features)
+
+
+def _sanitize_training_race_payload(race: dict) -> dict:
+    filtered_race, _policy = filter_prerace_payload(deepcopy(race))
+    return filtered_race
+
+
+def _summarize_validation_issues(
+    issues: list[str],
+    *,
+    sample_limit: int = VALIDATION_ISSUE_PREVIEW_LIMIT,
+) -> str:
+    preview = issues[:sample_limit]
+    remainder = len(issues) - len(preview)
+    suffix = "" if remainder <= 0 else f" ... (+{remainder} more)"
+    return f"{preview}{suffix}"
+
+
+def _validate_final_training_race_payload(race: dict) -> None:
+    race_id = str(race.get("race_id") or "unknown")
+    leakage_report = check_detailed_results_for_leakage(
+        [{"race_id": race_id, "race_data": race}]
+    )
+    if not leakage_report["passed"]:
+        raise ValueError(
+            f"Race {race_id} training input leakage check failed: "
+            f"{_summarize_validation_issues(leakage_report['issues'])}"
+        )
+
+    schema_report = validate_operational_dataset_payload(race)
+    if not schema_report["passed"]:
+        raise ValueError(
+            f"Race {race_id} training input operational schema validation failed: "
+            f"{_summarize_validation_issues(schema_report['violating_paths'])}"
+        )
 
 
 def _build_feature_rows(races: list[dict], answers: dict[str, list[int]]) -> list[dict]:
     rows: list[dict] = []
     for race in races:
-        info = race.get("race_info") or {}
-        horses = deepcopy(_pre_race_horse_order(race["horses"]))
+        filtered_race = _sanitize_training_race_payload(race)
+        horses = deepcopy(_pre_race_horse_order(filtered_race.get("horses") or []))
+        if not horses:
+            continue
         refreshed = _compute_race_features(deepcopy(horses))
         for horse, fresh in zip(horses, refreshed, strict=False):
             existing_features = horse.get("computed_features") or {}
             fresh_features = fresh.get("computed_features") or {}
             horse["computed_features"] = {**fresh_features, **existing_features}
-        actual = set(answers.get(race["race_id"], [])[:3])
-        local_rows: list[dict] = []
-
-        for horse in horses:
-            features = horse.get("computed_features") or {}
-            jockey = horse.get("jkDetail") or {}
-            trainer = horse.get("trDetail") or {}
-            horse_detail = horse.get("hrDetail") or {}
-            dist = _safe_int(info.get("rcDist"), 0)
-            local_rows.append(
-                {
-                    "rating": _safe_float(horse.get("rating")),
-                    "wgBudam": _safe_float(horse.get("wgBudam")),
-                    "wgHr_value": _parse_leading_number(horse.get("wgHr")),
-                    "winOdds": _safe_float(horse.get("winOdds")),
-                    "plcOdds": _safe_float(horse.get("plcOdds")),
-                    "age": _safe_float(horse.get("age")),
-                    "draw_no": _safe_float(horse.get("chulNo")),
-                    "sex_code": _sex_code(horse.get("sex")),
-                    "weather_code": _weather_code(info.get("weather")),
-                    "track_pct": _track_pct(info.get("track")),
-                    "class_code": _class_code(horse.get("class_rank")),
-                    "budam_code": _budam_code(info.get("budam")),
-                    "rest_risk_code": _rest_risk_code(features.get("rest_risk")),
-                    "allowance_flag": 1.0
-                    if str(horse.get("wgBudamBigo")) == "*"
-                    else 0.0,
-                    "horse_win_rate": _safe_float(features.get("horse_win_rate")),
-                    "horse_place_rate": _safe_float(features.get("horse_place_rate")),
-                    "jockey_win_rate": _safe_float(features.get("jockey_win_rate")),
-                    "jockey_place_rate": _safe_float(features.get("jockey_place_rate")),
-                    "trainer_win_rate": _safe_float(features.get("trainer_win_rate")),
-                    "trainer_place_rate": _safe_float(
-                        features.get("trainer_place_rate")
-                    ),
-                    "jockey_form": _safe_float(features.get("jockey_form")),
-                    "rest_days": _safe_float(features.get("rest_days")),
-                    "jockey_recent_win_rate": _safe_float(
-                        features.get("jockey_recent_win_rate")
-                    ),
-                    "rating_rank": _safe_float(features.get("rating_rank")),
-                    "odds_rank": _safe_float(features.get("odds_rank")),
-                    "age_prime": 1.0 if features.get("age_prime") else 0.0,
-                    "year_place_rate": _year_place_rate(horse),
-                    "total_place_rate": _total_place_rate(horse),
-                    "jockey_total_place_rate": _place_rate(
-                        jockey.get("ord1CntT"),
-                        jockey.get("ord2CntT"),
-                        jockey.get("ord3CntT"),
-                        jockey.get("rcCntT"),
-                    ),
-                    "trainer_total_place_rate": _place_rate(
-                        trainer.get("ord1CntT"),
-                        trainer.get("ord2CntT"),
-                        trainer.get("ord3CntT"),
-                        trainer.get("rcCntT"),
-                    ),
-                    "field_size": float(len(horses)),
-                    "is_handicap": 1.0
-                    if "핸디캡" in str(info.get("budam", ""))
-                    else 0.0,
-                    "dist": float(dist),
-                    "is_sprint": 1.0 if dist <= 1200 else 0.0,
-                    "is_mile": 1.0 if 1200 < dist <= 1600 else 0.0,
-                    "is_route": 1.0 if dist > 1600 else 0.0,
-                    "is_large": 1.0 if len(horses) >= 12 else 0.0,
-                    "burden_ratio": _safe_float(features.get("burden_ratio")),
-                    "hr_starts_y": _safe_float(horse_detail.get("rcCntY")),
-                    "hr_starts_t": _safe_float(horse_detail.get("rcCntT")),
-                    "horse_top3_skill": _safe_float(features.get("horse_top3_skill")),
-                    "horse_starts_y": _safe_float(features.get("horse_starts_y")),
-                    "horse_low_sample": 1.0
-                    if features.get("horse_low_sample") is True
-                    else 0.0
-                    if features.get("horse_low_sample") is False
-                    else np.nan,
-                    "jk_skill": _safe_float(features.get("jk_skill")),
-                    "tr_skill": _safe_float(features.get("tr_skill")),
-                    "horse_skill_rank": _safe_float(features.get("horse_skill_rank")),
-                    "jk_skill_rank": _safe_float(features.get("jk_skill_rank")),
-                    "tr_skill_rank": _safe_float(features.get("tr_skill_rank")),
-                    "wg_budam_rank": _safe_float(features.get("wg_budam_rank")),
-                    "gap_3rd_4th": _safe_float(features.get("gap_3rd_4th")),
-                    "field_size_live": _safe_float(features.get("field_size_live")),
-                    "wet_track": 1.0
-                    if features.get("wet_track") is True
-                    else 0.0
-                    if features.get("wet_track") is False
-                    else np.nan,
-                    "cancelled_count": _safe_float(features.get("cancelled_count")),
-                    "training_score": _safe_float(features.get("training_score")),
-                    "days_since_training": _safe_float(
-                        features.get("days_since_training")
-                    ),
-                    "recent_training": 1.0
-                    if features.get("recent_training") is True
-                    else 0.0
-                    if features.get("recent_training") is False
-                    else np.nan,
-                    "owner_win_rate": _safe_float(features.get("owner_win_rate")),
-                    "owner_skill": _safe_float(features.get("owner_skill")),
-                    "jk_place_rate_y": _place_rate(
-                        jockey.get("ord1CntY"),
-                        jockey.get("ord2CntY"),
-                        jockey.get("ord3CntY"),
-                        jockey.get("rcCntY"),
-                    ),
-                    "tr_place_rate_y": _place_rate(
-                        trainer.get("ord1CntY"),
-                        trainer.get("ord2CntY"),
-                        trainer.get("ord3CntY"),
-                        trainer.get("rcCntY"),
-                    ),
-                    "race_id": race["race_id"],
-                    "race_date": race["race_date"],
-                    "chulNo": horse.get("chulNo"),
-                    "target": 1 if horse.get("chulNo") in actual else 0,
-                }
-            )
-
-        rank_sources = {
-            "rating_rr": [row["rating"] for row in local_rows],
-            "wgBudam_rr": [row["wgBudam"] for row in local_rows],
-            "winOdds_rr": [row["winOdds"] for row in local_rows],
-            "plcOdds_rr": [row["plcOdds"] for row in local_rows],
-            "horse_place_rate_rr": [row["horse_place_rate"] for row in local_rows],
-            "jockey_place_rate_rr": [row["jockey_place_rate"] for row in local_rows],
-            "trainer_place_rate_rr": [row["trainer_place_rate"] for row in local_rows],
-            "year_place_rate_rr": [row["year_place_rate"] for row in local_rows],
-            "total_place_rate_rr": [row["total_place_rate"] for row in local_rows],
-            "draw_rr": [row["draw_no"] for row in local_rows],
-        }
-        reverse_features = {
-            "rating_rr",
-            "horse_place_rate_rr",
-            "jockey_place_rate_rr",
-            "trainer_place_rate_rr",
-            "year_place_rate_rr",
-            "total_place_rate_rr",
-        }
-        for feature_name, values in rank_sources.items():
-            ranks = _percentile_rank(values, reverse=feature_name in reverse_features)
-            for row, rank in zip(local_rows, ranks, strict=False):
-                row[feature_name] = rank
-
+        filtered_race["horses"] = horses
+        filtered_race = _sanitize_training_race_payload(filtered_race)
+        _validate_final_training_race_payload(filtered_race)
+        local_rows = build_alternative_ranking_rows_for_race(
+            filtered_race,
+            actual_top3=answers.get(filtered_race["race_id"], [])[:3],
+            validate_rows=True,
+        )
         rows.extend(local_rows)
 
     return rows
+
+
+def _normalize_dataset_before_split(
+    races: list[dict],
+    answers: dict[str, list[int]],
+) -> tuple[list[dict], dict[str, list[int]], dict[str, int]]:
+    race_candidates: dict[str, list[dict]] = defaultdict(list)
+    duplicate_horse_group_count = 0
+    dropped_horse_without_chul_count = 0
+
+    for race in races:
+        race_id = str(race.get("race_id") or "").strip()
+        if not race_id:
+            raise ValueError("Race sample missing race_id before split normalization")
+
+        normalized_race = deepcopy(race)
+        normalized_race["race_id"] = race_id
+        normalized_race["race_date"] = _normalize_race_date_text(
+            normalized_race.get("race_date")
+            or (normalized_race.get("race_info") or {}).get("rcDate"),
+            race_id=race_id,
+        )
+
+        horse_candidates: dict[int, list[dict]] = defaultdict(list)
+        for horse in normalized_race.get("horses") or []:
+            chul_no = _coerce_chul_no(horse.get("chulNo"))
+            if chul_no is None:
+                dropped_horse_without_chul_count += 1
+                continue
+            normalized_horse = deepcopy(horse)
+            normalized_horse["chulNo"] = chul_no
+            horse_candidates[chul_no].append(normalized_horse)
+
+        duplicate_horse_group_count += sum(
+            1 for candidates in horse_candidates.values() if len(candidates) > 1
+        )
+        normalized_race["horses"] = _pre_race_horse_order(
+            [
+                _select_canonical_record(candidates)
+                for _, candidates in sorted(horse_candidates.items())
+            ]
+        )
+        race_candidates[race_id].append(normalized_race)
+
+    normalized_races = [
+        _select_canonical_record(candidates)
+        for _, candidates in sorted(
+            race_candidates.items(),
+            key=lambda item: (
+                _normalize_race_date_text(
+                    item[1][0].get("race_date"),
+                    race_id=item[0],
+                ),
+                item[0],
+            ),
+        )
+    ]
+    normalized_races.sort(key=lambda race: (race["race_date"], race["race_id"]))
+
+    normalized_answers: dict[str, list[int]] = {}
+    for raw_race_id, raw_top3 in answers.items():
+        race_id = str(raw_race_id)
+        seen: set[int] = set()
+        normalized_top3: list[int] = []
+        values = raw_top3 if isinstance(raw_top3, list) else []
+        for item in values:
+            chul_no = _coerce_chul_no(item)
+            if chul_no is None or chul_no in seen:
+                continue
+            normalized_top3.append(chul_no)
+            seen.add(chul_no)
+            if len(normalized_top3) == 3:
+                break
+        normalized_answers[race_id] = normalized_top3
+
+    ordered_answers = {
+        race_id: normalized_answers[race_id]
+        for race_id in sorted(
+            normalized_answers,
+            key=lambda item: (_normalize_race_date_text(None, race_id=item), item),
+        )
+    }
+
+    summary = {
+        "input_race_count": len(races),
+        "normalized_race_count": len(normalized_races),
+        "duplicate_race_group_count": sum(
+            1 for candidates in race_candidates.values() if len(candidates) > 1
+        ),
+        "duplicate_race_count": sum(
+            max(len(candidates) - 1, 0) for candidates in race_candidates.values()
+        ),
+        "duplicate_horse_group_count": duplicate_horse_group_count,
+        "dropped_horse_without_chul_count": dropped_horse_without_chul_count,
+    }
+    return normalized_races, ordered_answers, summary
+
+
+def _normalize_feature_rows_before_split(
+    rows: list[dict],
+) -> tuple[list[dict], dict[str, int]]:
+    row_candidates: dict[tuple[str, str, int], list[dict]] = defaultdict(list)
+
+    for row in rows:
+        normalized_row = normalize_alternative_ranking_row(row, require_label=True)
+        race_id = normalized_row["race_id"]
+        race_date = normalized_row["race_date"]
+        chul_no = normalized_row["chulNo"]
+        row_candidates[(race_date, race_id, chul_no)].append(normalized_row)
+
+    normalized_rows = [
+        _select_canonical_record(candidates)
+        for _, candidates in sorted(row_candidates.items())
+    ]
+    validate_alternative_ranking_dataset_rows(normalized_rows, require_label=True)
+
+    missing_feature_value_count = 0
+    for row in normalized_rows:
+        missing_feature_value_count += sum(
+            1 for feature_name in OPERATIONAL_FEATURES if np.isnan(row[feature_name])
+        )
+
+    summary = {
+        "input_row_count": len(rows),
+        "normalized_row_count": len(normalized_rows),
+        "duplicate_row_group_count": sum(
+            1 for candidates in row_candidates.values() if len(candidates) > 1
+        ),
+        "duplicate_row_count": sum(
+            max(len(candidates) - 1, 0) for candidates in row_candidates.values()
+        ),
+        "missing_feature_value_count": missing_feature_value_count,
+    }
+    return normalized_rows, summary
 
 
 def _snapshot_order_alignment(
@@ -437,13 +553,50 @@ def _snapshot_order_alignment(
     }
 
 
-def _load_dataset(dataset_name: str) -> tuple[list[dict], dict[str, list[int]]]:
-    data = json.loads((SNAPSHOT_DIR / f"{dataset_name}.json").read_text())
-    answer_path = SNAPSHOT_DIR / f"{dataset_name}_answer_key.json"
-    answers = json.loads(answer_path.read_text())
-    if "meta" in answers:
-        answers = {k: v for k, v in answers.items() if k != "meta"}
-    return data, answers
+def _load_dataset(
+    artifacts: OfflineEvaluationDatasetArtifacts,
+) -> tuple[list[dict], dict[str, list[int]]]:
+    return load_offline_evaluation_dataset(artifacts)
+
+
+def _build_dataset_selection_snapshot(
+    artifacts: OfflineEvaluationDatasetArtifacts,
+) -> dict[str, Any]:
+    manifest_payload = json.loads(artifacts.manifest_path.read_text(encoding="utf-8"))
+    manifest_races = manifest_payload.get("races")
+    if not isinstance(manifest_races, list) or not manifest_races:
+        raise ValueError(
+            "offline dataset manifest must contain a non-empty races list for dataset selection snapshot."
+        )
+
+    final_race_ids: list[str] = []
+    for index, row in enumerate(manifest_races):
+        if not isinstance(row, dict):
+            raise ValueError(
+                "offline dataset manifest races entries must be JSON objects: "
+                f"dataset={artifacts.dataset}, index={index}"
+            )
+        race_id = str(row.get("race_id") or "").strip()
+        if not race_id:
+            raise ValueError(
+                "offline dataset manifest races entries must include race_id: "
+                f"dataset={artifacts.dataset}, index={index}"
+            )
+        final_race_ids.append(race_id)
+
+    if len(final_race_ids) != len(set(final_race_ids)):
+        raise ValueError(
+            "offline dataset manifest races contains duplicate race_id values for dataset selection snapshot."
+        )
+
+    return {
+        "source_artifact_path": str(artifacts.manifest_path),
+        "source_artifact_sha256": sha256(
+            artifacts.manifest_path.read_bytes()
+        ).hexdigest(),
+        "expected_race_count": len(final_race_ids),
+        "final_race_ids": final_race_ids,
+    }
 
 
 def _build_arrays(
@@ -468,29 +621,139 @@ def _all_missing_features(X: np.ndarray, features: list[str]) -> list[str]:
     return missing
 
 
+def load_runtime_params(
+    *,
+    config: dict,
+    runtime_params_path: Path | None = None,
+    model_random_state: int | None = None,
+) -> dict[str, int | None]:
+    """기존 테스트/호출부 호환용 wrapper.
+
+    실질적인 해석은 parameter_context 계층에서 수행한다.
+    """
+
+    _evaluation_seeds, _resolved_seed_index, runtime_params, _parameter_source = (
+        resolve_runtime_seed_parameters(
+            config=config,
+            runtime_params_path=runtime_params_path,
+            model_random_state=model_random_state,
+        )
+    )
+    return runtime_params.model_dump(mode="json")
+
+
 def _summarize(
     groups: np.ndarray,
     chuls: list[int],
     probs: np.ndarray,
     answers: dict[str, list[int]],
+    race_lookup: dict[str, list[dict]] | None = None,
 ) -> dict[str, float | int]:
+    predicted_by_race = _predict_top3_per_race(
+        groups,
+        chuls,
+        probs,
+        race_lookup=race_lookup,
+    )
+    prediction_rows = _build_prediction_rows(
+        predicted_by_race=predicted_by_race,
+        answers=answers,
+    )
+    return _summarize_prediction_rows(prediction_rows)
+
+
+def _predict_top3_per_race(
+    groups: np.ndarray,
+    chuls: list[int],
+    probs: np.ndarray,
+    race_lookup: dict[str, list[dict]] | None = None,
+) -> dict[str, list[int]]:
     bucket: dict[str, list[tuple[float, int]]] = defaultdict(list)
     for race_id, chul_no, prob in zip(groups, chuls, probs, strict=False):
         bucket[str(race_id)].append((float(prob), chul_no))
 
-    hits: list[int] = []
+    predicted_by_race: dict[str, list[int]] = {}
     for race_id, values in bucket.items():
-        predicted = [
-            chul_no
-            for prob, chul_no in sorted(values, key=lambda item: item[0], reverse=True)[
-                :3
-            ]
-        ]
-        actual = answers.get(race_id, [])[:3]
+        predicted_by_race[race_id] = _predict_top3_for_race(
+            race_lookup.get(race_id) if race_lookup else None,
+            values,
+        )
+    return predicted_by_race
+
+
+def _build_prediction_rows(
+    *,
+    predicted_by_race: dict[str, list[int]],
+    answers: dict[str, list[int]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for race_id in sorted(predicted_by_race):
+        predicted = [int(chul_no) for chul_no in predicted_by_race[race_id][:3]]
+        actual = [int(chul_no) for chul_no in answers.get(race_id, [])[:3]]
         if not actual:
             continue
-        hits.append(len(set(predicted) & set(actual)))
+        hit_count = len(set(predicted) & set(actual))
+        rows.append(
+            {
+                "race_id": race_id,
+                "predicted_top3_unordered": predicted,
+                "actual_top3_unordered": actual,
+                "hit_count": hit_count,
+                "exact_match": hit_count == 3,
+            }
+        )
+    return rows
 
+
+def _validate_prediction_coverage(
+    *,
+    predicted_by_race: dict[str, list[int]],
+    answers: dict[str, list[int]],
+    train_end: str,
+    eval_start: str | None,
+    eval_end: str | None,
+) -> None:
+    expected_race_ids = sorted(
+        str(race_id) for race_id, actual in answers.items() if actual
+    )
+    expected_race_id_set = set(expected_race_ids)
+    predicted_race_ids = sorted(
+        str(race_id)
+        for race_id, predicted in predicted_by_race.items()
+        if race_id in expected_race_id_set and len(predicted) >= 3
+    )
+    predicted_race_id_set = set(predicted_race_ids)
+    missing_race_ids = [
+        race_id for race_id in expected_race_ids if race_id not in predicted_race_id_set
+    ]
+    incomplete_race_ids = sorted(
+        str(race_id)
+        for race_id, predicted in predicted_by_race.items()
+        if race_id in expected_race_id_set and len(predicted) < 3
+    )
+
+    if not missing_race_ids:
+        return
+
+    window_label = f"train_end={train_end}, eval_start={eval_start or '-'}, eval_end={eval_end or '-'}"
+    raise PredictionCoverageError(
+        "prediction coverage validation failed for evaluation window "
+        f"({window_label}); missing_race_ids={missing_race_ids}; "
+        f"incomplete_top3_race_ids={incomplete_race_ids}",
+        missing_race_ids=missing_race_ids,
+        incomplete_top3_race_ids=incomplete_race_ids,
+        expected_race_count=len(expected_race_ids),
+        predicted_race_count=len(predicted_race_ids),
+        train_end=train_end,
+        eval_start=eval_start,
+        eval_end=eval_end,
+    )
+
+
+def _summarize_prediction_rows(
+    prediction_rows: list[dict[str, Any]],
+) -> dict[str, float | int]:
+    hits = [int(row["hit_count"]) for row in prediction_rows]
     exact = sum(1 for value in hits if value == 3)
     return {
         "races": len(hits),
@@ -505,6 +768,63 @@ def _summarize(
     }
 
 
+def _normalize_model_score(value: object) -> float | None:
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(score):
+        return None
+    return score
+
+
+def _predict_top3_for_race(
+    race_horses: list[dict] | None,
+    scored_values: list[tuple[float, int]],
+) -> list[int]:
+    model_scores: dict[int, float] = {}
+    for raw_score, chul_no in scored_values:
+        try:
+            normalized_chul_no = int(chul_no)
+        except (TypeError, ValueError):
+            continue
+        normalized_score = _normalize_model_score(raw_score)
+        if normalized_score is not None:
+            model_scores[normalized_chul_no] = normalized_score
+
+    if race_horses:
+        ranked_entries = rank_race_entries(
+            race_horses,
+            model_scores=model_scores or None,
+        )
+        predicted: list[int] = []
+        seen: set[int] = set()
+        for entry in ranked_entries:
+            if entry.chul_no is None or entry.chul_no in seen:
+                continue
+            predicted.append(entry.chul_no)
+            seen.add(entry.chul_no)
+            if len(predicted) == 3:
+                return predicted
+
+    prepared: list[tuple[int, float, int]] = []
+    for raw_score, chul_no in scored_values:
+        try:
+            normalized_chul_no = int(chul_no)
+        except (TypeError, ValueError):
+            continue
+        normalized_score = _normalize_model_score(raw_score)
+        prepared.append(
+            (
+                0 if normalized_score is not None else 1,
+                -(normalized_score if normalized_score is not None else 0.0),
+                normalized_chul_no,
+            )
+        )
+    prepared.sort()
+    return [chul_no for _flag, _score, chul_no in prepared[:3]]
+
+
 def _evaluate_window(
     *,
     X: np.ndarray,
@@ -513,11 +833,41 @@ def _evaluate_window(
     dates: np.ndarray,
     chuls: list[int],
     answers: dict[str, list[int]],
-    config: dict,
+    race_lookup: dict[str, list[dict]],
+    model_parameters: EvaluationModelParameters,
     train_end: str,
     eval_start: str | None,
     eval_end: str | None = None,
 ) -> dict[str, float | int]:
+    return _evaluate_window_with_details(
+        X=X,
+        y=y,
+        groups=groups,
+        dates=dates,
+        chuls=chuls,
+        answers=answers,
+        race_lookup=race_lookup,
+        model_parameters=model_parameters,
+        train_end=train_end,
+        eval_start=eval_start,
+        eval_end=eval_end,
+    )["summary"]
+
+
+def _evaluate_window_with_details(
+    *,
+    X: np.ndarray,
+    y: np.ndarray,
+    groups: np.ndarray,
+    dates: np.ndarray,
+    chuls: list[int],
+    answers: dict[str, list[int]],
+    race_lookup: dict[str, list[dict]],
+    model_parameters: EvaluationModelParameters,
+    train_end: str,
+    eval_start: str | None,
+    eval_end: str | None = None,
+) -> dict[str, Any]:
     train_mask = dates <= train_end
     eval_mask = dates > train_end if eval_start is None else dates >= eval_start
     if eval_end:
@@ -528,9 +878,9 @@ def _evaluate_window(
             f"Window produced empty partition: train_end={train_end}, eval_start={eval_start}, eval_end={eval_end}"
         )
 
-    model = _make_model(config)
+    model = _make_model(model_parameters)
     sample_weight = np.where(
-        y[train_mask] == 1, config["model"].get("positive_class_weight", 1.0), 1.0
+        y[train_mask] == 1, model_parameters.positive_class_weight, 1.0
     )
     model.fit(X[train_mask], y[train_mask], clf__sample_weight=sample_weight)
     probs = model.predict_proba(X[eval_mask])[:, 1]
@@ -547,119 +897,186 @@ def _evaluate_window(
             continue
         eval_answers[rid] = ans
 
-    return _summarize(
+    predicted_by_race = _predict_top3_per_race(
         groups[eval_mask],
         [chuls[idx] for idx, flag in enumerate(eval_mask) if flag],
         probs,
-        eval_answers,
+        race_lookup=race_lookup,
     )
+    _validate_prediction_coverage(
+        predicted_by_race=predicted_by_race,
+        answers=eval_answers,
+        train_end=train_end,
+        eval_start=eval_start,
+        eval_end=eval_end,
+    )
+    prediction_rows = _build_prediction_rows(
+        predicted_by_race=predicted_by_race,
+        answers=eval_answers,
+    )
+    return {
+        "summary": _summarize_prediction_rows(prediction_rows),
+        "prediction_rows": prediction_rows,
+        "window": {
+            "train_end": train_end,
+            "eval_start": eval_start,
+            "eval_end": eval_end,
+        },
+    }
 
 
-def _make_model(config: dict) -> Pipeline:
-    model = config["model"]
-    kind = model["kind"]
-    params = model["params"]
-
-    if kind == "hgb":
+def _make_model(model_parameters: EvaluationModelParameters) -> Pipeline:
+    params = model_parameters.params
+    if model_parameters.kind == "hgb":
         clf = HistGradientBoostingClassifier(
             max_depth=params["max_depth"],
             learning_rate=params["learning_rate"],
             max_iter=params["max_iter"],
             min_samples_leaf=params["min_samples_leaf"],
             l2_regularization=params["l2_regularization"],
-            random_state=42,
+            random_state=model_parameters.random_state,
         )
-    elif kind == "rf":
+    elif model_parameters.kind == "rf":
         clf = RandomForestClassifier(
             n_estimators=params["n_estimators"],
             max_depth=params["max_depth"],
             min_samples_leaf=params["min_samples_leaf"],
-            random_state=42,
+            random_state=model_parameters.random_state,
             n_jobs=-1,
         )
-    elif kind == "et":
+    elif model_parameters.kind == "et":
         clf = ExtraTreesClassifier(
             n_estimators=params["n_estimators"],
             max_depth=params["max_depth"],
             min_samples_leaf=params["min_samples_leaf"],
-            random_state=42,
+            random_state=model_parameters.random_state,
             n_jobs=-1,
         )
-    elif kind == "logreg":
+    elif model_parameters.kind == "logreg":
         clf = LogisticRegression(
             max_iter=params["max_iter"],
             C=params["C"],
             class_weight="balanced",
+            random_state=model_parameters.random_state,
         )
     else:
-        raise ValueError(f"Unsupported model kind: {kind}")
+        raise ValueError(f"Unsupported model kind: {model_parameters.kind}")
 
-    return Pipeline([("imp", SimpleImputer(strategy="median")), ("clf", clf)])
+    return Pipeline(
+        [
+            ("imp", SimpleImputer(strategy=model_parameters.imputer_strategy)),
+            ("clf", clf),
+        ]
+    )
 
 
-def evaluate(config_path: Path) -> dict:
-    config = json.loads(config_path.read_text())
+def evaluate(
+    config_path: Path,
+    *,
+    runtime_params_path: Path | None = None,
+    model_random_state: int | None = None,
+    seed_index: int | None = None,
+    run_id: str | None = None,
+    evaluation_context: EvaluationParameterContext | None = None,
+) -> dict:
+    context = evaluation_context or load_evaluation_parameter_context(
+        config_path=config_path,
+        seed_index=seed_index,
+        run_id=run_id,
+        runtime_params_path=runtime_params_path,
+        model_random_state=model_random_state,
+    )
+    config = dict(context.config)
+    runtime_params = context.runtime_params_dict()
+    model_parameters = context.model_parameters
     features = config["features"]
     _validate_features(features)
 
-    races, answers = _load_dataset(config["dataset"])
+    dataset_artifacts = resolve_offline_evaluation_dataset_artifacts(
+        str(config["dataset"]),
+        artifact_root=SNAPSHOT_DIR,
+    )
+    dataset_selection = _build_dataset_selection_snapshot(dataset_artifacts)
+    races, answers = _load_dataset(dataset_artifacts)
+    races, answers, dataset_normalization = _normalize_dataset_before_split(
+        races, answers
+    )
+    race_lookup = {
+        str(race["race_id"]): list(race.get("horses", []))
+        for race in races
+        if race.get("race_id")
+    }
     rows = _build_feature_rows(races, answers)
+    rows, row_normalization = _normalize_feature_rows_before_split(rows)
     X, y, groups, dates, chuls = _build_arrays(rows, features)
 
-    split = config["split"]
-    train_mask = dates <= split["train_end"]
-    dev_mask = (dates > split["train_end"]) & (dates <= split["dev_end"])
-    test_mask = dates >= split["test_start"]
-
-    if not train_mask.any() or not dev_mask.any() or not test_mask.any():
-        raise ValueError("Split produced an empty partition")
-
-    dev_summary = _evaluate_window(
-        X=X,
-        y=y,
-        groups=groups,
+    split_plan = build_temporal_split_plan(
         dates=dates,
-        chuls=chuls,
-        answers=answers,
         config=config,
-        train_end=split["train_end"],
-        eval_start=None,
-        eval_end=split["dev_end"],
     )
-    test_summary = _evaluate_window(
+    split = config["split"]
+    primary_split = split_plan.primary_split
+
+    dev_evaluation = _evaluate_window_with_details(
         X=X,
         y=y,
         groups=groups,
         dates=dates,
         chuls=chuls,
         answers=answers,
-        config=config,
-        train_end=split["train_end"],
-        eval_start=split["test_start"],
+        race_lookup=race_lookup,
+        model_parameters=model_parameters,
+        train_end=primary_split.train_end,
+        eval_start=None,
+        eval_end=primary_split.dev_end,
+    )
+    dev_summary = dev_evaluation["summary"]
+    test_evaluation = _evaluate_window_with_details(
+        X=X,
+        y=y,
+        groups=groups,
+        dates=dates,
+        chuls=chuls,
+        answers=answers,
+        race_lookup=race_lookup,
+        model_parameters=model_parameters,
+        train_end=primary_split.train_end,
+        eval_start=primary_split.test_start,
         eval_end=None,
     )
+    test_summary = test_evaluation["summary"]
     robust_exact_rate = round(
         min(dev_summary["exact_3of3_rate"], test_summary["exact_3of3_rate"]), 6
     )
     blended_exact_rate = round(
         (dev_summary["exact_3of3_rate"] + test_summary["exact_3of3_rate"]) / 2, 6
     )
-    rolling_windows = config.get("rolling_windows") or []
     rolling_results = []
-    for window in rolling_windows:
-        summary = _evaluate_window(
+    rolling_prediction_windows = []
+    for window in split_plan.rolling_windows:
+        rolling_evaluation = _evaluate_window_with_details(
             X=X,
             y=y,
             groups=groups,
             dates=dates,
             chuls=chuls,
             answers=answers,
-            config=config,
-            train_end=window["train_end"],
-            eval_start=window["eval_start"],
-            eval_end=window.get("eval_end"),
+            race_lookup=race_lookup,
+            model_parameters=model_parameters,
+            train_end=window.train_end,
+            eval_start=window.eval_start,
+            eval_end=window.eval_end,
         )
-        rolling_results.append({"name": window["name"], "summary": summary})
+        summary = rolling_evaluation["summary"]
+        rolling_results.append({"name": window.name, "summary": summary})
+        rolling_prediction_windows.append(
+            {
+                "name": window.name,
+                **rolling_evaluation["window"],
+                "summary": summary,
+                "prediction_rows": rolling_evaluation["prediction_rows"],
+            }
+        )
 
     rolling_min_exact_rate = round(
         min(
@@ -681,47 +1098,126 @@ def evaluate(config_path: Path) -> dict:
     )
     overfit_safe_exact_rate = round(min(robust_exact_rate, rolling_min_exact_rate), 6)
 
+    integrity_payload = {
+        **_snapshot_order_alignment(races, answers),
+        "all_missing_features": _all_missing_features(X, features),
+        "dataset_normalization": dataset_normalization,
+        "row_normalization": row_normalization,
+    }
+    summary_payload = {
+        "robust_exact_rate": robust_exact_rate,
+        "blended_exact_rate": blended_exact_rate,
+        "early_primary_exact_rate": robust_exact_rate,
+        "rolling_min_exact_rate": rolling_min_exact_rate,
+        "rolling_mean_exact_rate": rolling_mean_exact_rate,
+        "overfit_safe_exact_rate": overfit_safe_exact_rate,
+        "dev_test_gap": round(
+            abs(dev_summary["exact_3of3_rate"] - test_summary["exact_3of3_rate"]),
+            6,
+        ),
+    }
+
     return {
-        "config_path": str(config_path),
+        "config_path": context.config_path,
         "config": config,
+        "runtime_params": runtime_params,
+        "parameter_context": context.model_dump(mode="json"),
+        "input_contract": (
+            context.input_contract.model_dump(mode="json")
+            if context.input_contract is not None
+            else None
+        ),
+        "dataset_selection": dataset_selection,
+        "injected_model_parameters": model_parameters.model_dump(mode="json"),
         "feature_count": len(features),
         "market_feature_count": len([f for f in features if f in MARKET_FEATURES]),
         "split": split,
         "model": config["model"],
-        "integrity": {
-            **_snapshot_order_alignment(races, answers),
-            "all_missing_features": _all_missing_features(X, features),
-        },
-        "summary": {
-            "robust_exact_rate": robust_exact_rate,
-            "blended_exact_rate": blended_exact_rate,
-            "early_primary_exact_rate": robust_exact_rate,
-            "rolling_min_exact_rate": rolling_min_exact_rate,
-            "rolling_mean_exact_rate": rolling_mean_exact_rate,
-            "overfit_safe_exact_rate": overfit_safe_exact_rate,
-            "dev_test_gap": round(
-                abs(dev_summary["exact_3of3_rate"] - test_summary["exact_3of3_rate"]),
-                6,
-            ),
-        },
+        "seeds": {"model_random_state": runtime_params["model_random_state"]},
+        "integrity": integrity_payload,
+        "summary": summary_payload,
         "dev": dev_summary,
         "test": test_summary,
         "rolling": rolling_results,
+        "_reproducibility_artifacts": {
+            "prediction_rows": {
+                "format_version": "research-evaluation-prediction-rows-v1",
+                "dataset": str(config["dataset"]),
+                "run_id": run_id,
+                "seed_index": seed_index,
+                "model_random_state": runtime_params["model_random_state"],
+                "dataset_selection": dataset_selection,
+                "windows": [
+                    {
+                        "name": "dev",
+                        **dev_evaluation["window"],
+                        "summary": dev_summary,
+                        "prediction_rows": dev_evaluation["prediction_rows"],
+                    },
+                    {
+                        "name": "test",
+                        **test_evaluation["window"],
+                        "summary": test_summary,
+                        "prediction_rows": test_evaluation["prediction_rows"],
+                    },
+                    *rolling_prediction_windows,
+                ],
+            },
+            "metrics_summary": {
+                "format_version": "research-evaluation-metrics-v1",
+                "dataset": str(config["dataset"]),
+                "run_id": run_id,
+                "seed_index": seed_index,
+                "model_random_state": runtime_params["model_random_state"],
+                "feature_count": len(features),
+                "market_feature_count": len(
+                    [f for f in features if f in MARKET_FEATURES]
+                ),
+                "dataset_selection": dataset_selection,
+                "integrity": integrity_payload,
+                "summary": summary_payload,
+                "dev": dev_summary,
+                "test": test_summary,
+                "rolling": rolling_results,
+            },
+        },
     }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
+    parser.add_argument("--runtime-params")
+    parser.add_argument("--model-random-state", type=int)
     parser.add_argument("--output")
     args = parser.parse_args()
 
-    result = evaluate(Path(args.config))
+    config_path = Path(args.config)
+    runtime_params_path = Path(args.runtime_params) if args.runtime_params else None
+    evaluation_context = load_evaluation_parameter_context(
+        config_path=config_path,
+        runtime_params_path=runtime_params_path,
+        model_random_state=args.model_random_state,
+    )
+    result = evaluate(
+        config_path,
+        evaluation_context=evaluation_context,
+    )
     payload = json.dumps(result, ensure_ascii=False, indent=2)
     if args.output:
         output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(payload)
+        write_research_evaluation_bundle(
+            result=result,
+            config_path=config_path,
+            output_path=output_path,
+            created_at=datetime.now().astimezone(),
+            dataset_artifacts=resolve_offline_evaluation_dataset_artifacts(
+                str(result["config"]["dataset"]),
+                artifact_root=SNAPSHOT_DIR,
+            ),
+            runtime_params_path=runtime_params_path,
+            runtime_params=result["runtime_params"],
+        )
     print(payload)
 
 

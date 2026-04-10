@@ -10,8 +10,9 @@ scope:
   allowedGlobs:
     - "packages/scripts/autoresearch/clean_model_config.json"
     - "packages/scripts/autoresearch/extract_rrx_metric.py"
-    - "packages/scripts/autoresearch/research_clean.py"
     - "packages/scripts/autoresearch/rrx_propose.py"
+    - "packages/scripts/autoresearch/seed_matrix_runner.py"
+    - "packages/scripts/autoresearch/seed_summary_report.py"
     - "packages/scripts/autoresearch/run_rrx_experiment.sh"
     - "packages/scripts/autoresearch/run_rrx_metric.sh"
     - "packages/scripts/autoresearch/run_rrx_propose.sh"
@@ -27,12 +28,12 @@ experiment:
   run:
     command: "/Users/chsong/Developer/Personal/kra-analysis/packages/scripts/autoresearch/run_rrx_experiment.sh"
   outputs:
-    - id: clean_research
-      path: .ralph/outputs/research_clean.json
+    - id: holdout_seed_summary
+      path: .ralph/outputs/holdout_seed_summary_report.json
 
 metrics:
   catalog:
-    - id: dev_exact_rate
+    - id: holdout_lowest_hit_rate
       kind: numeric
       direction: maximize
       extractor:
@@ -42,18 +43,18 @@ metrics:
 
 frontier:
   strategy: single_best
-  primaryMetric: dev_exact_rate
+  primaryMetric: holdout_lowest_hit_rate
 
 ratchet:
   type: epsilon_improve
-  metric: dev_exact_rate
+  metric: holdout_lowest_hit_rate
   epsilon: 0
 
 stopping:
   target:
-    metric: dev_exact_rate
+    metric: holdout_lowest_hit_rate
     op: ">="
-    value: 0.8
+    value: 0.7
 
 storage:
   root: .ralph

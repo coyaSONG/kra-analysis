@@ -11,6 +11,10 @@ import json
 import math  # noqa: F401 — 허용 목록, 전략 함수에서 사용 가능
 import re
 
+from shared.alternative_ranking import rank_race_entries
+from shared.prerace_field_policy import filter_prerace_payload
+from shared.runner_status import select_prediction_candidates
+
 # ============================================================
 # 1. 프롬프트 템플릿
 # ============================================================
@@ -20,19 +24,22 @@ SYSTEM_PROMPT = """\
 삼복연승(1-3위) 예측을 수행합니다.
 
 분석 원칙:
-1. 배당률(winOdds)이 낮을수록 인기마 — 시장 내재 확률 = 1/winOdds
-2. 기수·조교사 승률(jockey_win_rate, trainer_win_rate)은 핵심 예측 변수
-3. 마필 승률·입상률(horse_win_rate, horse_place_rate)로 실력 판단
-4. 부담중량(wgBudam) 대비 마체중(wgHr) 비율이 높을수록 유리
-5. 장기휴양(rest_days > 90)은 감점 요인
-6. 핸디캡 경주에서는 저부담마가 유리
-7. odds_rank 상위 3두가 기본 후보, 거기서 edge를 찾을 것
+1. 출전표 확정 시점까지 확인 가능한 정보만 사용한다
+2. 기수·조교사 승률(jockey_win_rate, trainer_win_rate)은 핵심 예측 변수다
+3. 마필 승률·입상률(horse_win_rate, horse_place_rate)로 실력과 안정성을 판단한다
+4. 부담중량(wgBudam) 대비 마체중(wgHr), 레이팅(rating), 휴양일수(rest_days)를 함께 본다
+5. 장기휴양(rest_days > 90)은 감점 요인이다
+6. 핸디캡 경주에서는 부담중량과 레이팅 균형을 더 엄격히 본다
+7. 배당률, 사후 구간 순위/기록, 결과 확정 필드는 사용하지 않는다
 
 반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요."""
 
 USER_PROMPT_TEMPLATE = """\
 ## 경주 정보
 {race_info}
+
+## 후보 필터 요약
+{candidate_filter_summary}
 
 ## 출전마 데이터
 {horse_data}
@@ -57,7 +64,22 @@ OUTPUT_SCHEMA = {
 
 def select_features(race_data: dict) -> dict:
     """race_data에서 프롬프트에 포함할 필드 선택"""
-    return race_data
+    existing_candidate_filter = race_data.get("candidate_filter")
+    if isinstance(existing_candidate_filter, dict) and race_data.get("horses"):
+        candidate_filter = existing_candidate_filter
+        eligible_runners = list(race_data.get("horses", []))
+    else:
+        candidate_selection = select_prediction_candidates(
+            race_data.get("horses", []),
+            cancelled_horses=race_data.get("cancelled_horses", []),
+        )
+        candidate_filter = candidate_selection.to_audit_dict()
+        eligible_runners = candidate_selection.eligible_runners
+    prerace_payload = dict(race_data)
+    prerace_payload["horses"] = eligible_runners
+    prerace_payload["candidate_filter"] = candidate_filter
+    filtered, _policy = filter_prerace_payload(prerace_payload)
+    return filtered
 
 
 def format_race_info(features: dict) -> str:
@@ -87,16 +109,14 @@ def format_horse_data(horses: list[dict]) -> str:
     for h in horses:
         chul = h.get("chulNo", "?")
         name = h.get("hrName", "?")
-        odds = h.get("winOdds", "?")
-        plc_odds = h.get("plcOdds", "?")
         age = h.get("age", "?")
         sex = h.get("sex", "?")
         wg_hr = h.get("wgHr", "?")
         wg_budam = h.get("wgBudam", "?")
+        rating = h.get("rating", "?")
         class_rank = h.get("class_rank", "?")
 
         cf = h.get("computed_features", {})
-        odds_rank = cf.get("odds_rank", "?")
         horse_wr = cf.get("horse_win_rate", "?")
         horse_pr = cf.get("horse_place_rate", "?")
         jk_wr = cf.get("jockey_win_rate", "?")
@@ -104,22 +124,51 @@ def format_horse_data(horses: list[dict]) -> str:
         rest = cf.get("rest_days", "?")
         rest_risk = cf.get("rest_risk", "?")
 
-        line = (
-            f"  {chul}번 {name} | 배당={odds}(복={plc_odds}) 인기순위={odds_rank} | "
-            f"나이={age} 성별={sex} 체중={wg_hr} 부담={wg_budam} 등급={class_rank} | "
-            f"마승률={horse_wr} 입상률={horse_pr} 기수승률={jk_wr} 조교사승률={tr_wr} | "
-            f"휴양={rest}일({rest_risk})"
+        parts = [
+            f"{chul}번 {name}",
+            f"나이={age} 성별={sex}",
+            f"체중={wg_hr} 부담={wg_budam}",
+            f"등급={class_rank} 레이팅={rating}",
+            f"마승률={horse_wr} 입상률={horse_pr}",
+            f"기수승률={jk_wr} 조교사승률={tr_wr}",
+            f"휴양={rest}일({rest_risk})",
+        ]
+        quality_flags = h.get("quality_flags") or h.get("candidate_filter", {}).get(
+            "quality_flags", []
         )
-        lines.append(line)
+        if quality_flags:
+            parts.append(f"플래그={','.join(str(flag) for flag in quality_flags)}")
+        lines.append(" | ".join(parts))
     return "\n".join(lines)
+
+
+def format_candidate_filter_summary(features: dict) -> str:
+    candidate_filter = features.get("candidate_filter", {})
+    if not isinstance(candidate_filter, dict) or not candidate_filter:
+        return "- 필터 메타 없음"
+
+    status_counts = candidate_filter.get("status_counts", {})
+    exclusion_rule_counts = candidate_filter.get("exclusion_rule_counts", {})
+    reinclusion_rule_counts = candidate_filter.get("reinclusion_rule_counts", {})
+    flag_counts = candidate_filter.get("flag_counts", {})
+
+    parts = [
+        f"상태집계={json.dumps(status_counts, ensure_ascii=False, sort_keys=True)}",
+        f"제외사유={json.dumps(exclusion_rule_counts, ensure_ascii=False, sort_keys=True)}",
+        f"재편입사유={json.dumps(reinclusion_rule_counts, ensure_ascii=False, sort_keys=True)}",
+        f"플래그집계={json.dumps(flag_counts, ensure_ascii=False, sort_keys=True)}",
+    ]
+    return "\n".join(f"- {part}" for part in parts)
 
 
 def build_prompt(features: dict) -> tuple[str, str]:
     """프롬프트 조립. (system, user) 튜플 반환."""
     race_info = format_race_info(features)
+    candidate_filter_summary = format_candidate_filter_summary(features)
     horse_data = format_horse_data(features.get("horses", []))
     user = USER_PROMPT_TEMPLATE.format(
         race_info=race_info,
+        candidate_filter_summary=candidate_filter_summary,
         horse_data=horse_data,
         output_schema=json.dumps(OUTPUT_SCHEMA, ensure_ascii=False, indent=2),
     )
@@ -191,7 +240,7 @@ def _safe_int(value, default: int = 0) -> int:
         return default
 
 
-def _normalize(data: dict) -> dict:
+def _normalize(data: dict, *, eligible_chul_nos: set[int] | None = None) -> dict:
     """파싱된 dict를 표준 스키마로 정규화"""
     raw_predicted = data.get("predicted", [])
     predicted: list[int] = []
@@ -200,6 +249,8 @@ def _normalize(data: dict) -> dict:
         for item in raw_predicted:
             chul_no = _coerce_chulno(item)
             if chul_no is None or chul_no in seen:
+                continue
+            if eligible_chul_nos is not None and chul_no not in eligible_chul_nos:
                 continue
             predicted.append(chul_no)
             seen.add(chul_no)
@@ -219,70 +270,120 @@ def _normalize(data: dict) -> dict:
     }
 
 
-def _horse_sort_key(horse: dict) -> tuple[float, ...]:
+def _year_place_rate(horse: dict) -> float:
     hd = horse.get("hrDetail") or {}
-    cf = horse.get("computed_features", {})
-
-    # 최근 연도 입상률 (k=2, 700경주 cross-validated 최적)
     starts_y = _safe_int(hd.get("rcCntY"))
     places_y = (
         _safe_int(hd.get("ord1CntY"))
         + _safe_int(hd.get("ord2CntY"))
         + _safe_int(hd.get("ord3CntY"))
     )
+    if starts_y > 0:
+        return places_y / (starts_y + 2)
+    return _total_place_rate(horse)
 
-    # 총 경력 보정입상률 (폴백용)
+
+def _total_place_rate(horse: dict) -> float:
+    hd = horse.get("hrDetail") or {}
     starts_t = _safe_int(hd.get("rcCntT"))
     places_t = (
         _safe_int(hd.get("ord1CntT"))
         + _safe_int(hd.get("ord2CntT"))
         + _safe_int(hd.get("ord3CntT"))
     )
-    total_place_rate = places_t / (starts_t + 15) if starts_t >= 0 else 0.0
+    return places_t / (starts_t + 15) if starts_t >= 0 else 0.0
 
-    # 연도 통계 있으면 사용, 없으면 총 경력 폴백
-    year_place_rate = places_y / (starts_y + 2) if starts_y > 0 else total_place_rate
 
-    # 시장 내재 확률 (보정 신호)
-    win_odds = _safe_float(horse.get("winOdds"), 99.0)
-    odds_signal = 0.06 / max(win_odds, 1.01)
-
-    return (
-        year_place_rate + odds_signal,
-        total_place_rate,
-        -_safe_float(cf.get("odds_rank"), 999.0),
-    )
+def _format_reason_value(value: object, digits: int = 3) -> str:
+    number = _safe_float(value, default=float("nan"))
+    if math.isfinite(number):
+        return f"{number:.{digits}f}"
+    return "-"
 
 
 def _heuristic_prediction(race_data: dict) -> dict:
     horses = race_data.get("horses", [])
-    ranked = sorted(horses, key=_horse_sort_key, reverse=True)
-    top3 = ranked[:3]
-    predicted = [
-        horse.get("chulNo") for horse in top3 if horse.get("chulNo") is not None
-    ]
-
-    if len(predicted) != 3:
+    if len(horses) < 3:
         return {"predicted": [], "confidence": 0.0, "reasoning": "insufficient_horses"}
 
-    avg_place = sum(_horse_sort_key(horse)[0] for horse in top3) / 3
-    confidence = min(0.88, max(0.55, 0.52 + avg_place * 0.45))
+    ranked_entries = rank_race_entries(horses)
+    top3_entries = ranked_entries[:3]
+    predicted = [entry.chul_no for entry in top3_entries if entry.chul_no is not None]
+
+    avg_year_place = (
+        sum(entry.rule_values.get("year_place_rate") or 0.0 for entry in top3_entries)
+        / 3
+    )
+    confidence = min(0.88, max(0.55, 0.52 + avg_year_place * 0.40))
 
     reasons = []
-    for horse in top3:
-        cf = horse.get("computed_features", {})
-        score = _horse_sort_key(horse)[0]
+    for entry in top3_entries:
+        horse = entry.horse
+        rule_values = entry.rule_values
         reasons.append(
             f"{horse.get('chulNo')}번 {horse.get('hrName', '?')} "
-            f"(연도입상률={score:.3f}, "
-            f"인기순위={int(_safe_float(cf.get('odds_rank'), 99.0))})"
+            f"(말스킬={_format_reason_value(rule_values.get('horse_top3_skill'))}, "
+            f"연도입상률={_format_reason_value(rule_values.get('year_place_rate'))}, "
+            f"레이팅={_format_reason_value(rule_values.get('rating'), digits=1)})"
         )
 
-    return {
+    prediction = {
         "predicted": predicted,
         "confidence": confidence,
         "reasoning": " | ".join(reasons),
     }
+    return _append_candidate_filter_reasoning(
+        prediction, race_data.get("candidate_filter")
+    )
+
+
+def _append_candidate_filter_reasoning(
+    prediction: dict, candidate_filter: dict | None
+) -> dict:
+    if not candidate_filter or not isinstance(candidate_filter, dict):
+        return prediction
+
+    status_counts = candidate_filter.get("status_counts", {})
+    exclusion_rule_counts = candidate_filter.get("exclusion_rule_counts", {})
+    reinclusion_rule_counts = candidate_filter.get("reinclusion_rule_counts", {})
+    flag_counts = candidate_filter.get("flag_counts", {})
+
+    extras = []
+    if exclusion_rule_counts:
+        extras.append(
+            "제외="
+            + ",".join(
+                f"{rule}:{count}"
+                for rule, count in sorted(exclusion_rule_counts.items())
+            )
+        )
+    if reinclusion_rule_counts:
+        extras.append(
+            "재편입="
+            + ",".join(
+                f"{rule}:{count}"
+                for rule, count in sorted(reinclusion_rule_counts.items())
+            )
+        )
+    if flag_counts:
+        extras.append(
+            "플래그="
+            + ",".join(f"{rule}:{count}" for rule, count in sorted(flag_counts.items()))
+        )
+    if status_counts:
+        extras.append(
+            "상태="
+            + ",".join(
+                f"{status}:{count}" for status, count in sorted(status_counts.items())
+            )
+        )
+
+    if not extras:
+        return prediction
+
+    reasoning = str(prediction.get("reasoning", "")).strip()
+    prediction["reasoning"] = " | ".join(part for part in (reasoning, *extras) if part)
+    return prediction
 
 
 # ============================================================
@@ -300,18 +401,48 @@ def predict(race_data: dict, call_llm) -> dict:
     Returns:
         {"predicted": [1, 5, 3], "confidence": 0.72, "reasoning": "..."}
     """
+    existing_candidate_filter = race_data.get("candidate_filter")
+    if isinstance(existing_candidate_filter, dict) and race_data.get("horses"):
+        candidate_filter = existing_candidate_filter
+        eligible_runners = list(race_data.get("horses", []))
+    else:
+        candidate_selection = select_prediction_candidates(
+            race_data.get("horses", []),
+            cancelled_horses=race_data.get("cancelled_horses", []),
+        )
+        candidate_filter = candidate_selection.to_audit_dict()
+        eligible_runners = candidate_selection.eligible_runners
     features = select_features(race_data)
+    features["candidate_filter"] = candidate_filter
+    eligible_chul_nos = {
+        horse.get("chulNo")
+        for horse in eligible_runners
+        if horse.get("chulNo") is not None
+    }
     system, user = build_prompt(features)
     try:
         response = call_llm(system, user)
     except Exception:
-        return _heuristic_prediction(race_data)
+        return _heuristic_prediction(features)
 
     parsed = parse_response(response)
-    if parsed.get("predicted"):
-        return parsed
+    normalized = _normalize(parsed, eligible_chul_nos=eligible_chul_nos)
+    if len(normalized.get("predicted", [])) == 3:
+        return _append_candidate_filter_reasoning(
+            normalized, features.get("candidate_filter")
+        )
 
     if not str(response).strip():
-        return _heuristic_prediction(race_data)
+        return _heuristic_prediction(features)
 
-    return parsed
+    if parsed.get("reasoning") == "parse_error":
+        return _append_candidate_filter_reasoning(
+            normalized, features.get("candidate_filter")
+        )
+
+    if len(eligible_chul_nos) >= 3:
+        return _heuristic_prediction(features)
+
+    return _append_candidate_filter_reasoning(
+        normalized, features.get("candidate_filter")
+    )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from typing import Any
 
 
@@ -128,6 +129,157 @@ def _set_match_score(predicted: list[int], actual: list[int], k: int = 3) -> flo
     return len(pred_set & actual_set) / k
 
 
+def is_unordered_topk_exact_match(
+    predicted: list[int], actual: list[int], k: int = 3
+) -> bool:
+    """Whether predicted/actual top-k sets match exactly, ignoring order."""
+    pred_set = set(predicted[:k])
+    actual_set = set(actual[:k])
+    if len(pred_set) != k or len(actual_set) != k:
+        return False
+    return pred_set == actual_set
+
+
+def is_ordered_topk_exact_match(
+    predicted: list[int], actual: list[int], k: int = 3
+) -> bool:
+    """Whether predicted/actual top-k sequence matches exactly, preserving order."""
+    pred_slice = predicted[:k]
+    actual_slice = actual[:k]
+    if len(pred_slice) != k or len(actual_slice) != k:
+        return False
+    return pred_slice == actual_slice
+
+
+def _is_race_hit(result: dict[str, Any], k: int = 3) -> bool:
+    explicit_hit = result.get("hit")
+    if isinstance(explicit_hit, bool):
+        return explicit_hit
+
+    reward = result.get("reward") or {}
+    if "unordered_top3_exact_match" in reward:
+        return bool(reward.get("unordered_top3_exact_match"))
+
+    predicted = _predicted_numbers(result)
+    actual = _actual_numbers(result)
+    if not predicted or not actual:
+        return False
+
+    return is_unordered_topk_exact_match(predicted, actual, k=k)
+
+
+def _is_ordered_race_hit(result: dict[str, Any], k: int = 3) -> bool:
+    explicit_hit = result.get("ordered_hit")
+    if isinstance(explicit_hit, bool):
+        return explicit_hit
+
+    reward = result.get("reward") or {}
+    if "ordered_top3_exact_match" in reward:
+        return bool(reward.get("ordered_top3_exact_match"))
+
+    predicted = _predicted_numbers(result)
+    actual = _actual_numbers(result)
+    if not predicted or not actual:
+        return False
+
+    return is_ordered_topk_exact_match(predicted, actual, k=k)
+
+
+def _race_hit_metrics(
+    detailed_results: list[dict[str, Any]], k: int = 3
+) -> dict[str, float | int]:
+    total_races = len(detailed_results)
+    race_hit_count = sum(1 for result in detailed_results if _is_race_hit(result, k=k))
+    return {
+        "race_hit_count": race_hit_count,
+        "race_hit_rate": (race_hit_count / total_races) if total_races > 0 else 0.0,
+    }
+
+
+def _ordered_race_hit_metrics(
+    detailed_results: list[dict[str, Any]], k: int = 3
+) -> dict[str, float | int]:
+    total_races = len(detailed_results)
+    ordered_race_hit_count = sum(
+        1 for result in detailed_results if _is_ordered_race_hit(result, k=k)
+    )
+    return {
+        "ordered_race_hit_count": ordered_race_hit_count,
+        "ordered_race_hit_rate": (ordered_race_hit_count / total_races)
+        if total_races > 0
+        else 0.0,
+    }
+
+
+def _normalize_race_id(value: object) -> str | None:
+    race_id = str(value or "").strip()
+    return race_id or None
+
+
+def _collect_unique_race_ids(
+    race_ids: Sequence[object] | None,
+) -> list[str]:
+    normalized: list[str] = []
+    seen: set[str] = set()
+    if race_ids is None:
+        return normalized
+
+    for value in race_ids:
+        race_id = _normalize_race_id(value)
+        if race_id is None or race_id in seen:
+            continue
+        seen.add(race_id)
+        normalized.append(race_id)
+    return normalized
+
+
+def _has_prediction_output(result: dict[str, Any]) -> bool:
+    return result.get("prediction") is not None or bool(_predicted_numbers(result))
+
+
+def _compute_prediction_coverage_validation(
+    detailed_results: list[dict[str, Any]],
+    *,
+    reference_race_ids: Sequence[object] | None = None,
+) -> dict[str, Any]:
+    reference_ids = _collect_unique_race_ids(reference_race_ids)
+    if not reference_ids:
+        reference_ids = _collect_unique_race_ids(
+            result.get("race_id") for result in detailed_results
+        )
+
+    predicted_ids = _collect_unique_race_ids(
+        result.get("race_id")
+        for result in detailed_results
+        if _has_prediction_output(result)
+    )
+
+    reference_set = set(reference_ids)
+    predicted_set = set(predicted_ids)
+    missing_prediction_race_ids = [
+        race_id for race_id in reference_ids if race_id not in predicted_set
+    ]
+    unexpected_prediction_race_ids = [
+        race_id for race_id in predicted_ids if race_id not in reference_set
+    ]
+    predicted_race_count = sum(
+        1 for race_id in reference_ids if race_id in predicted_set
+    )
+    expected_race_count = len(reference_ids)
+
+    return {
+        "prediction_coverage": (
+            predicted_race_count / expected_race_count if expected_race_count else 0.0
+        ),
+        "expected_race_count": expected_race_count,
+        "predicted_race_count": predicted_race_count,
+        "missing_prediction_count": len(missing_prediction_race_ids),
+        "missing_prediction_race_ids": missing_prediction_race_ids,
+        "unexpected_prediction_count": len(unexpected_prediction_race_ids),
+        "unexpected_prediction_race_ids": unexpected_prediction_race_ids,
+    }
+
+
 def _ndcg_at_k(predicted: list[int], actual: list[int], k: int = 3) -> float:
     """NDCG@k - measures ranking quality of predicted vs actual.
 
@@ -232,6 +384,7 @@ def compute_prediction_quality_metrics(
     topk_values: tuple[int, ...] = (1, 3),
     ece_bins: int = 10,
     defer_threshold: float | None = None,
+    reference_race_ids: Sequence[object] | None = None,
 ) -> dict[str, Any]:
     """Compute quality metrics from detailed evaluation results.
 
@@ -239,6 +392,13 @@ def compute_prediction_quality_metrics(
     so log loss / brier / ECE are computed on a binary event:
     "predicted top-1 horse is actual winner".
     """
+
+    race_hit_summary = _race_hit_metrics(detailed_results)
+    ordered_race_hit_summary = _ordered_race_hit_metrics(detailed_results)
+    prediction_coverage_validation = _compute_prediction_coverage_validation(
+        detailed_results,
+        reference_race_ids=reference_race_ids,
+    )
 
     usable_results = [
         r
@@ -256,6 +416,9 @@ def compute_prediction_quality_metrics(
             "coverage": 0.0,
             "deferred_count": 0,
             "samples": 0,
+            **prediction_coverage_validation,
+            **race_hit_summary,
+            **ordered_race_hit_summary,
         }
 
     confidences = [_extract_confidence_probability(r) for r in usable_results]
@@ -304,11 +467,14 @@ def compute_prediction_quality_metrics(
         "coverage": coverage,
         "deferred_count": deferred_count,
         "samples": len(usable_results),
+        **prediction_coverage_validation,
         "set_match_rate": sum(set_match_scores) / len(set_match_scores)
         if set_match_scores
         else 0.0,
         "ndcg3": sum(ndcg_scores) / len(ndcg_scores) if ndcg_scores else 0.0,
         "brier_set": _brier_set_match(filtered_results),
+        **race_hit_summary,
+        **ordered_race_hit_summary,
     }
 
 
@@ -377,7 +543,14 @@ def compute_stratified_metrics(
                     sm_scores.append(_set_match_score(p, a))
                     ndcg_scores_g.append(_ndcg_at_k(p, a))
 
-            full_match = sum(1 for s in sm_scores if s >= 1.0)
+            full_match = sum(
+                1
+                for r in group_results
+                if is_unordered_topk_exact_match(
+                    _predicted_numbers(r),
+                    _actual_numbers(r),
+                )
+            )
             dim_metrics[group_key] = {
                 "count": len(group_results),
                 "success_rate": (full_match / len(sm_scores) * 100)

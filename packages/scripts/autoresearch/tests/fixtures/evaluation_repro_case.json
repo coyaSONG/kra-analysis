@@ -1,0 +1,97 @@
+{
+  "races": [
+    {
+      "race_id": "20250101_1_1",
+      "race_date": "20250101",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 92, "wgBudam": 55, "horse_win_rate": 33.0, "horse_place_rate": 60.0, "rcCntY": 10, "ord1CntY": 3, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 88, "wgBudam": 54, "horse_win_rate": 28.0, "horse_place_rate": 54.0, "rcCntY": 10, "ord1CntY": 2, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 84, "wgBudam": 53, "horse_win_rate": 22.0, "horse_place_rate": 46.0, "rcCntY": 10, "ord1CntY": 2, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 72, "wgBudam": 54, "horse_win_rate": 10.0, "horse_place_rate": 24.0, "rcCntY": 10, "ord1CntY": 1, "ord2CntY": 0, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 66, "wgBudam": 52, "horse_win_rate": 6.0, "horse_place_rate": 18.0, "rcCntY": 10, "ord1CntY": 0, "ord2CntY": 1, "ord3CntY": 0}
+      ]
+    },
+    {
+      "race_id": "20250102_1_1",
+      "race_date": "20250102",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 93, "wgBudam": 55, "horse_win_rate": 34.0, "horse_place_rate": 61.0, "rcCntY": 11, "ord1CntY": 4, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 89, "wgBudam": 54, "horse_win_rate": 29.0, "horse_place_rate": 55.0, "rcCntY": 11, "ord1CntY": 3, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 85, "wgBudam": 53, "horse_win_rate": 23.0, "horse_place_rate": 47.0, "rcCntY": 11, "ord1CntY": 2, "ord2CntY": 1, "ord3CntY": 2},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 73, "wgBudam": 54, "horse_win_rate": 11.0, "horse_place_rate": 25.0, "rcCntY": 11, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 67, "wgBudam": 52, "horse_win_rate": 7.0, "horse_place_rate": 19.0, "rcCntY": 11, "ord1CntY": 0, "ord2CntY": 1, "ord3CntY": 1}
+      ]
+    },
+    {
+      "race_id": "20250103_1_1",
+      "race_date": "20250103",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 94, "wgBudam": 55, "horse_win_rate": 35.0, "horse_place_rate": 62.0, "rcCntY": 12, "ord1CntY": 4, "ord2CntY": 2, "ord3CntY": 2},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 90, "wgBudam": 54, "horse_win_rate": 30.0, "horse_place_rate": 56.0, "rcCntY": 12, "ord1CntY": 3, "ord2CntY": 2, "ord3CntY": 2},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 86, "wgBudam": 53, "horse_win_rate": 24.0, "horse_place_rate": 48.0, "rcCntY": 12, "ord1CntY": 2, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 74, "wgBudam": 54, "horse_win_rate": 12.0, "horse_place_rate": 26.0, "rcCntY": 12, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 68, "wgBudam": 52, "horse_win_rate": 8.0, "horse_place_rate": 20.0, "rcCntY": 12, "ord1CntY": 0, "ord2CntY": 1, "ord3CntY": 1}
+      ]
+    },
+    {
+      "race_id": "20250104_1_1",
+      "race_date": "20250104",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 95, "wgBudam": 55, "horse_win_rate": 36.0, "horse_place_rate": 63.0, "rcCntY": 13, "ord1CntY": 5, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 91, "wgBudam": 54, "horse_win_rate": 31.0, "horse_place_rate": 57.0, "rcCntY": 13, "ord1CntY": 4, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 87, "wgBudam": 53, "horse_win_rate": 25.0, "horse_place_rate": 49.0, "rcCntY": 13, "ord1CntY": 3, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 75, "wgBudam": 54, "horse_win_rate": 13.0, "horse_place_rate": 27.0, "rcCntY": 13, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 69, "wgBudam": 52, "horse_win_rate": 9.0, "horse_place_rate": 21.0, "rcCntY": 13, "ord1CntY": 1, "ord2CntY": 0, "ord3CntY": 1}
+      ]
+    },
+    {
+      "race_id": "20250105_1_1",
+      "race_date": "20250105",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 96, "wgBudam": 55, "horse_win_rate": 37.0, "horse_place_rate": 64.0, "rcCntY": 14, "ord1CntY": 5, "ord2CntY": 2, "ord3CntY": 2},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 92, "wgBudam": 54, "horse_win_rate": 32.0, "horse_place_rate": 58.0, "rcCntY": 14, "ord1CntY": 4, "ord2CntY": 2, "ord3CntY": 2},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 88, "wgBudam": 53, "horse_win_rate": 26.0, "horse_place_rate": 50.0, "rcCntY": 14, "ord1CntY": 3, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 76, "wgBudam": 54, "horse_win_rate": 14.0, "horse_place_rate": 28.0, "rcCntY": 14, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 2},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 70, "wgBudam": 52, "horse_win_rate": 10.0, "horse_place_rate": 22.0, "rcCntY": 14, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 1}
+      ]
+    },
+    {
+      "race_id": "20250106_1_1",
+      "race_date": "20250106",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 97, "wgBudam": 55, "horse_win_rate": 38.0, "horse_place_rate": 65.0, "rcCntY": 15, "ord1CntY": 6, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 93, "wgBudam": 54, "horse_win_rate": 33.0, "horse_place_rate": 59.0, "rcCntY": 15, "ord1CntY": 5, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 89, "wgBudam": 53, "horse_win_rate": 27.0, "horse_place_rate": 51.0, "rcCntY": 15, "ord1CntY": 3, "ord2CntY": 2, "ord3CntY": 2},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 77, "wgBudam": 54, "horse_win_rate": 15.0, "horse_place_rate": 29.0, "rcCntY": 15, "ord1CntY": 1, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 71, "wgBudam": 52, "horse_win_rate": 11.0, "horse_place_rate": 23.0, "rcCntY": 15, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 1}
+      ]
+    },
+    {
+      "race_id": "20250107_1_1",
+      "race_date": "20250107",
+      "race_number": 1,
+      "horses": [
+        {"chulNo": 1, "age": 4, "sex": "M", "rating": 98, "wgBudam": 55, "horse_win_rate": 39.0, "horse_place_rate": 66.0, "rcCntY": 16, "ord1CntY": 6, "ord2CntY": 3, "ord3CntY": 1},
+        {"chulNo": 2, "age": 4, "sex": "F", "rating": 94, "wgBudam": 54, "horse_win_rate": 34.0, "horse_place_rate": 60.0, "rcCntY": 16, "ord1CntY": 5, "ord2CntY": 3, "ord3CntY": 1},
+        {"chulNo": 3, "age": 3, "sex": "M", "rating": 90, "wgBudam": 53, "horse_win_rate": 28.0, "horse_place_rate": 52.0, "rcCntY": 16, "ord1CntY": 4, "ord2CntY": 2, "ord3CntY": 1},
+        {"chulNo": 4, "age": 5, "sex": "F", "rating": 78, "wgBudam": 54, "horse_win_rate": 16.0, "horse_place_rate": 30.0, "rcCntY": 16, "ord1CntY": 2, "ord2CntY": 1, "ord3CntY": 1},
+        {"chulNo": 5, "age": 3, "sex": "M", "rating": 72, "wgBudam": 52, "horse_win_rate": 12.0, "horse_place_rate": 24.0, "rcCntY": 16, "ord1CntY": 1, "ord2CntY": 1, "ord3CntY": 2}
+      ]
+    }
+  ],
+  "answer_key": {
+    "20250101_1_1": [1, 2, 3],
+    "20250102_1_1": [1, 2, 3],
+    "20250103_1_1": [1, 2, 3],
+    "20250104_1_1": [1, 2, 3],
+    "20250105_1_1": [1, 2, 3],
+    "20250106_1_1": [1, 2, 3],
+    "20250107_1_1": [1, 2, 3]
+  }
+}

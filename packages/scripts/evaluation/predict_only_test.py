@@ -1,26 +1,35 @@
 #!/usr/bin/env python3
 """
-경주 전 데이터로 예측만 수행하는 테스트 스크립트
+경주 전 데이터로 예측만 수행하는 테스트 스크립트.
+
 - 실제 결과와의 비교 없음
-- enriched 데이터를 사용하여 예측 수행
+- 출전표 확정 시점 snapshot lookup과 공통 prerace schema builder를 재사용
 - 예측 결과와 분석 정보만 출력
 """
 
 from __future__ import annotations
 
 import json
-import re
 import sys
 import time
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # shared 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from feature_engineering import compute_race_features
+from evaluation.prediction_service import (
+    finalize_prediction_payload,
+    parse_prediction_output,
+)
 from shared.claude_client import ClaudeClient
-from shared.data_adapter import convert_basic_data_to_enriched_format
 from shared.db_client import RaceDBClient
+from shared.prerace_standard_loader import (
+    load_standardized_prerace_payload,
+    resolve_race_record_reference,
+)
+from shared.read_contract import RaceSnapshot, RaceSourceLookup
 
 
 class PredictionTester:
@@ -29,179 +38,137 @@ class PredictionTester:
         self.predictions_dir = Path("data/prediction_tests")
         self.predictions_dir.mkdir(parents=True, exist_ok=True)
 
-        # DB 클라이언트
         self.db_client = RaceDBClient()
-
-        # Claude CLI 클라이언트 (구독 플랜)
         self.client = ClaudeClient()
 
     def find_enriched_files(
         self, date_filter: str | None = None
-    ) -> list[dict[str, any]]:
-        """DB에서 수집 완료된 경주 찾기"""
+    ) -> list[RaceSnapshot | dict[str, Any]]:
+        """DB에서 수집 완료된 경주 찾기."""
+        if hasattr(self.db_client, "find_race_snapshots"):
+            return self.db_client.find_race_snapshots(date_filter=date_filter)
         return self.db_client.find_races(date_filter=date_filter)
 
-    def load_race_data(self, file_info: dict) -> dict | None:
-        """DB에서 경주 데이터 로드"""
+    def _normalize_race_record(
+        self,
+        race_record: RaceSnapshot | Mapping[str, Any],
+    ) -> tuple[dict[str, Any], RaceSourceLookup]:
+        if not isinstance(race_record, (RaceSnapshot, Mapping)):
+            raise TypeError("race_record must be a RaceSnapshot or mapping")
+        return resolve_race_record_reference(race_record)
+
+    def load_race_data(
+        self,
+        race_record: RaceSnapshot | Mapping[str, Any],
+    ) -> dict[str, Any] | None:
+        """DB에서 경주 데이터를 읽어 공통 prerace payload로 정규화한다."""
         try:
-            basic_data = self.db_client.load_race_basic_data(file_info["race_id"])
-            if not basic_data:
-                return None
-
-            data = convert_basic_data_to_enriched_format(basic_data)
-            if not data:
-                return None
-
-            items = data["response"]["body"]["items"]["item"]
-
-            # 데이터 정리 및 필터링
-            horses = []
-            for item in items:
-                # 기권/제외 말 필터링
-                if item.get("winOdds", 999) == 0:
-                    continue
-
-                # wgHr 파싱: "470(+5)" 형태에서 숫자만 추출
-                wgHr_str = str(item.get("wgHr", ""))
-                wgHr_match = re.match(r"(\d+)", wgHr_str)
-                wgHr_value = int(wgHr_match.group(1)) if wgHr_match else None
-
-                horse = {
-                    "chulNo": item["chulNo"],
-                    "hrName": item["hrName"],
-                    "hrNo": item["hrNo"],
-                    "jkName": item["jkName"],
-                    "jkNo": item["jkNo"],
-                    "trName": item["trName"],
-                    "trNo": item["trNo"],
-                    "winOdds": item["winOdds"],
-                    "plcOdds": item.get("plcOdds"),
-                    "budam": item.get("budam", ""),
-                    "wgBudam": item.get("wgBudam"),
-                    "wgHr": wgHr_value,
-                    "age": item.get("age"),
-                    "sex": item.get("sex", ""),
-                    "rank": item.get("rank", ""),
-                    "rating": item.get("rating"),
-                    "rcDist": item.get("rcDist"),
-                    "ilsu": item.get("ilsu"),
-                    "se_3cAccTime": item.get("se_3cAccTime"),
-                    "se_4cAccTime": item.get("se_4cAccTime"),
-                    "sj_3cOrd": item.get("sj_3cOrd"),
-                    "sj_4cOrd": item.get("sjS1fOrd"),
-                    "seS1fAccTime": item.get("seS1fAccTime"),
-                    "sjS1fOrd": item.get("sjS1fOrd"),
-                    "seG1fAccTime": item.get("seG1fAccTime"),
-                    "sjG1fOrd": item.get("sjG1fOrd"),
-                }
-
-                if "hrDetail" in item:
-                    horse["hrDetail"] = item["hrDetail"]
-                if "jkDetail" in item:
-                    horse["jkDetail"] = item["jkDetail"]
-                if "trDetail" in item:
-                    horse["trDetail"] = item["trDetail"]
-
-                horses.append(horse)
-
-            # Feature Engineering: 파생 피처 계산
-            horses = compute_race_features(horses)
-
-            first_horse_item = items[0] if items else {}
-            race_distance = first_horse_item.get("rcDist")
+            standardized = load_standardized_prerace_payload(
+                race_record,
+                query_port=self.db_client,
+            )
 
             return {
-                "meet": file_info["meet"],
-                "rcDate": file_info["race_date"],
-                "rcNo": file_info["race_no"],
-                "horses": horses,
-                "raceInfo": {
-                    "distance": race_distance,
-                    "grade": first_horse_item.get("rank", ""),
-                    "track": first_horse_item.get("track", ""),
-                    "weather": first_horse_item.get("weather", ""),
-                    "budam": first_horse_item.get("budam", ""),
+                "prompt_payload": standardized.standard_payload,
+                "analysis_payload": {
+                    "horses": standardized.standard_payload.get("horses", []),
+                    "race_info": standardized.standard_payload.get("race_info", {}),
+                    "candidate_filter": standardized.candidate_filter,
+                    "field_policy": standardized.field_policy,
+                    "source_lookup": (
+                        standardized.lookup.to_dict()
+                        if standardized.lookup is not None
+                        else {}
+                    ),
                 },
             }
-
-        except Exception as e:
-            print(f"데이터 로드 오류 ({file_info['race_id']}): {e}")
+        except Exception as exc:
+            race_id = (
+                race_record.race_id
+                if isinstance(race_record, RaceSnapshot)
+                else race_record.get("race_id", "unknown")
+            )
+            print(f"데이터 로드 오류 ({race_id}): {exc}")
             return None
 
     def run_prediction(self, race_data: dict, race_id: str) -> dict | None:
-        """Claude를 사용하여 예측 수행"""
+        """Claude를 사용하여 예측 수행."""
         try:
-            # 프롬프트 읽기
             with open(self.prompt_path, encoding="utf-8") as f:
                 prompt_template = f.read()
 
-            # 데이터를 프롬프트에 포함
-            # {{RACE_DATA}} 플레이스홀더가 있으면 대체하고, 없으면 뒤에 추가
             race_data_json_str = json.dumps(race_data, ensure_ascii=False, indent=2)
-
             if "{{RACE_DATA}}" in prompt_template:
                 prompt = prompt_template.replace("{{RACE_DATA}}", race_data_json_str)
             else:
                 prompt = f"{prompt_template}\n\n<race_data>\n{race_data_json_str}\n</race_data>"
 
-            # 클로드에게 명확하게 JSON만 출력하도록 지시 (프롬프트 최하단에 배치)
             prompt += "\n\nIMPORTANT: You must act as a prediction API. Do not analyze the prompt itself. Analyze the race data provided above and Output ONLY the JSON object as specified in <output_format>. Do not output any markdown code block markers (```json), introductory text, or explanations. Just the raw JSON string."
 
             start_time = time.time()
-
-            # Claude CLI를 통한 예측 호출 (구독 플랜)
             output = self.client.predict_sync(prompt)
-
             execution_time = time.time() - start_time
 
             if output is None:
                 print(f"예측 오류 ({race_id}): API 호출 실패 또는 타임아웃")
                 return None
 
-            # 응답 파싱
-            try:
-                # JSON 블록 추출 시도 (유연하게)
-                # 1. 마크다운 코드 블록 확인
-                json_match = re.search(r"```json\s*(\{.*?\})\s*```", output, re.DOTALL)
-
-                # 2. 코드 블록 없으면 가장 바깥쪽 중괄호 쌍 찾기
-                if not json_match:
-                    json_match = re.search(r"(\{.*\})", output, re.DOTALL)
-
-                if json_match:
-                    json_str = json_match.group(1)
-                    prediction_data = json.loads(json_str)
-
-                    # `predicted` 필드가 최상위에 없으면 trifecta_picks.primary에서 가져옴 (하위 호환성)
-                    predicted_list = prediction_data.get(
-                        "predicted",
-                        prediction_data.get("trifecta_picks", {}).get("primary", []),
-                    )
-
-                    return {
-                        "race_id": race_id,
-                        "predicted": predicted_list,
-                        "confidence": prediction_data.get("trifecta_picks", {}).get(
-                            "confidence", 0
-                        ),
-                        "reason": prediction_data.get("analysis_summary", ""),
-                        "execution_time": execution_time,
-                        "full_output": output,
-                    }
-                else:
-                    print(f"JSON 파싱 실패 ({race_id}). JSON 구조를 찾을 수 없습니다.")
-                    return None
-
-            except json.JSONDecodeError as e:
-                print(f"JSON 디코딩 오류 ({race_id}): {e}")
+            prediction = parse_prediction_output(
+                output,
+                execution_time,
+                race_data=race_data,
+            )
+            if prediction is None:
+                print(f"JSON 파싱 실패 ({race_id}). JSON 구조를 찾을 수 없습니다.")
                 return None
 
-        except Exception as e:
-            print(f"예측 중 오류 ({race_id}): {e}")
+            finalized_prediction = finalize_prediction_payload(
+                prediction,
+                race_data=race_data,
+                execution_time=execution_time,
+            )
+            if finalized_prediction is None:
+                print(
+                    f"최종 출력 계약 위반 ({race_id}): 3두 고유 예측 형식으로 확정할 수 없습니다."
+                )
+                return None
+
+            return {
+                "race_id": race_id,
+                **finalized_prediction,
+                "reason": finalized_prediction.get("reasoning", ""),
+                "full_output": output,
+            }
+        except Exception as exc:
+            print(f"예측 중 오류 ({race_id}): {exc}")
             return None
 
-    def analyze_prediction(self, prediction: dict, race_data: dict) -> dict:
-        """예측 결과 분석"""
+    def _selection_rank(self, horse: dict[str, Any]) -> tuple[int, int]:
+        computed = horse.get("computed_features", {})
+        rank = (
+            computed.get("rating_rank")
+            or computed.get("horse_skill_rank")
+            or computed.get("jk_skill_rank")
+            or computed.get("tr_skill_rank")
+        )
+        if rank is None:
+            return (999, int(horse.get("chulNo", 999)))
+        return (int(rank), int(horse.get("chulNo", 999)))
+
+    def _selection_rank_basis(self, horse: dict[str, Any]) -> str:
+        computed = horse.get("computed_features", {})
+        if computed.get("rating_rank") is not None:
+            return "rating_rank"
+        if computed.get("horse_skill_rank") is not None:
+            return "horse_skill_rank"
+        if computed.get("jk_skill_rank") is not None:
+            return "jk_skill_rank"
+        if computed.get("tr_skill_rank") is not None:
+            return "tr_skill_rank"
+        return "chulNo"
+
+    def analyze_prediction(self, prediction: dict, analysis_payload: dict) -> dict:
+        """예측 결과 분석."""
         analysis = {
             "race_id": prediction["race_id"],
             "predicted_horses": [],
@@ -210,65 +177,70 @@ class PredictionTester:
             "execution_time": prediction["execution_time"],
         }
 
-        # 예측한 말들의 정보 수집
-        horses_dict = {h["chulNo"]: h for h in race_data["horses"]}
+        horses = analysis_payload.get("horses", [])
+        horses_dict = {h["chulNo"]: h for h in horses if h.get("chulNo") is not None}
+        ordered_horses = sorted(horses, key=self._selection_rank)
 
         for chul_no in prediction["predicted"]:
-            if chul_no in horses_dict:
-                horse = horses_dict[chul_no]
+            horse = horses_dict.get(chul_no)
+            if horse is None:
+                continue
 
-                # 배당률 순위 계산
-                sorted_horses = sorted(race_data["horses"], key=lambda x: x["winOdds"])
-                odds_rank = next(
-                    (
-                        i + 1
-                        for i, h in enumerate(sorted_horses)
-                        if h["chulNo"] == chul_no
-                    ),
-                    0,
-                )
+            selection_rank = next(
+                (
+                    index + 1
+                    for index, candidate in enumerate(ordered_horses)
+                    if candidate["chulNo"] == chul_no
+                ),
+                0,
+            )
+            horse_info = {
+                "chulNo": chul_no,
+                "hrName": horse["hrName"],
+                "selectionRank": selection_rank,
+                "selectionRankBasis": self._selection_rank_basis(horse),
+                "jkName": horse["jkName"],
+            }
+            if horse.get("rating") is not None:
+                horse_info["rating"] = horse["rating"]
+            if horse.get("class_rank") not in (None, ""):
+                horse_info["classRank"] = horse["class_rank"]
 
-                horse_info = {
-                    "chulNo": chul_no,
-                    "hrName": horse["hrName"],
-                    "winOdds": horse["winOdds"],
-                    "oddsRank": odds_rank,
-                    "jkName": horse["jkName"],
-                }
+            if "jkDetail" in horse:
+                jk = horse["jkDetail"]
+                if jk.get("rcCntT", 0) > 0:
+                    horse_info["jkWinRate"] = round(
+                        (jk.get("ord1CntT", 0) / jk["rcCntT"]) * 100,
+                        1,
+                    )
 
-                # 기수 승률 추가
-                if "jkDetail" in horse:
-                    jk = horse["jkDetail"]
-                    if jk.get("rcCntT", 0) > 0:
-                        horse_info["jkWinRate"] = round(
-                            (jk.get("ord1CntT", 0) / jk["rcCntT"]) * 100, 1
-                        )
+            if "hrDetail" in horse:
+                hr = horse["hrDetail"]
+                if hr.get("rcCntT", 0) > 0:
+                    place_cnt = (
+                        hr.get("ord1CntT", 0)
+                        + hr.get("ord2CntT", 0)
+                        + hr.get("ord3CntT", 0)
+                    )
+                    horse_info["hrPlaceRate"] = round(
+                        (place_cnt / hr["rcCntT"]) * 100,
+                        1,
+                    )
 
-                # 말 입상률 추가
-                if "hrDetail" in horse:
-                    hr = horse["hrDetail"]
-                    if hr.get("rcCntT", 0) > 0:
-                        place_cnt = (
-                            hr.get("ord1CntT", 0)
-                            + hr.get("ord2CntT", 0)
-                            + hr.get("ord3CntT", 0)
-                        )
-                        horse_info["hrPlaceRate"] = round(
-                            (place_cnt / hr["rcCntT"]) * 100, 1
-                        )
+            analysis["predicted_horses"].append(horse_info)
 
-                analysis["predicted_horses"].append(horse_info)
-
-        # 예측 전략 분석
-        avg_odds_rank = sum(h["oddsRank"] for h in analysis["predicted_horses"]) / 3
-        if avg_odds_rank <= 3:
-            analysis["prediction_strategy"] = "인기마 중심"
-        elif avg_odds_rank <= 5:
-            analysis["prediction_strategy"] = "중간 배당"
+        avg_selection_rank = (
+            sum(h["selectionRank"] for h in analysis["predicted_horses"]) / 3
+            if analysis["predicted_horses"]
+            else 0
+        )
+        if avg_selection_rank <= 3:
+            analysis["prediction_strategy"] = "상위 지표 중심"
+        elif avg_selection_rank <= 5:
+            analysis["prediction_strategy"] = "중간 지표 혼합"
         else:
-            analysis["prediction_strategy"] = "고배당 도전"
+            analysis["prediction_strategy"] = "하위 지표 반전"
 
-        # 신뢰도 수준
         confidence = prediction["confidence"]
         if confidence >= 80:
             analysis["confidence_level"] = "매우 높음"
@@ -282,16 +254,14 @@ class PredictionTester:
         return analysis
 
     def run_test(self, date_filter: str | None = None, limit: int | None = None):
-        """예측 테스트 실행"""
+        """예측 테스트 실행."""
         print(f"\n{'=' * 60}")
         print("경주 예측 테스트 시작")
         print(f"프롬프트: {self.prompt_path}")
         print(f"날짜 필터: {date_filter if date_filter else '전체'}")
         print(f"{'=' * 60}\n")
 
-        # enriched 파일 찾기
         enriched_files = self.find_enriched_files(date_filter)
-
         if limit:
             enriched_files = enriched_files[:limit]
 
@@ -300,59 +270,57 @@ class PredictionTester:
         predictions = []
         analyses = []
 
-        for i, file_info in enumerate(enriched_files):
+        for index, race_record in enumerate(enriched_files):
+            race_info, _lookup = self._normalize_race_record(race_record)
             print(
-                f"\n[{i + 1}/{len(enriched_files)}] {file_info['race_id']} 예측 중..."
+                f"\n[{index + 1}/{len(enriched_files)}] {race_info['race_id']} 예측 중..."
             )
 
-            # 경주 데이터 로드
-            race_data = self.load_race_data(file_info)
+            race_data = self.load_race_data(race_record)
             if not race_data:
                 print("  ❌ 데이터 로드 실패")
                 continue
 
-            print(f"  - 출주마: {len(race_data['horses'])}마리")
+            prompt_payload = race_data["prompt_payload"]
+            analysis_payload = race_data["analysis_payload"]
+            print(f"  - 출주마: {len(prompt_payload['horses'])}마리")
 
-            # 예측 수행
-            prediction = self.run_prediction(race_data, file_info["race_id"])
+            prediction = self.run_prediction(prompt_payload, race_info["race_id"])
             if not prediction:
                 print("  ❌ 예측 실패")
                 continue
 
             predictions.append(prediction)
 
-            # 예측 분석
-            analysis = self.analyze_prediction(prediction, race_data)
+            analysis = self.analyze_prediction(prediction, analysis_payload)
             analyses.append(analysis)
 
-            # 결과 출력
             print(f"  ✅ 예측 완료 (실행시간: {prediction['execution_time']:.1f}초)")
             print(f"  - 예측: {prediction['predicted']}")
             print(f"  - 신뢰도: {prediction['confidence']}%")
             print(f"  - 이유: {prediction['reason']}")
             print(f"  - 전략: {analysis['prediction_strategy']}")
-
-            # 예측한 말들 정보
             print("  - 예측 말 정보:")
             for horse in analysis["predicted_horses"]:
                 info_parts = [f"{horse['chulNo']}번 {horse['hrName']}"]
                 info_parts.append(
-                    f"배당률 {horse['oddsRank']}위({horse['winOdds']:.1f})"
+                    f"선택순위 {horse['selectionRank']}위({horse['selectionRankBasis']})"
                 )
+                if "rating" in horse:
+                    info_parts.append(f"레이팅 {horse['rating']}")
+                if "classRank" in horse:
+                    info_parts.append(f"등급 {horse['classRank']}")
                 if "jkWinRate" in horse:
                     info_parts.append(f"기수승률 {horse['jkWinRate']}%")
                 if "hrPlaceRate" in horse:
                     info_parts.append(f"말입상률 {horse['hrPlaceRate']}%")
                 print(f"    • {' / '.join(info_parts)}")
 
-        # 전체 통계
         self.print_summary(predictions, analyses)
-
-        # 결과 저장
         self.save_results(predictions, analyses, date_filter)
 
     def print_summary(self, predictions: list[dict], analyses: list[dict]):
-        """전체 예측 요약 출력"""
+        """전체 예측 요약 출력."""
         if not predictions:
             print("\n예측 결과가 없습니다.")
             return
@@ -368,15 +336,14 @@ class PredictionTester:
         )
         print(f"- 평균 실행 시간: {avg_execution_time:.1f}초")
 
-        # 신뢰도 분포
         confidence_bins = {"80+": 0, "70-79": 0, "60-69": 0, "60-": 0}
-        for p in predictions:
-            conf = p["confidence"]
-            if conf >= 80:
+        for prediction in predictions:
+            confidence = prediction["confidence"]
+            if confidence >= 80:
                 confidence_bins["80+"] += 1
-            elif conf >= 70:
+            elif confidence >= 70:
                 confidence_bins["70-79"] += 1
-            elif conf >= 60:
+            elif confidence >= 60:
                 confidence_bins["60-69"] += 1
             else:
                 confidence_bins["60-"] += 1
@@ -386,33 +353,44 @@ class PredictionTester:
             percentage = (count / len(predictions)) * 100
             print(f"- {range_name}%: {count}개 ({percentage:.1f}%)")
 
-        # 전략 분포
         strategy_counts = {}
-        for a in analyses:
-            strategy = a["prediction_strategy"]
+        for analysis in analyses:
+            strategy = analysis["prediction_strategy"]
             strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
 
         print("\n🎯 예측 전략 분포:")
         for strategy, count in sorted(
-            strategy_counts.items(), key=lambda x: x[1], reverse=True
+            strategy_counts.items(),
+            key=lambda item: item[1],
+            reverse=True,
         ):
             percentage = (count / len(analyses)) * 100
             print(f"- {strategy}: {count}개 ({percentage:.1f}%)")
 
-        # 평균 배당률 순위
-        all_odds_ranks = []
-        for a in analyses:
-            for h in a["predicted_horses"]:
-                all_odds_ranks.append(h["oddsRank"])
+        all_selection_ranks = []
+        for analysis in analyses:
+            for horse in analysis["predicted_horses"]:
+                all_selection_ranks.append(horse["selectionRank"])
 
-        if all_odds_ranks:
-            avg_odds_rank = sum(all_odds_ranks) / len(all_odds_ranks)
-            print(f"\n💰 평균 선택 배당률 순위: {avg_odds_rank:.1f}위")
+        if all_selection_ranks:
+            avg_selection_rank = sum(all_selection_ranks) / len(all_selection_ranks)
+            print(f"\n📌 평균 선택 순위: {avg_selection_rank:.1f}위")
 
     def save_results(
         self, predictions: list[dict], analyses: list[dict], date_filter: str | None
     ):
-        """예측 결과 저장"""
+        """예측 결과 저장."""
+        invalid_predictions = [
+            prediction["race_id"]
+            for prediction in predictions
+            if prediction.get("prediction_output_format", {}).get("version") is None
+        ]
+        if invalid_predictions:
+            raise ValueError(
+                "3두 고유 예측 출력 계약이 없는 결과는 저장할 수 없습니다: "
+                + ", ".join(invalid_predictions)
+            )
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = (
             f"prediction_test_{date_filter if date_filter else 'all'}_{timestamp}.json"
@@ -453,12 +431,10 @@ def main():
     date_filter = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] != "all" else None
     limit = int(sys.argv[3]) if len(sys.argv) > 3 else None
 
-    # 파일 존재 확인
     if not Path(prompt_file).exists():
         print(f"Error: 프롬프트 파일을 찾을 수 없습니다: {prompt_file}")
         sys.exit(1)
 
-    # 테스터 실행
     tester = PredictionTester(prompt_file)
     tester.run_test(date_filter, limit)
 

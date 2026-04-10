@@ -7,7 +7,11 @@ data adapters without forcing callers to depend on raw row dictionaries.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
+
+from shared.entry_snapshot_metadata import derive_or_restore_entry_snapshot_metadata
+from shared.snapshot_query_schema import normalize_snapshot_lookup_payload
 
 MEET_NAME_MAP = {1: "서울", 2: "제주", 3: "부산경남"}
 
@@ -68,6 +72,51 @@ class RaceKey:
 
 
 @dataclass(frozen=True, slots=True)
+class RaceSourceLookup:
+    """Per-race source lookup contract anchored to the entry snapshot time."""
+
+    race_id: str
+    race_date: str
+    entry_snapshot_at: str
+
+    @classmethod
+    def from_race_info(cls, race_info: Mapping[str, Any]) -> "RaceSourceLookup":
+        normalized = normalize_snapshot_lookup_payload(race_info)
+
+        return cls(
+            race_id=normalized["race_id"],
+            race_date=normalized["race_date"],
+            entry_snapshot_at=normalized["entry_snapshot_at"],
+        )
+
+    @classmethod
+    def from_snapshot(cls, snapshot: "RaceSnapshot") -> "RaceSourceLookup":
+        timing = derive_or_restore_entry_snapshot_metadata(
+            race_date=snapshot.race_date,
+            basic_data=snapshot.basic_data,
+            raw_data=snapshot.raw_data,
+            row_collected_at=snapshot.collected_at,
+            row_updated_at=snapshot.updated_at,
+        )
+        if not timing.entry_finalized_at:
+            raise ValueError(
+                f"race {snapshot.race_id} is missing entry_finalized_at for snapshot lookup"
+            )
+        return cls(
+            race_id=snapshot.race_id,
+            race_date=snapshot.race_date,
+            entry_snapshot_at=timing.entry_finalized_at,
+        )
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "race_id": self.race_id,
+            "race_date": self.race_date,
+            "entry_snapshot_at": self.entry_snapshot_at,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class RaceSnapshot:
     """Canonical read DTO for a race row."""
 
@@ -75,7 +124,11 @@ class RaceSnapshot:
     collection_status: str | None = None
     result_status: str | None = None
     basic_data: dict[str, Any] | None = None
+    raw_data: dict[str, Any] | None = None
     result_data: Any | None = None
+    collected_at: datetime | str | None = None
+    created_at: datetime | str | None = None
+    updated_at: datetime | str | None = None
 
     @classmethod
     def from_row(cls, row: Mapping[str, Any]) -> "RaceSnapshot":
@@ -90,7 +143,11 @@ class RaceSnapshot:
             collection_status=row.get("collection_status"),
             result_status=row.get("result_status"),
             basic_data=_decode_json_if_needed(row.get("basic_data")),
+            raw_data=_decode_json_if_needed(row.get("raw_data")),
             result_data=_decode_json_if_needed(row.get("result_data")),
+            collected_at=row.get("collected_at"),
+            created_at=row.get("created_at"),
+            updated_at=row.get("updated_at"),
         )
 
     @property
