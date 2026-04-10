@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+export PYTHONPATH="packages/scripts${PYTHONPATH:+:$PYTHONPATH}"
+
 mkdir -p .ralph/outputs
 
 set -- \
