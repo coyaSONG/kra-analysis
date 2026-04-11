@@ -136,6 +136,38 @@ def test_load_offline_evaluation_dataset_uses_only_separated_artifacts(
     assert answers == {"race-separated": [1, 2, 3]}
 
 
+def test_resolve_offline_evaluation_dataset_artifacts_bootstraps_legacy_manifest(
+    tmp_path: Path,
+) -> None:
+    race = _race_payload(race_id="race-legacy-bootstrap")
+    race.pop("snapshot_meta")
+    (tmp_path / "holdout.json").write_text(
+        json.dumps([race], ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    (tmp_path / "holdout_answer_key.json").write_text(
+        json.dumps({"race-legacy-bootstrap": [1, 2, 3]}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    artifacts = resolve_offline_evaluation_dataset_artifacts(
+        "holdout",
+        artifact_root=tmp_path,
+    )
+
+    manifest = json.loads(artifacts.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["dataset"] == "holdout"
+    assert manifest["audit"]["legacy_bootstrap"] is True
+    assert manifest["candidate_selection_audit"]["legacy_bootstrap"] is True
+    assert manifest["races"] == [
+        {
+            "race_id": "race-legacy-bootstrap",
+            "replay_status": "legacy_snapshot_without_manifest",
+            "include_in_strict_dataset": True,
+        }
+    ]
+
+
 def test_resolve_offline_evaluation_dataset_artifacts_requires_manifest_match(
     tmp_path: Path,
 ) -> None:
