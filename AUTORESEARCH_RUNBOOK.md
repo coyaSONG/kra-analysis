@@ -38,6 +38,8 @@ sh packages/scripts/autoresearch/run_autoresearch_verify.sh
 - failure semantics:
   - invalid config / 실행 인프라 실패 -> non-zero exit
   - 성공 -> lowest hit rate 숫자 출력
+- every verify run uses a fresh output dir under `.autoresearch/verify-runs/`
+- `.autoresearch/outputs` 는 최신 verify run 결과를 가리키는 심볼릭 링크다.
 
 ## Guard
 

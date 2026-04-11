@@ -29,6 +29,7 @@ sh packages/scripts/autoresearch/run_autoresearch_verify.sh
 
 verify는 숫자 하나만 stdout에 출력한다.
 실험 인프라 실패나 invalid config면 non-zero exit로 끝난다.
+각 verify run은 fresh output dir에서 돌고, `.autoresearch/outputs`는 최신 결과를 가리킨다.
 
 ## Guard
 

@@ -3,14 +3,32 @@ set -eu
 
 export PYTHONPATH="packages/scripts${PYTHONPATH:+:$PYTHONPATH}"
 
-OUTPUT_DIR=".autoresearch/outputs"
-SUMMARY_PATH="$OUTPUT_DIR/holdout_seed_summary_report.json"
+ROOT_DIR=".autoresearch"
+RUNS_DIR="$ROOT_DIR/verify-runs"
+RETENTION="${VERIFY_RUN_RETENTION:-5}"
 
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$RUNS_DIR"
+RUN_DIR="$(mktemp -d "$RUNS_DIR/run.XXXXXX")"
+OUTPUT_DIR="$RUN_DIR/outputs"
+SUMMARY_PATH="$OUTPUT_DIR/holdout_seed_summary_report.json"
 
 uv run python packages/scripts/autoresearch/seed_matrix_runner.py \
   --config packages/scripts/autoresearch/clean_model_config.json \
   --output-dir "$OUTPUT_DIR" >/dev/null
+
+rm -rf "$ROOT_DIR/outputs"
+ln -s "verify-runs/$(basename "$RUN_DIR")/outputs" "$ROOT_DIR/outputs"
+
+if [ "$RETENTION" -gt 0 ] 2>/dev/null; then
+  COUNT=0
+  for old_run in $(ls -1dt "$RUNS_DIR"/run.* 2>/dev/null || true); do
+    COUNT=$((COUNT + 1))
+    if [ "$COUNT" -le "$RETENTION" ]; then
+      continue
+    fi
+    rm -rf "$old_run"
+  done
+fi
 
 uv run python - <<'PY'
 import json
