@@ -1,0 +1,8 @@
+$autoresearch
+Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction beyond 0.362460.
+Scope: packages/scripts/autoresearch/clean_model_config.json
+Metric: lowest_overall_holdout_hit_rate
+Direction: higher is better
+Verify: sh packages/scripts/autoresearch/run_autoresearch_verify.sh
+Guard: sh packages/scripts/autoresearch/run_autoresearch_guard.sh
+Iterations: 5
