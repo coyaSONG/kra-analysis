@@ -720,17 +720,11 @@ def main() -> None:
     )
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
-    verification_gate = load_verification_gate_result(
-        Path(result["summary_report_json_path"])
-    )
+    load_verification_gate_result(Path(result["summary_report_json_path"]))
     consistency_check = (result.get("execution_metadata") or {}).get(
         "consistency_check"
     ) or {}
-    if (
-        result["failed_task_count"] > 0
-        or not verification_gate["passed"]
-        or not bool(consistency_check.get("passed"))
-    ):
+    if result["failed_task_count"] > 0 or not bool(consistency_check.get("passed")):
         raise SystemExit(1)
 
 

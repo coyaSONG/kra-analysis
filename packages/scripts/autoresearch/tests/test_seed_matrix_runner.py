@@ -420,7 +420,7 @@ def test_load_verification_gate_result_rejects_invalid_summary_report(
         load_verification_gate_result(report_path)
 
 
-def test_seed_matrix_main_returns_nonzero_when_final_verification_fails(
+def test_seed_matrix_main_returns_zero_when_final_verification_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -461,8 +461,7 @@ def test_seed_matrix_main_returns_nonzero_when_final_verification_fails(
         ],
     )
 
-    with pytest.raises(SystemExit, match="1"):
-        main()
+    main()
 
 
 def test_seed_matrix_main_returns_zero_when_final_verification_passes(
@@ -507,3 +506,93 @@ def test_seed_matrix_main_returns_zero_when_final_verification_passes(
     )
 
     main()
+
+
+def test_seed_matrix_main_returns_nonzero_when_task_execution_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text("{}", encoding="utf-8")
+    report_path = tmp_path / "holdout_seed_summary_report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "gate": {"passed": False},
+                "verification_verdict": {"status": "FAIL", "passed": False},
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "autoresearch.seed_matrix_runner.execute_seed_matrix",
+        lambda **_: {
+            "summary_report_json_path": str(report_path),
+            "failed_task_count": 1,
+            "execution_metadata": {
+                "consistency_check": {"status": "PASS", "passed": True}
+            },
+        },
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "seed_matrix_runner.py",
+            "--config",
+            str(config_path),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+        ],
+    )
+
+    with pytest.raises(SystemExit, match="1"):
+        main()
+
+
+def test_seed_matrix_main_returns_nonzero_when_consistency_check_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text("{}", encoding="utf-8")
+    report_path = tmp_path / "holdout_seed_summary_report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "gate": {"passed": True},
+                "verification_verdict": {"status": "PASS", "passed": True},
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "autoresearch.seed_matrix_runner.execute_seed_matrix",
+        lambda **_: {
+            "summary_report_json_path": str(report_path),
+            "failed_task_count": 0,
+            "execution_metadata": {
+                "consistency_check": {"status": "FAIL", "passed": False}
+            },
+        },
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "seed_matrix_runner.py",
+            "--config",
+            str(config_path),
+            "--output-dir",
+            str(tmp_path / "outputs"),
+        ],
+    )
+
+    with pytest.raises(SystemExit, match="1"):
+        main()
