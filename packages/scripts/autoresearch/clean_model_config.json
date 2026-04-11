@@ -80,11 +80,11 @@
     "kind": "hgb",
     "positive_class_weight": 1.0,
     "params": {
-      "max_depth": 6,
+      "max_depth": 5,
       "learning_rate": 0.05,
       "max_iter": 600,
-      "min_samples_leaf": 30,
-      "l2_regularization": 0.4
+      "min_samples_leaf": 40,
+      "l2_regularization": 0.8
     }
   },
   "experiment": {
@@ -113,14 +113,14 @@
       "strategy": "curated_candidates_v1",
       "candidates": [
         {
-          "name": "baseline_hgb_depth6_lr005",
+          "name": "hgb_depth5_lr005_leaf40_l208",
           "kind": "hgb",
           "params": {
-            "max_depth": 6,
+            "max_depth": 5,
             "learning_rate": 0.05,
             "max_iter": 600,
-            "min_samples_leaf": 30,
-            "l2_regularization": 0.4
+            "min_samples_leaf": 40,
+            "l2_regularization": 0.8
           }
         },
         {
@@ -206,6 +206,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "baseline-seed"
+    "last_mutation": "regularize-hgb-depth5-leaf40-l208"
   }
 }
