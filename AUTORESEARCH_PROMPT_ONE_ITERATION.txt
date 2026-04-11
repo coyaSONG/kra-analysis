@@ -1,0 +1,23 @@
+$autoresearch
+Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction beyond 0.362460.
+Scope: packages/scripts/autoresearch/clean_model_config.json
+Metric: lowest_overall_holdout_hit_rate
+Direction: higher is better
+Verify: sh packages/scripts/autoresearch/run_autoresearch_verify.sh
+Guard: sh packages/scripts/autoresearch/run_autoresearch_guard.sh
+Iterations: 1
+
+Continuation rules:
+- If `autoresearch-results.tsv` already exists, do not reinitialize baseline.
+- Complete exactly one additional resolved iteration beyond the highest logged iteration.
+- A resolved iteration means:
+  1. apply one small config mutation,
+  2. run guard,
+  3. run verify to completion,
+  4. decide keep or discard,
+  5. append one row to `autoresearch-results.tsv`,
+  6. leave git working tree clean.
+- Do not stop while verify is still running.
+- If verify or guard fails, record a crash/discard row, clean up, and still finish the iteration.
+- Do not ask the user questions.
+- Exit only after the new iteration row is written and `git status --short` is clean.
