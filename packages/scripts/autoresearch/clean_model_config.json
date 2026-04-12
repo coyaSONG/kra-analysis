@@ -78,7 +78,7 @@
   },
   "model": {
     "kind": "hgb",
-    "positive_class_weight": 1.05,
+    "positive_class_weight": 1.0,
     "params": {
       "max_depth": 6,
       "learning_rate": 0.04,
@@ -152,7 +152,7 @@
       ]
     },
     "common_hyperparameters": {
-      "positive_class_weight": 1.05,
+      "positive_class_weight": 1.0,
       "imputer_strategy": "median",
       "random_state_source": "evaluation_seed",
       "target_label": "unordered_top3",
@@ -206,6 +206,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "positive_class_weight=1.05"
+    "last_mutation": "min_samples_leaf=42"
   }
 }
