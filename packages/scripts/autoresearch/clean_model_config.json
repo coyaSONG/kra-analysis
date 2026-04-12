@@ -83,7 +83,7 @@
       "max_depth": 6,
       "learning_rate": 0.04,
       "max_iter": 700,
-      "min_samples_leaf": 45,
+      "min_samples_leaf": 40,
       "l2_regularization": 0.4
     }
   },
@@ -113,13 +113,13 @@
       "strategy": "curated_candidates_v1",
       "candidates": [
         {
-          "name": "hgb_depth6_lr004_iter700_leaf45",
+          "name": "hgb_depth6_lr004_iter700_leaf40",
           "kind": "hgb",
           "params": {
             "max_depth": 6,
             "learning_rate": 0.04,
             "max_iter": 700,
-            "min_samples_leaf": 45,
+            "min_samples_leaf": 40,
             "l2_regularization": 0.4
           }
         },
@@ -206,6 +206,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "min_samples_leaf=45"
+    "last_mutation": "min_samples_leaf=40"
   }
 }
