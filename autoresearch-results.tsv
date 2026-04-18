@@ -18,3 +18,4 @@ iteration	commit	metric	delta	guard	guard-metric	status	description
 15	-	0.368932	0.006472	pass	-	discard	raise max_depth to 7 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
 16	-	0.375405	0.012945	pass	-	discard	raise l2_regularization to 0.4 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
 17	-	0.375405	0.012945	pass	-	discard	lower min_samples_leaf to 40 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
+18	-	0.372168	0.009708	pass	-	discard	raise min_samples_leaf to 44 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
