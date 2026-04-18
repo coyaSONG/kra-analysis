@@ -1,0 +1,19 @@
+# metric_direction: higher_is_better
+iteration	commit	metric	delta	guard	guard-metric	status	description
+0	1689bd0	0.36246	0.0	pass	-	baseline	baseline from matching config_id model-config-v1:2fbc12f548a09553
+1	-	0.36246	0.0	pass	-	discard	lower min_samples_leaf to 25; lowest holdout hit rate stayed at baseline
+2	-	0.359223	-0.003237	pass	-	discard	raise l2_regularization to 0.5; lowest holdout hit rate regressed below baseline
+3	55c73bc	0.368932	0.006472	pass	-	keep	raise min_samples_leaf to 35; lowest holdout hit rate improved beyond baseline
+4	cb27178	0.372168	0.009708	pass	-	keep	raise min_samples_leaf to 40; lowest holdout hit rate improved beyond prior keep
+5	-	0.372168	0.009708	pass	-	discard	raise min_samples_leaf to 45; lowest holdout hit rate matched the prior keep, so discarded
+6	f0b62a6	0.375405	0.012945	pass	-	keep	raise min_samples_leaf to 42; lowest holdout hit rate improved beyond the prior keep
+7	-	0.365696	-0.009709	pass	-	discard	raise min_samples_leaf to 43; lowest holdout hit rate regressed below the prior keep
+8	-	0.375405	0.012945	pass	-	discard	raise positive_class_weight to 1.05; lowest holdout hit rate matched the prior keep, so discarded
+9	-	0.375405	0.012945	pass	-	discard	raise max_iter to 800; lowest holdout hit rate matched the prior keep, so discarded
+10	-	0.372168	-0.003237	pass	-	discard	raise max_iter to 800 atop l2_regularization=0.3; lowest holdout hit rate regressed below the prior keep
+11	-	0.375405	0.012945	pass	-	discard	lower min_samples_leaf to 41 atop l2_regularization=0.3; lowest holdout hit rate matched the prior keep, so discarded
+12	-	0.372168	0.009708	pass	-	discard	lower l2_regularization to 0.2 atop min_samples_leaf=42; lowest holdout hit rate regressed below the prior keep
+13	2869a73	0.378641	0.016181	pass	-	keep	lower learning_rate to 0.03; lowest holdout hit rate improved beyond the prior keep
+14	-	0.378641	0.016181	pass	-	discard	raise max_iter to 800 atop learning_rate=0.03; lowest holdout hit rate matched the prior keep, so discarded
+15	-	0.368932	0.006472	pass	-	discard	raise max_depth to 7 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
+16	-	0.375405	0.012945	pass	-	discard	raise l2_regularization to 0.4 atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
