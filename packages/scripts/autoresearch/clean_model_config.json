@@ -173,6 +173,7 @@
     "rest_risk_code",
     "allowance_flag",
     "horse_win_rate",
+    "horse_place_rate",
     "jockey_win_rate",
     "jockey_place_rate",
     "trainer_win_rate",
