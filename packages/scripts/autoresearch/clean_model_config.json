@@ -200,10 +200,11 @@
     "horse_place_rate_rr",
     "jockey_place_rate_rr",
     "trainer_place_rate_rr",
-    "year_place_rate_rr"
+    "year_place_rate_rr",
+    "total_place_rate_rr"
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "remove total_place_rate_rr atop learning_rate=0.03"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
