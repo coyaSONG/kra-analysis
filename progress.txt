@@ -3,11 +3,12 @@ Started: 2026-04-19
 ---
 
 ## Patterns
-- Best so far: 0.375405 at commit f0b62a6 ("raise min_samples_leaf to 42 atop lr003"). Beat this strictly to keep.
+- Best so far: 0.378641 at commit 2869a73 ("lower learning_rate to 0.03"). Beat this strictly to keep.
 - Kept-mutation axis to date: only `min_samples_leaf` between 35–42, plus `learning_rate=0.03`. All other axes have been tried and discarded.
 - Plateau region: 17 consecutive discards/crashes after iteration 6 — every mutation was a small tweak in the same hyperparameter neighborhood. To break the plateau, vary the *axis*, not the *value*.
 - Verify takes minutes (10 seeds × full holdout). Do not abort early.
 - Guard must pass before verify; revert immediately on guard failure.
+- Removing `draw_rr` alone regressed to 0.375405, so simple one-feature ablations on the draw-position signal are not a promising plateau-breaker.
 
 ## Prior axes already tried (all discarded after baseline-keep era)
 - l2_regularization: 0.4, 0.5
@@ -24,4 +25,11 @@ Started: 2026-04-19
 - Change class balancing strategy (sample weights, threshold)
 - Adjust evaluation seeds or holdout window via config (if writable)
 
+---
+## [2026-04-19T18:38:40+0900] - iteration 24
+- mutation: remove `draw_rr` from `features` atop `positive_class_weight=1.05` and `learning_rate=0.03`
+- guard: pass
+- metric: 0.375405  (best so far: 0.378641)
+- decision: discard
+- learning: Removing the race-relative draw feature weakened worst-seed holdout performance, so this positional signal is still helping the current HGB setup. Do not retry the same single-feature ablation; next iteration should probe a different feature family or a broader feature-set change.
 ---
