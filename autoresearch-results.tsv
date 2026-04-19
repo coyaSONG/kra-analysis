@@ -26,3 +26,4 @@ iteration	commit	metric	delta	guard	guard-metric	status	description
 23	-	-	-	pass	-	crash	raise positive_class_weight to 1.05 atop learning_rate=0.03; verify hit ValidationError because model.positive_class_weight must match experiment.common_hyperparameters.positive_class_weight
 24	-	0.375405	-0.003236	pass	-	discard	remove draw_rr atop positive_class_weight=1.05 and learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
 24	-	0.375405	-0.003236	pass	-	discard	raise positive_class_weight to 1.05 atop learning_rate=0.03 with synced common weight; verify artifacts completed at lowest holdout hit rate 0.375405, so discarded below the prior keep
+25	-	0.368932	-0.009709	pass	-	discard	add horse_place_rate alongside horse_place_rate_rr atop learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
