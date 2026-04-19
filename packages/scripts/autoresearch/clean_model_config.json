@@ -78,7 +78,7 @@
   },
   "model": {
     "kind": "hgb",
-    "positive_class_weight": 1.05,
+    "positive_class_weight": 1.0,
     "params": {
       "max_depth": 6,
       "learning_rate": 0.03,
@@ -152,7 +152,7 @@
       ]
     },
     "common_hyperparameters": {
-      "positive_class_weight": 1.05,
+      "positive_class_weight": 1.0,
       "imputer_strategy": "median",
       "random_state_source": "evaluation_seed",
       "target_label": "unordered_top3",
@@ -201,11 +201,10 @@
     "jockey_place_rate_rr",
     "trainer_place_rate_rr",
     "year_place_rate_rr",
-    "total_place_rate_rr",
-    "draw_rr"
+    "total_place_rate_rr"
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "positive_class_weight=1.05 atop learning_rate=0.03"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
