@@ -1,0 +1,27 @@
+# Ralph Progress Log
+Started: 2026-04-19
+---
+
+## Patterns
+- Best so far: 0.375405 at commit f0b62a6 ("raise min_samples_leaf to 42 atop lr003"). Beat this strictly to keep.
+- Kept-mutation axis to date: only `min_samples_leaf` between 35–42, plus `learning_rate=0.03`. All other axes have been tried and discarded.
+- Plateau region: 17 consecutive discards/crashes after iteration 6 — every mutation was a small tweak in the same hyperparameter neighborhood. To break the plateau, vary the *axis*, not the *value*.
+- Verify takes minutes (10 seeds × full holdout). Do not abort early.
+- Guard must pass before verify; revert immediately on guard failure.
+
+## Prior axes already tried (all discarded after baseline-keep era)
+- l2_regularization: 0.4, 0.5
+- max_iter: 600, 800
+- max_depth: 7
+- min_samples_leaf: 25, 43, 45 (only 35/40/42 kept)
+- positive_class_weight: 0.9, 0.95, 1.05 (with and without synced common weight)
+- These hyperparameter dials are exhausted within the current feature/model choice.
+
+## Suggested unexplored axes for next iterations
+- Add or remove a feature in `clean_model_config.json` `features` list
+- Switch model class (if config schema allows)
+- Change training data window
+- Change class balancing strategy (sample weights, threshold)
+- Adjust evaluation seeds or holdout window via config (if writable)
+
+---
