@@ -174,7 +174,6 @@
     "allowance_flag",
     "horse_win_rate",
     "jockey_win_rate",
-    "jockey_recent_win_rate",
     "jockey_place_rate",
     "trainer_win_rate",
     "trainer_place_rate",
@@ -206,6 +205,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "add jockey_recent_win_rate atop draw_rr-removed learning_rate=0.03"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
