@@ -57,3 +57,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.087379, so reverted experiment commit `aece44b`.
 - learning: The linear balanced logreg family is much weaker and very slow due to repeated non-convergence at `max_iter=2000`; avoid retrying `logreg_balanced_c075` without a materially different preprocessing/scaling context, and next prefer a coherent feature-family change or another non-model-family axis.
 ---
+## [2026-04-26T06:08:04+0900] - iteration 41
+- mutation: add the `career_depth` feature bundle (`hr_starts_y`, `hr_starts_t`, `horse_low_sample`) atop the current draw_rr-removed HGB context.
+- hypothesis: Raw career start counts plus a low-sample flag could reduce overconfidence on lightly sampled horses and improve worst-seed recent-holdout stability after model-family switches failed.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.368932 vs current best 0.378641.
+- decision: discard; metric regressed by -0.009709, so reverted experiment commit `78497da`.
+- learning: Adding raw career-depth context did not recover worst-seed performance and made verify much slower; avoid retrying this exact career_depth bundle in the current HGB/draw_rr-removed context, and next prefer a different coherent feature-family axis or a leakage-free split/window experiment.
+---
