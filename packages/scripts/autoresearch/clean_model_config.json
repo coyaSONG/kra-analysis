@@ -77,12 +77,14 @@
     ]
   },
   "model": {
-    "kind": "rf",
+    "kind": "hgb",
     "positive_class_weight": 1.0,
     "params": {
-      "n_estimators": 600,
-      "max_depth": 8,
-      "min_samples_leaf": 8
+      "max_depth": 6,
+      "learning_rate": 0.03,
+      "max_iter": 700,
+      "min_samples_leaf": 42,
+      "l2_regularization": 0.3
     }
   },
   "experiment": {
@@ -203,6 +205,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "model.kind=rf_depth8_600trees"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
