@@ -2,7 +2,7 @@
   "format_version": "autoresearch-clean-config-v1",
   "dataset": "full_year_2025",
   "split": {
-    "train_end": "20250930",
+    "train_end": "20251031",
     "dev_end": "20251130",
     "test_start": "20251201"
   },
@@ -15,8 +15,8 @@
     },
     {
       "name": "fold_b",
-      "train_end": "20250930",
-      "eval_start": "20251001",
+      "train_end": "20251031",
+      "eval_start": "20251101",
       "eval_end": "20251130"
     },
     {
@@ -205,6 +205,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "remove draw_rr atop learning_rate=0.03"
+    "last_mutation": "split_window_train_through_20251031"
   }
 }
