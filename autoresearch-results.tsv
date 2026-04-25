@@ -36,3 +36,4 @@ iteration	commit	metric	delta	guard	guard-metric	status	description
 32	-	0.375405	-0.003236	pass	-	discard	lower l2_regularization to 0.25 atop draw_rr-removed learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
 33	-	0.372168	-0.006473	pass	-	discard	add horse_skill_rank atop draw_rr-removed learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
 34	-	0.375405	-0.003236	pass	-	discard	add jockey_recent_win_rate atop draw_rr-removed learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
+35	-	0.368932	-0.009709	pass	-	discard	add wgBudam_rr atop draw_rr-removed learning_rate=0.03; lowest holdout hit rate regressed below the prior keep
