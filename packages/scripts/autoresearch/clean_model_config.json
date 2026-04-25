@@ -162,6 +162,7 @@
   "features": [
     "rating",
     "wgBudam",
+    "wg_budam_rank",
     "wgHr_value",
     "age",
     "draw_no",
@@ -185,12 +186,14 @@
     "jockey_total_place_rate",
     "trainer_total_place_rate",
     "field_size",
+    "field_size_live",
     "is_handicap",
     "dist",
     "is_sprint",
     "is_mile",
     "is_large",
     "horse_top3_skill",
+    "gap_3rd_4th",
     "horse_starts_y",
     "jk_skill",
     "tr_skill",
@@ -205,6 +208,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "remove draw_rr atop learning_rate=0.03"
+    "last_mutation": "add speed_shape bundle"
   }
 }
