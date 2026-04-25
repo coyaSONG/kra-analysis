@@ -197,7 +197,6 @@
     "jk_place_rate_y",
     "tr_place_rate_y",
     "rating_rr",
-    "wgBudam_rr",
     "horse_place_rate_rr",
     "jockey_place_rate_rr",
     "trainer_place_rate_rr",
@@ -206,6 +205,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "add wgBudam_rr atop draw_rr-removed learning_rate=0.03"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
