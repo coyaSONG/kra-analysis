@@ -65,3 +65,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.009709, so reverted experiment commit `78497da`.
 - learning: Adding raw career-depth context did not recover worst-seed performance and made verify much slower; avoid retrying this exact career_depth bundle in the current HGB/draw_rr-removed context, and next prefer a different coherent feature-family axis or a leakage-free split/window experiment.
 ---
+## [2026-04-26T07:51:51+0900] - iteration 42
+- mutation: add the `speed_shape` feature bundle (`wg_budam_rank`, `field_size_live`, `gap_3rd_4th`) atop the current draw_rr-removed HGB context.
+- hypothesis: Live field size, burden-rank shape, and top-skill gap could capture same-race competitive structure and improve worst-seed recent-holdout stability after model-family switches and career-depth features failed.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.355987 vs current best 0.378641.
+- decision: discard; metric regressed by -0.022654, so reverted experiment commit `9d83e6d`.
+- learning: The speed_shape bundle can produce strong individual seeds but worsens worst-seed stability through seed 02; avoid retrying this exact bundle in the current HGB/draw_rr-removed context, and next try a different single axis such as a leakage-free split/window experiment or a narrower retained-feature cleanup rather than adding more shape features.
+---
