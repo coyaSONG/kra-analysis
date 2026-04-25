@@ -41,3 +41,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.009709, so reverted experiment commit `5c4256e`.
 - learning: The RF family is much slower and weaker than the kept HGB context on worst-seed holdout; avoid retrying RF depth8/600 trees and prefer another schema-supported model family or a coherent feature-family change next.
 ---
+## [2026-04-26T02:43:36+0900] - iteration 39
+- mutation: switch top-level `model.kind` and params from the kept HGB configuration to the schema-supported `et_depth8_800trees` candidate.
+- hypothesis: An ExtraTrees candidate could improve worst-seed recent-holdout hit rate by reducing HGB-specific split variance with randomized thresholds after a long HGB plateau and an RF regression.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.23301 vs current best 0.378641.
+- decision: discard; metric regressed by -0.145631, so reverted experiment commit `8f7f571`.
+- learning: ET depth8/800 trees is both very slow and much weaker than the kept HGB context; avoid this bagged-tree family/value pair and next prefer a different schema-supported family such as logreg or a coherent feature-family change.
+---
