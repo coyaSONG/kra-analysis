@@ -33,3 +33,11 @@ Started: 2026-04-19
 - decision: discard
 - learning: Removing the race-relative draw feature weakened worst-seed holdout performance, so this positional signal is still helping the current HGB setup. Do not retry the same single-feature ablation; next iteration should probe a different feature family or a broader feature-set change.
 ---
+## [2026-04-26T01:02:08+0900] - iteration 38
+- mutation: switch top-level `model.kind` and params from the kept HGB configuration to the schema-supported `rf_depth8_600trees` candidate.
+- hypothesis: A bagged RandomForest candidate could improve worst-seed recent-holdout hit rate by reducing HGB-specific variance after a long plateau of HGB hyperparameter and single-feature regressions.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.368932 vs current best 0.378641.
+- decision: discard; metric regressed by -0.009709, so reverted experiment commit `5c4256e`.
+- learning: The RF family is much slower and weaker than the kept HGB context on worst-seed holdout; avoid retrying RF depth8/600 trees and prefer another schema-supported model family or a coherent feature-family change next.
+---
