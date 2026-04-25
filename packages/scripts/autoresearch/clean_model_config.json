@@ -192,9 +192,6 @@
     "is_large",
     "horse_top3_skill",
     "horse_starts_y",
-    "hr_starts_y",
-    "hr_starts_t",
-    "horse_low_sample",
     "jk_skill",
     "tr_skill",
     "jk_place_rate_y",
@@ -208,6 +205,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "add career_depth bundle atop draw_rr-removed learning_rate=0.03"
+    "last_mutation": "remove draw_rr atop learning_rate=0.03"
   }
 }
