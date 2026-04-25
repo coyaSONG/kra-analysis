@@ -193,6 +193,7 @@
     "horse_top3_skill",
     "horse_starts_y",
     "jk_skill",
+    "jk_skill_rank",
     "tr_skill",
     "jk_place_rate_y",
     "tr_place_rate_y",
@@ -205,6 +206,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "remove draw_rr atop learning_rate=0.03"
+    "last_mutation": "add jk_skill_rank atop draw_rr-removed learning_rate=0.03"
   }
 }
