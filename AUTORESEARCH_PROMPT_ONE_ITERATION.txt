@@ -1,5 +1,5 @@
 $autoresearch
-Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction beyond 0.362460.
+Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction. Current best must be read from `autoresearch-results.tsv`; baseline is 0.362460.
 Scope: packages/scripts/autoresearch/clean_model_config.json
 Metric: lowest_overall_holdout_hit_rate
 Direction: higher is better
@@ -9,15 +9,54 @@ Iterations: 1
 
 Continuation rules:
 - If `autoresearch-results.tsv` already exists, do not reinitialize baseline.
-- Complete exactly one additional resolved iteration beyond the highest logged iteration.
+- Complete exactly one additional resolved iteration.
+- Use the next display iteration number as `max(numeric iteration column) + 1`.
+- The supervisor may count physical TSV rows instead; do not try to reconcile historical duplicate rows during the iteration.
 - A resolved iteration means:
-  1. apply one small config mutation,
-  2. run guard,
-  3. run verify to completion,
-  4. decide keep or discard,
-  5. append one row to `autoresearch-results.tsv`,
-  6. leave git working tree clean.
+  1. complete the research review checklist below,
+  2. apply one small config mutation,
+  3. run guard,
+  4. run verify to completion,
+  5. decide keep or discard,
+  6. append one row to `autoresearch-results.tsv`,
+  7. append one block to `progress.txt`,
+  8. leave git working tree clean.
 - Do not stop while verify is still running.
 - If verify or guard fails, record a crash/discard row, clean up, and still finish the iteration.
 - Do not ask the user questions.
 - Exit only after the new iteration row is written and `git status --short` is clean.
+
+Research review checklist:
+- Read `AUTORESEARCH_RUNBOOK.md`, `progress.txt`, the last 20 rows of `autoresearch-results.tsv`, `git log --oneline -20`, and the current `clean_model_config.json`.
+- Identify the current best metric from rows with `status=keep` or `status=baseline`.
+- Identify the last 10 attempted experiment axes and mark them as `success`, `same`, `regression`, or `crash`.
+- If the last 5 resolved iterations did not beat the best metric, choose a new research axis instead of a tiny value tweak.
+- If the last 10 resolved iterations did not beat the best metric, choose a radical but still single-axis experiment.
+- Do not repeat an axis/value pair already discarded unless the hypothesis explicitly combines it with a different kept context.
+
+Allowed research axes, in priority order after plateau:
+- model family switch within schema-supported candidates, if changing `model.kind` and params is valid.
+- feature family changes that test a coherent hypothesis, not one arbitrary column at a time.
+- class weighting or common hyperparameter changes, keeping duplicated schema fields synchronized.
+- split/window changes only if they preserve recent-holdout, leakage-free, all-KRA evaluation semantics.
+- HGB local parameter tweaks only when they directly exploit a recent keep.
+
+Hypothesis requirement:
+- Before editing, write a one-sentence hypothesis in your internal reasoning and use it to choose the mutation.
+- The mutation description in `autoresearch-results.tsv` must state the research axis and why it was tested.
+- `progress.txt` must append:
+  - iteration number
+  - mutation
+  - hypothesis
+  - guard result
+  - metric and current best
+  - decision
+  - learning: what this result says to avoid or try next
+
+Hard constraints:
+- Experiment mutation may only edit `packages/scripts/autoresearch/clean_model_config.json`.
+- Logging may edit only `autoresearch-results.tsv` and `progress.txt`.
+- Do not edit verify, guard, dataset, runner, schema, or source data files.
+- Do not use post-race, result, odds, payout, or market-derived fields.
+- Keep `model.positive_class_weight` synchronized with `experiment.common_hyperparameters.positive_class_weight`.
+- Keep changes atomic: one research axis per iteration.

@@ -24,6 +24,23 @@ def read_iteration_count(results_path: Path) -> int:
     return count
 
 
+def read_max_display_iteration(results_path: Path) -> int | None:
+    if not results_path.exists():
+        return None
+    max_iteration: int | None = None
+    for line in results_path.read_text(encoding="utf-8").splitlines():
+        if not line or line.startswith("#") or line.startswith("iteration\t"):
+            continue
+        first_column = line.split("\t", 1)[0]
+        try:
+            iteration = int(first_column)
+        except ValueError:
+            continue
+        if max_iteration is None or iteration > max_iteration:
+            max_iteration = iteration
+    return max_iteration
+
+
 def git_status_clean(repo: Path) -> bool:
     proc = subprocess.run(
         ["git", "status", "--short"],
@@ -100,6 +117,7 @@ def main() -> None:
         raise SystemExit("working tree must be clean before supervisor start")
 
     starting_rows = read_iteration_count(results_path)
+    starting_display_iteration = read_max_display_iteration(results_path)
     target_rows = starting_rows + args.iterations
 
     status_payload = {
@@ -110,6 +128,7 @@ def main() -> None:
         "target_additional_iterations": args.iterations,
         "target_rows": target_rows,
         "completed_rows": starting_rows,
+        "max_display_iteration": starting_display_iteration,
         "last_exit_code": None,
         "last_iteration_log": None,
         "last_message_file": None,
@@ -134,8 +153,10 @@ def main() -> None:
         status_payload["last_exit_code"] = exit_code
 
         new_rows = read_iteration_count(results_path)
+        max_display_iteration = read_max_display_iteration(results_path)
         clean = git_status_clean(repo)
         status_payload["completed_rows"] = new_rows
+        status_payload["max_display_iteration"] = max_display_iteration
 
         if exit_code != 0:
             status_payload.update(
@@ -184,6 +205,7 @@ def main() -> None:
             raise SystemExit(3)
 
         status_payload["completed_rows"] = new_rows
+        status_payload["max_display_iteration"] = max_display_iteration
         update_status(status_path, status_payload)
         time.sleep(1)
 
@@ -192,6 +214,7 @@ def main() -> None:
             "state": "completed",
             "completed_at": utc_now(),
             "completed_rows": read_iteration_count(results_path),
+            "max_display_iteration": read_max_display_iteration(results_path),
         }
     )
     update_status(status_path, status_payload)

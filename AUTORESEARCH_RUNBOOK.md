@@ -13,8 +13,11 @@
 
 ## Scope
 
-- writable:
+- experiment writable:
   - `packages/scripts/autoresearch/clean_model_config.json`
+- log writable:
+  - `autoresearch-results.tsv`
+  - `progress.txt`
 - read-only references:
   - `packages/scripts/autoresearch/run_autoresearch_verify.sh`
   - `packages/scripts/autoresearch/run_autoresearch_guard.sh`
@@ -53,23 +56,43 @@ sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 ## Working Rules
 
 - 실험은 `clean_model_config.json`만 수정한다.
+- 로그는 `autoresearch-results.tsv`와 `progress.txt`만 수정한다.
 - 누수 필드, 결과 필드, 시장 배당 필드는 추가하지 않는다.
-- 바꿀 수 있는 축은 `HGB params`, `positive_class_weight`, 허용 feature subset 뿐이다.
-- 한 iteration 당 변경은 작게 유지한다.
+- 한 iteration 당 변경은 하나의 연구 축으로 제한한다.
+- plateau가 길어지면 작은 HGB 값 조정 대신 모델군, 피처군, class weighting, 검증 window 같은 새 축을 우선 탐색한다.
+- `model.positive_class_weight`와 `experiment.common_hyperparameters.positive_class_weight`는 항상 동기화한다.
 - guard 실패면 discard 한다.
 - verify metric이 개선될 때만 keep 한다.
+
+## Research Review
+
+각 iteration 시작 전 반드시 확인한다.
+
+- `progress.txt`
+- `tail -20 autoresearch-results.tsv`
+- `git log --oneline -20`
+- 마지막 keep commit의 diff 또는 stat
+- 현재 `clean_model_config.json`
+
+판단 기준:
+
+- 최근 5개 resolved iteration이 최고 기록을 못 넘으면 작은 값 조정보다 새 연구 축을 고른다.
+- 최근 10개 resolved iteration이 최고 기록을 못 넘으면 radical experiment를 고른다.
+- 이미 discard된 axis/value 조합은 같은 조건으로 반복하지 않는다.
+- 결과 row description에는 어떤 연구 축을 왜 테스트했는지 남긴다.
+- `progress.txt`에는 hypothesis, metric, decision, learning을 append한다.
 
 ## Prompt
 
 ```text
 $autoresearch
-Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction beyond 0.362460.
+Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction. Current best must be read from `autoresearch-results.tsv`; baseline is 0.362460.
 Scope: packages/scripts/autoresearch/clean_model_config.json
 Metric: lowest_overall_holdout_hit_rate
 Direction: higher is better
 Verify: sh packages/scripts/autoresearch/run_autoresearch_verify.sh
 Guard: sh packages/scripts/autoresearch/run_autoresearch_guard.sh
-Iterations: 5
+Iterations: 1
 ```
 
 ## Preflight
@@ -81,3 +104,7 @@ git status --short
 git log --oneline -5
 tail -20 autoresearch-results.tsv 2>/dev/null || true
 ```
+
+Historical note:
+
+- `autoresearch-results.tsv` currently has a duplicated display iteration `24` from an external experiment. Supervisor progress uses physical row count, while research display numbering should use `max(numeric iteration column) + 1`.
