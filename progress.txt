@@ -49,3 +49,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.145631, so reverted experiment commit `8f7f571`.
 - learning: ET depth8/800 trees is both very slow and much weaker than the kept HGB context; avoid this bagged-tree family/value pair and next prefer a different schema-supported family such as logreg or a coherent feature-family change.
 ---
+## [2026-04-26T04:24:36+0900] - iteration 40
+- mutation: switch top-level `model.kind` and params from the kept HGB configuration to the schema-supported `logreg_balanced_c075` candidate.
+- hypothesis: A simpler balanced logistic-regression ranker could improve worst-seed recent-holdout hit rate by reducing tree-model variance after HGB hyperparameter, RF, and ET regressions.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.291262 vs current best 0.378641.
+- decision: discard; metric regressed by -0.087379, so reverted experiment commit `aece44b`.
+- learning: The linear balanced logreg family is much weaker and very slow due to repeated non-convergence at `max_iter=2000`; avoid retrying `logreg_balanced_c075` without a materially different preprocessing/scaling context, and next prefer a coherent feature-family change or another non-model-family axis.
+---
