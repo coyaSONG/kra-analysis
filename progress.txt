@@ -81,3 +81,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.003236, so reverted experiment commit `9cb8b07`.
 - learning: Including October in training improved several seeds but hurt seed 09 enough to regress the worst-seed metric; avoid this exact October-expanded split, and next prefer a different single axis such as retained-feature cleanup or another leakage-free window change that does not simply expand training into October.
 ---
+## [2026-04-27T02:17:16+0900] - iteration 1
+- mutation: remove the direct stored-only skill feature family (`jk_skill`, `tr_skill`) from `features`, leaving the existing place-rate context in place.
+- hypothesis: Direct `jk_skill`/`tr_skill` values are stored/backfill-risk and partly redundant with jockey/trainer place-rate features, so removing them may improve leakage-free worst-seed holdout stability while preserving the T-30 operational contract.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.119741 vs prior clean-v2 current best 0.116505; new clean-v2 best 0.119741.
+- decision: keep; metric improved by +0.003236 over the valid clean-v2 TSV baseline.
+- learning: The contract-aligned direct-skill cleanup clears the clean-v2 baseline, but the result is still far below the invalidated historical plateau; continue from clean-v2 rows only and next test another release-safe feature-family cleanup or a coherent addition from the RELEASE bucket rather than reusing invalid historical rows for selection.
+---
