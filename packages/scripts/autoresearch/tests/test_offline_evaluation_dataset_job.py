@@ -85,6 +85,7 @@ def _make_snapshot(
     race_number: int,
     *,
     weather: str = "맑음",
+    starters: tuple[int, ...] = (1, 2, 3),
 ) -> RaceSnapshot:
     return RaceSnapshot(
         key=RaceKey(
@@ -95,7 +96,12 @@ def _make_snapshot(
         ),
         collection_status="collected",
         result_status="collected",
-        basic_data=_make_snapshot_basic_data(race_date, race_number, weather=weather),
+        basic_data=_make_snapshot_basic_data(
+            race_date,
+            race_number,
+            weather=weather,
+            starters=starters,
+        ),
         result_data={"top3": [1, 2, 3]},
         collected_at=f"{race_date[:4]}-{race_date[4:6]}-{race_date[6:8]}T10:30:00+09:00",
         updated_at=f"{race_date[:4]}-{race_date[4:6]}-{race_date[6:8]}T10:31:00+09:00",
@@ -235,6 +241,83 @@ def test_build_snapshot_race_data_can_inject_strict_past_stats():
     assert horse["computed_features"]["recent_top3_count"] == 2
     assert horse["computed_features"]["recent_win_rate"] == 0.25
     assert timing_meta["operational_cutoff_status"]["passed"] is True
+
+
+def test_build_snapshot_race_data_can_load_entry_change_snapshot_manifest(tmp_path):
+    snapshot = _make_snapshot("20250101", 1, 1, starters=(1, 2, 3, 4))
+    manifest = {
+        "schema_version": "entry-change-bulletin-snapshot-v1",
+        "source_id": "entry_change_bulletin",
+        "meet": 1,
+        "source_snapshot_at": "2025-01-01T10:00:00+09:00",
+        "notices": [
+            {
+                "change_type": "jockey_change",
+                "race_date": "20250101",
+                "race_no": 1,
+                "chul_no": 1,
+                "old_jockey_name": "기수전",
+                "new_jockey_name": "기수후",
+                "reason": "부상",
+                "source_snapshot_at": "2025-01-01T10:00:00+09:00",
+            }
+        ],
+    }
+    (tmp_path / "meet1.json").write_text(
+        json.dumps(manifest, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    race_data, timing_meta = build_snapshot_race_data(
+        snapshot,
+        entry_change_snapshot_dir=tmp_path,
+    )
+
+    assert race_data is not None
+    assert race_data["horses"][0]["changed_jockey_flag"] == 1.0
+    assert race_data["horses"][0]["changed_jockey_notice"]["reason"] == "부상"
+    assert race_data["horses"][1]["changed_jockey_flag"] == 0.0
+    assert timing_meta["entry_change_audit"]["source_present"] is True
+    assert timing_meta["entry_change_source_lookup"]["source_present"] is True
+    assert timing_meta["entry_change_source_lookup"]["reason"] == (
+        "selected_latest_before_cutoff"
+    )
+
+
+def test_build_snapshot_race_data_ignores_late_entry_change_manifest(tmp_path):
+    snapshot = _make_snapshot("20250101", 1, 1, starters=(1, 2, 3, 4))
+    manifest = {
+        "schema_version": "entry-change-bulletin-snapshot-v1",
+        "source_id": "entry_change_bulletin",
+        "meet": 1,
+        "source_snapshot_at": "2025-01-01T10:45:00+09:00",
+        "notices": [
+            {
+                "change_type": "jockey_change",
+                "race_date": "20250101",
+                "race_no": 1,
+                "chul_no": 1,
+            }
+        ],
+    }
+    (tmp_path / "meet1_late.json").write_text(
+        json.dumps(manifest, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    race_data, timing_meta = build_snapshot_race_data(
+        snapshot,
+        entry_change_snapshot_dir=tmp_path,
+    )
+
+    assert race_data is not None
+    assert race_data["horses"][0]["changed_jockey_flag"] is None
+    assert race_data["horses"][0]["changed_jockey_status"] == "source_missing"
+    assert timing_meta["entry_change_audit"]["source_present"] is False
+    assert timing_meta["entry_change_source_lookup"]["source_present"] is False
+    assert timing_meta["entry_change_source_lookup"]["reason"] == (
+        "all_manifests_after_cutoff"
+    )
 
 
 def test_write_snapshot_bundle_writes_t30_release_gate_report(monkeypatch, tmp_path):

@@ -147,6 +147,10 @@ def test_parse_entry_change_bulletin_extracts_cancellations_and_jockey_changes()
     <h2><img alt="말취소" /></h2>
     <table><tbody>
       <tr>
+        <th>구분</th><th>경주일자</th><th>경주번호</th><th>출전번호</th>
+        <th>마명</th><th>조교사명</th><th>기수명</th><th>사유</th><th>공지시간</th>
+      </tr>
+      <tr>
         <td>출전제외</td>
         <td>2026/04/26 <span>(일)</span></td>
         <td>1</td>
@@ -160,6 +164,11 @@ def test_parse_entry_change_bulletin_extracts_cancellations_and_jockey_changes()
     </tbody></table>
     <h2><img alt="기수변경" /></h2>
     <table><tbody>
+      <tr>
+        <th>경주일자</th><th>경주번호</th><th>출전번호</th><th>마명</th>
+        <th>변경전기수</th><th>중량</th><th>변경후기수</th><th>중량</th>
+        <th>사유</th><th>공지시간</th>
+      </tr>
       <tr>
         <td>2026/04/26 <span>(일)</span></td>
         <td>4</td>

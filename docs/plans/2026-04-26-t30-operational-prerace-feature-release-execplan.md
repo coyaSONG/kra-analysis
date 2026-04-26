@@ -22,6 +22,8 @@ After this change, the project can produce KRA unordered top-3 predictions from 
 - [x] (2026-04-27 09:20Z) Parsed changed-jockey notices are now wired into standardized horse payloads as nullable non-model state with entry-change coverage audit.
 - [x] (2026-04-27 09:35Z) Milestone 2 gate reporting was added: snapshot bundles now emit per-dataset T-30 release gate reports for freshness, odds exclusion, and changed-jockey source coverage.
 - [x] (2026-04-27 10:05Z) Milestone 4 evaluation tooling was added and validated. The resulting release readiness verdict is `BLOCKED`, not release-pass, because current stored artifacts cannot prove strict T-30 freshness and DB replay produced zero usable strict rows for the fixed mini_val/holdout manifests.
+- [x] (2026-04-27 10:42Z) Added `apps/api/scripts/capture_entry_change_bulletin.py` to persist raw KRA entry-change HTML and parsed notice manifests with a shared `source_snapshot_at`. A live capture for meets 1/2/3 wrote ignored local artifacts under `data/source_snapshots/entry_change_bulletin/`.
+- [x] (2026-04-27 10:55Z) Wired captured `entry_change_bulletin` manifests into offline replay through `packages/scripts/shared/entry_change_snapshot_manifest.py` and `--entry-change-snapshot-dir`. Replay selects only the latest manifest whose `source_snapshot_at` is at or before the race `entry_snapshot_at`; late-only manifests keep changed-jockey state as `source_missing`.
 
 ## Surprises & Discoveries
 
@@ -48,6 +50,12 @@ After this change, the project can produce KRA unordered top-3 predictions from 
 
 - Observation: existing static snapshot artifacts are useful as a weakness probe but are not release-valid.
   Evidence: `.ralph/outputs/t30_release_evaluation_current_snapshots.json` reports `gate.passed=false` because freshness metadata is missing; release-feature coverage is 0% for `recent_*`, `cancelled_count`, and `field_size_live`, while `weight_delta` coverage is 93.5%.
+
+- Observation: the live entry-change bulletin contains table header rows that look structurally similar to data rows.
+  Evidence: the first live capture initially produced bogus notices with `horse_name="마명"` and `reason="사유"`. `_is_header_row()` now filters those rows, and the corrected live capture produced meet1=6 notices, meet2=2 notices, meet3=0 notices.
+
+- Observation: entry-change manifests must be selected by capture timestamp, not simply by race date.
+  Evidence: `select_entry_change_snapshot_for_replay()` ignores manifests whose `source_snapshot_at` is after the race `entry_snapshot_at`, so replay cannot use a later public bulletin to backfill a historical pre-race snapshot.
 
 ## Decision Log
 
@@ -252,6 +260,7 @@ Milestone 4 evaluation and readiness artifacts:
 - `.ralph/outputs/t30_release_evaluation_current_snapshots.json`: static snapshot probe; not release-valid because freshness metadata is missing. Baseline exact 3-of-3 was `0.386`, release-feature exact 3-of-3 was `0.382`, exact delta was `-0.004`, and average set-match delta was `-0.0013333333333332975`.
 - `.ralph/outputs/t30_release_snapshots/`: attempted strict DB replay output. The build wrote zero strict rows for both splits because stored snapshots were late or partial.
 - `.ralph/outputs/t30_release_readiness_report.json` and `.ralph/outputs/t30_release_readiness_report.md`: final readiness report with verdict `BLOCKED`.
+- `data/source_snapshots/entry_change_bulletin/`: ignored local raw HTML and JSON manifest captures for `entry_change_bulletin`; each manifest records `source_snapshot_at`, raw HTML path, content hash, and parsed notices.
 
 Milestone 4 validation transcript:
 
@@ -269,6 +278,25 @@ Milestone 4 validation transcript:
     $ cd apps/api && UV_CACHE_DIR=../../.uv-cache uv run pytest -q --no-cov tests/unit/test_prerace_public_source_connectors.py
     tests/unit/test_prerace_public_source_connectors.py .........            [100%]
     9 passed in 2.04s
+
+Entry-change capture and replay linkage validation transcript:
+
+    $ cd apps/api && UV_CACHE_DIR=../../.uv-cache uv run python scripts/capture_entry_change_bulletin.py --meet 1 --meet 2 --meet 3
+    [
+      {"notice_count": 6, "source_snapshot_at": "2026-04-26T15:42:12.780181+00:00", ...},
+      {"notice_count": 2, "source_snapshot_at": "2026-04-26T15:42:12.914764+00:00", ...},
+      {"notice_count": 0, "source_snapshot_at": "2026-04-26T15:42:13.032425+00:00", ...}
+    ]
+
+    $ UV_CACHE_DIR=.uv-cache uv run pytest -q packages/scripts/tests/test_entry_change_snapshot_manifest.py packages/scripts/autoresearch/tests/test_offline_evaluation_dataset_job.py packages/scripts/tests/test_prerace_prediction_payload.py packages/scripts/tests/test_t30_release_gate.py
+    ...............                                                          [100%]
+    15 passed in 0.53s
+
+    $ UV_CACHE_DIR=.uv-cache uv run ruff check packages/scripts/shared/entry_change_snapshot_manifest.py packages/scripts/autoresearch/offline_evaluation_dataset_job.py packages/scripts/tests/test_entry_change_snapshot_manifest.py packages/scripts/autoresearch/tests/test_offline_evaluation_dataset_job.py
+    All checks passed!
+
+    $ UV_CACHE_DIR=.uv-cache uv run mypy packages/scripts/shared/entry_change_snapshot_manifest.py
+    Success: no issues found in 1 source file
 
 ## Interfaces and Dependencies
 

@@ -198,6 +198,11 @@ def _has_no_data(cells: tuple[_Cell, ...]) -> bool:
     return any("자료가 없습니다" in cell.text for cell in cells)
 
 
+def _is_header_row(cells: tuple[_Cell, ...]) -> bool:
+    texts = {cell.text for cell in cells}
+    return "마명" in texts and ("사유" in texts or "변경전기수" in texts)
+
+
 def _parse_cancelled_row(
     section: str,
     cells: tuple[_Cell, ...],
@@ -205,7 +210,7 @@ def _parse_cancelled_row(
     meet: int | None,
     source_snapshot_at: str | None,
 ) -> EntryChangeNotice | None:
-    if len(cells) < 9 or _has_no_data(cells):
+    if len(cells) < 9 or _has_no_data(cells) or _is_header_row(cells):
         return None
     race_date = _normalize_race_date(cells[1].text)
     return EntryChangeNotice(
@@ -235,7 +240,7 @@ def _parse_jockey_change_row(
     meet: int | None,
     source_snapshot_at: str | None,
 ) -> EntryChangeNotice | None:
-    if len(cells) < 10 or _has_no_data(cells):
+    if len(cells) < 10 or _has_no_data(cells) or _is_header_row(cells):
         return None
     race_date = _normalize_race_date(cells[0].text)
     return EntryChangeNotice(

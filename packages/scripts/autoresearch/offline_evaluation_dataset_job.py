@@ -20,6 +20,9 @@ from typing import Any, Protocol
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from shared.db_client import RaceDBClient
+from shared.entry_change_snapshot_manifest import (
+    select_entry_change_snapshot_for_replay,
+)
 from shared.prerace_standard_loader import build_standardized_prerace_payload
 from shared.read_contract import RaceSnapshot, RaceSourceLookup
 from shared.t30_release_gate import build_t30_release_gate_report
@@ -93,6 +96,7 @@ def build_snapshot_race_data(
     *,
     query_port: OfflineEvaluationSnapshotQueryPort | None = None,
     with_past_stats: bool = False,
+    entry_change_snapshot_dir: Path | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     """경주 스냅샷을 평가용 strict payload와 timing 메타데이터로 변환한다."""
 
@@ -105,6 +109,14 @@ def build_snapshot_race_data(
         return None, timing_meta
 
     filtered_basic_data = select_allowed_basic_data(snapshot.basic_data)
+    entry_change_selection = None
+    if entry_change_snapshot_dir is not None:
+        entry_change_selection = select_entry_change_snapshot_for_replay(
+            meet=snapshot.meet,
+            cutoff_at=lookup.entry_snapshot_at,
+            snapshot_dir=entry_change_snapshot_dir,
+        )
+        timing_meta["entry_change_source_lookup"] = entry_change_selection.to_dict()
 
     def _inject_past_stats(horses: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not with_past_stats:
@@ -131,6 +143,12 @@ def build_snapshot_race_data(
             meet=snapshot.key.meet_name,
             lookup=lookup,
             include_resolution_audit=True,
+            entry_change_notices=(
+                entry_change_selection.notices
+                if entry_change_selection is not None
+                and entry_change_selection.source_present
+                else None
+            ),
             horse_preprocessor=_inject_past_stats if with_past_stats else None,
         )
     except ValueError:
@@ -147,7 +165,7 @@ def build_snapshot_race_data(
     timing_meta["candidate_filter"] = standardized.candidate_filter
     timing_meta["operational_cutoff_status"] = standardized.operational_cutoff_status
     timing_meta["entry_change_audit"] = standardized.entry_change_audit
-    timing_meta["source_lookup"] = standardized.lookup.to_dict()
+    timing_meta["source_lookup"] = lookup.to_dict()
     race_data = standardized.standard_payload
     race_data["snapshot_meta"] = timing_meta
     return race_data, timing_meta
@@ -246,6 +264,7 @@ def build_snapshot_bundle(
     holdout_minimum_race_count: int = 50,
     mini_val_minimum_race_count: int = 20,
     with_past_stats: bool = False,
+    entry_change_snapshot_dir: Path | None = None,
 ) -> dict[str, Any]:
     normalized_created_at = _normalize_snapshot_created_at(manifest_created_at)
     split_manifests = plan_recent_holdout_manifests(
@@ -277,6 +296,7 @@ def build_snapshot_bundle(
                 frozen_snapshot,
                 query_port=query_port,
                 with_past_stats=with_past_stats,
+                entry_change_snapshot_dir=entry_change_snapshot_dir,
             )
             timing_manifests[mode].append(timing_meta)
             if not race_data:
@@ -298,6 +318,9 @@ def build_snapshot_bundle(
     return {
         "created_at": normalized_created_at,
         "with_past_stats": with_past_stats,
+        "entry_change_snapshot_dir": (
+            str(entry_change_snapshot_dir) if entry_change_snapshot_dir else None
+        ),
         "split_manifests": split_manifests,
         "snapshots": snapshots,
         "timing_manifests": timing_manifests,
@@ -401,6 +424,7 @@ def check_snapshot_reproducibility(
     mini_val_minimum_race_count: int = 20,
     reference_bundle: dict[str, Any] | None = None,
     with_past_stats: bool = False,
+    entry_change_snapshot_dir: Path | None = None,
 ) -> dict[str, Any]:
     """입력 스냅샷을 동일 조건으로 두 번 생성해 byte/구조 단위 일치 여부를 검증한다."""
 
@@ -411,6 +435,7 @@ def check_snapshot_reproducibility(
         holdout_minimum_race_count=holdout_minimum_race_count,
         mini_val_minimum_race_count=mini_val_minimum_race_count,
         with_past_stats=with_past_stats,
+        entry_change_snapshot_dir=entry_change_snapshot_dir,
     )
     regenerated = build_snapshot_bundle(
         race_snapshots,
@@ -419,6 +444,7 @@ def check_snapshot_reproducibility(
         holdout_minimum_race_count=holdout_minimum_race_count,
         mini_val_minimum_race_count=mini_val_minimum_race_count,
         with_past_stats=with_past_stats,
+        entry_change_snapshot_dir=entry_change_snapshot_dir,
     )
 
     dataset_reports: dict[str, Any] = {}
@@ -492,6 +518,7 @@ def create_offline_evaluation_dataset(
     snapshot_dir: Path = SNAPSHOTS_DIR,
     manifest_created_at: datetime | str | None = None,
     with_past_stats: bool = False,
+    entry_change_snapshot_dir: Path | None = None,
 ) -> None:
     """DB에서 경주 데이터를 읽어 오프라인 평가 snapshot 팩을 생성한다."""
 
@@ -512,6 +539,7 @@ def create_offline_evaluation_dataset(
             query_port=db,
             manifest_created_at=created_at,
             with_past_stats=with_past_stats,
+            entry_change_snapshot_dir=entry_change_snapshot_dir,
         )
         validate_snapshot_bundle_counts(bundle)
 
@@ -521,6 +549,7 @@ def create_offline_evaluation_dataset(
             manifest_created_at=created_at,
             reference_bundle=bundle,
             with_past_stats=with_past_stats,
+            entry_change_snapshot_dir=entry_change_snapshot_dir,
         )
         if not reproducibility_report["passed"]:
             raise ValueError(
@@ -554,12 +583,18 @@ def main() -> None:
         default=False,
         help="strict prior-date past_stats를 snapshot horse payload에 주입",
     )
+    parser.add_argument(
+        "--entry-change-snapshot-dir",
+        type=Path,
+        help="entry_change_bulletin raw/manifest snapshot directory",
+    )
     args = parser.parse_args()
 
     create_offline_evaluation_dataset(
         force=args.force_recreate,
         manifest_created_at=args.reference_time,
         with_past_stats=args.with_past_stats,
+        entry_change_snapshot_dir=args.entry_change_snapshot_dir,
     )
 
 
