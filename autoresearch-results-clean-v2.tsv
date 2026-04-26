@@ -5,3 +5,4 @@
 iteration	commit	metric	delta	guard	guard-metric	status	description
 0	-	0.116505	0.0	pass	-	baseline	clean v2 baseline after stripping stored computed_features, removing contaminated rank/rr features, canonical chulNo ordering, and re-running 10 seeds
 1	a5902c5	0.119741	0.003236	pass	57 passed	keep	feature_family_cleanup: removed direct stored-only `jk_skill` and `tr_skill` inputs to test whether dropping redundant/backfill-risk skill values while retaining safer place-rate context improves leakage-free worst-seed holdout stability
+2	3ce3819	0.122977	0.003236	pass	57 passed	keep	feature_family_addition: added T-30 RELEASE/current_model_input `weight_delta` to test whether prerace body-weight change adds release-safe condition signal beyond absolute `wgHr_value` and improves leakage-free worst-seed holdout stability

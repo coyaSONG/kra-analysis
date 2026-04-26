@@ -89,3 +89,11 @@ Started: 2026-04-19
 - decision: keep; metric improved by +0.003236 over the valid clean-v2 TSV baseline.
 - learning: The contract-aligned direct-skill cleanup clears the clean-v2 baseline, but the result is still far below the invalidated historical plateau; continue from clean-v2 rows only and next test another release-safe feature-family cleanup or a coherent addition from the RELEASE bucket rather than reusing invalid historical rows for selection.
 ---
+## [2026-04-27T05:44:06+0900] - iteration 2
+- mutation: add the T-30 RELEASE/current_model_input body-weight delta feature (`weight_delta`) to `features`, leaving model kind, split, class weighting, and all other inputs unchanged.
+- hypothesis: `weight_delta` should add release-safe prerace condition information beyond absolute `wgHr_value`, improving worst-seed recent-holdout stability without violating the T-30 operational contract.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs prior clean-v2 current best 0.119741; new clean-v2 best 0.122977.
+- decision: keep; metric improved by +0.003236 over the prior valid clean-v2 best.
+- learning: Body-weight delta is a productive release-safe feature addition in the clean-v2 context; next avoid null-only `past_stats` additions on this canonical snapshot unless the dataset is regenerated with past_stats coverage, and prefer another high-coverage T-30 release-safe feature or a focused cleanup around redundant weight/body-size signals.
+---
