@@ -238,6 +238,15 @@ def _pre_race_horse_order(horses: list[dict]) -> list[dict]:
     )
 
 
+def _strip_untrusted_computed_features(horses: list[dict]) -> list[dict]:
+    stripped: list[dict] = []
+    for horse in horses:
+        clean_horse = deepcopy(horse)
+        clean_horse.pop("computed_features", None)
+        stripped.append(clean_horse)
+    return stripped
+
+
 def _is_blank_like(value: object) -> bool:
     if value is None:
         return True
@@ -368,14 +377,15 @@ def _build_feature_rows(races: list[dict], answers: dict[str, list[int]]) -> lis
     rows: list[dict] = []
     for race in races:
         filtered_race = _sanitize_training_race_payload(race)
-        horses = deepcopy(_pre_race_horse_order(filtered_race.get("horses") or []))
+        horses = _strip_untrusted_computed_features(
+            _pre_race_horse_order(filtered_race.get("horses") or [])
+        )
         if not horses:
             continue
         refreshed = _compute_race_features(deepcopy(horses))
         for horse, fresh in zip(horses, refreshed, strict=False):
-            existing_features = horse.get("computed_features") or {}
             fresh_features = fresh.get("computed_features") or {}
-            horse["computed_features"] = {**fresh_features, **existing_features}
+            horse["computed_features"] = dict(fresh_features)
         filtered_race["horses"] = horses
         filtered_race = _sanitize_training_race_payload(filtered_race)
         _validate_final_training_race_payload(filtered_race)

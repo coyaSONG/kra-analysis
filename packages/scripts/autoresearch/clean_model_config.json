@@ -1,6 +1,6 @@
 {
   "format_version": "autoresearch-clean-config-v1",
-  "dataset": "full_year_2025",
+  "dataset": "full_year_2025_prerace_canonical_v2",
   "split": {
     "train_end": "20250930",
     "dev_end": "20251130",
@@ -103,9 +103,9 @@
       61
     ],
     "input_data": {
-      "dataset_name": "full_year_2025",
-      "version_id": "full_year_2025-entry-finalized-prerace-v1",
-      "source_policy_version": "prerace-entry-finalized-only-v1",
+      "dataset_name": "full_year_2025_prerace_canonical_v2",
+      "version_id": "full_year_2025-prerace-canonical-v2",
+      "source_policy_version": "prerace-canonicalized-legacy-v2",
       "feature_schema_version": "alternative-ranking-input-v1",
       "operational_snapshot_only": true
     },
@@ -175,7 +175,6 @@
     "jockey_place_rate",
     "trainer_place_rate",
     "rest_days",
-    "rating_rank",
     "age_prime",
     "year_place_rate",
     "total_place_rate",
@@ -192,16 +191,11 @@
     "jk_skill",
     "tr_skill",
     "jk_place_rate_y",
-    "tr_place_rate_y",
-    "rating_rr",
-    "horse_place_rate_rr",
-    "jockey_place_rate_rr",
-    "trainer_place_rate_rr",
-    "year_place_rate_rr",
-    "total_place_rate_rr"
+    "tr_place_rate_y"
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "drop absolute win-rate feature family atop draw_rr-removed learning_rate=0.03"
+    "last_mutation": "reset to canonical prerace v2 dataset after leakage invalidation",
+    "clean_v2_baseline_lowest_overall_holdout_hit_rate": 0.116505
   }
 }

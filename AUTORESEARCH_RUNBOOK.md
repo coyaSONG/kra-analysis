@@ -5,18 +5,20 @@
 
 ## Current Baseline
 
-- source: `.autoresearch/outputs/holdout_seed_summary_report.json`
+- source: `.autoresearch/clean-v2-baseline/outputs/holdout_seed_summary_report.json`
+- dataset: `full_year_2025_prerace_canonical_v2`
 - metric: `lowest_overall_holdout_hit_rate`
-- baseline lowest: `0.362460`
-- baseline mean: `0.382201`
-- baseline max: `0.394822`
+- clean-v2 baseline lowest: `0.116505`
+- clean-v2 baseline mean: `0.134628`
+- clean-v2 baseline max: `0.152104`
+- historical contaminated baseline: `0.362460` (invalid; do not use)
 
 ## Scope
 
 - experiment writable:
   - `packages/scripts/autoresearch/clean_model_config.json`
 - log writable:
-  - `autoresearch-results.tsv`
+  - `autoresearch-results-clean-v2.tsv`
   - `progress.txt`
 - read-only references:
   - `packages/scripts/autoresearch/run_autoresearch_verify.sh`
@@ -28,7 +30,8 @@
 ## Objective
 
 출전표 확정 시점 정보만 사용한 `unordered_top3` 예측에서
-`lowest_overall_holdout_hit_rate`를 baseline `0.362460`보다 높인다.
+`lowest_overall_holdout_hit_rate`를 clean-v2 baseline보다 높인다.
+`autoresearch-results.tsv`의 기존 metric은 `INVALID_LEAKAGE` 상태라 비교 기준으로 쓰지 않는다.
 
 ## Verify
 
@@ -56,7 +59,7 @@ sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 ## Working Rules
 
 - 실험은 `clean_model_config.json`만 수정한다.
-- 로그는 `autoresearch-results.tsv`와 `progress.txt`만 수정한다.
+- 로그는 `autoresearch-results-clean-v2.tsv`와 `progress.txt`만 수정한다.
 - 누수 필드, 결과 필드, 시장 배당 필드는 추가하지 않는다.
 - 한 iteration 당 변경은 하나의 연구 축으로 제한한다.
 - plateau가 길어지면 작은 HGB 값 조정 대신 모델군, 피처군, class weighting, 검증 window 같은 새 축을 우선 탐색한다.
@@ -69,7 +72,7 @@ sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 각 iteration 시작 전 반드시 확인한다.
 
 - `progress.txt`
-- `tail -20 autoresearch-results.tsv`
+- `tail -20 autoresearch-results-clean-v2.tsv`
 - `git log --oneline -20`
 - 마지막 keep commit의 diff 또는 stat
 - 현재 `clean_model_config.json`
@@ -86,7 +89,7 @@ sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 
 ```text
 $autoresearch
-Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction. Current best must be read from `autoresearch-results.tsv`; baseline is 0.362460.
+Goal: Improve leakage-free recent-holdout 10-seed lowest hit rate for unordered top-3 horse prediction. Current best must be read from `autoresearch-results-clean-v2.tsv`.
 Scope: packages/scripts/autoresearch/clean_model_config.json
 Metric: lowest_overall_holdout_hit_rate
 Direction: higher is better
@@ -102,9 +105,12 @@ Iterations: 1
 ```bash
 git status --short
 git log --oneline -5
-tail -20 autoresearch-results.tsv 2>/dev/null || true
+tail -20 autoresearch-results-clean-v2.tsv 2>/dev/null || true
 ```
 
 Historical note:
 
 - `autoresearch-results.tsv` currently has a duplicated display iteration `24` from an external experiment. Supervisor progress uses physical row count, while research display numbering should use `max(numeric iteration column) + 1`.
+- Current historical leaderboard is invalidated by `AUTORESEARCH_INVALIDATION.md`.
+  The default `autoresearch-results.tsv` remains blocked. Clean research resumes
+  through `autoresearch-results-clean-v2.tsv` and the canonical v2 dataset.

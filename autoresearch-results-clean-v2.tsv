@@ -1,0 +1,6 @@
+# metric_direction: higher_is_better
+# dataset: full_year_2025_prerace_canonical_v2
+# source_policy_version: prerace-canonicalized-legacy-v2
+# historical_results: autoresearch-results.tsv marked INVALID_LEAKAGE; do not compare or select from it
+iteration	commit	metric	delta	guard	guard-metric	status	description
+0	-	0.116505	0.0	pass	-	baseline	clean v2 baseline after stripping stored computed_features, removing contaminated rank/rr features, canonical chulNo ordering, and re-running 10 seeds

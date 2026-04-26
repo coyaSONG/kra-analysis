@@ -92,6 +92,16 @@ def _base_training_race() -> dict[str, object]:
     }
 
 
+def _comparable_row(row: dict[str, object]) -> dict[str, object]:
+    comparable: dict[str, object] = {}
+    for key, value in row.items():
+        if isinstance(value, float) and np.isnan(value):
+            comparable[key] = "NaN"
+        else:
+            comparable[key] = value
+    return comparable
+
+
 def test_validate_features_rejects_non_operational_inputs() -> None:
     try:
         _validate_features(["rating", "winOdds"])
@@ -127,7 +137,7 @@ def test_build_feature_rows_filters_forbidden_source_columns_before_model_input(
     assert "winOdds" not in first
     assert "plcOdds" not in first
     assert "odds_rank" not in first
-    assert first["horse_win_rate"] == 22.0
+    assert np.isnan(first["horse_win_rate"])
     assert first["target"] == 1
     assert set(first) == {
         "race_id",
@@ -135,6 +145,67 @@ def test_build_feature_rows_filters_forbidden_source_columns_before_model_input(
         "chulNo",
         "target",
         *ALTERNATIVE_RANKING_ALLOWED_FEATURES,
+    }
+
+
+def test_build_feature_rows_ignores_stored_computed_feature_overrides() -> None:
+    race = _base_training_race()
+    for horse in race["horses"]:
+        horse["rating"] = 0
+        horse["computed_features"] = {
+            "rating_rank": -999,
+            "horse_win_rate": 99.0,
+            "odds_rank": 1,
+        }
+
+    rows = _build_feature_rows([race], {"20250101_1_1": [1, 2, 3]})
+
+    assert len(rows) == 3
+    assert {row["rating_rank"] for row in rows} == {1.0}
+    assert all(np.isnan(row["horse_win_rate"]) for row in rows)
+    assert all("odds_rank" not in row for row in rows)
+
+
+def test_build_feature_rows_is_invariant_to_raw_horse_order() -> None:
+    race_a = _base_training_race()
+    race_b = deepcopy(race_a)
+    race_b["horses"] = list(reversed(race_b["horses"]))
+    for index, horse in enumerate(race_b["horses"], start=1):
+        horse["computed_features"] = {"rating_rank": index}
+
+    rows_a = _build_feature_rows([race_a], {"20250101_1_1": [1, 2, 3]})
+    rows_b = _build_feature_rows([race_b], {"20250101_1_1": [1, 2, 3]})
+
+    by_chul_a = {row["chulNo"]: _comparable_row(row) for row in rows_a}
+    by_chul_b = {row["chulNo"]: _comparable_row(row) for row in rows_b}
+    assert by_chul_a == by_chul_b
+
+
+def test_build_feature_rows_is_invariant_to_postrace_source_fields() -> None:
+    race_a = _base_training_race()
+    race_b = deepcopy(race_a)
+    for index, horse in enumerate(race_b["horses"], start=1):
+        horse.update(
+            {
+                "ord": index,
+                "rcTime": 70.0 + index,
+                "ordBigo": "result",
+                "buG1fOrd": index,
+                "buG1fAccTime": 10.0 + index,
+                "winOdds": 1.0,
+                "plcOdds": 1.0,
+            }
+        )
+        horse["computed_features"] = {
+            "rating_rank": index,
+            "odds_rank": index,
+        }
+
+    rows_a = _build_feature_rows([race_a], {"20250101_1_1": [1, 2, 3]})
+    rows_b = _build_feature_rows([race_b], {"20250101_1_1": [1, 2, 3]})
+
+    assert {row["chulNo"]: _comparable_row(row) for row in rows_a} == {
+        row["chulNo"]: _comparable_row(row) for row in rows_b
     }
 
 

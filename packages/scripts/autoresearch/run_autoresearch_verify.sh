@@ -6,6 +6,7 @@ export PYTHONPATH="packages/scripts${PYTHONPATH:+:$PYTHONPATH}"
 ROOT_DIR=".autoresearch"
 RUNS_DIR="$ROOT_DIR/verify-runs"
 RETENTION="${VERIFY_RUN_RETENTION:-5}"
+MAX_WORKERS="${VERIFY_MAX_WORKERS:-1}"
 
 mkdir -p "$RUNS_DIR"
 RUN_DIR="$(mktemp -d "$RUNS_DIR/run.XXXXXX")"
@@ -14,7 +15,8 @@ SUMMARY_PATH="$OUTPUT_DIR/holdout_seed_summary_report.json"
 
 uv run python packages/scripts/autoresearch/seed_matrix_runner.py \
   --config packages/scripts/autoresearch/clean_model_config.json \
-  --output-dir "$OUTPUT_DIR" >/dev/null
+  --output-dir "$OUTPUT_DIR" \
+  --max-workers "$MAX_WORKERS" >/dev/null
 
 rm -rf "$ROOT_DIR/outputs"
 ln -s "verify-runs/$(basename "$RUN_DIR")/outputs" "$ROOT_DIR/outputs"

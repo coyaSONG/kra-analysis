@@ -1,4 +1,8 @@
 # metric_direction: higher_is_better
+# invalidation_status: INVALID_LEAKAGE
+# invalidation_notice: AUTORESEARCH_INVALIDATION.md
+# valid_for_model_selection: false
+# valid_for_performance_claim: false
 iteration	commit	metric	delta	guard	guard-metric	status	description
 0	1689bd0	0.36246	0.0	pass	-	baseline	baseline from matching config_id model-config-v1:2fbc12f548a09553
 1	-	0.36246	0.0	pass	-	discard	lower min_samples_leaf to 25; lowest holdout hit rate stayed at baseline

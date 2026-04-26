@@ -589,19 +589,17 @@ def compute_race_features(
 
     # 2단계: race-relative rankings
     def _rank_by(key_fn, reverse=False):
-        """경주 내 순위 계산. 값이 None이면 최하위."""
-        indexed = []
-        for i, h in enumerate(horses):
-            val = key_fn(h)
-            indexed.append((i, val))
+        """경주 내 dense rank. 동점은 같은 순위로 둔다."""
         default = float("-inf") if reverse else float("inf")
-        indexed.sort(
-            key=lambda x: x[1] if x[1] is not None else default, reverse=reverse
-        )
-        ranks = [0] * n
-        for rank, (idx, _) in enumerate(indexed, start=1):
-            ranks[idx] = rank
-        return ranks
+        values = []
+        for horse in horses:
+            value = key_fn(horse)
+            values.append(value if value is not None else default)
+        ordered_values = sorted(set(values), reverse=reverse)
+        rank_by_value = {
+            value: rank for rank, value in enumerate(ordered_values, start=1)
+        }
+        return [rank_by_value[value] for value in values]
 
     # odds_rank (winOdds 오름차순, 낮을수록 인기)
     odds_rank_allowed = _feature_allowed(

@@ -610,19 +610,19 @@ def _percentile_rank(values: list[float], *, reverse: bool = False) -> list[floa
         number = _safe_float(value, math.nan)
         normalized.append(number if math.isfinite(number) else fill)
 
-    ordered = sorted(
-        range(len(normalized)),
-        key=lambda index: normalized[index],
-        reverse=reverse,
-    )
     if len(normalized) <= 1:
-        return [1.0] * len(normalized)
+        return [0.5] * len(normalized)
 
-    ranks = [0.0] * len(normalized)
-    denominator = len(normalized) - 1
-    for rank_index, row_index in enumerate(ordered):
-        ranks[row_index] = rank_index / denominator
-    return ranks
+    ordered_values = sorted(set(normalized), reverse=reverse)
+    if len(ordered_values) <= 1:
+        return [0.5] * len(normalized)
+
+    denominator = len(ordered_values) - 1
+    rank_by_value = {
+        value: rank_index / denominator
+        for rank_index, value in enumerate(ordered_values)
+    }
+    return [rank_by_value[value] for value in normalized]
 
 
 def _pre_race_horse_order(horses: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:

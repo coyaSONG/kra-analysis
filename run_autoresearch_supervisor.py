@@ -8,6 +8,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+INVALIDATION_NOTICE = "AUTORESEARCH_INVALIDATION.md"
+
 
 def utc_now() -> str:
     return datetime.now(UTC).isoformat()
@@ -59,6 +61,25 @@ def update_status(path: Path, payload: dict) -> None:
     )
 
 
+def assert_research_not_invalidated(
+    repo: Path,
+    *,
+    results_path: Path,
+    allow_invalidated_results: bool,
+) -> None:
+    invalidation_path = repo / INVALIDATION_NOTICE
+    if allow_invalidated_results or not invalidation_path.exists():
+        return
+    if results_path.name != "autoresearch-results.tsv":
+        return
+    raise SystemExit(
+        "autoresearch results are marked INVALID_LEAKAGE; refusing to start. "
+        f"See {invalidation_path}. Remove the invalidation notice after a clean "
+        "dataset/config reset, use a new clean results file, or pass "
+        "--allow-invalidated-results for a manual recovery-only run."
+    )
+
+
 def run_codex_iteration(
     repo: Path, prompt_path: Path, log_path: Path, last_msg_path: Path
 ) -> int:
@@ -102,6 +123,11 @@ def main() -> None:
         "--results-file",
         default="autoresearch-results.tsv",
     )
+    parser.add_argument(
+        "--allow-invalidated-results",
+        action="store_true",
+        help="Allow manual recovery runs even when AUTORESEARCH_INVALIDATION.md exists.",
+    )
     args = parser.parse_args()
 
     repo = Path.cwd()
@@ -113,6 +139,11 @@ def main() -> None:
 
     if not prompt_path.exists():
         raise SystemExit(f"missing prompt file: {prompt_path}")
+    assert_research_not_invalidated(
+        repo,
+        results_path=results_path,
+        allow_invalidated_results=args.allow_invalidated_results,
+    )
     if not git_status_clean(repo):
         raise SystemExit("working tree must be clean before supervisor start")
 
