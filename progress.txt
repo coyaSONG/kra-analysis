@@ -73,3 +73,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.022654, so reverted experiment commit `9d83e6d`.
 - learning: The speed_shape bundle can produce strong individual seeds but worsens worst-seed stability through seed 02; avoid retrying this exact bundle in the current HGB/draw_rr-removed context, and next try a different single axis such as a leakage-free split/window experiment or a narrower retained-feature cleanup rather than adding more shape features.
 ---
+## [2026-04-26T09:36:52+0900] - iteration 43
+- mutation: change the split/window axis to train through `20251031`, evaluate dev on `20251101`-`20251130`, and keep `20251201+` as the recent holdout test.
+- hypothesis: Adding October races to training while preserving a November dev window and December recent holdout could capture late-season form shifts and improve worst-seed stability after model-family and feature-family regressions.
+- guard result: pass (`18 passed`).
+- metric and current best: 0.375405 vs current best 0.378641.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `9cb8b07`.
+- learning: Including October in training improved several seeds but hurt seed 09 enough to regress the worst-seed metric; avoid this exact October-expanded split, and next prefer a different single axis such as retained-feature cleanup or another leakage-free window change that does not simply expand training into October.
+---
