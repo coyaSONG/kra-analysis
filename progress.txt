@@ -105,3 +105,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `c8a16b5` with `7ed768a`.
 - learning: The cancelled/live-field context did not improve the clean-v2 worst-seed floor and made verify much slower; avoid retrying this exact `field_size_live` + `cancelled_count` addition in the current HGB/weight_delta context, and next prefer a different release-safe feature cleanup or a non-null high-coverage single axis.
 ---
+## [2026-04-27T08:30:32+0900] - iteration 4
+- mutation: remove the stored-only direct horse skill feature (`horse_top3_skill`) from `features`, leaving model kind, split, class weighting, `weight_delta`, and the remaining horse place-rate/start-count context unchanged.
+- hypothesis: `horse_top3_skill` is a stored/backfill-risk direct skill value that may be redundant with retained horse place-rate and start-count signals, so removing it may improve leakage-free worst-seed holdout stability while preserving the T-30 operational contract.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `af1e5cf` with `81b4d94`.
+- learning: Removing `horse_top3_skill` did not lift the clean-v2 worst-seed floor, so avoid this single direct-horse-skill cleanup in the current HGB/weight_delta context; next prefer a different single axis such as class weighting or a coherent retained-feature cleanup that is not another direct skill removal.
+---
