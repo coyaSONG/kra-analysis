@@ -12,6 +12,7 @@
 - clean-v2 baseline mean: `0.134628`
 - clean-v2 baseline max: `0.152104`
 - historical contaminated baseline: `0.362460` (invalid; do not use)
+- operational constraint: T-30 release contract and entry-change snapshot support are merged; guard must keep those tests green.
 
 ## Scope
 
@@ -54,13 +55,14 @@ sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 ```
 
 - expectation: exit code `0`
-- purpose: proposer/runner/dataset artifact 회귀 차단
+- purpose: proposer/runner/dataset artifact/T-30 release contract 회귀 차단
 
 ## Working Rules
 
 - 실험은 `clean_model_config.json`만 수정한다.
 - 로그는 `autoresearch-results-clean-v2.tsv`와 `progress.txt`만 수정한다.
 - 누수 필드, 결과 필드, 시장 배당 필드는 추가하지 않는다.
+- T-30 release contract에서 audit-only/backfill-only인 feature는 모델 입력에 추가하지 않는다.
 - 한 iteration 당 변경은 하나의 연구 축으로 제한한다.
 - plateau가 길어지면 작은 HGB 값 조정 대신 모델군, 피처군, class weighting, 검증 window 같은 새 축을 우선 탐색한다.
 - `model.positive_class_weight`와 `experiment.common_hyperparameters.positive_class_weight`는 항상 동기화한다.

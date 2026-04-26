@@ -7,6 +7,7 @@ Verify: sh packages/scripts/autoresearch/run_autoresearch_verify.sh
 Guard: sh packages/scripts/autoresearch/run_autoresearch_guard.sh
 Iterations: 1
 Invalidation guard: `AUTORESEARCH_INVALIDATION.md` marks historical `autoresearch-results.tsv` rows invalid. Do not use historical rows for model selection. Continue only from `autoresearch-results-clean-v2.tsv` and the `full_year_2025_prerace_canonical_v2` dataset.
+Operational guard: preserve the T-30 operational release contract. Any feature experiment must remain compatible with `data/contracts/t30_operational_release_features_v1.csv`; odds and timing-unverified sources are audit/backfill-only, not model inputs.
 
 Continuation rules:
 - If `autoresearch-results-clean-v2.tsv` already exists, do not reinitialize baseline.
@@ -59,5 +60,6 @@ Hard constraints:
 - Logging may edit only `autoresearch-results-clean-v2.tsv` and `progress.txt`.
 - Do not edit verify, guard, dataset, runner, schema, or source data files.
 - Do not use post-race, result, odds, payout, or market-derived fields.
+- Do not add features outside the T-30 release contract unless they are already proven release-safe by the contract tests.
 - Keep `model.positive_class_weight` synchronized with `experiment.common_hyperparameters.positive_class_weight`.
 - Keep changes atomic: one research axis per iteration.
