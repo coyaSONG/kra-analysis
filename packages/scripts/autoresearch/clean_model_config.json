@@ -78,7 +78,7 @@
   },
   "model": {
     "kind": "hgb",
-    "positive_class_weight": 1.0,
+    "positive_class_weight": 1.05,
     "params": {
       "max_depth": 6,
       "learning_rate": 0.03,
@@ -152,7 +152,7 @@
       ]
     },
     "common_hyperparameters": {
-      "positive_class_weight": 1.0,
+      "positive_class_weight": 1.05,
       "imputer_strategy": "median",
       "random_state_source": "evaluation_seed",
       "target_label": "unordered_top3",
