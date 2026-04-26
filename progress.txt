@@ -97,3 +97,11 @@ Started: 2026-04-19
 - decision: keep; metric improved by +0.003236 over the prior valid clean-v2 best.
 - learning: Body-weight delta is a productive release-safe feature addition in the clean-v2 context; next avoid null-only `past_stats` additions on this canonical snapshot unless the dataset is regenerated with past_stats coverage, and prefer another high-coverage T-30 release-safe feature or a focused cleanup around redundant weight/body-size signals.
 ---
+## [2026-04-27T07:06:51+0900] - iteration 3
+- mutation: add the T-30 RELEASE/current_model_input cancelled_changed_jockey context (`field_size_live`, `cancelled_count`) to `features`, leaving model kind, split, class weighting, and all other inputs unchanged.
+- hypothesis: `field_size_live` and `cancelled_count` may add release-safe pre-cutoff live-field context beyond raw `field_size`, improving worst-seed recent-holdout stability without using odds or timing-unverified sources.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `c8a16b5` with `7ed768a`.
+- learning: The cancelled/live-field context did not improve the clean-v2 worst-seed floor and made verify much slower; avoid retrying this exact `field_size_live` + `cancelled_count` addition in the current HGB/weight_delta context, and next prefer a different release-safe feature cleanup or a non-null high-coverage single axis.
+---
