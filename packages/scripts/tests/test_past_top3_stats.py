@@ -177,6 +177,8 @@ class TestPastStatsInFeatures:
         assert features["recent_top3_rate"] == 0.6
         assert features["recent_win_rate"] == 0.4
         assert features["recent_race_count"] == 5
+        assert features["recent_top3_count"] == 3
+        assert features["recent_win_count"] == 2
 
     def test_no_past_stats(self):
         """past_stats가 없으면 None"""
@@ -185,3 +187,5 @@ class TestPastStatsInFeatures:
         assert features["recent_top3_rate"] is None
         assert features["recent_win_rate"] is None
         assert features["recent_race_count"] is None
+        assert features["recent_top3_count"] is None
+        assert features["recent_win_count"] is None

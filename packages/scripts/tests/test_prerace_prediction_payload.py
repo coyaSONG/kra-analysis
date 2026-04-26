@@ -29,104 +29,169 @@ def test_strip_forbidden_fields_renames_rank_and_removes_postrace_keys():
 
 def test_build_prerace_race_payload_from_enriched_uses_common_schema_contract():
     removed_paths: list[str] = []
-    payload, candidate_filter, _field_policy = build_prerace_race_payload_from_enriched(
-        {
-            "response": {
-                "body": {
-                    "items": {
-                        "item": [
-                            {
-                                "rcDate": "20250719",
-                                "rcNo": 3,
-                                "rcName": "일반",
-                                "rcDist": 1200,
-                                "track": "건조",
-                                "weather": "맑음",
-                                "meet": "서울",
-                                "chulNo": 1,
-                                "hrName": "알파",
-                                "hrNo": "001",
-                                "jkName": "기수1",
-                                "jkNo": "J1",
-                                "trName": "조교사1",
-                                "trNo": "T1",
-                                "owName": "마주1",
-                                "owNo": "O1",
-                                "winOdds": 2.5,
-                                "plcOdds": 1.4,
-                                "rating": 75,
-                                "rank": "국6",
-                                "age": 3,
-                                "sex": "수",
-                                "name": "한국",
-                                "wgBudam": 54,
-                                "wgBudamBigo": "-",
-                                "wgHr": "470(+3)",
-                                "ilsu": 21,
-                                "ordBigo": "-",
-                                "hrDetail": {
-                                    "rcCntT": 5,
-                                    "ord1CntT": 1,
-                                    "ord2CntT": 1,
-                                    "ord3CntT": 1,
+    payload, candidate_filter, _field_policy, entry_change_audit = (
+        build_prerace_race_payload_from_enriched(
+            {
+                "response": {
+                    "body": {
+                        "items": {
+                            "item": [
+                                {
+                                    "rcDate": "20250719",
+                                    "rcNo": 3,
+                                    "rcName": "일반",
+                                    "rcDist": 1200,
+                                    "track": "건조",
+                                    "weather": "맑음",
+                                    "meet": "서울",
+                                    "chulNo": 1,
+                                    "hrName": "알파",
+                                    "hrNo": "001",
+                                    "jkName": "기수1",
+                                    "jkNo": "J1",
+                                    "trName": "조교사1",
+                                    "trNo": "T1",
+                                    "owName": "마주1",
+                                    "owNo": "O1",
+                                    "winOdds": 2.5,
+                                    "plcOdds": 1.4,
+                                    "rating": 75,
+                                    "rank": "국6",
+                                    "age": 3,
+                                    "sex": "수",
+                                    "name": "한국",
+                                    "wgBudam": 54,
+                                    "wgBudamBigo": "-",
+                                    "wgHr": "470(+3)",
+                                    "ilsu": 21,
+                                    "ordBigo": "-",
+                                    "hrDetail": {
+                                        "rcCntT": 5,
+                                        "ord1CntT": 1,
+                                        "ord2CntT": 1,
+                                        "ord3CntT": 1,
+                                    },
+                                    "jkDetail": {
+                                        "rcCntT": 10,
+                                        "ord1CntT": 2,
+                                        "ord2CntT": 1,
+                                        "ord3CntT": 1,
+                                    },
+                                    "trDetail": {
+                                        "rcCntT": 8,
+                                        "ord1CntT": 1,
+                                        "ord2CntT": 1,
+                                        "ord3CntT": 1,
+                                    },
                                 },
-                                "jkDetail": {
-                                    "rcCntT": 10,
-                                    "ord1CntT": 2,
-                                    "ord2CntT": 1,
-                                    "ord3CntT": 1,
+                                {
+                                    "rcDate": "20250719",
+                                    "rcNo": 3,
+                                    "rcDist": 1200,
+                                    "track": "건조",
+                                    "weather": "맑음",
+                                    "meet": "서울",
+                                    "chulNo": 2,
+                                    "hrName": "브라보",
+                                    "hrNo": "002",
+                                    "jkName": "기수2",
+                                    "jkNo": "J2",
+                                    "trName": "조교사2",
+                                    "trNo": "T2",
+                                    "owName": "마주2",
+                                    "owNo": "O2",
+                                    "winOdds": 0,
+                                    "plcOdds": 0,
+                                    "rating": 71,
+                                    "rank": "국6",
+                                    "age": 3,
+                                    "sex": "암",
+                                    "name": "한국",
+                                    "wgBudam": 53,
+                                    "wgBudamBigo": "-",
+                                    "wgHr": "460(+1)",
+                                    "ilsu": 15,
                                 },
-                                "trDetail": {
-                                    "rcCntT": 8,
-                                    "ord1CntT": 1,
-                                    "ord2CntT": 1,
-                                    "ord3CntT": 1,
-                                },
-                            },
-                            {
-                                "rcDate": "20250719",
-                                "rcNo": 3,
-                                "rcDist": 1200,
-                                "track": "건조",
-                                "weather": "맑음",
-                                "meet": "서울",
-                                "chulNo": 2,
-                                "hrName": "브라보",
-                                "hrNo": "002",
-                                "jkName": "기수2",
-                                "jkNo": "J2",
-                                "trName": "조교사2",
-                                "trNo": "T2",
-                                "owName": "마주2",
-                                "owNo": "O2",
-                                "winOdds": 0,
-                                "plcOdds": 0,
-                                "rating": 71,
-                                "rank": "국6",
-                                "age": 3,
-                                "sex": "암",
-                                "name": "한국",
-                                "wgBudam": 53,
-                                "wgBudamBigo": "-",
-                                "wgHr": "460(+1)",
-                                "ilsu": 15,
-                            },
-                        ]
+                            ]
+                        }
                     }
                 }
-            }
-        },
-        race_id="20250719_1_3",
-        race_date="20250719",
-        meet="서울",
-        removed_paths=removed_paths,
+            },
+            race_id="20250719_1_3",
+            race_date="20250719",
+            meet="서울",
+            entry_change_notices=[
+                {
+                    "change_type": "jockey_change",
+                    "race_date": "20250719",
+                    "race_no": 3,
+                    "chul_no": 1,
+                    "old_jockey_name": "기수0",
+                    "new_jockey_name": "기수1",
+                    "reason": "부상",
+                    "announced_at": "2025-07-19T10:00:00+09:00",
+                }
+            ],
+            removed_paths=removed_paths,
+        )
     )
 
     assert payload["race_id"] == "20250719_1_3"
     assert payload["input_schema"]["schema_version"] == "alternative-ranking-input-v1"
     assert payload["horses"][0]["class_rank"] == "국6"
+    assert payload["horses"][0]["changed_jockey_flag"] == 1.0
+    assert payload["horses"][1]["changed_jockey_flag"] == 0.0
+    assert payload["horses"][0]["changed_jockey_notice"]["reason"] == "부상"
     assert "winOdds" not in payload["horses"][0]
     assert "ordBigo" not in removed_paths
     assert "horses[0].ordBigo" in removed_paths
     assert candidate_filter["status_counts"]["normal"] == 1
     assert candidate_filter["status_counts"]["scratched"] == 1
+    assert entry_change_audit["source_present"] is True
+    assert entry_change_audit["race_jockey_change_count"] == 1
+
+
+def test_build_prerace_race_payload_keeps_changed_jockey_null_without_source():
+    payload, _candidate_filter, _field_policy, entry_change_audit = (
+        build_prerace_race_payload_from_enriched(
+            {
+                "response": {
+                    "body": {
+                        "items": {
+                            "item": [
+                                {
+                                    "rcDate": "20250719",
+                                    "rcNo": 3,
+                                    "rcDist": 1200,
+                                    "track": "건조",
+                                    "weather": "맑음",
+                                    "meet": "서울",
+                                    "chulNo": 1,
+                                    "hrName": "알파",
+                                    "hrNo": "001",
+                                    "rating": 75,
+                                    "rank": "국6",
+                                    "age": 3,
+                                    "sex": "수",
+                                    "wgBudam": 54,
+                                    "wgHr": "470(+3)",
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            race_id="20250719_1_3",
+            race_date="20250719",
+            meet="서울",
+        )
+    )
+
+    assert payload["horses"][0]["changed_jockey_flag"] is None
+    assert payload["horses"][0]["changed_jockey_status"] == "source_missing"
+    assert entry_change_audit == {
+        "source_present": False,
+        "notice_count": 0,
+        "race_jockey_change_count": 0,
+        "matched_chul_nos": [],
+    }

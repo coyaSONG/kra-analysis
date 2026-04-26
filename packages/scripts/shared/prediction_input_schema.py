@@ -79,7 +79,9 @@ _COMPUTED_FEATURE_EXTRA_FIELDS = frozenset(
         "jk_qnl_rate_t",
         "jk_qnl_rate_y",
         "recent_race_count",
+        "recent_top3_count",
         "recent_top3_rate",
+        "recent_win_count",
         "recent_win_rate",
         "rest_days",
         "training_missing",
@@ -570,6 +572,18 @@ def _parse_leading_number(value: object, default: float = math.nan) -> float:
     return _safe_float(match.group(0), default)
 
 
+def _parse_weight_delta(value: object, default: float = math.nan) -> float:
+    if value in ("", None):
+        return default
+    match = re.search(r"\(([+-]?\d+)\)", str(value))
+    if not match:
+        return default
+    delta = _safe_float(match.group(1), default)
+    if math.isnan(delta) or not -40 <= delta <= 40:
+        return default
+    return delta
+
+
 def _place_rate(ord1: object, ord2: object, ord3: object, total: object) -> float:
     total_count = _safe_float(total, 0.0)
     if total_count <= 0:
@@ -959,6 +973,11 @@ def _base_row_from_race_and_horse(
         "rating": _safe_float(horse.get("rating")),
         "rating_rank": _safe_float(features.get("rating_rank")),
         "recent_training": _bool_to_float(features.get("recent_training")),
+        "recent_race_count": _safe_float(features.get("recent_race_count")),
+        "recent_top3_count": _safe_float(features.get("recent_top3_count")),
+        "recent_top3_rate": _safe_float(features.get("recent_top3_rate")),
+        "recent_win_count": _safe_float(features.get("recent_win_count")),
+        "recent_win_rate": _safe_float(features.get("recent_win_rate")),
         "rest_days": _safe_float(features.get("rest_days")),
         "rest_risk_code": _rest_risk_code(features.get("rest_risk")),
         "sex_code": _sex_code(horse.get("sex")),
@@ -983,6 +1002,10 @@ def _base_row_from_race_and_horse(
         "training_score": _safe_float(features.get("training_score")),
         "weather_code": _weather_code(info.get("weather")),
         "wet_track": _bool_to_float(features.get("wet_track")),
+        "weight_delta": _safe_float(
+            horse.get("weight_delta"),
+            _parse_weight_delta(horse.get("wgHr")),
+        ),
         "wgBudam": _safe_float(horse.get("wgBudam")),
         "wgHr_value": _parse_leading_number(horse.get("wgHr")),
         "wg_budam_rank": _safe_float(features.get("wg_budam_rank")),

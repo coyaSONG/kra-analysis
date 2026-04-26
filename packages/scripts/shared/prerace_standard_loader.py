@@ -9,6 +9,8 @@ from typing import Any, Protocol
 from feature_engineering import compute_race_features
 
 from shared.data_adapter import convert_snapshot_to_enriched_format
+from shared.entry_snapshot_metadata import extract_sch_st_time
+from shared.operational_cutoff import classify_source_snapshot_for_t30
 from shared.prerace_prediction_payload import (
     HorseFeatureBuilder,
     HorseListPreprocessor,
@@ -41,6 +43,8 @@ class StandardizedPreracePayload:
     standard_payload: dict[str, Any]
     candidate_filter: dict[str, Any]
     field_policy: dict[str, Any]
+    operational_cutoff_status: dict[str, Any]
+    entry_change_audit: dict[str, Any]
     removed_post_race_paths: tuple[str, ...]
     entry_resolution_audit: dict[str, Any] | None
 
@@ -81,6 +85,7 @@ def build_standardized_prerace_payload(
     meet: str | int | None = None,
     lookup: RaceSourceLookup | None = None,
     cancelled_horses: list[dict[str, Any]] | None = None,
+    entry_change_notices: list[dict[str, Any]] | None = None,
     include_resolution_audit: bool = False,
     horse_preprocessor: HorseListPreprocessor | None = None,
     feature_builder: HorseFeatureBuilder | None = None,
@@ -101,6 +106,16 @@ def build_standardized_prerace_payload(
         raise ValueError(
             f"race {race_id} could not be converted from intermediate basic_data"
         )
+    source_snapshot_at = (
+        lookup.entry_snapshot_at
+        if lookup is not None
+        else raw_basic_data.get("collected_at")
+    )
+    operational_cutoff_status = classify_source_snapshot_for_t30(
+        race_date=race_date,
+        scheduled_start_time=extract_sch_st_time(raw_basic_data),
+        source_snapshot_at=source_snapshot_at,
+    ).to_dict()
 
     removed_paths: list[str] = []
     normalized_cancelled_horses = (
@@ -108,13 +123,19 @@ def build_standardized_prerace_payload(
         if cancelled_horses is not None
         else raw_basic_data.get("cancelled_horses")
     )
-    standard_payload, candidate_filter, field_policy = (
+    normalized_entry_change_notices = (
+        entry_change_notices
+        if entry_change_notices is not None
+        else raw_basic_data.get("entry_change_notices")
+    )
+    standard_payload, candidate_filter, field_policy, entry_change_audit = (
         build_prerace_race_payload_from_enriched(
             enriched,
             race_id=race_id,
             race_date=race_date,
             meet=meet,
             cancelled_horses=normalized_cancelled_horses,
+            entry_change_notices=normalized_entry_change_notices,
             removed_paths=removed_paths,
             horse_preprocessor=horse_preprocessor,
             feature_builder=feature_builder or compute_race_features,
@@ -135,6 +156,8 @@ def build_standardized_prerace_payload(
         standard_payload=standard_payload,
         candidate_filter=candidate_filter,
         field_policy=field_policy,
+        operational_cutoff_status=operational_cutoff_status,
+        entry_change_audit=entry_change_audit,
         removed_post_race_paths=tuple(sorted(set(removed_paths))),
         entry_resolution_audit=(
             resolution_audit if isinstance(resolution_audit, dict) else None

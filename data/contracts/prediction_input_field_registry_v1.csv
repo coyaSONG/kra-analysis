@@ -44,7 +44,12 @@ plcOdds_rr,prerace-field-metadata-v1,model_input.plcOdds_rr,derived,INTERNAL,mod
 rating,prerace-field-metadata-v1,model_input.rating,source,API214_1,horses[].rating,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
 rating_rank,prerace-field-metadata-v1,model_input.rating_rank,derived,INTERNAL,horses[].computed_features.rating_rank,L0,documented,허용,ALLOW,scalar,가변,동일 경주 내 rating 순위
 rating_rr,prerace-field-metadata-v1,model_input.rating_rr,derived,INTERNAL,model_input.rating,L0,documented,허용,ALLOW,scalar,가변,rating race-relative 정규화
+recent_race_count,prerace-field-metadata-v1,model_input.recent_race_count,derived,INTERNAL,horses[].computed_features.recent_race_count,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,불변,현재 경주 race_date 미만 historical result lookback 기반
+recent_top3_count,prerace-field-metadata-v1,model_input.recent_top3_count,derived,INTERNAL,horses[].computed_features.recent_top3_count,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,불변,현재 경주 race_date 미만 historical result lookback 기반
+recent_top3_rate,prerace-field-metadata-v1,model_input.recent_top3_rate,derived,INTERNAL,horses[].computed_features.recent_top3_rate,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,불변,현재 경주 race_date 미만 historical result lookback 기반
 recent_training,prerace-field-metadata-v1,model_input.recent_training,derived,INTERNAL,horses[].computed_features.recent_training,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,최근 조교 여부
+recent_win_count,prerace-field-metadata-v1,model_input.recent_win_count,derived,INTERNAL,horses[].computed_features.recent_win_count,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,불변,현재 경주 race_date 미만 historical result lookback 기반
+recent_win_rate,prerace-field-metadata-v1,model_input.recent_win_rate,derived,INTERNAL,horses[].computed_features.recent_win_rate,L-1,documented,조건부 허용,ALLOW_STORED_ONLY,scalar,불변,현재 경주 race_date 미만 historical result lookback 기반
 rest_days,prerace-field-metadata-v1,model_input.rest_days,derived,INTERNAL,horses[].ilsu,L0,documented,허용,ALLOW,scalar,가변,ilsu 직접 사용
 rest_risk_code,prerace-field-metadata-v1,model_input.rest_risk_code,derived,INTERNAL,horses[].computed_features.rest_risk,L0,documented,허용,ALLOW,scalar,가변,ilsu 기반 휴양 리스크 코드화
 sex_code,prerace-field-metadata-v1,model_input.sex_code,derived,API214_1,horses[].sex,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
@@ -61,6 +66,7 @@ trainer_win_rate,prerace-field-metadata-v1,model_input.trainer_win_rate,derived,
 training_score,prerace-field-metadata-v1,model_input.training_score,derived,INTERNAL,horses[].computed_features.training_score,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,조교 현황 평점
 weather_code,prerace-field-metadata-v1,model_input.weather_code,derived,INTERNAL,track.weather,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,날씨 코드화
 wet_track,prerace-field-metadata-v1,model_input.wet_track,derived,INTERNAL,horses[].computed_features.wet_track,L0 snapshot,documented,조건부 허용,ALLOW_SNAPSHOT_ONLY,scalar,가변,track.track 기반 습윤 주로 여부
+weight_delta,prerace-field-metadata-v1,model_input.weight_delta,derived,INTERNAL,horses[].weight_delta|horses[].wg_hr,L0,documented,허용,ALLOW,scalar,가변,wgHr 괄호 내부 마체중 증감 파싱
 wgBudam,prerace-field-metadata-v1,model_input.wgBudam,source,API214_1,horses[].wg_budam,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반
 wgBudam_rr,prerace-field-metadata-v1,model_input.wgBudam_rr,derived,INTERNAL,model_input.wgBudam,L0,documented,허용,ALLOW,scalar,가변,wgBudam race-relative 정규화
 wgHr_value,prerace-field-metadata-v1,model_input.wgHr_value,derived,INTERNAL,horses[].wg_hr,L0,documented,허용,ALLOW,scalar,가변,출전표 확정 시점 기본 카드 기반

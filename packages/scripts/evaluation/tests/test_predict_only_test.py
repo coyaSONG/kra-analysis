@@ -116,6 +116,11 @@ def test_load_race_data_reuses_snapshot_lookup_and_common_builder(
                 "removed_paths": [],
                 "policy_version": "prerace-field-policy-v1",
             },
+            operational_cutoff_status={
+                "passed": True,
+                "reason": "ok",
+            },
+            entry_change_audit={"source_present": False},
             removed_post_race_paths=(),
             entry_resolution_audit=None,
         )

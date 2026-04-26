@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import sys
 from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -14,6 +16,7 @@ from autoresearch.offline_evaluation_dataset_job import (
     build_entry_snapshot_lookup,
     build_snapshot_bundle,
     build_snapshot_race_data,
+    write_snapshot_bundle,
 )
 
 
@@ -127,6 +130,20 @@ class _FakeSnapshotQueryPort:
         basic_data["track"]["weather"] = "비"
         return basic_data
 
+    def get_past_top3_stats_for_race(self, hr_nos, *, lookup, lookback_days=90):
+        assert lookup.race_id in self._snapshot_by_id
+        assert lookback_days == 90
+        return {
+            hr_no: {
+                "recent_race_count": 4,
+                "recent_win_count": 1,
+                "recent_top3_count": 2,
+                "recent_win_rate": 0.25,
+                "recent_top3_rate": 0.5,
+            }
+            for hr_no in hr_nos
+        }
+
     def close(self) -> None:
         return None
 
@@ -174,6 +191,11 @@ def test_build_snapshot_race_data_delegates_to_shared_snapshot_and_schema_module
             },
             candidate_filter={"status_counts": {"normal": 1}},
             field_policy={"blocked_paths": []},
+            operational_cutoff_status={
+                "passed": True,
+                "reason": "ok",
+            },
+            entry_change_audit={"source_present": False},
             removed_post_race_paths=(),
             entry_resolution_audit={"source": "entry_resolution"},
         )
@@ -193,6 +215,72 @@ def test_build_snapshot_race_data_delegates_to_shared_snapshot_and_schema_module
         timing_meta["source_lookup"]["entry_snapshot_at"] == "2025-01-01T10:30:00+09:00"
     )
     assert timing_meta["entry_resolution_audit"] == {"source": "entry_resolution"}
+    assert timing_meta["operational_cutoff_status"]["passed"] is True
+    assert timing_meta["entry_change_audit"] == {"source_present": False}
+
+
+def test_build_snapshot_race_data_can_inject_strict_past_stats():
+    snapshot = _make_snapshot("20250101", 1, 1)
+    query_port = _FakeSnapshotQueryPort([snapshot])
+
+    race_data, timing_meta = build_snapshot_race_data(
+        snapshot,
+        query_port=query_port,
+        with_past_stats=True,
+    )
+
+    assert race_data is not None
+    horse = race_data["horses"][0]
+    assert horse["past_stats"]["recent_race_count"] == 4
+    assert horse["computed_features"]["recent_top3_count"] == 2
+    assert horse["computed_features"]["recent_win_rate"] == 0.25
+    assert timing_meta["operational_cutoff_status"]["passed"] is True
+
+
+def test_write_snapshot_bundle_writes_t30_release_gate_report(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "autoresearch.offline_evaluation_dataset_job.write_split_manifests",
+        lambda _manifests: None,
+    )
+    race = {
+        "race_id": "race-1",
+        "race_date": "20250101",
+        "race_info": {
+            "rcDate": "20250101",
+            "rcNo": 1,
+            "rcDist": 1200,
+            "track": "건조",
+            "weather": "맑음",
+            "meet": "서울",
+        },
+        "horses": [{"chulNo": 1, "changed_jockey_flag": None}],
+        "snapshot_meta": {
+            "race_id": "race-1",
+            "replay_status": "strict",
+            "include_in_strict_dataset": True,
+            "operational_cutoff_status": {
+                "passed": True,
+                "reason": "ok",
+            },
+            "entry_change_audit": {"source_present": False},
+        },
+    }
+    bundle = {
+        "created_at": datetime.fromisoformat("2026-04-27T09:00:00+09:00"),
+        "split_manifests": {},
+        "snapshots": {"mini_val": [race], "holdout": []},
+        "timing_manifests": {"mini_val": [race["snapshot_meta"]], "holdout": []},
+        "answer_key": {"meta": {}, "mini_val": {}, "holdout": {}},
+    }
+
+    write_snapshot_bundle(bundle, snapshot_dir=tmp_path)
+
+    report = json.loads(
+        (tmp_path / "mini_val_t30_release_gate_report.json").read_text(encoding="utf-8")
+    )
+    assert report["schema_version"] == "t30-release-gate-report-v1"
+    assert report["passed"] is True
+    assert report["entry_change_coverage"]["source_missing_race_count"] == 1
 
 
 def test_build_snapshot_bundle_reloads_basic_data_via_common_lookup_contract():

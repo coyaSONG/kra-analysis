@@ -60,6 +60,13 @@ class RaceEvaluationDataLoader:
         )
 
     def load_race_data(self, race_info: dict[str, Any]) -> dict[str, Any] | None:
+        standardized = self.load_standardized_race_data(race_info)
+        return standardized.standard_payload if standardized is not None else None
+
+    def load_standardized_race_data(
+        self,
+        race_info: dict[str, Any],
+    ) -> Any | None:
         try:
             lookup = RaceSourceLookup.from_race_info(race_info)
             standardized = load_standardized_prerace_payload(
@@ -72,7 +79,7 @@ class RaceEvaluationDataLoader:
                     )
                 ),
             )
-            return standardized.standard_payload
+            return standardized
         except Exception as exc:
             print(f"데이터 로드 오류: {exc}")
             return None

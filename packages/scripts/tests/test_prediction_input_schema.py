@@ -49,7 +49,7 @@ def test_alternative_ranking_schema_is_fixed_to_operational_subset() -> None:
         schema["timing_contract_path"]
         == "data/contracts/feature_source_timing_contract_v1.csv"
     )
-    assert len(ALTERNATIVE_RANKING_ALLOWED_FEATURES) == 65
+    assert len(ALTERNATIVE_RANKING_ALLOWED_FEATURES) == 71
     assert len(ALTERNATIVE_RANKING_BLOCKED_FEATURES) == 5
     assert (
         set(schema["allowed_as_of_requirements"])
@@ -76,6 +76,11 @@ def test_alternative_ranking_schema_is_fixed_to_operational_subset() -> None:
     ]
     assert len(schema["column_specs"]) == len(ALTERNATIVE_RANKING_ALLOWED_FEATURES) + 4
     assert ALTERNATIVE_RANKING_COLUMN_SPEC_BY_NAME["rating"].dtype == "float"
+    assert ALTERNATIVE_RANKING_COLUMN_SPEC_BY_NAME["weight_delta"].dtype == "float"
+    assert (
+        ALTERNATIVE_RANKING_COLUMN_SPEC_BY_NAME["recent_top3_rate"].derivation_scope
+        == "per_entry_derived"
+    )
     assert ALTERNATIVE_RANKING_COLUMN_SPEC_BY_NAME["rating"].missing_rule == "allow_nan"
     assert (
         ALTERNATIVE_RANKING_COLUMN_SPEC_BY_NAME["draw_rr"].derivation_scope
@@ -440,6 +445,11 @@ def test_build_alternative_ranking_rows_for_race_generates_complete_inference_ro
                     "horse_place_rate": 44.0,
                     "rating_rank": 1,
                     "age_prime": True,
+                    "recent_race_count": 4,
+                    "recent_top3_count": 2,
+                    "recent_top3_rate": 0.5,
+                    "recent_win_count": 1,
+                    "recent_win_rate": 0.25,
                 },
             },
             {
@@ -456,6 +466,11 @@ def test_build_alternative_ranking_rows_for_race_generates_complete_inference_ro
                     "horse_place_rate": 35.0,
                     "rating_rank": 2,
                     "age_prime": False,
+                    "recent_race_count": 2,
+                    "recent_top3_count": 1,
+                    "recent_top3_rate": 0.5,
+                    "recent_win_count": 0,
+                    "recent_win_rate": 0.0,
                 },
             },
         ],
@@ -471,5 +486,9 @@ def test_build_alternative_ranking_rows_for_race_generates_complete_inference_ro
         *ALTERNATIVE_RANKING_ALLOWED_FEATURES,
     }
     assert rows[0]["race_id"] == "20250101_1_1"
+    assert rows[0]["recent_top3_rate"] == 0.5
+    assert rows[0]["recent_win_count"] == 1.0
+    assert rows[0]["weight_delta"] == 1.0
+    assert rows[1]["weight_delta"] == -1.0
     assert rows[0]["draw_rr"] == 0.0
     assert rows[1]["draw_rr"] == 1.0

@@ -148,6 +148,18 @@ def test_build_standardized_prerace_payload_normalizes_intermediate_snapshot() -
         race_id="20250719_1_3",
         race_date="20250719",
         meet="서울",
+        entry_change_notices=[
+            {
+                "change_type": "jockey_change",
+                "race_date": "20250719",
+                "race_no": 3,
+                "chul_no": 1,
+                "old_jockey_name": "기수0",
+                "new_jockey_name": "기수1",
+                "reason": "부상",
+                "announced_at": "2025-07-19T10:00:00+09:00",
+            }
+        ],
         include_resolution_audit=True,
     )
 
@@ -156,11 +168,21 @@ def test_build_standardized_prerace_payload_normalizes_intermediate_snapshot() -
         "alternative-ranking-input-v1"
     )
     assert standardized.standard_payload["horses"][0]["class_rank"] == "국6"
+    assert standardized.operational_cutoff_status["passed"] is True
+    assert standardized.operational_cutoff_status["operational_cutoff_at"] == (
+        "2025-07-19T14:20:00+09:00"
+    )
     assert "rank" not in standardized.standard_payload["horses"][0]
     assert "horses[0].ordBigo" in standardized.removed_post_race_paths
     assert standardized.entry_resolution_audit is not None
     assert standardized.entry_resolution_audit["audit_version"] == (
         "prerace-entry-resolution-v1"
+    )
+    assert standardized.entry_change_audit["source_present"] is True
+    assert standardized.entry_change_audit["race_jockey_change_count"] == 1
+    assert standardized.standard_payload["horses"][0]["changed_jockey_flag"] == 1.0
+    assert standardized.standard_payload["horses"][0]["changed_jockey_status"] == (
+        "changed"
     )
 
 
@@ -186,4 +208,27 @@ def test_load_standardized_prerace_payload_uses_query_port_lookup_contract() -> 
     ]
     assert standardized.lookup is not None
     assert standardized.lookup.entry_snapshot_at == "2025-07-19T10:35:00+09:00"
+    assert standardized.operational_cutoff_status["source_snapshot_at"] == (
+        "2025-07-19T10:35:00+09:00"
+    )
     assert standardized.standard_payload["horses"][0]["hrNo"] == "001"
+    assert standardized.standard_payload["horses"][0]["changed_jockey_flag"] is None
+    assert standardized.entry_change_audit["source_present"] is False
+
+
+def test_build_standardized_prerace_payload_marks_post_t30_snapshot_late() -> None:
+    basic_data = _basic_data()
+    basic_data["collected_at"] = "2025-07-19T14:21:00+09:00"
+
+    standardized = build_standardized_prerace_payload(
+        basic_data,
+        race_id="20250719_1_3",
+        race_date="20250719",
+        meet="서울",
+    )
+
+    assert standardized.operational_cutoff_status["passed"] is False
+    assert standardized.operational_cutoff_status["reason"] == "source_after_cutoff"
+    assert standardized.operational_cutoff_status["operational_cutoff_at"] == (
+        "2025-07-19T14:20:00+09:00"
+    )

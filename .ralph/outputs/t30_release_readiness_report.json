@@ -1,0 +1,113 @@
+{
+  "format_version": "t30-release-readiness-report-v1",
+  "verdict": "blocked",
+  "blocking_reasons": [
+    "db_replay_has_zero_t30_strict_holdout_rows",
+    "existing_snapshot_gate_missing_operational_cutoff_status",
+    "past_stats_and_cancelled_snapshot_features_have_zero_coverage_in_existing_snapshot_artifacts"
+  ],
+  "db_replay_summary": {
+    "datasets": {
+      "mini_val": {
+        "requested": 200,
+        "written": 0,
+        "failures": 200
+      },
+      "holdout": {
+        "requested": 500,
+        "written": 0,
+        "failures": 500
+      }
+    }
+  },
+  "db_replay_failure_reason_counts": {
+    "mini_val": {
+      "late_snapshot_unusable": 200
+    },
+    "holdout": {
+      "late_snapshot_unusable": 375,
+      "partial_snapshot": 125
+    }
+  },
+  "existing_snapshot_evaluation": {
+    "gate_passed": false,
+    "removed_config_features": [
+      "jk_skill"
+    ],
+    "baseline_summary": {
+      "race_count": 500,
+      "exact_3of3_count": 193,
+      "exact_3of3_rate": 0.386,
+      "avg_set_match": 0.718,
+      "hit_distribution": {
+        "0": 7,
+        "1": 102,
+        "2": 198,
+        "3": 193
+      }
+    },
+    "release_summary": {
+      "race_count": 500,
+      "exact_3of3_count": 191,
+      "exact_3of3_rate": 0.382,
+      "avg_set_match": 0.7166666666666667,
+      "hit_distribution": {
+        "0": 7,
+        "1": 102,
+        "2": 200,
+        "3": 191
+      }
+    },
+    "delta": {
+      "avg_set_match": -0.0013333333333332975,
+      "exact_3of3_rate": -0.0040000000000000036
+    },
+    "key_feature_coverage": {
+      "recent_race_count": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "recent_top3_count": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "recent_top3_rate": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "recent_win_count": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "recent_win_rate": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "weight_delta": {
+        "present_count": 5064,
+        "missing_count": 351,
+        "coverage_rate": 0.935180055401662
+      },
+      "cancelled_count": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      },
+      "field_size_live": {
+        "present_count": 0,
+        "missing_count": 5415,
+        "coverage_rate": 0.0
+      }
+    }
+  },
+  "next_actions": [
+    "collect_or_reconstruct_entry_finalized_snapshots_before_t30_for_holdout_races",
+    "persist_entry_change_bulletin_snapshots_with_source_snapshot_at",
+    "rerun_offline_dataset_replay_with_with_past_stats_after_strict_snapshots_exist"
+  ]
+}

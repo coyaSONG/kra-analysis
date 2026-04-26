@@ -114,6 +114,11 @@ def test_load_race_data_builds_normalized_payload(monkeypatch):
                 },
             },
             field_policy={},
+            operational_cutoff_status={
+                "passed": True,
+                "reason": "ok",
+            },
+            entry_change_audit={"source_present": False},
             removed_post_race_paths=(),
             entry_resolution_audit=None,
         )
@@ -210,6 +215,11 @@ def test_load_race_data_excludes_cancelled_rows_even_when_market_signal_is_posit
                 },
             },
             field_policy={},
+            operational_cutoff_status={
+                "passed": True,
+                "reason": "ok",
+            },
+            entry_change_audit={"source_present": False},
             removed_post_race_paths=(),
             entry_resolution_audit=None,
         )
@@ -276,6 +286,11 @@ def test_load_race_data_delegates_payload_build_to_shared_builder(monkeypatch):
             },
             candidate_filter={"status_counts": {"normal": 1}},
             field_policy={"blocked_paths": []},
+            operational_cutoff_status={
+                "passed": True,
+                "reason": "ok",
+            },
+            entry_change_audit={"source_present": False},
             removed_post_race_paths=(),
             entry_resolution_audit=None,
         )
@@ -295,6 +310,17 @@ def test_load_race_data_delegates_payload_build_to_shared_builder(monkeypatch):
     assert calls[0]["race_info"]["race_id"] == "race-1"
     assert calls[0]["race_info"]["race_date"] == "20240719"
     assert payload["horses"][0]["past_stats"] == {"wins": 3}
+
+    standardized = loader.load_standardized_race_data(
+        {
+            "race_id": "race-1",
+            "race_date": "20240719",
+            "entry_snapshot_at": "2024-07-19T10:00:00+09:00",
+        }
+    )
+    assert standardized is not None
+    assert standardized.standard_payload["horses"][0]["past_stats"] == {"wins": 3}
+    assert standardized.operational_cutoff_status["passed"] is True
 
 
 def test_build_v5_race_data():

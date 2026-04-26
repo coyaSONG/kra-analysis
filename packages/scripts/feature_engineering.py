@@ -316,10 +316,14 @@ def compute_features(horse: dict, *, validation_mode: str = "exclude") -> dict:
         features["recent_top3_rate"] = past.get("recent_top3_rate")
         features["recent_win_rate"] = past.get("recent_win_rate")
         features["recent_race_count"] = past.get("recent_race_count")
+        features["recent_top3_count"] = past.get("recent_top3_count")
+        features["recent_win_count"] = past.get("recent_win_count")
     else:
         features["recent_top3_rate"] = None
         features["recent_win_rate"] = None
         features["recent_race_count"] = None
+        features["recent_top3_count"] = None
+        features["recent_win_count"] = None
 
     # --- 7-8. 조교사 승률 / 입상률 ---
     tr = horse.get("trDetail")

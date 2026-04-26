@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections.abc import Sequence
 from dataclasses import replace
 from datetime import datetime
@@ -16,9 +17,12 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Protocol
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from shared.db_client import RaceDBClient
 from shared.prerace_standard_loader import build_standardized_prerace_payload
 from shared.read_contract import RaceSnapshot, RaceSourceLookup
+from shared.t30_release_gate import build_t30_release_gate_report
 
 from autoresearch.holdout_dataset import (
     build_dataset_manifest,
@@ -51,6 +55,14 @@ class OfflineEvaluationSnapshotQueryPort(Protocol):
         lookup: RaceSourceLookup,
     ) -> dict[str, Any] | None: ...
 
+    def get_past_top3_stats_for_race(
+        self,
+        hr_nos: list[str],
+        *,
+        lookup: RaceSourceLookup,
+        lookback_days: int = 90,
+    ) -> dict[str, dict[str, Any]]: ...
+
     def close(self) -> None: ...
 
 
@@ -78,25 +90,48 @@ def load_snapshot_basic_data_at_reference_time(
 
 def build_snapshot_race_data(
     snapshot: RaceSnapshot,
+    *,
+    query_port: OfflineEvaluationSnapshotQueryPort | None = None,
+    with_past_stats: bool = False,
 ) -> tuple[dict[str, Any] | None, dict[str, Any]]:
     """경주 스냅샷을 평가용 strict payload와 timing 메타데이터로 변환한다."""
 
     timing = derive_snapshot_timing(snapshot)
     timing_meta = snapshot_meta_dict(timing)
     timing_meta["race_id"] = snapshot.race_id
+    lookup = build_entry_snapshot_lookup(snapshot)
 
     if not timing.include_in_strict_dataset:
         return None, timing_meta
 
     filtered_basic_data = select_allowed_basic_data(snapshot.basic_data)
+
+    def _inject_past_stats(horses: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not with_past_stats:
+            return horses
+        if query_port is None:
+            raise ValueError("with_past_stats requires query_port")
+        hr_nos = [str(horse["hrNo"]) for horse in horses if horse.get("hrNo")]
+        past_stats = query_port.get_past_top3_stats_for_race(
+            hr_nos=hr_nos,
+            lookup=lookup,
+            lookback_days=90,
+        )
+        for horse in horses:
+            hr_no = str(horse.get("hrNo") or "")
+            if hr_no in past_stats:
+                horse["past_stats"] = past_stats[hr_no]
+        return horses
+
     try:
         standardized = build_standardized_prerace_payload(
             filtered_basic_data,
             race_id=snapshot.race_id,
             race_date=snapshot.race_date,
             meet=snapshot.key.meet_name,
-            lookup=build_entry_snapshot_lookup(snapshot),
+            lookup=lookup,
             include_resolution_audit=True,
+            horse_preprocessor=_inject_past_stats if with_past_stats else None,
         )
     except ValueError:
         timing_meta["include_in_strict_dataset"] = False
@@ -110,6 +145,8 @@ def build_snapshot_race_data(
     )
     timing_meta["field_policy"] = standardized.field_policy
     timing_meta["candidate_filter"] = standardized.candidate_filter
+    timing_meta["operational_cutoff_status"] = standardized.operational_cutoff_status
+    timing_meta["entry_change_audit"] = standardized.entry_change_audit
     timing_meta["source_lookup"] = standardized.lookup.to_dict()
     race_data = standardized.standard_payload
     race_data["snapshot_meta"] = timing_meta
@@ -208,6 +245,7 @@ def build_snapshot_bundle(
     manifest_created_at: datetime | str | None = None,
     holdout_minimum_race_count: int = 50,
     mini_val_minimum_race_count: int = 20,
+    with_past_stats: bool = False,
 ) -> dict[str, Any]:
     normalized_created_at = _normalize_snapshot_created_at(manifest_created_at)
     split_manifests = plan_recent_holdout_manifests(
@@ -235,7 +273,11 @@ def build_snapshot_bundle(
                 snapshot,
                 query_port=query_port,
             )
-            race_data, timing_meta = build_snapshot_race_data(frozen_snapshot)
+            race_data, timing_meta = build_snapshot_race_data(
+                frozen_snapshot,
+                query_port=query_port,
+                with_past_stats=with_past_stats,
+            )
             timing_manifests[mode].append(timing_meta)
             if not race_data:
                 raise ValueError(
@@ -255,6 +297,7 @@ def build_snapshot_bundle(
     }
     return {
         "created_at": normalized_created_at,
+        "with_past_stats": with_past_stats,
         "split_manifests": split_manifests,
         "snapshots": snapshots,
         "timing_manifests": timing_manifests,
@@ -318,6 +361,29 @@ def write_snapshot_bundle(
             json.dumps(manifest, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+        gate_payloads = [
+            {
+                "race_id": record.get("race_id"),
+                "standard_payload": record,
+                "operational_cutoff_status": record.get("snapshot_meta", {}).get(
+                    "operational_cutoff_status",
+                    {},
+                ),
+                "entry_change_audit": record.get("snapshot_meta", {}).get(
+                    "entry_change_audit",
+                    {},
+                ),
+            }
+            for record in snapshots[mode]
+        ]
+        (snapshot_dir / f"{mode}_t30_release_gate_report.json").write_text(
+            json.dumps(
+                build_t30_release_gate_report(gate_payloads),
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         print(f"{mode}: {len(snapshots[mode])} races (sha256={sha})")
 
     (snapshot_dir / "answer_key.json").write_text(
@@ -334,6 +400,7 @@ def check_snapshot_reproducibility(
     holdout_minimum_race_count: int = 50,
     mini_val_minimum_race_count: int = 20,
     reference_bundle: dict[str, Any] | None = None,
+    with_past_stats: bool = False,
 ) -> dict[str, Any]:
     """입력 스냅샷을 동일 조건으로 두 번 생성해 byte/구조 단위 일치 여부를 검증한다."""
 
@@ -343,6 +410,7 @@ def check_snapshot_reproducibility(
         manifest_created_at=manifest_created_at,
         holdout_minimum_race_count=holdout_minimum_race_count,
         mini_val_minimum_race_count=mini_val_minimum_race_count,
+        with_past_stats=with_past_stats,
     )
     regenerated = build_snapshot_bundle(
         race_snapshots,
@@ -350,6 +418,7 @@ def check_snapshot_reproducibility(
         manifest_created_at=reference["created_at"],
         holdout_minimum_race_count=holdout_minimum_race_count,
         mini_val_minimum_race_count=mini_val_minimum_race_count,
+        with_past_stats=with_past_stats,
     )
 
     dataset_reports: dict[str, Any] = {}
@@ -422,6 +491,7 @@ def create_offline_evaluation_dataset(
     query_port: OfflineEvaluationSnapshotQueryPort | None = None,
     snapshot_dir: Path = SNAPSHOTS_DIR,
     manifest_created_at: datetime | str | None = None,
+    with_past_stats: bool = False,
 ) -> None:
     """DB에서 경주 데이터를 읽어 오프라인 평가 snapshot 팩을 생성한다."""
 
@@ -441,6 +511,7 @@ def create_offline_evaluation_dataset(
             race_snapshots,
             query_port=db,
             manifest_created_at=created_at,
+            with_past_stats=with_past_stats,
         )
         validate_snapshot_bundle_counts(bundle)
 
@@ -449,6 +520,7 @@ def create_offline_evaluation_dataset(
             query_port=db,
             manifest_created_at=created_at,
             reference_bundle=bundle,
+            with_past_stats=with_past_stats,
         )
         if not reproducibility_report["passed"]:
             raise ValueError(
@@ -476,11 +548,18 @@ def main() -> None:
         "--reference-time",
         help="dataset manifest created_at override (ISO-8601)",
     )
+    parser.add_argument(
+        "--with-past-stats",
+        action="store_true",
+        default=False,
+        help="strict prior-date past_stats를 snapshot horse payload에 주입",
+    )
     args = parser.parse_args()
 
     create_offline_evaluation_dataset(
         force=args.force_recreate,
         manifest_created_at=args.reference_time,
+        with_past_stats=args.with_past_stats,
     )
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from evaluation.leakage_checks import FORBIDDEN_POST_RACE_FIELDS
@@ -14,6 +14,7 @@ from shared.runner_status import select_prediction_candidates
 
 HorseListPreprocessor = Callable[[list[dict[str, Any]]], list[dict[str, Any]] | None]
 HorseFeatureBuilder = Callable[[list[dict[str, Any]]], list[dict[str, Any]]]
+EntryChangeNotices = Sequence[Mapping[str, Any]]
 
 
 def strip_forbidden_fields(
@@ -84,6 +85,95 @@ def _build_race_info(
     }
 
 
+def _safe_int(value: object) -> int | None:
+    if value in ("", None):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_race_date(value: object) -> str | None:
+    if value in ("", None):
+        return None
+    text = str(value)
+    digits = "".join(ch for ch in text if ch.isdigit())
+    return digits[:8] if len(digits) >= 8 else None
+
+
+def _jockey_change_notice_matches_race(
+    notice: Mapping[str, Any],
+    *,
+    race_date: str,
+    race_no: int | None,
+) -> bool:
+    if notice.get("change_type") != "jockey_change":
+        return False
+    if _normalize_race_date(notice.get("race_date")) != _normalize_race_date(race_date):
+        return False
+    notice_race_no = _safe_int(notice.get("race_no") or notice.get("rcNo"))
+    return race_no is not None and notice_race_no == race_no
+
+
+def _annotate_changed_jockey_state(
+    horses: list[dict[str, Any]],
+    *,
+    race_date: str,
+    race_no: int | None,
+    entry_change_notices: EntryChangeNotices | None,
+) -> dict[str, Any]:
+    source_present = entry_change_notices is not None
+    relevant: list[Mapping[str, Any]] = []
+    if entry_change_notices is not None:
+        relevant = [
+            notice
+            for notice in entry_change_notices
+            if _jockey_change_notice_matches_race(
+                notice,
+                race_date=race_date,
+                race_no=race_no,
+            )
+        ]
+
+    by_chul_no = {
+        chul_no: notice
+        for notice in relevant
+        if (chul_no := _safe_int(notice.get("chul_no") or notice.get("chulNo")))
+        is not None
+    }
+
+    for horse in horses:
+        chul_no = _safe_int(horse.get("chulNo"))
+        notice = by_chul_no.get(chul_no)
+        if not source_present:
+            horse["changed_jockey_flag"] = None
+            horse["changed_jockey_status"] = "source_missing"
+            continue
+
+        horse["changed_jockey_flag"] = 1.0 if notice is not None else 0.0
+        horse["changed_jockey_status"] = (
+            "changed" if notice is not None else "unchanged"
+        )
+        if notice is not None:
+            horse["changed_jockey_notice"] = {
+                "old_jockey_name": notice.get("old_jockey_name"),
+                "old_jockey_no": notice.get("old_jockey_no"),
+                "new_jockey_name": notice.get("new_jockey_name"),
+                "new_jockey_no": notice.get("new_jockey_no"),
+                "reason": notice.get("reason"),
+                "announced_at": notice.get("announced_at"),
+                "source_snapshot_at": notice.get("source_snapshot_at"),
+            }
+
+    return {
+        "source_present": source_present,
+        "notice_count": len(entry_change_notices or ()),
+        "race_jockey_change_count": len(relevant),
+        "matched_chul_nos": sorted(by_chul_no),
+    }
+
+
 def build_prerace_race_payload_from_enriched(
     enriched: dict[str, Any],
     *,
@@ -91,10 +181,11 @@ def build_prerace_race_payload_from_enriched(
     race_date: str,
     meet: str | int | None = None,
     cancelled_horses: list[dict[str, Any]] | None = None,
+    entry_change_notices: EntryChangeNotices | None = None,
     removed_paths: list[str] | None = None,
     horse_preprocessor: HorseListPreprocessor | None = None,
     feature_builder: HorseFeatureBuilder | None = None,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     """enriched race payload를 공통 prerace/schema 계약으로 정규화한다."""
 
     items = _normalize_items(enriched)
@@ -115,6 +206,12 @@ def build_prerace_race_payload_from_enriched(
         if processed is not None:
             horses = processed
     horses = (feature_builder or compute_race_features)(horses)
+    entry_change_audit = _annotate_changed_jockey_state(
+        horses,
+        race_date=race_date,
+        race_no=_safe_int(items[0].get("rcNo")),
+        entry_change_notices=entry_change_notices,
+    )
 
     race_payload: dict[str, Any] = {
         "race_id": race_id,
@@ -130,4 +227,9 @@ def build_prerace_race_payload_from_enriched(
     filtered_payload["input_schema"] = validate_alternative_ranking_race_payload(
         filtered_payload
     )
-    return filtered_payload, race_payload["candidate_filter"], field_policy
+    return (
+        filtered_payload,
+        race_payload["candidate_filter"],
+        field_policy,
+        entry_change_audit,
+    )
