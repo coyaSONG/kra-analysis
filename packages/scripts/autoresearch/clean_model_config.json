@@ -182,8 +182,6 @@
     "jockey_total_place_rate",
     "trainer_total_place_rate",
     "field_size",
-    "field_size_live",
-    "cancelled_count",
     "is_handicap",
     "dist",
     "is_sprint",
