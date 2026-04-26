@@ -172,10 +172,7 @@
     "budam_code",
     "rest_risk_code",
     "allowance_flag",
-    "horse_win_rate",
-    "jockey_win_rate",
     "jockey_place_rate",
-    "trainer_win_rate",
     "trainer_place_rate",
     "rest_days",
     "rating_rank",
@@ -205,6 +202,6 @@
   ],
   "notes": {
     "goal": "Leakage-free early prediction exact 3-of-3 optimization",
-    "last_mutation": "remove draw_rr atop learning_rate=0.03"
+    "last_mutation": "drop absolute win-rate feature family atop draw_rr-removed learning_rate=0.03"
   }
 }
