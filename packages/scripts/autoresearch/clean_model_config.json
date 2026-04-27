@@ -82,7 +82,7 @@
     "params": {
       "n_estimators": 600,
       "max_depth": 8,
-      "min_samples_leaf": 8
+      "min_samples_leaf": 12
     }
   },
   "experiment": {
