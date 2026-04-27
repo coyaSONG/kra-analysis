@@ -177,3 +177,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.009709, so reverted experiment commit `4394a8f` with `b2ecd08`.
 - learning: Increasing RF depth was much slower and weakened the worst-seed floor, so avoid `max_depth=10` in the current RF/weight_delta context; next prefer a cost-aware RF tree-count/depth reduction or a coherent release-safe feature experiment rather than making RF trees deeper.
 ---
+## [2026-04-27T21:08:31+0900] - iteration 13
+- mutation: lower active RF `min_samples_leaf` from 8 to 6, leaving model family, `n_estimators`, `max_depth`, split/window, class weighting, and features unchanged.
+- hypothesis: A slightly smaller RF leaf size could recover useful prerace feature interactions without increasing tree depth, raising the leakage-free worst-seed floor after the RF model-family switch improved the clean-v2 best.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.142395 vs current best 0.145631; clean-v2 best remains 0.145631.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `abab730` with `b8d5cb5`.
+- learning: Both directions away from RF `min_samples_leaf=8` have now regressed the clean-v2 floor, so avoid further leaf-size tweaks in the current RF/weight_delta context; next prefer a different RF axis such as tree count or a coherent release-safe feature experiment.
+---
