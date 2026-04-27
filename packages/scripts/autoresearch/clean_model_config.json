@@ -80,7 +80,7 @@
     "kind": "logreg",
     "positive_class_weight": 1.0,
     "params": {
-      "max_iter": 2000,
+      "max_iter": 5000,
       "C": 0.75
     }
   },
