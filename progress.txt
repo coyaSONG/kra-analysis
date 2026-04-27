@@ -145,3 +145,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.003236, so reverted experiment commit `bbb04e4` with `493114a`.
 - learning: Rating-relative core-card additions hurt the worst-seed floor, especially leaving seed 09 at 0.119741; avoid retrying this exact `rating_rank` + `rating_rr` bundle in the current HGB/weight_delta context and next prefer a different single axis such as a split/window change or a materially different release-safe feature family.
 ---
+## [2026-04-27T15:35:00+0900] - iteration 9
+- mutation: add the T-30 release-safe same-race draw-relative feature (`draw_rr`) to `features`, leaving model kind, split/window, class weighting, `weight_delta`, and all other inputs unchanged.
+- hypothesis: Field-normalized draw position could stabilize weak seeds by giving HGB relative stall context beyond raw `draw_no` when field sizes vary, without using odds or timing-unverified sources.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.119741 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `75e0340` with `f066bf8`.
+- learning: `draw_rr` did not recover the clean-v2 worst-seed floor and repeated the 0.119741 failure mode seen in rating-relative features; avoid adding isolated race-relative core-card transforms in the current HGB/weight_delta context, and next prefer a split/window change or a coherent high-coverage stored-as-of rate family rather than another single relative transform.
+---
