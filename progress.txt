@@ -185,3 +185,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.003236, so reverted experiment commit `abab730` with `b8d5cb5`.
 - learning: Both directions away from RF `min_samples_leaf=8` have now regressed the clean-v2 floor, so avoid further leaf-size tweaks in the current RF/weight_delta context; next prefer a different RF axis such as tree count or a coherent release-safe feature experiment.
 ---
+## [2026-04-27T22:32:56+0900] - iteration 14
+- mutation: switch top-level `model.kind` and params from the kept RF configuration to the schema-supported `et_depth8_800trees` candidate, leaving split/window, synchronized `positive_class_weight`, and all features unchanged.
+- hypothesis: ExtraTrees may reduce RF-specific split variance through more randomized bagged trees and raise the leakage-free worst-seed floor after direct RF leaf/depth tweaks regressed.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.142395 vs current best 0.145631; clean-v2 best remains 0.145631.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `9241bb9` with `581dfb2`.
+- learning: The ET candidate was much slower and still matched the recent RF parameter-regression floor, so avoid `et_depth8_800trees` in the current RF/weight_delta context; next prefer a cheaper single axis such as RF tree-count reduction or a coherent release-safe feature-family test rather than another expensive ensemble-family switch.
+---
