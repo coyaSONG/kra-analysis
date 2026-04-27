@@ -161,8 +161,6 @@
   },
   "features": [
     "rating",
-    "rating_rank",
-    "rating_rr",
     "wgBudam",
     "wgHr_value",
     "weight_delta",
