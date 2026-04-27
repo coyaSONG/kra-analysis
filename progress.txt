@@ -201,3 +201,11 @@ Started: 2026-04-19
 - decision: keep; metric improved by +0.029126 over the prior valid clean-v2 best.
 - learning: The schema-supported LogReg family substantially improves the worst-seed floor despite repeated `lbfgs` convergence warnings and long runtime; next avoid returning to RF/ET micro-tweaks unless a new kept context demands it, and prefer LogReg-specific convergence/scaling/regularization experiments or release-safe feature additions that preserve this linear-family context.
 ---
+## [2026-04-28T01:18:14+0900] - iteration 16
+- mutation: lower active LogReg `C` from 0.75 to 0.50, leaving model family, `max_iter`, split/window, synchronized `positive_class_weight`, and features unchanged.
+- hypothesis: Stronger L2 regularization in the kept LogReg context may reduce seed-level overfit and raise the leakage-free worst-seed holdout floor without changing release-safe feature inputs.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.174757 vs current best 0.174757; clean-v2 best remains 0.174757.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `f854243` with `f8cc798`.
+- learning: `C=0.50` does not lift the LogReg clean-v2 floor and still emits repeated `lbfgs` convergence warnings, so avoid this stronger-regularization value in the current context; next prefer a different LogReg axis such as class weighting or a coherent release-safe feature-family test rather than another small downward `C` tweak.
+---
