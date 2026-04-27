@@ -161,3 +161,11 @@ Started: 2026-04-19
 - decision: keep; metric improved by +0.022654 over the prior valid clean-v2 best.
 - learning: The RF family is expensive but materially improves the clean-v2 worst-seed floor, so keep this model-family switch and next exploit the RF context with a cost-aware single-axis RF parameter or release-safe feature experiment rather than returning to isolated HGB race-relative feature additions.
 ---
+## [2026-04-27T18:21:31+0900] - iteration 11
+- mutation: raise active RF `min_samples_leaf` from 8 to 12, leaving model family, `n_estimators`, `max_depth`, split/window, class weighting, and features unchanged.
+- hypothesis: Stronger RF leaf regularization could reduce seed-level variance and raise the leakage-free worst-seed floor after the RF model-family switch improved the clean-v2 best.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.142395 vs current best 0.145631; clean-v2 best remains 0.145631.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `8958f4b` with `f41326c`.
+- learning: Increasing RF leaf size worsened the seed 05 floor while leaving the mean roughly unchanged, so avoid `min_samples_leaf=12` in the current RF/weight_delta context; next prefer a different RF axis such as depth/tree count or a release-safe feature experiment rather than stronger leaf regularization.
+---
