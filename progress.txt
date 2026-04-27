@@ -113,3 +113,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `af1e5cf` with `81b4d94`.
 - learning: Removing `horse_top3_skill` did not lift the clean-v2 worst-seed floor, so avoid this single direct-horse-skill cleanup in the current HGB/weight_delta context; next prefer a different single axis such as class weighting or a coherent retained-feature cleanup that is not another direct skill removal.
 ---
+## [2026-04-27T09:53:25+0900] - iteration 5
+- mutation: raise synchronized `positive_class_weight` from `1.00` to `1.05` in both `model` and `experiment.common_hyperparameters`, leaving model family, split/window, and features unchanged.
+- hypothesis: A mild positive-class upweight may improve unordered top-3 recall and raise the worst-seed holdout floor in the clean-v2 kept context where direct jockey/trainer skill inputs were removed and `weight_delta` was added.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `d580499` with `123caaa`.
+- learning: `positive_class_weight=1.05` does not improve the clean-v2 HGB/weight_delta context despite strong early seeds; avoid this exact class-weight value in the current context and next prefer a different single axis such as a release-safe feature cleanup/addition or a materially different class-weight setting only with a new kept context.
+---
