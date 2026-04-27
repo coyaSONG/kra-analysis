@@ -77,12 +77,12 @@
     ]
   },
   "model": {
-    "kind": "et",
+    "kind": "rf",
     "positive_class_weight": 1.0,
     "params": {
-      "n_estimators": 800,
+      "n_estimators": 600,
       "max_depth": 8,
-      "min_samples_leaf": 6
+      "min_samples_leaf": 8
     }
   },
   "experiment": {
