@@ -137,3 +137,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `8b7bf9c` with `c5fea29`.
 - learning: Adding horse win-rate improved several seeds but seed 09 fell back to the clean-v2 floor, so avoid this single stored horse win-rate addition in the current HGB/weight_delta context; next try a genuinely new axis, preferably a coherent race-relative/core-card feature family or a split/window change rather than another isolated horse-history scalar.
 ---
+## [2026-04-27T14:05:25+0900] - iteration 8
+- mutation: add the release-safe same-race rating-relative core-card features (`rating_rank`, `rating_rr`) to `features`, leaving model kind, split/window, class weighting, `weight_delta`, and all other inputs unchanged.
+- hypothesis: Same-race normalized rating structure could stabilize weak seeds by giving HGB explicit within-field strength ordering beyond raw `rating`, without using odds or timing-unverified sources.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.119741 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric regressed by -0.003236, so reverted experiment commit `bbb04e4` with `493114a`.
+- learning: Rating-relative core-card additions hurt the worst-seed floor, especially leaving seed 09 at 0.119741; avoid retrying this exact `rating_rank` + `rating_rr` bundle in the current HGB/weight_delta context and next prefer a different single axis such as a split/window change or a materially different release-safe feature family.
+---
