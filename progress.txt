@@ -217,3 +217,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.025890, so reverted experiment commit `74792e4` with `a4d94f8`.
 - learning: Increasing LogReg `max_iter` to 5000 was much slower, still emitted repeated `lbfgs` convergence warnings, and worsened the worst-seed floor; avoid further pure iteration-budget increases and next prefer a different single axis such as feature scaling support only if schema-supported, class weighting in the kept LogReg context, or a coherent release-safe feature-family test.
 ---
+## [2026-04-28T04:03:38+0900] - iteration 18
+- mutation: raise synchronized LogReg `positive_class_weight` from 1.00 to 1.10 in both `model` and `experiment.common_hyperparameters`, leaving model family, `C`, `max_iter`, split/window, and features unchanged.
+- hypothesis: A stronger top-3 positive recall bias in the kept LogReg context may raise the leakage-free worst-seed holdout floor without changing release-safe feature inputs.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.165049 vs current best 0.174757; clean-v2 best remains 0.174757.
+- decision: discard; metric regressed by -0.009708, so reverted experiment commit `5c4d461` with `2618bee`.
+- learning: Upweighting positives in the kept LogReg context worsened the worst-seed floor despite preserving the T-30 feature contract; avoid retrying `positive_class_weight=1.10` here and next prefer a materially different LogReg axis such as schema-supported scaling/solver support or a coherent release-safe feature-family test.
+---
