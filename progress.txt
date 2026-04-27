@@ -233,3 +233,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.009708, so reverted experiment commit `c918bb0` with `3f5255f`.
 - learning: Removing the horse-history proxy bundle in the kept LogReg context repeated the `0.165049` floor seen in the positive-class-weight experiment, so avoid this cleanup bundle here; next prefer a different LogReg axis that addresses scaling/solver behavior if schema-supported, or a high-confidence T-30 RELEASE feature family with demonstrated coverage rather than removing more retained horse context.
 ---
+## [2026-04-28T06:53:23+0900] - iteration 20
+- mutation: add the high-coverage stored-as-of win-signal feature bundle (`horse_win_rate`, `jockey_win_rate`, `trainer_win_rate`, `jockey_recent_win_rate`) to `features`, leaving the kept LogReg model family, `C`, `max_iter`, split/window, and synchronized `positive_class_weight` unchanged.
+- hypothesis: Win-only horse/jockey/trainer strength and jockey recent form may give the kept LogReg context complementary linear signal beyond retained place-rate inputs, raising worst-seed recent-holdout stability without using odds, result, or timing-unverified sources.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.152104 vs current best 0.174757; clean-v2 best remains 0.174757.
+- decision: discard; metric regressed by -0.022653 below the clean-v2 best, so reverted experiment commit `159d7d2` with `258fc98`.
+- learning: Adding win-only rate signals substantially worsened the LogReg floor and made verify very slow with repeated `lbfgs` convergence warnings; avoid adding this win-signal bundle in the current LogReg/weight_delta context and next prefer a different single axis, especially schema-supported scaling/solver work only if it becomes config-supported or a split/window change rather than more correlated rate additions.
+---
