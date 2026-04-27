@@ -121,3 +121,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `d580499` with `123caaa`.
 - learning: `positive_class_weight=1.05` does not improve the clean-v2 HGB/weight_delta context despite strong early seeds; avoid this exact class-weight value in the current context and next prefer a different single axis such as a release-safe feature cleanup/addition or a materially different class-weight setting only with a new kept context.
 ---
+## [2026-04-27T11:17:00+0900] - iteration 6
+- mutation: remove the stored-only annual horse start-count feature (`horse_starts_y`) from `features`, leaving model kind, split/window, class weighting, `weight_delta`, and the remaining horse skill/place-rate context unchanged.
+- hypothesis: `horse_starts_y` may be a redundant/backfill-risk career-volume signal once horse place-rate and total place-rate context remain, so removing it could reduce seed-level overfit while preserving the T-30 operational contract.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `7460846` with `191ca35`.
+- learning: Removing `horse_starts_y` does not lift the clean-v2 floor and made verify unusually slow; avoid this exact single stored horse-volume cleanup in the current HGB/weight_delta context, and next prefer a genuinely new axis such as another model-family candidate only if schema-supported or a coherent release-safe feature addition with demonstrated non-null coverage.
+---
