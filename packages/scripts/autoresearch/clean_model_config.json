@@ -183,6 +183,7 @@
     "dist",
     "is_sprint",
     "is_mile",
+    "is_route",
     "is_large",
     "horse_top3_skill",
     "horse_starts_y",
