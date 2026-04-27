@@ -184,8 +184,6 @@
     "is_sprint",
     "is_mile",
     "is_large",
-    "horse_top3_skill",
-    "horse_starts_y",
     "jk_place_rate_y",
     "tr_place_rate_y"
   ],
