@@ -153,3 +153,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.003236, so reverted experiment commit `75e0340` with `f066bf8`.
 - learning: `draw_rr` did not recover the clean-v2 worst-seed floor and repeated the 0.119741 failure mode seen in rating-relative features; avoid adding isolated race-relative core-card transforms in the current HGB/weight_delta context, and next prefer a split/window change or a coherent high-coverage stored-as-of rate family rather than another single relative transform.
 ---
+## [2026-04-27T16:57:46+0900] - iteration 10
+- mutation: switch top-level `model.kind` and params from the kept HGB configuration to the schema-supported `rf_depth8_600trees` candidate, leaving split/window, synchronized `positive_class_weight`, and all features unchanged.
+- hypothesis: A bagged RandomForest candidate could reduce HGB-specific seed variance and raise the leakage-free worst-seed floor in the clean-v2 context where direct jockey/trainer skill inputs were removed and `weight_delta` was added.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.145631 vs prior clean-v2 current best 0.122977; new clean-v2 best 0.145631.
+- decision: keep; metric improved by +0.022654 over the prior valid clean-v2 best.
+- learning: The RF family is expensive but materially improves the clean-v2 worst-seed floor, so keep this model-family switch and next exploit the RF context with a cost-aware single-axis RF parameter or release-safe feature experiment rather than returning to isolated HGB race-relative feature additions.
+---
