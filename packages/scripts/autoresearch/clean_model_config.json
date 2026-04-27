@@ -81,7 +81,7 @@
     "positive_class_weight": 1.0,
     "params": {
       "max_iter": 2000,
-      "C": 0.5
+      "C": 0.75
     }
   },
   "experiment": {
