@@ -209,3 +209,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `f854243` with `f8cc798`.
 - learning: `C=0.50` does not lift the LogReg clean-v2 floor and still emits repeated `lbfgs` convergence warnings, so avoid this stronger-regularization value in the current context; next prefer a different LogReg axis such as class weighting or a coherent release-safe feature-family test rather than another small downward `C` tweak.
 ---
+## [2026-04-28T02:41:14+0900] - iteration 17
+- mutation: raise active LogReg `max_iter` from 2000 to 5000, leaving model family, `C`, split/window, synchronized `positive_class_weight`, and features unchanged.
+- hypothesis: More LogReg optimization budget may reduce `lbfgs` under-convergence in the kept linear context and improve leakage-free worst-seed holdout stability without changing release-safe feature inputs.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.148867 vs current best 0.174757; clean-v2 best remains 0.174757.
+- decision: discard; metric regressed by -0.025890, so reverted experiment commit `74792e4` with `a4d94f8`.
+- learning: Increasing LogReg `max_iter` to 5000 was much slower, still emitted repeated `lbfgs` convergence warnings, and worsened the worst-seed floor; avoid further pure iteration-budget increases and next prefer a different single axis such as feature scaling support only if schema-supported, class weighting in the kept LogReg context, or a coherent release-safe feature-family test.
+---
