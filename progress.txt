@@ -225,3 +225,11 @@ Started: 2026-04-19
 - decision: discard; metric regressed by -0.009708, so reverted experiment commit `5c4d461` with `2618bee`.
 - learning: Upweighting positives in the kept LogReg context worsened the worst-seed floor despite preserving the T-30 feature contract; avoid retrying `positive_class_weight=1.10` here and next prefer a materially different LogReg axis such as schema-supported scaling/solver support or a coherent release-safe feature-family test.
 ---
+## [2026-04-28T05:26:16+0900] - iteration 19
+- mutation: remove the stored/backfill-risk horse-history proxy feature bundle (`horse_top3_skill`, `horse_starts_y`) from `features`, leaving the kept LogReg model family, `C`, `max_iter`, split/window, synchronized `positive_class_weight`, and all other inputs unchanged.
+- hypothesis: LogReg may over-rely on stale or backfill-risk horse-history proxy signals in a linear decision boundary, so removing `horse_top3_skill` and `horse_starts_y` could improve leakage-free worst-seed holdout stability while strengthening T-30 operational compatibility.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.165049 vs current best 0.174757; clean-v2 best remains 0.174757.
+- decision: discard; metric regressed by -0.009708, so reverted experiment commit `c918bb0` with `3f5255f`.
+- learning: Removing the horse-history proxy bundle in the kept LogReg context repeated the `0.165049` floor seen in the positive-class-weight experiment, so avoid this cleanup bundle here; next prefer a different LogReg axis that addresses scaling/solver behavior if schema-supported, or a high-confidence T-30 RELEASE feature family with demonstrated coverage rather than removing more retained horse context.
+---
