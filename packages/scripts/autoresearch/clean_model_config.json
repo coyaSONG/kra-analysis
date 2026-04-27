@@ -78,7 +78,7 @@
   },
   "model": {
     "kind": "logreg",
-    "positive_class_weight": 1.0,
+    "positive_class_weight": 1.1,
     "params": {
       "max_iter": 2000,
       "C": 0.75
@@ -149,7 +149,7 @@
       ]
     },
     "common_hyperparameters": {
-      "positive_class_weight": 1.0,
+      "positive_class_weight": 1.1,
       "imputer_strategy": "median",
       "random_state_source": "evaluation_seed",
       "target_label": "unordered_top3",
