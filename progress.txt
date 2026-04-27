@@ -129,3 +129,11 @@ Started: 2026-04-19
 - decision: discard; metric tied rather than strictly improving, so reverted experiment commit `7460846` with `191ca35`.
 - learning: Removing `horse_starts_y` does not lift the clean-v2 floor and made verify unusually slow; avoid this exact single stored horse-volume cleanup in the current HGB/weight_delta context, and next prefer a genuinely new axis such as another model-family candidate only if schema-supported or a coherent release-safe feature addition with demonstrated non-null coverage.
 ---
+## [2026-04-27T12:40:52+0900] - iteration 7
+- mutation: add the operationally allowed stored-as-of horse win-rate feature (`horse_win_rate`) to `features`, leaving model kind, split/window, class weighting, `weight_delta`, and all existing place-rate/top3-skill context unchanged.
+- hypothesis: `horse_win_rate` could add a win-only, top-heavy horse-strength signal beyond retained place-rate and `horse_top3_skill` context, improving worst-seed recent-holdout stability while preserving the T-30 operational contract.
+- guard result: pass (`57 passed`).
+- metric and current best: 0.122977 vs current best 0.122977; clean-v2 best remains 0.122977.
+- decision: discard; metric tied rather than strictly improving, so reverted experiment commit `8b7bf9c` with `c5fea29`.
+- learning: Adding horse win-rate improved several seeds but seed 09 fell back to the clean-v2 floor, so avoid this single stored horse win-rate addition in the current HGB/weight_delta context; next try a genuinely new axis, preferably a coherent race-relative/core-card feature family or a split/window change rather than another isolated horse-history scalar.
+---
