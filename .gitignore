@@ -11,8 +11,10 @@
 .serena/
 
 # Generated data
-data/
-mlruns/
+/data
+/data/
+/mlruns/
+/models/
 
 # Dependencies
 node_modules/
