@@ -1,0 +1,26 @@
+feature_name,feature_group,release_bucket,cutoff_rule,model_feature_status,notes
+recent_race_count,past_stats,RELEASE,history.race_date < target.race_date and historical result materialized at or before T-30,current_model_input,Strict prior-date horse form count.
+recent_win_rate,past_stats,RELEASE,history.race_date < target.race_date and historical result materialized at or before T-30,current_model_input,Strict prior-date horse win rate.
+recent_top3_rate,past_stats,RELEASE,history.race_date < target.race_date and historical result materialized at or before T-30,current_model_input,Strict prior-date horse top3 rate.
+recent_win_count,past_stats,RELEASE,history.race_date < target.race_date and historical result materialized at or before T-30,current_model_input,Strict prior-date horse win count.
+recent_top3_count,past_stats,RELEASE,history.race_date < target.race_date and historical result materialized at or before T-30,current_model_input,Strict prior-date horse top3 count.
+weight_delta,body_weight_delta,RELEASE,API214_1 wgHr value captured at or before T-30,current_model_input,Parse signed body-weight delta from the prerace card; null with normalization flag on parse failure.
+cancelled_count,cancelled_changed_jockey,RELEASE,API9_1 or public change bulletin snapshot captured at or before T-30,current_model_input,Pre-cutoff cancellation count only.
+field_size_live,cancelled_changed_jockey,RELEASE,API9_1 or public change bulletin snapshot captured at or before T-30,current_model_input,Pre-cutoff live field size only.
+changed_jockey_flag,cancelled_changed_jockey,RELEASE,entry_change_bulletin snapshot captured at or before T-30,planned_nullable,Null until the change bulletin parser is validated; never fabricate zero from missing source data.
+training_score,training,BACKFILL_ONLY,store source snapshot at or before T-30 but do not use as release model input,backfill_only,Current coverage is insufficient for the first operational release.
+recent_training,training,BACKFILL_ONLY,store source snapshot at or before T-30 but do not use as release model input,backfill_only,Current coverage is insufficient for the first operational release.
+days_since_training,training,BACKFILL_ONLY,store source snapshot at or before T-30 but do not use as release model input,backfill_only,Current coverage is insufficient for the first operational release.
+jk_skill,jkStats,BACKFILL_ONLY,stored-as-of jockey stats only; do not use in release overlay,backfill_only,API11 coverage is currently weak and may be stale when backfilled by re-query.
+jk_qnl_rate_y,jkStats,BACKFILL_ONLY,stored-as-of jockey stats only; do not use in release overlay,backfill_only,API11 coverage is currently weak and may be stale when backfilled by re-query.
+jk_qnl_rate_t,jkStats,BACKFILL_ONLY,stored-as-of jockey stats only; do not use in release overlay,backfill_only,API11 coverage is currently weak and may be stale when backfilled by re-query.
+owner_skill,ownerStats,BACKFILL_ONLY,stored-as-of owner stats only; do not use in release overlay,backfill_only,Owner history is backfill and QA scope for this release.
+owner_win_rate,ownerStats,BACKFILL_ONLY,stored-as-of owner stats only; do not use in release overlay,backfill_only,Owner history is backfill and QA scope for this release.
+past_speed_index,sectional_speed,BACKFILL_ONLY,historical races only with history.race_date < target.race_date; current-race sectionals forbidden,backfill_only,Historical speed feature candidate for later releases.
+past_late_pace_index,sectional_speed,BACKFILL_ONLY,historical races only with history.race_date < target.race_date; current-race sectionals forbidden,backfill_only,Historical pace feature candidate for later releases.
+similar_distance_top3_rate,sectional_speed,BACKFILL_ONLY,historical races only with history.race_date < target.race_date; current-race sectionals forbidden,backfill_only,Historical similar-distance feature candidate for later releases.
+winOdds,odds,AUDIT_ONLY,collect T-60/T-30/T-10/T-5 snapshots only; never use as first-release model input,audit_only,Timing-unverified market signal.
+plcOdds,odds,AUDIT_ONLY,collect T-60/T-30/T-10/T-5 snapshots only; never use as first-release model input,audit_only,Timing-unverified market signal.
+odds_rank,odds,AUDIT_ONLY,collect T-60/T-30/T-10/T-5 snapshots only; never use as first-release model input,audit_only,Derived from timing-unverified market signal.
+winOdds_rr,odds,AUDIT_ONLY,collect T-60/T-30/T-10/T-5 snapshots only; never use as first-release model input,audit_only,Derived from timing-unverified market signal.
+plcOdds_rr,odds,AUDIT_ONLY,collect T-60/T-30/T-10/T-5 snapshots only; never use as first-release model input,audit_only,Derived from timing-unverified market signal.

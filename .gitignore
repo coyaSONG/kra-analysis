@@ -11,8 +11,9 @@
 .serena/
 
 # Generated data
-/data
-/data/
+/data/*
+!/data/contracts/
+!/data/contracts/**
 /mlruns/
 /models/
 
