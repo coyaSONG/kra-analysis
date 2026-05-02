@@ -21,7 +21,7 @@ if git ls-files | grep -E "^\.env$|^\.env\."; then
   exit 1
 fi
 
-if git ls-files | grep "^data/"; then
-  echo "data/ files committed!"
+if git ls-files | grep "^data/" | grep -v "^data/contracts/"; then
+  echo "data/ files committed (only data/contracts/ is allowed; it holds code-side schema CSVs)!"
   exit 1
 fi
