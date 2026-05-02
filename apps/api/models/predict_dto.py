@@ -51,12 +51,8 @@ class PredictResponse(BaseModel):
     predicted: list[str] = Field(
         ..., description="추정된 top-3 chulNo (score 내림차순)"
     )
-    scores: dict[str, float] = Field(
-        ..., description="모든 후보 chulNo의 score map"
-    )
-    confidence: float = Field(
-        ..., description="top-1 score (0~1)", ge=0.0, le=1.0
-    )
+    scores: dict[str, float] = Field(..., description="모든 후보 chulNo의 score map")
+    confidence: float = Field(..., description="top-1 score (0~1)", ge=0.0, le=1.0)
     reasoning: str = Field(..., description="간단한 설명 문자열")
     model_version: ModelVersionInfo
 

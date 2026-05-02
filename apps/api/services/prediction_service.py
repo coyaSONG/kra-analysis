@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import sys
 import threading
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import structlog
 
