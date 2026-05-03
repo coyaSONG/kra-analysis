@@ -174,9 +174,11 @@ class TestCollectRaceDataNewAPIs:
         await service.collect_race_data("20260315", 1, 1, AsyncMock())
         assert "horses" in saved_data
         assert len(saved_data["horses"]) == 1
-        # 실패한 신규 필드는 빈 값
-        assert saved_data.get("race_plan") == {}
-        assert saved_data.get("track") == {}
+        # 실패한 신규 필드는 정규화된 빈 값(모든 핵심 키가 None)
+        race_plan = saved_data.get("race_plan", {})
+        track = saved_data.get("track", {})
+        assert all(value is None for value in race_plan.values())
+        assert all(value is None for value in track.values())
 
 
 class TestCollectRaceOdds:

@@ -408,53 +408,16 @@ class TestGetHorsePastPerformancesNoneDb:
 
 
 # ===================================================================
-# 6. services/collection_preprocessing.py — lines 45-46, 52-53, 59-60, 73-75
+# 6. services/collection_preprocessing.py — rule-engine driven shape
 # ===================================================================
 
 
 class TestPreprocessDataEdgeCases:
-    def test_weight_ratio_value_error(self):
-        # Need a valid horse for avg_weight > 0, and one with invalid weight
-        horses = [
-            {"win_odds": 5.0, "weight": 50, "rating": 80},
-            {"win_odds": 3.0, "weight": "invalid", "rating": 80},
-        ]
-        result = preprocess_data({"horses": horses})
-        assert result["horses"][1]["weight_ratio"] == 0
-
-    def test_rating_ratio_value_error(self):
-        horses = [
-            {"win_odds": 5.0, "weight": 50, "rating": 80},
-            {"win_odds": 3.0, "weight": 50, "rating": "invalid"},
-        ]
-        result = preprocess_data({"horses": horses})
-        assert result["horses"][1]["rating_ratio"] == 0
-
-    def test_odds_ratio_value_error(self):
-        # The odds_ratio except branch requires float(horse.get("win_odds", 0))
-        # to raise. But win_odds already passed the float() filter above.
-        # We need an object that passes float() the first time (filtering)
-        # but fails the second time (ratio computation).
-        class TrickyValue:
-            def __init__(self):
-                self._call_count = 0
-
-            def __float__(self):
-                self._call_count += 1
-                if self._call_count > 2:
-                    raise ValueError("nope")
-                return 5.0
-
-            def __gt__(self, other):
-                return True
-
-        horses = [
-            {"win_odds": 3.0, "weight": 50, "rating": 80},
-            {"win_odds": TrickyValue(), "weight": 50, "rating": 80},
-        ]
-        result = preprocess_data({"horses": horses})
-        # The second horse should have odds_ratio set (possibly 0 or calculated)
-        assert "odds_ratio" in result["horses"][1]
+    def test_preprocess_attaches_rule_schema_version_audit(self):
+        result = preprocess_data({"horses": []})
+        assert result["preprocessing_audit"]["rule_schema_version"].startswith(
+            "prerace-entry-preprocessing-rules-v1"
+        )
 
     def test_preprocess_propagates_unexpected_error(self):
         with pytest.raises((TypeError, AttributeError)):

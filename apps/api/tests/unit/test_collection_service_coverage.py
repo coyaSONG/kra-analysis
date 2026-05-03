@@ -202,8 +202,8 @@ class TestCollectRaceDataFailurePaths:
         service = CollectionService(mock_kra)
         result = await service.collect_race_data("20240720", 1, 1, db_session)
 
-        # The horse should NOT have training data (unmatched)
-        assert "training" not in result["horses"][0]
+        # Unmatched training data leaves the canonical training block empty.
+        assert result["horses"][0].get("training") == {}
 
 
 # =====================================================================

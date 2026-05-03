@@ -47,6 +47,7 @@ from services.race_processing_workflow import (
     RaceKey,
     RaceProcessingWorkflow,
     build_race_processing_workflow,
+    split_payload_for_persistence,
 )
 from utils.field_mapping import convert_api_to_internal
 
@@ -437,45 +438,48 @@ class CollectionService:
     async def _save_race_data(self, data: dict[str, Any], db: AsyncSession) -> None:
         """경주 데이터 데이터베이스 저장"""
         try:
-            # Generate race_id
-            race_id = f"{data['date']}_{data['meet']}_{data['race_number']}"
+            basic_data, raw_data = split_payload_for_persistence(data)
+            race_id = (
+                f"{basic_data['date']}_{basic_data['meet']}_{basic_data['race_number']}"
+            )
 
-            # 기존 데이터 확인
             existing = await db.execute(
                 select(Race).where(
                     and_(
-                        Race.date == data["date"],
-                        Race.meet == data["meet"],
-                        Race.race_number == data["race_number"],
+                        Race.date == basic_data["date"],
+                        Race.meet == basic_data["meet"],
+                        Race.race_number == basic_data["race_number"],
                     )
                 )
             )
             race = existing.scalar_one_or_none()
 
             if race:
-                # 업데이트
-                race.basic_data = data
+                race.basic_data = basic_data
+                if raw_data is not None:
+                    race.raw_data = raw_data
                 race.updated_at = _utcnow()
                 race.collection_status = DataStatus.COLLECTED
                 race.collected_at = _utcnow()
                 race.status = DataStatus.COLLECTED
-                # keep compatibility columns in sync
-                race.race_date = data["date"]
-                race.race_no = data["race_number"]
+                race.race_date = basic_data["date"]
+                race.race_no = basic_data["race_number"]
             else:
-                # 신규 생성
-                race = Race(
-                    race_id=race_id,
-                    date=data["date"],
-                    race_date=data["date"],
-                    meet=data["meet"],
-                    race_number=data["race_number"],
-                    race_no=data["race_number"],
-                    basic_data=data,
-                    status=DataStatus.COLLECTED,
-                    collection_status=DataStatus.COLLECTED,
-                    collected_at=_utcnow(),
-                )
+                race_kwargs: dict[str, Any] = {
+                    "race_id": race_id,
+                    "date": basic_data["date"],
+                    "race_date": basic_data["date"],
+                    "meet": basic_data["meet"],
+                    "race_number": basic_data["race_number"],
+                    "race_no": basic_data["race_number"],
+                    "basic_data": basic_data,
+                    "status": DataStatus.COLLECTED,
+                    "collection_status": DataStatus.COLLECTED,
+                    "collected_at": _utcnow(),
+                }
+                if raw_data is not None:
+                    race_kwargs["raw_data"] = raw_data
+                race = Race(**race_kwargs)
                 db.add(race)
 
             await db.commit()

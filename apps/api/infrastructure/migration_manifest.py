@@ -11,6 +11,7 @@ ACTIVE_MIGRATIONS = [
     "004_add_job_shadow_fields.sql",
     "005_add_usage_events.sql",
     "006_canonical_job_status_backfill.sql",
+    "007_runtime_db_hardening.sql",
 ]
 
 
@@ -31,3 +32,8 @@ def get_required_migration_head() -> str | None:
     if not ACTIVE_MIGRATIONS:
         return None
     return ACTIVE_MIGRATIONS[-1]
+
+
+def get_legacy_conflict_tables() -> list[str]:
+    """Return table names whose presence indicates pre-unified legacy state."""
+    return []

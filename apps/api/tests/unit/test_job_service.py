@@ -10,8 +10,8 @@ from services.job_service import JobService
 
 
 @pytest.mark.unit
-def test_required_migration_head_tracks_canonical_job_status_backfill():
-    assert get_required_migration_head() == "006_canonical_job_status_backfill.sql"
+def test_required_migration_head_tracks_runtime_db_hardening():
+    assert get_required_migration_head() == "007_runtime_db_hardening.sql"
 
 
 @pytest.mark.unit

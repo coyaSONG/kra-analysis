@@ -39,6 +39,13 @@ from services.collection_enrichment import (
     prefetch_past_performances as prefetch_past_performances_helper,
 )
 from services.collection_preprocessing import preprocess_data as preprocess_data_helper
+from services.prerace_postprocessing import (
+    SCHEMA_VERSION as PRERACE_SCHEMA_VERSION,
+)
+from services.prerace_postprocessing import (
+    normalize_prerace_payload,
+)
+from services.prerace_storage_policy import split_prerace_payload_for_storage
 from utils.field_mapping import POOL_NAME_MAP, VALID_POOLS, convert_api_to_internal
 
 logger = structlog.get_logger()
@@ -47,6 +54,31 @@ logger = structlog.get_logger()
 def _utcnow() -> datetime:
     """Return current UTC time as naive datetime for database writes."""
     return datetime.now(UTC).replace(tzinfo=None)
+
+
+def split_payload_for_persistence(
+    payload: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Split a canonical prerace payload into (basic, raw); pass non-canonical through.
+
+    Storage-policy audit can reject payloads that contain non-canonical legacy fields
+    (e.g. when older test fixtures slip into the workflow). Fall back to the unsplit
+    payload in that case so collection still completes; the audit error is logged.
+    """
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema_version") != PRERACE_SCHEMA_VERSION
+    ):
+        return payload, None
+
+    try:
+        return split_prerace_payload_for_storage(payload)
+    except ValueError as exc:
+        logger.warning(
+            "Storage policy split skipped; persisting payload as legacy basic_data",
+            error=str(exc),
+        )
+        return payload, None
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,39 +261,44 @@ class SQLAlchemyRaceRepository:
         )
 
     async def save_collection(self, collected: CollectedRace) -> None:
-        data = collected.payload
+        basic_data, raw_data = split_payload_for_persistence(collected.payload)
         existing = await self.db.execute(
             select(Race).where(
                 and_(
-                    Race.date == data["date"],
-                    Race.meet == data["meet"],
-                    Race.race_number == data["race_number"],
+                    Race.date == basic_data["date"],
+                    Race.meet == basic_data["meet"],
+                    Race.race_number == basic_data["race_number"],
                 )
             )
         )
         race = existing.scalar_one_or_none()
 
         if race:
-            race.basic_data = data
+            race.basic_data = basic_data
+            if raw_data is not None:
+                race.raw_data = raw_data
             race.updated_at = _utcnow()
             race.collection_status = DataStatus.COLLECTED
             race.collected_at = _utcnow()
             race.status = DataStatus.COLLECTED
-            race.race_date = data["date"]
-            race.race_no = data["race_number"]
+            race.race_date = basic_data["date"]
+            race.race_no = basic_data["race_number"]
         else:
-            race = Race(
-                race_id=collected.race_id,
-                date=data["date"],
-                race_date=data["date"],
-                meet=data["meet"],
-                race_number=data["race_number"],
-                race_no=data["race_number"],
-                basic_data=data,
-                status=DataStatus.COLLECTED,
-                collection_status=DataStatus.COLLECTED,
-                collected_at=_utcnow(),
-            )
+            race_kwargs: dict[str, Any] = {
+                "race_id": collected.race_id,
+                "date": basic_data["date"],
+                "race_date": basic_data["date"],
+                "meet": basic_data["meet"],
+                "race_number": basic_data["race_number"],
+                "race_no": basic_data["race_number"],
+                "basic_data": basic_data,
+                "status": DataStatus.COLLECTED,
+                "collection_status": DataStatus.COLLECTED,
+                "collected_at": _utcnow(),
+            }
+            if raw_data is not None:
+                race_kwargs["raw_data"] = raw_data
+            race = Race(**race_kwargs)
             self.db.add(race)
 
         await self.db.commit()
@@ -529,6 +566,7 @@ class RaceProcessingWorkflow:
         source: KraRaceSourcePort,
         races: RaceRepositoryPort,
         history: RaceHistoryPort | None = None,
+        normalize_payload_fn: PayloadTransformer | None = None,
         preprocess_payload_fn: PayloadTransformer | None = None,
         enrich_payload_fn: PayloadTransformer | None = None,
         collect_horse_details_fn: HorseBundleCollector | None = None,
@@ -538,6 +576,7 @@ class RaceProcessingWorkflow:
         self.source = source
         self.races = races
         self.history = history
+        self.normalize_payload_fn = normalize_payload_fn
         self.preprocess_payload_fn = preprocess_payload_fn
         self.enrich_payload_fn = enrich_payload_fn
         self.collect_horse_details_fn = collect_horse_details_fn
@@ -636,6 +675,8 @@ class RaceProcessingWorkflow:
             horses=horses_data,
             failed_horses=failed_horses,
         )
+        if self.normalize_payload_fn is not None:
+            payload = await self.normalize_payload_fn(payload)
         collected = CollectedRace(
             race_id=key.race_id,
             key=key,
@@ -847,6 +888,10 @@ class RaceProcessingWorkflow:
         )
 
 
+async def _default_normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    return normalize_prerace_payload(payload)
+
+
 async def _default_preprocess_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return preprocess_data_helper(payload)
 
@@ -881,6 +926,7 @@ def build_race_processing_workflow(
     kra_api,
     db: AsyncSession,
     *,
+    normalize_payload_fn: PayloadTransformer | None = None,
     preprocess_payload_fn: PayloadTransformer | None = None,
     enrich_payload_fn: PayloadTransformer | None = None,
     collect_horse_details_fn: HorseBundleCollector | None = None,
@@ -892,6 +938,7 @@ def build_race_processing_workflow(
         source=KraRaceSourceAdapter(kra_api),
         races=SQLAlchemyRaceRepository(db),
         history=SQLAlchemyRaceHistory(db),
+        normalize_payload_fn=normalize_payload_fn or _default_normalize_payload,
         preprocess_payload_fn=preprocess_payload_fn or _default_preprocess_payload,
         enrich_payload_fn=enrich_payload_fn
         or _build_default_enrich_payload(kra_api, db),

@@ -410,49 +410,21 @@ class TestCollectionEnrichmentTrainerException:
 
 
 # ---------------------------------------------------------------------------
-# 11. services/collection_preprocessing.py  lines 59-60
+# 11. services/collection_preprocessing.py — rule-engine driven shape
 # ---------------------------------------------------------------------------
 class TestCollectionPreprocessingOddsRatio:
-    def test_preprocess_data_invalid_win_odds_for_odds_ratio(self):
-        # horse has valid win_odds for filtering but non-numeric for ratio calc
+    def test_preprocess_data_excludes_horses_without_core_identifiers(self):
+        """Horses missing chul_no/hr_no/etc. are flagged core_missing and excluded."""
         raw_data = {
             "horses": [
                 {"win_odds": 5.0, "weight": 500, "rating": 80},
                 {"win_odds": 3.0, "weight": 480, "rating": 75},
             ]
         }
-        # First verify normal case works
         result = preprocess_data(raw_data)
-        assert len(result["horses"]) == 2
-
-        # Now create a horse that passes the float(win_odds) > 0 filter
-        # but whose win_odds later causes ValueError in odds_ratio calc.
-        # This requires a custom object that floats once but fails later.
-        class BadOdds:
-            """Returns 5.0 on first float() call, raises on second."""
-
-            def __init__(self):
-                self._calls = 0
-
-            def __float__(self):
-                self._calls += 1
-                if self._calls <= 1:
-                    return 5.0
-                raise ValueError("bad odds")
-
-            def __gt__(self, other):
-                return True
-
-        raw_data2 = {
-            "horses": [
-                {"win_odds": BadOdds(), "weight": 500, "rating": 80},
-                {"win_odds": 3.0, "weight": 480, "rating": 75},
-            ]
-        }
-        result2 = preprocess_data(raw_data2)
-        # The horse with BadOdds should have odds_ratio = 0 due to ValueError
-        bad_horse = result2["horses"][0]
-        assert bad_horse.get("odds_ratio") == 0
+        assert result["horses"] == []
+        assert result["excluded_horses"] == 2
+        assert result["preprocessing_audit"]["reason_counts"].get("core_missing") == 2
 
 
 # ---------------------------------------------------------------------------

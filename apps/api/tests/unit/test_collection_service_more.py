@@ -17,16 +17,20 @@ async def test_preprocess_data_various_values():
     svc = CollectionService(DummyKRA())
     raw = {
         "horses": [
-            {"win_odds": "0", "weight": "500", "rating": "80"},  # filtered out
+            {"win_odds": "0", "weight": "500", "rating": "80"},
             {"win_odds": "5.5", "weight": "510", "rating": "82"},
-            {"win_odds": "abc", "weight": "bad", "rating": None},  # invalids handled
+            {"win_odds": "abc", "weight": "bad", "rating": None},
         ]
     }
     out = await svc._preprocess_data(raw)
     assert "preprocessing_timestamp" in out
-    # At least the valid entry remains active and gains ratios keys
-    active = [h for h in out["horses"] if float(h.get("win_odds", 0)) > 0]
-    assert any("weight_ratio" in h for h in active)
+    audit = out["preprocessing_audit"]
+    assert audit["rule_schema_version"].startswith(
+        "prerace-entry-preprocessing-rules-v1"
+    )
+    # All entries lack core identifiers (chul_no/hr_no/etc.) so they are excluded.
+    assert out["horses"] == []
+    assert out["excluded_horses"] == 3
 
 
 @pytest.mark.asyncio

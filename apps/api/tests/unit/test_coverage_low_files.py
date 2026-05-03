@@ -54,7 +54,7 @@ class TestMigrationManifest:
 
         head = get_required_migration_head()
         assert head is not None
-        assert head == "005_add_usage_events.sql"
+        assert head == "007_runtime_db_hardening.sql"
 
     def test_get_required_migration_head_returns_none_when_empty(self, monkeypatch):
         import infrastructure.migration_manifest as mm

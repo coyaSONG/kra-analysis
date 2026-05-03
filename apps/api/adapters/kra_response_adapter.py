@@ -10,6 +10,15 @@ import structlog
 logger = structlog.get_logger()
 
 
+_MEET_NAME_TO_CODE: dict[str, int] = {
+    "서울": 1,
+    "제주": 2,
+    "부산": 3,
+    "부경": 3,
+    "부산경남": 3,
+}
+
+
 class KRAResponseAdapter:
     """KRA API 응답을 정규화된 형태로 변환하는 어댑터"""
 
@@ -253,3 +262,156 @@ class KRAResponseAdapter:
             return int(float(value))  # "12.0" 같은 경우를 위해 float를 거침
         except (ValueError, TypeError):
             return 0
+
+    @staticmethod
+    def _safe_int_or_none(value: Any) -> int | None:
+        """Best-effort integer cast that returns None on failure or empty input."""
+        if value in (None, ""):
+            return None
+        try:
+            return int(float(value))
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _normalize_string(value: Any) -> str | None:
+        """Trimmed string, or None when empty/None."""
+        if value is None:
+            return None
+        normalized = str(value).strip()
+        return normalized or None
+
+    @staticmethod
+    def _normalize_identifier(value: Any) -> str | None:
+        """String identifier with trailing ``.0`` stripped (e.g. ``"123.0"`` → ``"123"``)."""
+        normalized = KRAResponseAdapter._normalize_string(value)
+        if normalized is None:
+            return None
+        if normalized.endswith(".0"):
+            stripped = normalized[:-2]
+            return stripped or None
+        return normalized
+
+    @staticmethod
+    def _normalize_race_date(value: Any) -> str | None:
+        """8-digit YYYYMMDD string when value yields exactly 8 digits, else None."""
+        if value is None:
+            return None
+        digits = "".join(ch for ch in str(value).strip() if ch.isdigit())
+        return digits if len(digits) == 8 else None
+
+    @staticmethod
+    def _normalize_meet(value: Any) -> int | None:
+        """Meet code (1: 서울, 2: 제주, 3: 부산/부경) from int or Korean name."""
+        if value in (None, ""):
+            return None
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value if value > 0 else None
+        text = str(value).strip()
+        if not text:
+            return None
+        if text in _MEET_NAME_TO_CODE:
+            return _MEET_NAME_TO_CODE[text]
+        try:
+            parsed = int(float(text))
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed > 0 else None
+
+    @staticmethod
+    def extract_race_metadata(api_response: dict[str, Any]) -> dict[str, Any]:
+        """Extract ``race_date``, ``race_no``, ``meet`` from the first response item."""
+        item = KRAResponseAdapter.extract_single_item(api_response)
+        if not isinstance(item, dict):
+            return {}
+        race_date = KRAResponseAdapter._normalize_race_date(
+            item.get("rcDate") or item.get("race_date")
+        )
+        race_no = KRAResponseAdapter._safe_int_or_none(
+            item.get("rcNo") or item.get("race_no")
+        )
+        meet = KRAResponseAdapter._normalize_meet(item.get("meet"))
+        metadata: dict[str, Any] = {}
+        if race_date is not None:
+            metadata["race_date"] = race_date
+        if race_no is not None:
+            metadata["race_no"] = race_no
+        if meet is not None:
+            metadata["meet"] = meet
+        return metadata
+
+    @staticmethod
+    def extract_race_entries(api_response: dict[str, Any]) -> list[dict[str, Any]]:
+        """Return horse entries with snake_case fields, sorted by chul_no ascending."""
+        from utils.field_mapping import convert_api_to_internal
+
+        entries = [
+            convert_api_to_internal(item)
+            for item in KRAResponseAdapter.extract_items(api_response)
+            if isinstance(item, dict)
+        ]
+        return sorted(
+            entries,
+            key=lambda entry: (
+                entry.get("chul_no") is None,
+                KRAResponseAdapter._safe_int_or_none(entry.get("chul_no")) or 0,
+            ),
+        )
+
+    @staticmethod
+    def select_matching_race_items(
+        api_response: dict[str, Any],
+        *,
+        race_no: int | None,
+        race_date: str | None = None,
+        meet: int | str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Filter response items matching the given race coordinates."""
+        target_race_no = KRAResponseAdapter._safe_int_or_none(race_no)
+        target_race_date = (
+            KRAResponseAdapter._normalize_race_date(race_date)
+            if race_date is not None
+            else None
+        )
+        target_meet = (
+            KRAResponseAdapter._normalize_meet(meet) if meet is not None else None
+        )
+
+        matches: list[dict[str, Any]] = []
+        for item in KRAResponseAdapter.extract_items(api_response):
+            if not isinstance(item, dict):
+                continue
+            if target_race_no is not None:
+                item_race_no = KRAResponseAdapter._safe_int_or_none(
+                    item.get("rcNo") or item.get("race_no")
+                )
+                if item_race_no != target_race_no:
+                    continue
+            if target_race_date is not None:
+                item_date = KRAResponseAdapter._normalize_race_date(
+                    item.get("rcDate") or item.get("race_date")
+                )
+                if item_date != target_race_date:
+                    continue
+            if target_meet is not None:
+                item_meet = KRAResponseAdapter._normalize_meet(item.get("meet"))
+                if item_meet != target_meet:
+                    continue
+            matches.append(item)
+        return matches
+
+    @staticmethod
+    def select_matching_race_item(
+        api_response: dict[str, Any],
+        *,
+        race_no: int | None,
+        race_date: str | None = None,
+        meet: int | str | None = None,
+    ) -> dict[str, Any] | None:
+        """Return the first item matching the given race coordinates, or None."""
+        matches = KRAResponseAdapter.select_matching_race_items(
+            api_response, race_no=race_no, race_date=race_date, meet=meet
+        )
+        return matches[0] if matches else None

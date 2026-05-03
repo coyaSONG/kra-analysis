@@ -1,75 +1,119 @@
-"""Collection preprocessing helpers."""
+"""Collection preprocessing helpers backed by the prereace rule engine."""
 
+from __future__ import annotations
+
+from collections import Counter
 from datetime import UTC, datetime
 from typing import Any
 
-import pandas as pd
 import structlog
+
+from utils.prerace_entry_normalizer import normalize_prerace_horse_entry
 
 logger = structlog.get_logger()
 
+RULE_SCHEMA_VERSION = "prerace-entry-preprocessing-rules-v1"
+
+_OPTIONAL_HORSE_FIELDS: tuple[str, ...] = ("ilsu", "hr_tool")
+
 
 def preprocess_data(raw_data: dict[str, Any]) -> dict[str, Any]:
-    """Apply preprocessing rules to collected race data."""
+    """Apply rule-engine-based preprocessing to collected race data."""
+    horses_in = raw_data.get("horses", [])
+
+    normalized_horses = [_normalize_horse(horse) for horse in horses_in]
+    chul_no_counts: Counter[int] = Counter(
+        horse["chul_no"]
+        for horse in normalized_horses
+        if horse.get("chul_no") is not None
+    )
+
+    active_horses, excluded_entries = _partition_horses(
+        normalized_horses, chul_no_counts
+    )
+    audit = _build_preprocessing_audit(excluded_entries)
+
+    return {
+        **raw_data,
+        "horses": active_horses,
+        "excluded_horses": len(excluded_entries),
+        "preprocessing_timestamp": datetime.now(UTC).isoformat(),
+        "preprocessing_audit": audit,
+    }
+
+
+def _normalize_horse(horse: Any) -> dict[str, Any]:
+    if not isinstance(horse, dict):
+        return {"normalization_flags": ["core_missing"]}
     try:
-        horses = raw_data.get("horses", [])
-
-        # Remove scratched horses with invalid/zero odds.
-        active_horses = []
-        for horse in horses:
-            try:
-                win_odds = float(horse.get("win_odds", 0))
-                if win_odds > 0:
-                    active_horses.append(horse)
-            except (ValueError, TypeError):
-                # Skip horses with invalid win_odds
-                pass
-
-        # Aggregate baseline statistics for active horses.
-        if active_horses:
-            df = pd.DataFrame(active_horses)
-            for col in ["weight", "rating", "win_odds"]:
-                if col in df:
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
-
-            avg_weight = df["weight"].mean() if "weight" in df else 0
-            avg_rating = df["rating"].mean() if "rating" in df else 0
-            avg_win_odds = df["win_odds"].mean() if "win_odds" in df else 0
-
-            for horse in active_horses:
-                if avg_weight > 0:
-                    try:
-                        horse["weight_ratio"] = (
-                            float(horse.get("weight", 0)) / avg_weight
-                        )
-                    except (ValueError, TypeError):
-                        horse["weight_ratio"] = 0
-                if avg_rating > 0:
-                    try:
-                        horse["rating_ratio"] = (
-                            float(horse.get("rating", 0)) / avg_rating
-                        )
-                    except (ValueError, TypeError):
-                        horse["rating_ratio"] = 0
-                if avg_win_odds > 0:
-                    try:
-                        horse["odds_ratio"] = (
-                            float(horse.get("win_odds", 0)) / avg_win_odds
-                        )
-                    except (ValueError, TypeError):
-                        horse["odds_ratio"] = 0
-
-        return {
-            **raw_data,
-            "horses": active_horses,
-            "excluded_horses": len(horses) - len(active_horses),
-            "preprocessing_timestamp": datetime.now(UTC).isoformat(),
-            "statistics": {
-                "avg_weight": avg_weight if "avg_weight" in locals() else 0,
-                "avg_rating": avg_rating if "avg_rating" in locals() else 0,
-                "avg_win_odds": avg_win_odds if "avg_win_odds" in locals() else 0,
-            },
-        }
+        return normalize_prerace_horse_entry(horse)
     except Exception as exc:
-        logger.error("Preprocessing logic failed", error=str(exc))
-        raise
+        logger.warning("Horse normalization failed", error=str(exc))
+        return {"normalization_flags": ["core_missing"]}
+
+
+def _partition_horses(
+    normalized_horses: list[dict[str, Any]],
+    chul_no_counts: Counter[int],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    active: list[dict[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+
+    for horse in normalized_horses:
+        flags = list(horse.get("normalization_flags", []))
+        reasons = _exclusion_reasons(horse, flags, chul_no_counts)
+
+        body = _shape_horse_for_output(horse, flags)
+
+        if reasons:
+            excluded.append(
+                {
+                    "hr_no": horse.get("hr_no"),
+                    "chul_no": horse.get("chul_no"),
+                    "reasons": reasons,
+                }
+            )
+        else:
+            active.append(body)
+
+    return active, excluded
+
+
+def _exclusion_reasons(
+    horse: dict[str, Any],
+    flags: list[str],
+    chul_no_counts: Counter[int],
+) -> list[str]:
+    reasons: list[str] = []
+    chul_no = horse.get("chul_no")
+    if isinstance(chul_no, int) and chul_no_counts.get(chul_no, 0) > 1:
+        reasons.append("chul_no_duplicate")
+    if "age_invalid" in flags:
+        reasons.append("age_invalid")
+    if "wg_budam_outlier" in flags:
+        reasons.append("wg_budam_outlier")
+    if not reasons and "core_missing" in flags:
+        reasons.append("core_missing")
+    return reasons
+
+
+def _shape_horse_for_output(horse: dict[str, Any], flags: list[str]) -> dict[str, Any]:
+    body = {key: value for key, value in horse.items() if key != "normalization_flags"}
+    for field in _OPTIONAL_HORSE_FIELDS:
+        body.setdefault(field, None)
+    body["preprocessing"] = {"flags": flags}
+    return body
+
+
+def _build_preprocessing_audit(
+    excluded_entries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    reason_counts: Counter[str] = Counter()
+    for entry in excluded_entries:
+        reason_counts.update(entry["reasons"])
+
+    return {
+        "rule_schema_version": RULE_SCHEMA_VERSION,
+        "excluded_entries": excluded_entries,
+        "reason_counts": dict(reason_counts),
+    }

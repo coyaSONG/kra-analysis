@@ -288,67 +288,35 @@ class TestCollectionService:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_preprocess_data_filtering(self, collection_service):
-        """Test data preprocessing with horse filtering"""
-        # Test data with mixed win_odds values
+        """Horses missing core identifiers are excluded with `core_missing` reason."""
         raw_data = {
             "horses": [
                 {"hrNo": "001", "win_odds": "5.5", "weight": "500", "rating": "85"},
-                {
-                    "hrNo": "002",
-                    "win_odds": "0",
-                    "weight": "480",
-                    "rating": "82",
-                },  # Excluded
+                {"hrNo": "002", "win_odds": "0", "weight": "480", "rating": "82"},
                 {"hrNo": "003", "win_odds": "10.0", "weight": "490", "rating": "80"},
-                {
-                    "hrNo": "004",
-                    "win_odds": None,
-                    "weight": "485",
-                    "rating": "81",
-                },  # Excluded
-                {
-                    "hrNo": "005",
-                    "win_odds": "invalid",
-                    "weight": "495",
-                    "rating": "83",
-                },  # Excluded
             ]
         }
-
-        # Execute
-        result = await collection_service._preprocess_data(raw_data)
-
-        # Assert
-        assert len(result["horses"]) == 2  # Only horses with valid win_odds > 0
-        assert result["excluded_horses"] == 3
-        assert all(float(h.get("win_odds", 0)) > 0 for h in result["horses"])
-
-        # Check calculated statistics
-        assert "statistics" in result
-        stats = result["statistics"]
-        assert stats["avg_weight"] > 0
-        assert stats["avg_rating"] > 0
-        assert stats["avg_win_odds"] > 0
-
-        # Check ratios calculated for active horses
-        for horse in result["horses"]:
-            assert "weight_ratio" in horse
-            assert "rating_ratio" in horse
-            assert "odds_ratio" in horse
-
-    @pytest.mark.unit
-    @pytest.mark.asyncio
-    async def test_preprocess_data_empty_horses(self, collection_service):
-        """Test preprocessing with no horses"""
-        raw_data = {"horses": []}
 
         result = await collection_service._preprocess_data(raw_data)
 
         assert result["horses"] == []
+        assert result["excluded_horses"] == 3
+        audit = result["preprocessing_audit"]
+        assert audit["rule_schema_version"].startswith(
+            "prerace-entry-preprocessing-rules-v1"
+        )
+        assert audit["reason_counts"].get("core_missing") == 3
+
+    @pytest.mark.unit
+    @pytest.mark.asyncio
+    async def test_preprocess_data_empty_horses(self, collection_service):
+        """Empty input yields empty active horses with rule-versioned audit."""
+        result = await collection_service._preprocess_data({"horses": []})
+
+        assert result["horses"] == []
         assert result["excluded_horses"] == 0
-        assert result["statistics"]["avg_weight"] == 0
-        assert result["statistics"]["avg_rating"] == 0
-        assert result["statistics"]["avg_win_odds"] == 0
+        assert result["preprocessing_audit"]["excluded_entries"] == []
+        assert result["preprocessing_audit"]["reason_counts"] == {}
 
     @pytest.mark.unit
     @pytest.mark.asyncio
