@@ -12,6 +12,8 @@ from services.prerace_storage_policy import (
     split_prerace_payload_for_storage,
 )
 
+pytestmark = pytest.mark.unit
+
 
 def _make_race_info(items):
     item_list = items if isinstance(items, list) else [items]

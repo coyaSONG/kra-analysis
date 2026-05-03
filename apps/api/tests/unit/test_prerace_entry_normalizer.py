@@ -3,10 +3,14 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import pytest
+
 from utils.prerace_entry_normalizer import (
     RULE_TABLE_FIELD_PATHS,
     normalize_prerace_horse_entry,
 )
+
+pytestmark = pytest.mark.unit
 
 
 def test_rule_table_field_paths_match_normalizer_coverage():
