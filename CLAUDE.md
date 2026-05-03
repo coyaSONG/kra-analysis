@@ -3,19 +3,23 @@
 Claude Code 작업 시 필수 지침입니다.
 
 ## 프로젝트 개요
+
 한국마사회(KRA) 경마 데이터 분석으로 삼복연승(1-3위) 예측 AI 시스템 개발
 
 ## 핵심 원칙
 
 ### 1. 프롬프트 작성
+
 - XML 태그 구조화, Chain of Thought, Few-shot 예시 사용
 
 ### 2. 데이터 처리
+
 - `win_odds=0` → 기권/제외마 (필터링 필수)
 - enriched 데이터 우선 사용
 - 상세 구조: `docs/enriched-data-structure.md`
 
 ### 3. 파일 관리
+
 - **절대 삭제 금지**: .env, data/, KRA_PUBLIC_API_GUIDE.md
 - **Git 제외**: data/ 폴더 (로컬 전용)
 
@@ -69,6 +73,7 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 ```
 
 ## 현재 상태
+
 - 목표: 70% 이상 적중률
 - v5 재귀 개선 시스템 구현 완료 (2025-06-22)
   - 프롬프트 파싱 시스템 (XML 태그 기반)
@@ -81,6 +86,7 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
     - 토큰 최적화 - 효율적인 프롬프트 압축
 
 ## 참조 문서
+
 - 프로젝트 상세: `docs/project-overview.md`
 - API 가이드: `docs/KRA_PUBLIC_API_GUIDE.md` (또는 프로젝트 내 검색)
 - Git 규칙: `docs/git-commit-convention.md`
@@ -88,12 +94,12 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - v5 시스템: `packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py`
 
 ## 중요 규칙
+
 - Python 실행: 항상 `python3` 사용
 - 새 문서 생성 전 기존 문서 확인 필수
 - 중복 내용 생성 금지
 - Git 커밋 시 Claude 워터마크 제거 (Co-Authored-By 등)
 
-<!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
 **KRA Analysis**
@@ -110,22 +116,25 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - **Operational safety**: Redis 장애, migration drift, background job 유실 가능성을 고려해야 한다 — 플랫폼 안정화가 현재 최우선 과제이기 때문이다
 - **Documentation truthfulness**: 문서가 실제 코드와 어긋나면 안 된다 — 신규 기여자가 잘못된 구조를 학습하는 비용이 이미 발생하고 있기 때문이다
 - **Version control**: 계획 문서는 git에 추적한다 — 현재 저장소 관례와 세션 복원성을 유지하기 위해서다
-<!-- GSD:project-end -->
 
-<!-- GSD:stack-start source:codebase/STACK.md -->
 ## Technology Stack
 
 ## Languages
+
 - Python 3.13 - API runtime and most domain logic live in `apps/api/**/*.py`, with offline evaluation and prompt-improvement workflows in `packages/scripts/**/*.py`.
 - JavaScript / Node.js - Workspace orchestration and one utility fetcher live in `package.json`, `apps/api/package.json`, and `packages/scripts/evaluation/fetch_and_save_results.js`.
 - YAML / JSON / TOML - Build, CI, linting, and dependency configuration live in `turbo.json`, `pnpm-workspace.yaml`, `.github/workflows/ci.yml`, `.github/workflows/codeql.yml`, `apps/api/pyproject.toml`, and `packages/scripts/pyproject.toml`.
+
 ## Runtime
+
 - Python 3.13 is the declared baseline in `.python-version`, `apps/api/pyproject.toml`, `packages/scripts/pyproject.toml`, and `apps/api/Dockerfile`.
 - Node.js 22 is the explicit CI/runtime baseline for workspace tooling in `.github/workflows/ci.yml`.
 - `pnpm` 9.0.0 manages the monorepo workspace from `package.json`.
 - `uv` manages Python dependency resolution and sync for `apps/api` and `packages/scripts` via `uv.lock`, `apps/api/pyproject.toml`, and `packages/scripts/pyproject.toml`.
 - Lockfile: present in `pnpm-lock.yaml` and `uv.lock`.
+
 ## Frameworks
+
 - FastAPI 0.118.0 - HTTP API framework used by `apps/api/main_v2.py` and the routers under `apps/api/routers/`.
 - Uvicorn 0.37.0 - ASGI server used in `apps/api/main_v2.py`, `apps/api/package.json`, and `apps/api/Dockerfile`.
 - Pydantic 2.11.9 + `pydantic-settings` 2.11.0 - configuration and DTO validation in `apps/api/config.py` and model modules under `apps/api/models/`.
@@ -136,7 +145,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Mypy - Python type-checking configured in `apps/api/pyproject.toml`.
 - ESLint + Prettier - Node/workspace formatting rules live in `.eslintrc.json`, `.prettierrc`, and `packages/eslint-config/package.json`.
 - Docker - containerized API runtime is defined in `apps/api/Dockerfile`.
+
 ## Key Dependencies
+
 - `supabase` 2.20.0 - secondary database/client integration wrapped in `apps/api/infrastructure/supabase_client.py`.
 - `redis` 6.4.0 - cache, rate limiting, and background task state in `apps/api/infrastructure/redis_client.py`, `apps/api/middleware/rate_limit.py`, and `apps/api/infrastructure/background_tasks.py`.
 - `httpx` 0.28.1 - outbound KRA API client transport in `apps/api/infrastructure/kra_api/core.py` and `apps/api/services/kra_api_service.py`.
@@ -147,14 +158,18 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - `psycopg2-binary` 2.9.11 - synchronous PostgreSQL access for evaluation scripts in `packages/scripts/shared/db_client.py`.
 - `mlflow` 3.9.0 - experiment tracking used by `packages/scripts/evaluation/mlflow_tracker.py` and `packages/scripts/evaluation/evaluate_prompt_v3.py`.
 - Local CLI integrations for `claude`, `codex`, and `gemini` are wrapped in `packages/scripts/shared/claude_client.py` and `packages/scripts/shared/llm_client.py`.
+
 ## Workspace Layout
+
 - Root orchestrator in `package.json` and `turbo.json`.
 - API app workspace in `apps/api/package.json` and `apps/api/pyproject.toml`.
 - Shared Node config packages in `packages/typescript-config/package.json` and `packages/eslint-config/package.json`.
 - Python-heavy script workspace in `packages/scripts/package.json` and `packages/scripts/pyproject.toml`.
 - No frontend application package is detected under `apps/`; the workspace is backend- and scripting-centric.
 - TypeScript is present as shared tooling configuration, not as a substantial application codebase.
+
 ## Configuration
+
 - API settings are centralized in `apps/api/config.py` using `BaseSettings` with `.env` loading.
 - Turbo passes shared env through from `turbo.json` and app-specific env through from `apps/api/turbo.json`.
 - Environment example files exist at `apps/api/.env.example` and `apps/api/.env.template`; a local `apps/api/.env` file is also present.
@@ -165,18 +180,19 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Script Python config: `packages/scripts/pyproject.toml`
 - API container image: `apps/api/Dockerfile`
 - Node lint/format config: `.eslintrc.json`, `.prettierrc`, `packages/eslint-config/package.json`
+
 ## Platform Requirements
+
 - Python 3.13 with `uv` is required to run `apps/api` and `packages/scripts`.
 - `pnpm` 9 and Node.js are required for Turbo-driven workspace commands from `package.json`.
 - Local PostgreSQL-compatible access and Redis are expected by the API when running outside test mode, based on `apps/api/config.py` and `apps/api/infrastructure/database.py`.
 - The deployable artifact detected in-repo is the API container defined by `apps/api/Dockerfile`, which runs `uvicorn main_v2:app`.
 - Production assumes a remote PostgreSQL/Supabase database, Redis, and environment-injected secrets as enforced by `apps/api/config.py`.
-<!-- GSD:stack-end -->
 
-<!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
 ## Evidence Sources
+
 - Repository guidance in `AGENTS.md`
 - JavaScript formatting rules in `.eslintrc.json` and `.prettierrc`
 - Root Python tooling in `pyproject.toml`
@@ -189,7 +205,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Data-model patterns in `apps/api/models/collection_dto.py` and `apps/api/models/database_models.py`
 - Authentication and error conventions in `apps/api/dependencies/auth.py`
 - Script-package style in `packages/scripts/shared/llm_client.py`, `packages/scripts/shared/db_client.py`, `packages/scripts/evaluation/data_loading.py`, and `packages/scripts/prompt_improvement/jury_prompt_improver.py`
+
 ## Naming Patterns
+
 - Python functions and variables use `snake_case`; classes use `PascalCase` per `AGENTS.md`.
 - TypeScript, where present, should use `camelCase` for variables/functions and `PascalCase` for types/classes per `AGENTS.md`.
 - API module filenames use `snake_case` and describe their layer role: `apps/api/services/collection_service.py`, `apps/api/routers/jobs_v2.py`, `apps/api/middleware/rate_limit.py`, `apps/api/dependencies/auth.py`.
@@ -198,7 +216,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Compatibility fields are labeled explicitly with legacy-oriented names instead of silent reuse: `job_kind_v2`, `lifecycle_state_v2` in `apps/api/models/database_models.py`, and compatibility properties like `race_date` and `race_no` in `apps/api/models/database_models.py`.
 - Service-layer helper aliases use descriptive suffixes to disambiguate imports: `analyze_weather_impact_helper`, `preprocess_data_helper` in `apps/api/services/collection_service.py`.
 - Script-package modules also use `snake_case`, but import path setup is often manual via `sys.path.insert(...)` in `packages/scripts/evaluation/evaluate_prompt_v3.py`, `packages/scripts/evaluation/predict_only_test.py`, and `packages/scripts/prompt_improvement/jury_prompt_improver.py`.
+
 ## Code Style
+
 - JavaScript formatting is 2-space indent, single quotes, semicolons, trailing commas on multiline structures, max length 120, and ESM modules via `.eslintrc.json` and `.prettierrc`.
 - Python uses Ruff with line length 88 and target `py313` in `pyproject.toml` and `apps/api/pyproject.toml`.
 - Ruff lint sets include `E`, `W`, `F`, `I`, `B`, `C4`, and `UP` in both `pyproject.toml` and `apps/api/pyproject.toml`.
@@ -208,7 +228,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Newer modules prefer modern typing syntax such as `list[str]`, `dict[str, Any]`, `str | None`, and Python 3.12 type alias syntax (`type DispatchHandler = ...`) as seen in `apps/api/services/job_service.py`.
 - Value objects and internal contracts increasingly use `@dataclass`, often with `frozen=True` and `slots=True`, for example `apps/api/policy/principal.py`, `apps/api/services/kra_collection_module.py`, and `apps/api/infrastructure/kra_api/core.py`.
 - Older Pydantic request models still use v1-style `@validator` and `class Config` patterns in `apps/api/models/collection_dto.py`, even though the runtime depends on Pydantic v2 in `apps/api/pyproject.toml`.
+
 ## Module and Layer Patterns
+
 - Domain logic should stay in `services/`; HTTP and I/O should stay in the API layer per `AGENTS.md`.
 - FastAPI setup is centralized in `apps/api/main_v2.py`; route modules are mounted there and should not duplicate app construction elsewhere.
 - HTTP boundary code lives in `apps/api/routers/*.py` and stays relatively thin. Routers mostly validate inputs, acquire dependencies, translate exceptions to `HTTPException`, and delegate to services or workflow modules, as in `apps/api/routers/collection_v2.py` and `apps/api/routers/jobs_v2.py`.
@@ -216,7 +238,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Shared infrastructure is isolated under `apps/api/infrastructure/*.py` for DB, Redis, KRA API transport, and background task plumbing.
 - Request-scoped and app-scoped cross-cutting concerns are separated into `apps/api/middleware/*.py` and `apps/api/bootstrap/runtime.py`.
 - Script-package code under `packages/scripts` is flatter and less layered than the API. It often favors direct imports and command-oriented modules over explicit service boundaries, as seen in `packages/scripts/evaluation/data_loading.py` and `packages/scripts/prompt_improvement/jury_prompt_improver.py`.
+
 ## Typing and Data-Model Patterns
+
 - Use Python 3.13+ across the repo per `pyproject.toml`, `apps/api/pyproject.toml`, and `packages/scripts/pyproject.toml`.
 - FastAPI request/response payloads are modeled with Pydantic `BaseModel` plus rich `Field(...)` metadata for schema descriptions in `apps/api/models/collection_dto.py` and `apps/api/models/job_dto.py`.
 - SQLAlchemy models use typed declarative mappings with `Mapped[...]` and `mapped_column(...)` rather than untyped legacy ORM style. See `apps/api/models/database_models.py`.
@@ -224,7 +248,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Field-shape translation is explicit rather than implicit. `convert_api_to_internal` in `apps/api/utils/field_mapping.py` and adapter logic in `apps/api/adapters/kra_response_adapter.py` are the expected bridge points.
 - Backward compatibility is preserved inside models rather than through duplicated tables or DTOs. Examples include `Race.race_date`, `Race.race_no`, and `Race.status` compatibility properties in `apps/api/models/database_models.py`.
 - Script-package code frequently uses small dataclasses for in-memory contracts, such as `LLMResponse` in `packages/scripts/shared/llm_client.py` and `RaceEvaluationDataLoader` in `packages/scripts/evaluation/data_loading.py`.
+
 ## Configuration and Environment Handling
+
 - Real secrets belong in `.env` files and must not be committed, with `apps/api/.env.template` as the setup template per `AGENTS.md`.
 - Turbo passes through `KRA_*`, `SUPABASE_*`, `REDIS_*`, `DATABASE_URL`, `SECRET_KEY`, `CELERY_*`, and `PG*` environment variables via `turbo.json`.
 - API configuration is centralized in `apps/api/config.py` via `Settings(BaseSettings)`. Modules usually import the global singleton `settings` rather than instantiating settings ad hoc.
@@ -233,25 +259,33 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Tests mutate the global config singleton instead of rebuilding the app with isolated settings providers. `_apply_test_settings_to_global()` in `apps/api/tests/platform/fixtures.py` is the established pattern.
 - Script-package code does not reuse `Settings(BaseSettings)`. `packages/scripts/shared/db_client.py` reads `apps/api/.env` directly with `dotenv_values`, then rewrites `postgresql+asyncpg://` URLs for `psycopg2`.
 - Because script modules often load env state directly and patch `sys.path`, future code in `packages/scripts` should follow the existing explicit-path style unless the package layout is first normalized.
+
 ## Error Handling Conventions
+
 - Router boundaries usually catch broad exceptions, log them, and convert them to `HTTPException`. Examples: `apps/api/routers/collection_v2.py` and `apps/api/routers/jobs_v2.py`.
 - Service boundaries wrap DB mutations in `try/except`, log structured error details, and `rollback()` before re-raising. `apps/api/services/job_service.py` is the clearest reference.
 - Optional dependencies are often fail-open instead of hard-failing the request path. Redis initialization in `apps/api/main_v2.py`, cache access in `apps/api/infrastructure/redis_client.py`, and rate limiting in `apps/api/middleware/rate_limit.py` all degrade gracefully when Redis is unavailable.
 - Global exception handling in `apps/api/main_v2.py` generates an `error_id` and returns a generic 500 payload instead of leaking stack traces.
 - The API distinguishes user-visible validation errors from operational backend errors. `apps/api/dependencies/auth.py` raises `401` for missing/invalid API keys, `429` for quota exhaustion, and `503` when the auth backend is unavailable.
 - Script-package modules are less uniform: some return `None` and print errors (`packages/scripts/evaluation/data_loading.py`), while others rely on stdlib logging (`packages/scripts/prompt_improvement/jury_prompt_improver.py`). New script code should match the local module style rather than importing API patterns blindly.
+
 ## Logging Conventions
+
 - Logging is configurable via env-backed settings like `log_level`, `log_format`, and `log_file` in `apps/api/config.py`.
 - The API standard is `structlog`. Most runtime modules define `logger = structlog.get_logger()` at module scope, for example `apps/api/main_v2.py`, `apps/api/dependencies/auth.py`, `apps/api/services/collection_service.py`, and `apps/api/infrastructure/database.py`.
 - Structured key-value logging is preferred over interpolated strings when context matters. Good examples: `logger.error("Unhandled exception", error_id=..., path=..., method=...)` in `apps/api/main_v2.py` and `logger.warning("Rate limit degraded: bypassing due to Redis failure", error=str(e))` in `apps/api/middleware/rate_limit.py`.
 - Some modules still mix in f-string logging, especially older router/service code such as `apps/api/routers/collection_v2.py` and parts of `apps/api/main_v2.py`. For consistency, new API code should prefer structured event names plus keyword fields.
 - Request logging redacts sensitive fields before emission. `_mask_sensitive_fields()` and `_mask_sensitive_value()` in `apps/api/middleware/logging.py` are the repository standard for masking headers, query params, and tokens.
 - Script-package logging is mixed: `packages/scripts/prompt_improvement/jury_prompt_improver.py` uses stdlib `logging`, `packages/scripts/evaluation/data_loading.py` uses `print`, and shared utilities are not consistently structured.
+
 ## Comments and Documentation Style
+
 - Short module docstrings are common and often bilingual in effect: Korean business context with English technical terms. See `apps/api/main_v2.py`, `apps/api/config.py`, and `packages/scripts/shared/llm_client.py`.
 - Inline comments are used to explain compatibility, migration, and failure-mode rationale rather than trivial operations. Examples include Redis fail-open notes in `apps/api/middleware/rate_limit.py` and legacy compatibility properties in `apps/api/models/database_models.py`.
 - Example payloads live inside DTO classes using `json_schema_extra` rather than external docs for request/response bodies. `apps/api/models/collection_dto.py` and `apps/api/models/job_dto.py` are the references.
+
 ## Practical Guidance for Future Changes
+
 - Put new HTTP endpoints in `apps/api/routers/` and keep them thin; delegate orchestration to `apps/api/services/` or workflow modules like `apps/api/services/kra_collection_module.py`.
 - Model public API payloads with Pydantic models in `apps/api/models/`, and describe fields with `Field(...)`.
 - Model persistence with typed SQLAlchemy models in `apps/api/models/database_models.py` style; use `Mapped[...]`, `mapped_column(...)`, and explicit JSON field types.
@@ -259,18 +293,19 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Read config through `config.settings` inside the API package. Do not introduce ad hoc `os.getenv(...)` calls in new API modules unless the value is intentionally outside the settings model.
 - If you add new script-package modules under `packages/scripts`, follow the local reality: small command-oriented modules, explicit dataclasses, and direct tests. If you need reusable config or imports there, consider normalizing packaging first because current script code frequently depends on `sys.path.insert(...)`.
 - Treat TypeScript lint/format configs as repo-level scaffolding only. No active `*.ts` or `*.tsx` source files were detected in the checked-out working tree outside `.worktrees/`, so Python conventions are the operative standard here.
-<!-- GSD:conventions-end -->
 
-<!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
 ## Pattern Overview
+
 - Runtime composition is centralized in `apps/api/main_v2.py`; the application mounts routers, middleware, DB session factory, and a small runtime facade.
 - Request handling is layered as router -> auth dependency/policy -> service facade/service -> infrastructure/model, with `AsyncSession` injected at the router boundary from `apps/api/infrastructure/database.py`.
 - Background execution is not an external worker system; `apps/api/infrastructure/background_tasks.py` runs `asyncio.create_task()` jobs in-process and persists best-effort task state in Redis.
 - External KRA calls are wrapped twice: transport policy and retry live in `apps/api/infrastructure/kra_api/core.py`, while endpoint-specific methods live in `apps/api/services/kra_api_service.py`.
 - Persistence is SQLAlchemy-first. `apps/api/models/database_models.py` is the canonical schema for active API flows, while `apps/api/infrastructure/supabase_client.py` exists but is not in the active HTTP request path.
+
 ## Layers
+
 - Purpose: Build the FastAPI app, register middleware and routers, manage startup/shutdown.
 - Location: `apps/api/main_v2.py`, `apps/api/bootstrap/runtime.py`
 - Contains: `create_app()`, lifespan startup/shutdown, `AppRuntime`, `ObservabilityFacade`
@@ -311,12 +346,16 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Contains: `Pipeline`, `PipelineBuilder`, `PipelineContext`, stage classes, orchestrator
 - Depends on: `apps/api/services/collection_service.py`, `apps/api/services/kra_api_service.py`
 - Used by: tests in `apps/api/tests/unit/test_pipeline_base.py`, `apps/api/tests/unit/test_data_pipeline.py`, `apps/api/tests/unit/test_pipeline_stages.py`; not mounted by `apps/api/main_v2.py`
+
 ## Data Flow
+
 - Per-request DB state uses `AsyncSession` yielded by `apps/api/infrastructure/database.py`.
 - App-wide operational state is stored on `app.state` in `apps/api/main_v2.py` as `db_session_factory` and `runtime`.
 - Background task liveness is split between in-memory `_running_tasks` in `apps/api/infrastructure/background_tasks.py` and optional Redis copies of task status.
 - Race lifecycle state is persisted in `apps/api/models/database_models.py` across `collection_status`, `enrichment_status`, and `result_status`.
+
 ## Key Abstractions
+
 - Purpose: Router-facing facade that separates queries, commands, and async job submission.
 - Examples: `apps/api/services/kra_collection_module.py`
 - Pattern: facade / application service boundary
@@ -335,7 +374,9 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Purpose: Keep health/metrics rendering out of routers and make observability easy to stub in tests.
 - Examples: `apps/api/bootstrap/runtime.py`
 - Pattern: runtime facade attached to `app.state`
+
 ## Entry Points
+
 - Location: `apps/api/main_v2.py`
 - Triggers: `uv run uvicorn main_v2:app --reload --port 8000`, `pnpm -w -F @apps/api dev`
 - Responsibilities: create FastAPI app, initialize DB/Redis, register middleware and routers, expose root endpoint
@@ -348,14 +389,20 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Location: `apps/api/scripts/apply_migrations.py`, `apps/api/scripts/check_collection_status_db.py`, `apps/api/scripts/test_db_connection.py`
 - Triggers: manual CLI execution
 - Responsibilities: schema application, status inspection, connectivity validation
+
 ## Key Execution Paths
+
 ## Error Handling
+
 - `apps/api/main_v2.py` adds a global exception handler that emits a generated `error_id`.
 - `apps/api/services/result_collection_service.py` retries persistence of failure status before giving up.
 - `apps/api/middleware/rate_limit.py` and `apps/api/infrastructure/redis_client.py` bypass cache/rate-limit behavior when Redis is unavailable.
 - `apps/api/infrastructure/database.py` is strict in non-test startup and permissive in test mode.
+
 ## Cross-Cutting Concerns
+
 ## Architectural Mismatches
+
 - `apps/api/README.md` still documents `apps/api/routers/race.py` and `apps/api/services/race_service.py`, but those files are not present in the current tree.
 - The active mounted router set in `apps/api/main_v2.py` is only `collection_v2`, `jobs_v2`, `health`, and `metrics`.
 - `README.md`, `apps/api/README.md`, `apps/api/docs/QUICK_START.md`, and `apps/api/docs/SUPABASE_SETUP.md` refer to `apps/api/.env.template`.
@@ -364,30 +411,3 @@ pnpm test --filter=...@apps/api          # 변경된 패키지만 테스트
 - Active asynchronous execution flows use `apps/api/services/job_service.py` plus `apps/api/tasks/async_tasks.py` instead of `PipelineOrchestrator`.
 - `apps/api/infrastructure/supabase_client.py` exists and is used by scripts such as `apps/api/scripts/test_db_connection.py`.
 - Active routers and services use SQLAlchemy sessions from `apps/api/infrastructure/database.py` rather than the Supabase client.
-<!-- GSD:architecture-end -->
-
-<!-- GSD:skills-start source:skills/ -->
-## Project Skills
-
-No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, or `.github/skills/` with a `SKILL.md` index file.
-<!-- GSD:skills-end -->
-
-<!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
-
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
-
-Use these entry points:
-- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd-debug` for investigation and bug fixing
-- `/gsd-execute-phase` for planned phase work
-
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
-<!-- GSD:workflow-end -->
-
-<!-- GSD:profile-start -->
-## Developer Profile
-
-> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.
-> This section is managed by `generate-claude-profile` -- do not edit manually.
-<!-- GSD:profile-end -->
