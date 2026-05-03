@@ -20,7 +20,7 @@ from infrastructure.redis_client import close_redis, init_redis
 from middleware.logging import RequestLoggingMiddleware
 from middleware.policy_accounting import PolicyAccountingMiddleware
 from middleware.rate_limit import RateLimitMiddleware
-from routers import collection_v2, health, jobs_v2, metrics
+from routers import collection_v2, health, jobs_v2, metrics, predict
 
 # 구조화된 로깅 설정
 structlog.configure(
@@ -165,6 +165,7 @@ def create_app() -> FastAPI:
         collection_v2.router, prefix="/api/v2/collection", tags=["collection"]
     )
     app.include_router(jobs_v2.router, prefix="/api/v2/jobs", tags=["jobs"])
+    app.include_router(predict.router, prefix="/api/v2/predict", tags=["predict"])
     app.include_router(health.router, tags=["health"])
     app.include_router(metrics.router, tags=["metrics"])
 

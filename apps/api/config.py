@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     kra_api_verify_ssl: bool = True
     kra_rate_limit: int = 100  # requests per minute
 
+    # Champion prediction model (autoresearch leakage-free LogReg)
+    champion_model_path: str = "models/champion_clean.joblib"
+
     # Security
     secret_key: str = Field(
         default="dev-secret-key-change-in-production",

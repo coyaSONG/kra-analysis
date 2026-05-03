@@ -26,6 +26,10 @@ dependencies = [
     "tenacity>=9.0.0",
     "pandas>=2.2.0",
     "greenlet>=3.1.1",
+    # Champion prediction model (autoresearch leakage-free LogReg)
+    "joblib>=1.4.0",
+    "numpy>=2.0.0",
+    "scikit-learn>=1.4.0",
 ]
 
 [project.optional-dependencies]

@@ -16,6 +16,8 @@ PolicyAction = Literal[
     "jobs.list",
     "jobs.read",
     "jobs.cancel",
+    "prediction.predict",
+    "prediction.read_model_info",
 ]
 
 
@@ -30,6 +32,8 @@ class PolicyAuthorizer:
         "jobs.list": frozenset({"read"}),
         "jobs.read": frozenset({"read"}),
         "jobs.cancel": frozenset({"write"}),
+        "prediction.predict": frozenset({"read"}),
+        "prediction.read_model_info": frozenset({"read"}),
     }
 
     async def authorize(
