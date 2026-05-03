@@ -76,7 +76,7 @@ def predict_race(
     probs = pipeline.predict_proba(X)[:, 1]
 
     chuls = [row["chulNo"] for row in rows]
-    scored = sorted(zip(chuls, probs), key=lambda pair: -pair[1])
+    scored = sorted(zip(chuls, probs, strict=False), key=lambda pair: -pair[1])
     top3 = [str(chul) for chul, _ in scored[:3]]
     scores = {str(chul): float(prob) for chul, prob in scored}
     confidence = float(scored[0][1]) if scored else 0.0

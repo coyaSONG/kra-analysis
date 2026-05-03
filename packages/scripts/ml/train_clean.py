@@ -26,8 +26,12 @@ SCRIPT_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPT_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPT_ROOT))
 
-from autoresearch.dataset_artifacts import resolve_offline_evaluation_dataset_artifacts  # noqa: E402
-from autoresearch.parameter_context import load_evaluation_parameter_context  # noqa: E402
+from autoresearch.dataset_artifacts import (  # noqa: E402
+    resolve_offline_evaluation_dataset_artifacts,
+)
+from autoresearch.parameter_context import (  # noqa: E402
+    load_evaluation_parameter_context,
+)
 from autoresearch.research_clean import (  # noqa: E402
     SNAPSHOT_DIR,
     _build_arrays,
