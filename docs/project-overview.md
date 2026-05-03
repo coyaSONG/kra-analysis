@@ -73,4 +73,4 @@ Client
 - migration과 ORM 초기화가 동시에 존재해 스키마 source of truth가 불명확함
 - 일부 문서가 현재 구조가 아닌 과거 구조를 설명함
 
-이 정리 작업의 기준 문서는 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md) 입니다.
+이 정리 작업의 기준 문서는 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md) 입니다.

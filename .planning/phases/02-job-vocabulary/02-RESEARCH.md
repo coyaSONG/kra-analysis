@@ -47,10 +47,10 @@
 
 - Public type/status truth already exists in the schema shape: `models/job_dto.py` and `models/database_models.py` expose `collection|batch|...`, while dispatch drift is concentrated in `services/job_contract.py` and tests that still assert internal aliases. [VERIFIED: apps/api/models/job_dto.py][VERIFIED: apps/api/models/database_models.py][VERIFIED: apps/api/services/job_contract.py]
 - The biggest remaining lie is on the read path, not the create path. `CollectionJobs.submit_batch_collect()` already persists `job_type="batch"`, but `list_jobs_with_total()` still dual-reads `lifecycle_state_v2` and accepts `running` filters. [VERIFIED: apps/api/services/kra_collection_module.py][VERIFIED: apps/api/services/job_service.py]
-- `job_kind_v2` and `lifecycle_state_v2` are compatibility columns introduced by rollout work, but current tests still treat them as canonical evidence. Phase 2 should demote them to non-public internals or mirrored compatibility fields, not the source of truth. [VERIFIED: docs/plans/2026-03-19-architecture-rollout-execplan.md][VERIFIED: apps/api/tests/unit/test_job_contract.py][VERIFIED: apps/api/tests/unit/test_async_tasks.py]
+- `job_kind_v2` and `lifecycle_state_v2` are compatibility columns introduced by rollout work, but current tests still treat them as canonical evidence. Phase 2 should demote them to non-public internals or mirrored compatibility fields, not the source of truth. [VERIFIED: docs/plans/archive/2026-03-19-architecture-rollout-execplan.md][VERIFIED: apps/api/tests/unit/test_job_contract.py][VERIFIED: apps/api/tests/unit/test_async_tasks.py]
 - The safest cutover is: keep `jobs.type` and `jobs.status` as the only public read/write truth, keep internal dispatch mapping inside `normalize_dispatch_action()`, and backfill legacy `running|retrying` rows to `processing` before removing compatibility reads. [VERIFIED: apps/api/services/job_contract.py][VERIFIED: apps/api/services/job_service.py]
 
-**Primary recommendation:** Plan this phase as three sequential slices: public vocabulary core cleanup, jobs API canonical-only read/cancel cutover with targeted migration/backfill, and async collection/task/runtime cleanup so batch submission and follow-up job reads stay truthful end-to-end. [VERIFIED: .planning/phases/02-job-vocabulary/02-CONTEXT.md][VERIFIED: docs/plans/2026-03-19-architecture-remediation-execplan.md]
+**Primary recommendation:** Plan this phase as three sequential slices: public vocabulary core cleanup, jobs API canonical-only read/cancel cutover with targeted migration/backfill, and async collection/task/runtime cleanup so batch submission and follow-up job reads stay truthful end-to-end. [VERIFIED: .planning/phases/02-job-vocabulary/02-CONTEXT.md][VERIFIED: docs/plans/archive/2026-03-19-architecture-remediation-execplan.md]
 
 ## Recommended Cutover Strategy
 
@@ -121,7 +121,7 @@
 **How to avoid:** either mirror public vocabulary into shadow fields or stop asserting on them for public jobs; never persist internal aliases as if they were canonical.
 
 ### Pitfall 3: Deleting Compatibility Reads Before Legacy Rows Are Fixed
-**What goes wrong:** canonical-only `Job.status` reads miss preexisting `running` or `retrying` rows. [VERIFIED: apps/api/services/job_service.py][VERIFIED: docs/plans/2026-03-19-architecture-rollout-execplan.md]  
+**What goes wrong:** canonical-only `Job.status` reads miss preexisting `running` or `retrying` rows. [VERIFIED: apps/api/services/job_service.py][VERIFIED: docs/plans/archive/2026-03-19-architecture-rollout-execplan.md]  
 **How to avoid:** sequence the cutover behind a targeted backfill migration and explicit tests for post-migration behavior only.
 
 ### Pitfall 4: Letting Batch Submission Prove the Wrong Type

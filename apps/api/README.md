@@ -117,7 +117,7 @@ cd apps/api
 uv run python scripts/apply_migrations.py
 ```
 
-현재 기준선으로 보는 파일은 `migrations/001_unified_schema.sql`입니다. 저장소 안에는 legacy baseline도 남아 있으므로 `001_initial_schema.sql`을 현재 기준처럼 취급하면 안 됩니다. 배경은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
+현재 기준선으로 보는 파일은 `migrations/001_unified_schema.sql`입니다. 저장소 안에는 legacy baseline도 남아 있으므로 `001_initial_schema.sql`을 현재 기준처럼 취급하면 안 됩니다. 배경은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
 
 ## 운영 점검 명령
 
@@ -172,4 +172,4 @@ pnpm -F @apps/api test
 
 - [Legacy v1 정책](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/LEGACY_V1_POLICY.md)
 - [Supabase 설정 가이드](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/SUPABASE_SETUP.md)
-- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)
+- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)

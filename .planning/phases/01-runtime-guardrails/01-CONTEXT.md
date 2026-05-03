@@ -47,7 +47,7 @@
 - `.planning/STATE.md` — current execution position and active blockers
 
 ### Remediation Baseline
-- `docs/plans/2026-03-19-architecture-remediation-execplan.md` — current stabilization direction, especially health/logging/auth mismatch notes and rollout ordering
+- `docs/plans/archive/2026-03-19-architecture-remediation-execplan.md` — current stabilization direction, especially health/logging/auth mismatch notes and rollout ordering
 
 ### Codebase Maps
 - `.planning/codebase/ARCHITECTURE.md` — runtime layer boundaries and health/auth/logging integration points

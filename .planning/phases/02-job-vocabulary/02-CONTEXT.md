@@ -51,8 +51,8 @@
 - `.planning/phases/01-runtime-guardrails/01-CONTEXT.md` — Phase 1에서 확정된 auth/runtime contract, 기존 endpoint compatibility 원칙
 
 ### Remediation / Rollout Baseline
-- `docs/plans/2026-03-19-architecture-remediation-execplan.md` — job vocabulary drift의 문제 정의와 Phase 2 scope 배경
-- `docs/plans/2026-03-19-architecture-rollout-execplan.md` — `job_kind_v2` / `lifecycle_state_v2` shadow-field 도입 배경과 read-compat 단계 설명
+- `docs/plans/archive/2026-03-19-architecture-remediation-execplan.md` — job vocabulary drift의 문제 정의와 Phase 2 scope 배경
+- `docs/plans/archive/2026-03-19-architecture-rollout-execplan.md` — `job_kind_v2` / `lifecycle_state_v2` shadow-field 도입 배경과 read-compat 단계 설명
 
 ### Codebase Maps
 - `.planning/codebase/CONCERNS.md` — 분열된 job vocabulary와 in-process runner 리스크

@@ -130,7 +130,7 @@ uv run python scripts/apply_migrations.py
 
 - 앱은 현재 `SQLAlchemy ORM + PostgreSQL` 중심입니다.
 - `create_all()`과 SQL migration이 함께 존재하므로, 운영 환경에서는 migration 경로를 우선 확인해야 합니다.
-- 상세 정리 계획은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
+- 상세 정리 계획은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
 
 ## 실험 및 평가 스크립트
 
@@ -156,7 +156,7 @@ pnpm --filter=@repo/scripts run test
 - [API README](/Users/chsong/Developer/Personal/kra-analysis/apps/api/README.md)
 - [프로젝트 개요](/Users/chsong/Developer/Personal/kra-analysis/docs/project-overview.md)
 - [Knowledge Index](/Users/chsong/Developer/Personal/kra-analysis/docs/knowledge/INDEX.md)
-- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/2026-03-19-architecture-remediation-execplan.md)
+- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)
 - [Legacy v1 정책](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/LEGACY_V1_POLICY.md)
 
 ## 현재 주의사항

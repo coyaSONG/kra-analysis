@@ -54,7 +54,7 @@
 - The main repo drift is between mounted runtime paths and tested paths: `create_app()` mounts `RequestLoggingMiddleware`, but current logging tests still instantiate `LoggingMiddleware` directly. [VERIFIED: apps/api/main_v2.py][VERIFIED: apps/api/tests/unit/test_middleware_logging.py][VERIFIED: apps/api/tests/unit/test_logging_redaction.py]
 - Focused health, logging, auth, and policy tests currently pass only when coverage addopts are overridden; default `pytest` exits non-zero on small samples because `apps/api/pytest.ini` enforces repo-wide coverage. [VERIFIED: apps/api/pytest.ini][VERIFIED: targeted pytest runs 2026-04-05]
 
-**Primary recommendation:** Plan this phase as three small slices: explicit degraded Redis status, canonical request logging consolidation, and principal-first auth/policy tests, with contract tests written or corrected before each runtime edit. [VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md][VERIFIED: docs/plans/2026-03-19-architecture-remediation-execplan.md]
+**Primary recommendation:** Plan this phase as three small slices: explicit degraded Redis status, canonical request logging consolidation, and principal-first auth/policy tests, with contract tests written or corrected before each runtime edit. [VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md][VERIFIED: docs/plans/archive/2026-03-19-architecture-remediation-execplan.md]
 
 ## Required Changes
 
@@ -110,7 +110,7 @@
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Rebuilding health or logging around new service objects. [VERIFIED: apps/api/bootstrap/runtime.py][VERIFIED: apps/api/middleware/logging.py] | Keep the existing runtime seam and delete duplicate responsibility. [VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md] | Brownfield risk is lower because current routers, fixtures, and integration tests already depend on these seams. [VERIFIED: apps/api/tests/platform/fixtures.py][VERIFIED: docs/plans/2026-03-19-architecture-remediation-execplan.md] |
+| Rebuilding health or logging around new service objects. [VERIFIED: apps/api/bootstrap/runtime.py][VERIFIED: apps/api/middleware/logging.py] | Keep the existing runtime seam and delete duplicate responsibility. [VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md] | Brownfield risk is lower because current routers, fixtures, and integration tests already depend on these seams. [VERIFIED: apps/api/tests/platform/fixtures.py][VERIFIED: docs/plans/archive/2026-03-19-architecture-remediation-execplan.md] |
 | Making `APIKey` the public router dependency again. [VERIFIED: apps/api/dependencies/auth.py] | Keep `AuthenticatedPrincipal` public and `APIKey` internal. [VERIFIED: apps/api/policy/principal.py][VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md] | This matches the current router code and avoids widening the public auth contract mid-phase. [VERIFIED: apps/api/routers/collection_v2.py][VERIFIED: apps/api/routers/jobs_v2.py] |
 
 **Installation:** Existing repo commands are sufficient for this phase. [VERIFIED: AGENTS.md][VERIFIED: apps/api/pyproject.toml]
@@ -186,7 +186,7 @@ principal: AuthenticatedPrincipal = Depends(require_action('jobs.read'))
 | Auth boundary types | New dict/DTO caller shape parallel to policy primitives. [VERIFIED: apps/api/policy/principal.py] | `AuthenticatedPrincipal`. [VERIFIED: apps/api/policy/principal.py] | Routers, authorization, and accounting already understand this type. [VERIFIED: apps/api/routers/collection_v2.py][VERIFIED: apps/api/routers/jobs_v2.py][VERIFIED: apps/api/policy/accounting.py] |
 | Test harnesses | Bespoke live-server or manual fixture stacks for every test file. [VERIFIED: apps/api/tests/platform/fixtures.py] | Existing `ASGITransport`, `FakeRedis`, in-memory SQLite, and `create_app()` overrides. [VERIFIED: apps/api/tests/platform/fixtures.py] | The repo already ships a deterministic harness that matches Phase 01 needs. [VERIFIED: apps/api/tests/platform/fixtures.py] |
 
-**Key insight:** The right plan deletes duplicate responsibility; it does not introduce a new runtime layer. [VERIFIED: docs/plans/2026-03-19-architecture-remediation-execplan.md][VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md]
+**Key insight:** The right plan deletes duplicate responsibility; it does not introduce a new runtime layer. [VERIFIED: docs/plans/archive/2026-03-19-architecture-remediation-execplan.md][VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md]
 
 ## Common Pitfalls
 
@@ -349,7 +349,7 @@ async with AsyncClient(transport=transport, base_url='http://test') as http_clie
 ### Primary (HIGH confidence)
 - `.planning/phases/01-runtime-guardrails/01-CONTEXT.md` — locked decisions, discretion, and out-of-scope boundaries. [VERIFIED: .planning/phases/01-runtime-guardrails/01-CONTEXT.md]
 - `.planning/REQUIREMENTS.md` — `HEALTH-01`, `HEALTH-02`, `HEALTH-03` requirement text. [VERIFIED: .planning/REQUIREMENTS.md]
-- `docs/plans/2026-03-19-architecture-remediation-execplan.md` — remediation ordering and known drift areas. [VERIFIED: docs/plans/2026-03-19-architecture-remediation-execplan.md]
+- `docs/plans/archive/2026-03-19-architecture-remediation-execplan.md` — remediation ordering and known drift areas. [VERIFIED: docs/plans/archive/2026-03-19-architecture-remediation-execplan.md]
 - `apps/api/main_v2.py` — real middleware and router wiring. [VERIFIED: apps/api/main_v2.py]
 - `apps/api/bootstrap/runtime.py`, `apps/api/routers/health.py`, `apps/api/middleware/logging.py`, `apps/api/middleware/policy_accounting.py`, `apps/api/dependencies/auth.py`, `apps/api/policy/*.py` — runtime seams under Phase 01. [VERIFIED: apps/api/bootstrap/runtime.py][VERIFIED: apps/api/routers/health.py][VERIFIED: apps/api/middleware/logging.py][VERIFIED: apps/api/middleware/policy_accounting.py][VERIFIED: apps/api/dependencies/auth.py][VERIFIED: apps/api/policy/authentication.py][VERIFIED: apps/api/policy/accounting.py][VERIFIED: apps/api/policy/principal.py]
 - `apps/api/tests/unit/*` and `apps/api/tests/integration/*` files listed in the task plus `apps/api/tests/platform/fixtures.py` — current coverage shape and harness patterns. [VERIFIED: apps/api/tests/unit/test_health_detailed_branches.py][VERIFIED: apps/api/tests/unit/test_health_dynamic.py][VERIFIED: apps/api/tests/unit/test_middleware_logging.py][VERIFIED: apps/api/tests/unit/test_logging_redaction.py][VERIFIED: apps/api/tests/unit/test_logging_middleware_post_body.py][VERIFIED: apps/api/tests/unit/test_logging_middleware_error.py][VERIFIED: apps/api/tests/unit/test_auth.py][VERIFIED: apps/api/tests/unit/test_auth_deps.py][VERIFIED: apps/api/tests/unit/test_auth_extended.py][VERIFIED: apps/api/tests/unit/test_auth_expired_key.py][VERIFIED: apps/api/tests/unit/test_auth_token_paths.py][VERIFIED: apps/api/tests/unit/test_auth_resource_access.py][VERIFIED: apps/api/tests/integration/test_api_endpoints.py][VERIFIED: apps/api/tests/integration/test_policy_accounting.py][VERIFIED: apps/api/tests/platform/fixtures.py]

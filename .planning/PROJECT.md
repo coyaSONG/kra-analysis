@@ -38,7 +38,7 @@ KRA 경주 데이터를 수집, 저장, 조회, 재실험하는 핵심 계약이
 - `apps/api`는 FastAPI, SQLAlchemy async ORM, PostgreSQL, Redis, in-process `asyncio` background task 조합으로 동작한다.
 - `packages/scripts`는 운영 API와 별개로 평가, 프롬프트 개선, 실험 자동화를 담당한다.
 - `.planning/codebase/*.md` 기준으로 현재 주요 리스크는 in-process 작업 실행기, 분열된 job vocabulary, legacy/unified migration 공존, 비대한 `CollectionService`, 드리프트된 문서다.
-- `docs/plans/2026-03-19-architecture-remediation-execplan.md`는 현재 액티브 개선 방향을 가장 구체적으로 설명하는 canonical 실행 문서다.
+- `docs/plans/archive/2026-03-19-architecture-remediation-execplan.md`는 현재 액티브 개선 방향을 가장 구체적으로 설명하는 canonical 실행 문서다.
 - 이 프로젝트는 "새 제품을 만든다"기보다 "이미 동작 중인 데이터 수집/실험 플랫폼을 단일 계약 시스템으로 정리한다"는 성격이 강하다.
 
 ## Constraints
