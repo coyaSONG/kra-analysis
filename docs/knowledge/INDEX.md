@@ -1,7 +1,12 @@
 # Project Knowledge Index
 
 ## Decisions
+- [Target Metric: set_match ≥ 0.70](decision-2026-05-03-target-metric-set-match.md) — Canonical success criterion on holdout set (clarified from scattered docs)
+- [enriched_data는 의도적으로 대기 중](decision-2026-05-03-enriched-data-intentional-hold.md) — A/B 검증 대기, basic_data만 활성, NULL 정상
 - [enriched_data 파이프라인 정비 보류](decision-2026-03-15-skip-pipeline-overhaul.md) — P0~P3 보류, 피처 ablation 실험 우선
+- [DB Schema source of truth is migration](decision-2026-05-03-migration-source-of-truth.md) — Migration files canonical (not ORM); Alembic adoption long-term
+- [Job (durable unit) + DispatchAction (command)](decision-2026-05-03-job-task-domain-model.md) — 3-level async model: DispatchAction→Job→Task; v2 consolidation next cycle
+- [_v2 suffix naming (3-track split)](decision-2026-05-03-v2-suffix-strategy.md) — API routes keep /v2/, modules/files clean up, DB columns drop post-cutover
 
 ## Experiments
 - [Past Top3 Stats A/B 실험](experiment-2026-03-15-past-top3-stats-ablation.md) — 최근 90일 top3 진입률이 적중률을 높이는지 검증 (실행 대기)
