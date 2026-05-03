@@ -66,7 +66,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/15
           SECRET_KEY: test-secret-key
           ENVIRONMENT: test
-          RATE_LIMIT_ENABLED: "false"
+          RATE_LIMIT_ENABLED: 'false'
         run: bash apps/api/scripts/run_quality_ci.sh integration
       - name: Coverage
         env:
@@ -81,6 +81,32 @@ jobs:
           files: ./apps/api/coverage.xml
           flags: api
           fail_ci_if_error: false
+
+  scripts-checks:
+    name: Scripts Checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Python dependencies
+        working-directory: ./packages/scripts
+        run: uv sync --group dev
+      - name: Scripts CI (lint + tests)
+        run: pnpm run quality:scripts:ci
 
   security:
     name: Security Checks
