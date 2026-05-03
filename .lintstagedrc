@@ -1,0 +1,11 @@
+{
+  "*": "prettier --ignore-unknown --write",
+  "apps/api/**/*.py": [
+    "bash -c 'cd apps/api && uv run ruff check --fix'",
+    "bash -c 'cd apps/api && uv run ruff format'"
+  ],
+  "packages/scripts/**/*.py": [
+    "bash -c 'cd packages/scripts && uv run ruff check --fix'",
+    "bash -c 'cd packages/scripts && uv run ruff format'"
+  ]
+}
