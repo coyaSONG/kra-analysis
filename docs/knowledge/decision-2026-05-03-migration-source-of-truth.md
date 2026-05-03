@@ -3,6 +3,7 @@ title: DB Schema source of truth is migration, not ORM
 date: 2026-05-03
 category: decision
 tags: [database, schema, migrations, alembic]
+adr: docs/adr/0003-migration-source-of-truth.md
 status: active
 related: []
 ---

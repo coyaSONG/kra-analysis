@@ -3,6 +3,7 @@ title: enriched_data Pipeline is Intentionally On Hold
 date: 2026-05-03
 category: decision
 tags: [data-lifecycle, pipeline, architecture]
+adr: docs/adr/0002-enriched-data-on-hold.md
 status: active
 related: [decision-2026-03-15-skip-pipeline-overhaul.md]
 ---

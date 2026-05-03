@@ -3,6 +3,7 @@ title: Target Metric is set_match ≥ 0.70
 date: 2026-05-03
 category: decision
 tags: [goals, metrics, success-criteria]
+adr: docs/adr/0001-target-metric-set-match.md
 status: active
 related: []
 ---

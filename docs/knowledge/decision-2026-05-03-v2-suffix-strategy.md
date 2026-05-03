@@ -3,6 +3,7 @@ title: _v2 suffix naming (3-track split)
 date: 2026-05-03
 category: decision
 tags: [naming, refactoring, versioning, api]
+adr: docs/adr/0005-v2-suffix-policy.md
 status: active
 related: []
 ---

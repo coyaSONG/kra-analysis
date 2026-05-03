@@ -3,6 +3,7 @@ title: Job (durable unit) + DispatchAction (command) terminology
 date: 2026-05-03
 category: decision
 tags: [async, domain-model, terminology, job-queue]
+adr: docs/adr/0004-job-dispatchaction-task-model.md
 status: active
 related: []
 ---

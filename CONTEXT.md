@@ -153,7 +153,7 @@ champion 모델의 버전 식별자 (예: iter 56). autoresearch 실험 keep 시
 holdout 경주의 품질 분류. strict는 운영 인증 기준, degraded는 회귀 감시용 참고.
 
 **set_match**:
-예측 3마리 집합과 실제 top3 집합의 정확 일치 비율 (0.0~1.0). **이 시스템의 north star metric** (목표: holdout set_match ≥ 0.70).
+예측 3마리 집합과 실제 top3 집합의 정확 일치 비율 (0.0~1.0). **이 시스템의 north star metric** (목표: holdout set_match ≥ 0.70 — `docs/adr/0001-target-metric-set-match`).
 
 **correct_count / accuracy_score**:
 예측 3마리 중 실제 top3에 포함된 수 (0~3) / 그 비율 (0~1). set_match보다 부드러운 부분 적중 메트릭.
@@ -190,9 +190,9 @@ holdout 경주의 품질 분류. strict는 운영 인증 기준, degraded는 회
 
 운영상 의도적으로 미루고 있는 것들 — 신규 기여자가 코드를 읽다 "왜 안 돌아가지?"라고 오해하지 않도록 명시:
 
-- **enrichment 파이프라인**: A/B 효과 검증 후 활성화 (`docs/knowledge/decision-2026-03-15-skip-pipeline-overhaul`, `decision-2026-05-03-enriched-data-intentional-hold`). `enriched_data` 컬럼이 NULL인 게 정상.
+- **enrichment 파이프라인**: A/B 효과 검증 후 활성화 (`docs/adr/0002-enriched-data-on-hold`; `docs/knowledge/decision-2026-03-15-skip-pipeline-overhaul`). `enriched_data` 컬럼이 NULL인 게 정상.
 - **live 환경 prediction**: 라이브 Supabase에 historical stats 부재로 모든 출주마가 `excluded` 처리됨. **offline holdout 우선**이라 후순위 (`gotcha-2026-05-03-live-enrichment-data-starvation`).
 - **autoresearch-pilot 통합**: 영구 분리. main으로 합치지 않음.
 - **새 prerace storage pipeline**: rule engine 완성됨, integration 진행 중 (별도 작업).
-- **Job 어휘 v2 cutover**: 현재 dual-write, read cutover 대기 (`decision-2026-05-03-job-task-domain-model`).
-- **Alembic 도입**: 장기 계획. 단기는 자체 manifest 검증 강화.
+- **Job 어휘 v2 cutover**: 현재 dual-write, read cutover 대기 (`docs/adr/0004-job-dispatchaction-task-model`, `docs/adr/0005-v2-suffix-policy`).
+- **Alembic 도입**: 장기 계획. 단기는 자체 manifest 검증 강화 (`docs/adr/0003-migration-source-of-truth`).
