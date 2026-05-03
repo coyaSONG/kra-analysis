@@ -16,6 +16,16 @@
 !/data/contracts/**
 /mlruns/
 /models/
+/packages/data/
+/packages/scripts/data/
+/packages/scripts/autoresearch/snapshots/*
+!/packages/scripts/autoresearch/snapshots/*_manifest.json
+
+# Experiment artifacts (Ralph autoresearch loops)
+.ralph/
+.ralph.*/
+.ralph-holdout/
+.ralph-holdout-*/
 
 # Dependencies
 node_modules/
