@@ -1,7 +1,7 @@
 # KRA 경마 데이터 수집 및 예측 분석
 
-[![API Coverage](https://codecov.io/gh/chsong/kra-analysis/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/chsong/kra-analysis)
-[![CI](https://github.com/chsong/kra-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/chsong/kra-analysis/actions/workflows/ci.yml)
+[![API Coverage](https://codecov.io/gh/coyaSONG/kra-analysis/branch/main/graph/badge.svg?flag=api)](https://codecov.io/gh/coyaSONG/kra-analysis)
+[![CI](https://github.com/coyaSONG/kra-analysis/actions/workflows/ci.yml/badge.svg)](https://github.com/coyaSONG/kra-analysis/actions/workflows/ci.yml)
 
 한국마사회(KRA) 데이터를 수집하고, 경주 전 데이터를 정리해 예측 실험과 평가에 사용하는 저장소입니다. 현재 운영 코어는 `apps/api`의 FastAPI 서버이며, 예측 평가와 프롬프트 개선 실험은 `packages/scripts`에 모여 있습니다.
 
@@ -75,7 +75,7 @@ cp .env.template .env
 - `VALID_API_KEYS`
 - `KRA_API_KEY`
 
-상세 설명은 [SUPABASE_SETUP.md](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/SUPABASE_SETUP.md)를 참고하세요.
+상세 설명은 [SUPABASE_SETUP.md](apps/api/docs/SUPABASE_SETUP.md)를 참고하세요.
 
 ### 3. API 실행
 
@@ -130,7 +130,7 @@ uv run python scripts/apply_migrations.py
 
 - 앱은 현재 `SQLAlchemy ORM + PostgreSQL` 중심입니다.
 - `create_all()`과 SQL migration이 함께 존재하므로, 운영 환경에서는 migration 경로를 우선 확인해야 합니다.
-- 상세 정리 계획은 [2026-03-19-architecture-remediation-execplan.md](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
+- 상세 정리 계획은 [2026-03-19-architecture-remediation-execplan.md](docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)에 정리되어 있습니다.
 
 ## 실험 및 평가 스크립트
 
@@ -149,15 +149,15 @@ pnpm --filter=@repo/scripts run improve:v5 -- --help
 pnpm --filter=@repo/scripts run test
 ```
 
-세부 구조는 [packages/scripts/README.md](/Users/chsong/Developer/Personal/kra-analysis/packages/scripts/README.md)를 참고하세요.
+세부 구조는 [packages/scripts/README.md](packages/scripts/README.md)를 참고하세요.
 
 ## 문서
 
-- [API README](/Users/chsong/Developer/Personal/kra-analysis/apps/api/README.md)
-- [프로젝트 개요](/Users/chsong/Developer/Personal/kra-analysis/docs/project-overview.md)
-- [Knowledge Index](/Users/chsong/Developer/Personal/kra-analysis/docs/knowledge/INDEX.md)
-- [아키텍처 리메디에이션 ExecPlan](/Users/chsong/Developer/Personal/kra-analysis/docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)
-- [Legacy v1 정책](/Users/chsong/Developer/Personal/kra-analysis/apps/api/docs/LEGACY_V1_POLICY.md)
+- [API README](apps/api/README.md)
+- [프로젝트 개요](docs/project-overview.md)
+- [Knowledge Index](docs/knowledge/INDEX.md)
+- [아키텍처 리메디에이션 ExecPlan](docs/plans/archive/2026-03-19-architecture-remediation-execplan.md)
+- [Legacy v1 정책](apps/api/docs/LEGACY_V1_POLICY.md)
 
 ## 현재 주의사항
 
