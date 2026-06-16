@@ -166,7 +166,7 @@ pygments==2.19.2
     # via
     #   pytest
     #   rich
-pyjwt==2.10.1
+pyjwt==2.13.0
     # via supabase-auth
 pytest==8.4.2
     # via
