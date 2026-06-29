@@ -1,4 +1,4 @@
-"""Materialize or strictly block live entity-history overlay source."""
+"""Materialize live frontier artifact-combo prior-date source."""
 
 from __future__ import annotations
 
@@ -10,12 +10,10 @@ from typing import Any
 
 DEFAULT_CACHE_DIR = Path(".cache/autoresearch")
 DEFAULT_SOURCE_TARGET = DEFAULT_CACHE_DIR / (
-    "clean_release_current_best_entity_history_overlay_prior_date_"
-    "selector_rerun_repro_diagnostic.json"
+    "clean_release_frontier_artifact_combo_prior_date_selector_rerun_repro_diagnostic.json"
 )
 DEFAULT_LIVE_SOURCE = (
-    DEFAULT_CACHE_DIR
-    / "single_combo_live_cross_surface_union_race_context_prior_date_predictions.json"
+    DEFAULT_CACHE_DIR / "single_combo_live_current_best_fallback_predictions.json"
 )
 DEFAULT_CANDIDATE_FEATURES = (
     DEFAULT_CACHE_DIR
@@ -23,17 +21,15 @@ DEFAULT_CANDIDATE_FEATURES = (
 )
 DEFAULT_OUTPUT = (
     DEFAULT_CACHE_DIR
-    / "single_combo_live_entity_history_overlay_prior_date_predictions.json"
+    / "single_combo_live_frontier_artifact_combo_prior_date_predictions.json"
 )
 
-EXPECTED_SOURCE_SELECTION_CONTRACT = "one_unordered_top3_combo_per_race"
-LIVE_SOURCE_SELECTION_CONTRACT = "one_unordered_top3_combo_per_race"
+LIVE_SOURCE_SELECTION_CONTRACT = "live_current_best_fallback_predictions_by_window"
+OUTPUT_SELECTION_CONTRACT = "one_unordered_top3_combo_per_race"
 PARENT_ACTION = (
-    "port_locked_best_entity_history_overlay_prior_date_source_to_live_runner"
+    "port_locked_best_frontier_artifact_combo_prior_date_source_to_live_runner"
 )
-CHILD_ACTION = (
-    "port_locked_best_cross_surface_union_race_context_prior_date_source_to_live_runner"
-)
+CHILD_ACTION = "materialize_live_current_best_fallback_for_frontier_artifact_combo"
 
 
 def _read_json(path: Path) -> Any:
@@ -75,20 +71,25 @@ def _coverage_rate(coverage: dict[str, Any]) -> float | None:
 
 def _best_selector(source_target: dict[str, Any]) -> dict[str, Any]:
     best = _dict(source_target.get("best"))
+    windows: list[dict[str, Any]] = []
+    for window in _list(best.get("windows")):
+        window_dict = _dict(window)
+        diagnostics = _dict(window_dict.get("diagnostics"))
+        if diagnostics:
+            windows.append(
+                {
+                    "name": window_dict.get("name"),
+                    "diagnostics": diagnostics,
+                }
+            )
     return {
         "candidate": best.get("candidate"),
         "selector_spec": best.get("selector_spec"),
-        "selection_contract": source_target.get("selection_contract"),
-        "source_artifact": source_target.get("source_artifact"),
         "summary": _dict(best.get("summary")),
-        "window_diagnostics": [
-            {
-                "name": _dict(window).get("name"),
-                "diagnostics": _dict(_dict(window).get("diagnostics")),
-            }
-            for window in _list(best.get("windows"))
-            if _dict(_dict(window).get("diagnostics"))
-        ],
+        "selection_contract": source_target.get("selection_contract"),
+        "source_artifacts": _list(source_target.get("source_artifacts")),
+        "source_names": _list(source_target.get("source_names")),
+        "window_diagnostics": windows,
     }
 
 
@@ -102,18 +103,15 @@ def _window_prediction_count(payload: dict[str, Any]) -> int:
 def _source_context(path: Path) -> dict[str, Any]:
     payload = _dict(_read_json(path))
     coverage = _dict(payload.get("coverage"))
-    selection_contract = payload.get("selection_contract")
-    source_selection_contract = (
-        payload.get("source_selection_contract") or selection_contract
-    )
     predicted_count = _int(coverage.get("predicted_race_count"))
     if predicted_count is None:
         predicted_count = _window_prediction_count(payload)
+    selection_contract = payload.get("selection_contract")
     status = "missing"
     if path.exists():
         if (
             payload.get("status") == "passed"
-            and source_selection_contract == LIVE_SOURCE_SELECTION_CONTRACT
+            and selection_contract == LIVE_SOURCE_SELECTION_CONTRACT
             and _coverage_rate(coverage) == 1.0
             and predicted_count > 0
         ):
@@ -126,11 +124,10 @@ def _source_context(path: Path) -> dict[str, Any]:
         "status": status,
         "source_status": payload.get("status"),
         "selection_contract": selection_contract,
-        "source_selection_contract": source_selection_contract,
-        "expected_source_selection_contract": LIVE_SOURCE_SELECTION_CONTRACT,
+        "expected_selection_contract": LIVE_SOURCE_SELECTION_CONTRACT,
         "coverage": coverage,
         "predicted_race_count": predicted_count,
-        "contract_match": source_selection_contract == LIVE_SOURCE_SELECTION_CONTRACT,
+        "contract_match": selection_contract == LIVE_SOURCE_SELECTION_CONTRACT,
         "diagnostic_only": payload.get("diagnostic_only"),
         "counts_as_70_percent_evidence": payload.get("counts_as_70_percent_evidence"),
         "recommended_next_action": payload.get("recommended_next_action"),
@@ -177,14 +174,34 @@ def _candidate_race_ids(candidate_context: dict[str, Any]) -> list[str]:
     return [str(race_id) for race_id in _list(coverage.get("race_ids"))]
 
 
+def _best_is_current_source_only(selector: dict[str, Any]) -> bool:
+    windows = _list(selector.get("window_diagnostics"))
+    if not windows:
+        return False
+    for window in windows:
+        diagnostics = _dict(_dict(window).get("diagnostics"))
+        try:
+            selected_current_best_rate = float(
+                diagnostics.get("selected_current_best_rate")
+            )
+        except (TypeError, ValueError):
+            return False
+        if selected_current_best_rate != 1.0:
+            return False
+        if diagnostics.get("selection_uses_labels") is not False:
+            return False
+    return True
+
+
 def _recommended_next_action(
     *,
-    live_source_context: dict[str, Any],
+    source_context: dict[str, Any],
     candidate_status: str,
+    status: str,
     ready_to_pass_through: bool,
 ) -> dict[str, Any]:
-    if live_source_context.get("status") != "passed":
-        child_recommended = _dict(live_source_context.get("recommended_next_action"))
+    if source_context.get("status") != "passed":
+        child_recommended = _dict(source_context.get("recommended_next_action"))
         child_action = child_recommended.get("action")
         if isinstance(child_action, str) and child_action:
             return {
@@ -194,11 +211,11 @@ def _recommended_next_action(
                     "classification", "background_modeling_candidate"
                 ),
                 "queue_priority_score": float(
-                    child_recommended.get("queue_priority_score", 94.92)
+                    child_recommended.get("queue_priority_score", 94.98)
                 ),
                 "reason": (
                     child_recommended.get("reason")
-                    or "The cross-surface union race-context source reported a downstream live-port dependency."
+                    or "The live current-best fallback source reported a downstream dependency."
                 ),
                 "upstream_action": PARENT_ACTION,
             }
@@ -206,43 +223,54 @@ def _recommended_next_action(
             "action": CHILD_ACTION,
             "blocking": False,
             "classification": "background_modeling_candidate",
-            "queue_priority_score": 94.92,
+            "queue_priority_score": 94.98,
             "reason": (
-                "The entity-history overlay source cannot emit predictions until "
-                "the cross-surface union race-context prior-date source is "
-                "materialized with the exact contract."
+                "The frontier artifact-combo source needs the live current-best "
+                "fallback predictions materialized with full coverage."
             ),
         }
     if candidate_status != "passed":
         return {
-            "action": "repair_live_candidate_features_before_entity_history_overlay_prior_date_port",
+            "action": "repair_live_candidate_features_before_frontier_artifact_combo_prior_date_port",
             "blocking": False,
             "classification": "background_modeling_candidate",
-            "queue_priority_score": 94.9,
+            "queue_priority_score": 94.96,
             "reason": (
-                "The entity-history overlay source needs complete live full-combo "
+                "The frontier artifact-combo source needs complete live full-combo "
                 "candidate features and live records before pass-through can be trusted."
             ),
         }
     if ready_to_pass_through:
         return {
-            "action": "materialize_locked_best_entity_history_pair_overlay_from_passed_entity_history_overlay",
+            "action": "materialize_locked_best_broad_component_first_exact_rank_from_passed_frontier_artifact_combo",
             "blocking": False,
             "classification": "background_modeling_candidate",
-            "queue_priority_score": 94.88,
+            "queue_priority_score": 94.94,
             "reason": (
-                "The fallback-only entity-history overlay source has been materialized "
-                "and can now unblock the entity-history pair-overlay parent."
+                "The frontier selector's locked best chose the current source in "
+                "every validation window, so the current-best live source can unblock "
+                "the broad-component parent."
+            ),
+        }
+    if status == "blocked_pending_frontier_artifact_combo_prior_date_prediction_logic":
+        return {
+            "action": "implement_locked_best_frontier_artifact_combo_prior_date_prediction_logic",
+            "blocking": False,
+            "classification": "background_modeling_candidate",
+            "queue_priority_score": 94.94,
+            "reason": (
+                "The live current-best source is available, but the frontier selector "
+                "cannot be safely reduced to pass-through from the locked diagnostics."
             ),
         }
     return {
-        "action": "inspect_entity_history_overlay_prior_date_pass_through_coverage_gap",
+        "action": "inspect_frontier_artifact_combo_prior_date_live_materializer_gap",
         "blocking": False,
         "classification": "background_modeling_candidate",
-        "queue_priority_score": 94.86,
+        "queue_priority_score": 94.92,
         "reason": (
-            "The entity-history overlay source is present, but its live prediction "
-            "coverage does not match the current candidate race universe."
+            "The frontier artifact-combo materializer reached an unexpected coverage "
+            "state and needs inspection before unblocking its parent."
         ),
     }
 
@@ -265,17 +293,17 @@ def build_artifact(
     predicted_race_count = _window_prediction_count(
         {"predictions_by_window": predictions}
     )
+    current_source_only = _best_is_current_source_only(selector)
+    source_ready = source_context["status"] == "passed"
+    candidates_ready = candidate_context["status"] == "passed"
     ready_to_pass_through = (
-        source_context["status"] == "passed"
-        and candidate_context["status"] == "passed"
+        source_ready
+        and candidates_ready
+        and current_source_only
         and predicted_race_count == expected_race_count
         and expected_race_count > 0
     )
-    recommended = _recommended_next_action(
-        candidate_status=str(candidate_context.get("status")),
-        live_source_context=source_context,
-        ready_to_pass_through=ready_to_pass_through,
-    )
+
     if ready_to_pass_through:
         status = "passed"
         coverage = {
@@ -286,8 +314,9 @@ def build_artifact(
             "missing_race_ids": [],
             "race_ids": race_ids,
         }
+        predictions_payload: dict[str, Any] = predictions
     elif (
-        source_context["status"] != "passed"
+        not source_ready
         and source_context.get("exists")
         and _dict(source_context.get("recommended_next_action")).get("action")
     ):
@@ -299,8 +328,8 @@ def build_artifact(
             "coverage_rate": 0.0 if expected_race_count else None,
             "missing_race_ids": race_ids,
         }
-        predictions = {}
-    elif source_context["status"] != "passed":
+        predictions_payload = {}
+    elif not source_ready:
         status = "blocked_missing_live_source_artifact"
         coverage = {
             "status": "blocked",
@@ -309,8 +338,8 @@ def build_artifact(
             "coverage_rate": 0.0 if expected_race_count else None,
             "missing_race_ids": race_ids,
         }
-        predictions = {}
-    elif candidate_context["status"] != "passed":
+        predictions_payload = {}
+    elif not candidates_ready:
         status = "blocked_incomplete_live_candidate_features"
         coverage = {
             "status": "blocked",
@@ -319,9 +348,19 @@ def build_artifact(
             "coverage_rate": 0.0 if expected_race_count else None,
             "missing_race_ids": race_ids,
         }
-        predictions = {}
+        predictions_payload = {}
+    elif not current_source_only:
+        status = "blocked_pending_frontier_artifact_combo_prior_date_prediction_logic"
+        coverage = {
+            "status": "blocked",
+            "expected_race_count": expected_race_count,
+            "predicted_race_count": 0,
+            "coverage_rate": 0.0 if expected_race_count else None,
+            "missing_race_ids": race_ids,
+        }
+        predictions_payload = {}
     else:
-        status = "blocked_entity_history_overlay_prior_date_coverage_gap"
+        status = "blocked_frontier_artifact_combo_prior_date_coverage_gap"
         coverage = {
             "status": "blocked",
             "expected_race_count": expected_race_count,
@@ -333,44 +372,51 @@ def build_artifact(
             ),
             "missing_race_ids": race_ids,
         }
-        predictions = {}
+        predictions_payload = {}
+
+    recommended = _recommended_next_action(
+        candidate_status=str(candidate_context.get("status")),
+        ready_to_pass_through=ready_to_pass_through,
+        source_context=source_context,
+        status=status,
+    )
     return {
-        "format_version": "single-combo-live-entity-history-overlay-prior-date-materializer-v1",
+        "format_version": "single-combo-live-frontier-artifact-combo-prior-date-materializer-v1",
         "generated_at_utc": datetime.now(UTC).isoformat(),
         "status": status,
         "diagnostic_only": status != "passed",
         "counts_as_70_percent_evidence": False,
         "counts_as_forward_test_evidence": False,
         "counts_as_56_46_chain_validation": False,
-        "selection_contract": "one_unordered_top3_combo_per_race",
-        "source_selection_contract": "one_unordered_top3_combo_per_race",
+        "selection_contract": OUTPUT_SELECTION_CONTRACT,
+        "source_selection_contract": OUTPUT_SELECTION_CONTRACT,
         "source_target_selection_contract": selector.get("selection_contract"),
-        "expected_source_selection_contract": EXPECTED_SOURCE_SELECTION_CONTRACT,
+        "expected_live_source_selection_contract": LIVE_SOURCE_SELECTION_CONTRACT,
         "selector_spec": selector.get("selector_spec"),
         "source_target_artifact": str(source_target_path),
-        "source_target_source_artifact": selector.get("source_artifact"),
+        "source_target_source_artifacts": selector.get("source_artifacts"),
+        "source_target_source_names": selector.get("source_names"),
         "live_source_context": source_context,
         "candidate_feature_context": candidate_context,
         "coverage": coverage,
-        "predictions_by_window": predictions,
+        "predictions_by_window": predictions_payload,
         "selector_diagnostics": {
-            "selector": "fallback_only",
+            "selector": "frontier_artifact_combo_prior_date",
             "candidate": selector.get("candidate"),
             "selector_spec": selector.get("selector_spec"),
             "summary": selector.get("summary"),
             "window_diagnostics": selector.get("window_diagnostics"),
+            "best_selected_current_source_in_all_windows": current_source_only,
             "selection_uses_target_labels": False,
             "history_uses_completed_prior_outcomes": False,
         },
         "recommended_next_action": recommended,
         "policy": {
-            "fallback_only_ranker_may_pass_through_materialized_source": True,
-            "do_not_substitute_champion_clean_top3_for_locked_source": True,
-            "diagnostic_shadow_substitution_must_not_unblock_locked_parent": True,
-            "required_source_must_be_materialized_before_prediction": True,
+            "pass_through_requires_best_selected_current_source_rate_one": True,
+            "pass_through_source_is_live_current_best_fallback": True,
             "active_live_labels_must_not_be_used": True,
-            "prior_date_history_must_not_include_current_or_future_labels": True,
-            "same_day_result_history_updates_without_contract_forbidden": True,
+            "do_not_substitute_unverified_frontier_sources": True,
+            "diagnostic_shadow_substitution_must_not_count_as_70_percent": True,
             "counts_as_70_percent_evidence": False,
         },
         "blocked_reason": None if status == "passed" else recommended["reason"],
