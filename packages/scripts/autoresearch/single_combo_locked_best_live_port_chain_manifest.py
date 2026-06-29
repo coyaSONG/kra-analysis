@@ -90,6 +90,9 @@ LIVE_ARTIFACT_BY_OFFLINE_FRAGMENT = {
     "broad_component_first_exact_rank_prior_date_selector": (
         "single_combo_live_broad_component_first_exact_rank_prior_date_predictions.json"
     ),
+    "frontier_artifact_combo_prior_date_selector": (
+        "single_combo_live_frontier_artifact_combo_prior_date_predictions.json"
+    ),
 }
 
 ACTION_BY_LIVE_ARTIFACT = {
@@ -164,6 +167,9 @@ ACTION_BY_LIVE_ARTIFACT = {
     ),
     "single_combo_live_broad_component_first_exact_rank_prior_date_predictions.json": (
         "port_locked_best_broad_component_first_exact_rank_prior_date_source_to_live_runner"
+    ),
+    "single_combo_live_frontier_artifact_combo_prior_date_predictions.json": (
+        "port_locked_best_frontier_artifact_combo_prior_date_source_to_live_runner"
     ),
 }
 

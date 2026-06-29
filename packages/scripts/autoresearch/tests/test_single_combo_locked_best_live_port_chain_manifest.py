@@ -516,6 +516,11 @@ def test_build_manifest_maps_variant_calibration_input_dependencies(
             "prior_date_selector_rerun_repro_diagnostic.json",
             "port_locked_best_broad_component_first_exact_rank_prior_date_source_to_live_runner",
         ),
+        (
+            "clean_release_frontier_artifact_combo_prior_date_"
+            "selector_rerun_repro_diagnostic.json",
+            "port_locked_best_frontier_artifact_combo_prior_date_source_to_live_runner",
+        ),
     ]
     for artifact_name, expected_action in cases:
         audit = tmp_path / f"{artifact_name}.audit.json"
