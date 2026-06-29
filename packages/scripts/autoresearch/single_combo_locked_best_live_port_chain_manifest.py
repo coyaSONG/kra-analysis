@@ -87,6 +87,9 @@ LIVE_ARTIFACT_BY_OFFLINE_FRAGMENT = {
     "cross_surface_union_race_context_prior_date_selector": (
         "single_combo_live_cross_surface_union_race_context_prior_date_predictions.json"
     ),
+    "broad_component_first_exact_rank_prior_date_selector": (
+        "single_combo_live_broad_component_first_exact_rank_prior_date_predictions.json"
+    ),
 }
 
 ACTION_BY_LIVE_ARTIFACT = {
@@ -158,6 +161,9 @@ ACTION_BY_LIVE_ARTIFACT = {
     ),
     "single_combo_live_cross_surface_union_race_context_prior_date_predictions.json": (
         "port_locked_best_cross_surface_union_race_context_prior_date_source_to_live_runner"
+    ),
+    "single_combo_live_broad_component_first_exact_rank_prior_date_predictions.json": (
+        "port_locked_best_broad_component_first_exact_rank_prior_date_source_to_live_runner"
     ),
 }
 
