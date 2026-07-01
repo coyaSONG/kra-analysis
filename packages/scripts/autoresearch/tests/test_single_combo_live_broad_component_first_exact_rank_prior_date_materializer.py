@@ -166,16 +166,101 @@ def test_build_artifact_blocks_pending_model_logic_after_source_materialization(
         source_target_path=source_target,
     )
 
-    assert (
-        result["status"]
-        == "blocked_pending_broad_component_first_exact_rank_prior_date_prediction_logic"
-    )
+    assert result["status"] == "blocked_incomplete_live_broad_components"
     assert result["diagnostic_only"] is True
     assert result["predictions_by_window"] == {}
-    assert result["selector_diagnostics"][
-        "prediction_logic_pending_after_source_materialization"
-    ]
     assert result["recommended_next_action"]["action"] == (
-        "implement_locked_best_broad_component_first_exact_rank_prior_date_prediction_logic"
+        "repair_live_broad_component_predictions_before_broad_component_first_exact_rank_prior_date_port"
     )
-    assert result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
+
+
+def test_build_artifact_emits_predictions_after_broad_components_are_ready(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source_target = tmp_path / "broad-component-target.json"
+    candidates = tmp_path / "candidates.json"
+    source = tmp_path / "frontier-source.json"
+    broad_components = tmp_path / "broad-components.json"
+    train_surface = tmp_path / "train-surface.json"
+    _write_source_target(source_target)
+    race_ids = _write_candidates(candidates, race_count=2)
+    _write_passed_source(source, race_ids)
+    _write_json(train_surface, {"selector_spec": "fake-selector"})
+    _write_json(
+        broad_components,
+        {
+            "coverage": {"status": "passed"},
+            "materialized_components": ["component_a"],
+            "missing_components": [],
+            "predictions_by_window": {
+                "live": {
+                    "component_a": {
+                        race_ids[0]: [2, 3, 4],
+                        race_ids[1]: [3, 4, 5],
+                    }
+                }
+            },
+            "required_components": ["component_a"],
+            "selection_contract": (
+                "live_broad_component_predictions_partial_no_answer"
+            ),
+            "status": "passed",
+        },
+    )
+
+    def fake_training_inputs(*, train_surface_path: Path, live_race_ids: list[str]):
+        assert train_surface_path == train_surface
+        assert live_race_ids == race_ids
+        return (
+            {"selector_spec": "fake-selector", "train_prediction_contract": "safe"},
+            "fold_c",
+            ("component_a",),
+            [{"race_id": "train"}],
+            {},
+        )
+
+    monkeypatch.setattr(materializer, "_load_training_inputs", fake_training_inputs)
+    monkeypatch.setattr(
+        materializer.train_surface,
+        "_resolve_best_specs",
+        lambda _selector_spec: (object(), object(), object()),
+    )
+    monkeypatch.setattr(
+        materializer,
+        "_predict_live_window",
+        lambda **_kwargs: (
+            {
+                race_ids[0]: [2, 3, 4],
+                race_ids[1]: [3, 4, 5],
+            },
+            {
+                "history_update": (
+                    "completed_frozen_train_dates_only_no_live_label_updates"
+                ),
+                "selection_uses_live_labels": False,
+            },
+        ),
+    )
+
+    result = materializer.build_artifact(
+        candidate_features_path=candidates,
+        live_broad_components_path=broad_components,
+        live_source_path=source,
+        source_target_path=source_target,
+        train_surface_path=train_surface,
+    )
+
+    assert result["status"] == "passed"
+    assert result["diagnostic_only"] is False
+    assert result["coverage"]["coverage_rate"] == 1.0
+    assert result["coverage"]["predicted_race_count"] == 2
+    assert result["predictions_by_window"] == {
+        "live": {
+            race_ids[0]: [2, 3, 4],
+            race_ids[1]: [3, 4, 5],
+        }
+    }
+    assert result["selector_diagnostics"]["selection_uses_live_labels"] is False
+    assert not result["counts_as_70_percent_evidence"]
+    assert not result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
