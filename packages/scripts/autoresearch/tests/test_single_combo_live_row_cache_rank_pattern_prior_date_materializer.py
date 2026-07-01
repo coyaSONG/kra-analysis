@@ -164,18 +164,81 @@ def test_build_artifact_blocks_pending_model_logic_after_source_materialization(
         candidate_features_path=candidates,
         live_source_path=source,
         source_target_path=source_target,
+        train_surface_path=tmp_path / "missing-train-surface.json",
     )
 
-    assert (
-        result["status"]
-        == "blocked_pending_row_cache_rank_pattern_prior_date_prediction_logic"
-    )
+    assert result["status"] == "blocked_missing_row_cache_rank_pattern_train_surface"
     assert result["diagnostic_only"] is True
     assert result["predictions_by_window"] == {}
-    assert result["selector_diagnostics"][
-        "prediction_logic_pending_after_source_materialization"
-    ]
     assert result["recommended_next_action"]["action"] == (
-        "implement_locked_best_row_cache_rank_pattern_prior_date_prediction_logic"
+        "repair_row_cache_rank_pattern_train_surface_before_live_port"
     )
     assert result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
+
+
+def test_build_artifact_emits_predictions_after_train_surface_is_ready(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source_target = tmp_path / "row-cache-target.json"
+    candidates = tmp_path / "candidates.json"
+    source = tmp_path / "pair-overlay-source.json"
+    train_surface = tmp_path / "train-surface.json"
+    _write_source_target(source_target)
+    race_ids = _write_candidates(candidates, race_count=2)
+    _write_passed_source(source, race_ids)
+    _write_json(train_surface, {"model_spec": "top20/hgb/exact"})
+
+    monkeypatch.setattr(
+        materializer,
+        "_live_rows_by_race_from_candidate_payload",
+        lambda _payload, *, expected_race_ids: {
+            race_id: [{"race_id": race_id, "chulNo": 1}] * 3
+            for race_id in expected_race_ids
+        },
+    )
+    monkeypatch.setattr(
+        materializer,
+        "_load_training_state",
+        lambda *, train_surface_path, live_race_ids: {
+            "surface_payload": {"train_prediction_contract": "safe"},
+            "train_candidate_rows": 10,
+        },
+    )
+    monkeypatch.setattr(
+        materializer,
+        "_predict_live_window",
+        lambda **_kwargs: (
+            {
+                race_ids[0]: [2, 3, 4],
+                race_ids[1]: [3, 4, 5],
+            },
+            {
+                "history_update": (
+                    "completed_frozen_train_dates_only_no_live_label_updates"
+                ),
+                "selection_uses_live_labels": False,
+            },
+        ),
+    )
+
+    result = materializer.build_artifact(
+        candidate_features_path=candidates,
+        live_source_path=source,
+        source_target_path=source_target,
+        train_surface_path=train_surface,
+    )
+
+    assert result["status"] == "passed"
+    assert result["diagnostic_only"] is False
+    assert result["coverage"]["coverage_rate"] == 1.0
+    assert result["coverage"]["predicted_race_count"] == 2
+    assert result["predictions_by_window"] == {
+        "live": {
+            race_ids[0]: [2, 3, 4],
+            race_ids[1]: [3, 4, 5],
+        }
+    }
+    assert result["selector_diagnostics"]["selection_uses_live_labels"] is False
+    assert not result["counts_as_70_percent_evidence"]
+    assert not result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
