@@ -6,6 +6,7 @@ import argparse
 import itertools
 import json
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
@@ -61,6 +62,7 @@ PARENT_ACTION = (
 CHILD_ACTION = (
     "port_locked_best_row_cache_rank_pattern_prior_date_source_to_live_runner"
 )
+CandidateRowsBuilder = Callable[..., list[dict[str, Any]]]
 
 
 def _safe_mean(values: list[float]) -> float:
@@ -357,6 +359,7 @@ def _load_training_state(
     *,
     train_surface_path: Path,
     live_race_ids: list[str],
+    candidate_rows_builder: CandidateRowsBuilder = selector_base._candidate_rows_for_race,
 ) -> dict[str, Any]:
     surface_payload = _dict(_read_json(train_surface_path))
     source_group_name = str(surface_payload.get("source_group_spec") or "")
@@ -432,7 +435,7 @@ def _load_training_state(
     train_rows: list[dict[str, Any]] = []
     for race_id in completed_race_ids:
         train_rows.extend(
-            selector_base._candidate_rows_for_race(
+            candidate_rows_builder(
                 race_id=race_id,
                 race_rows=rows_by_race.get(race_id, []),
                 sources=sources,
@@ -469,6 +472,7 @@ def _predict_live_window(
     current_best_predictions: dict[str, tuple[int, int, int]],
     live_rows_by_race: dict[str, list[dict[str, Any]]],
     train_state: dict[str, Any],
+    candidate_rows_builder: CandidateRowsBuilder = selector_base._candidate_rows_for_race,
 ) -> tuple[dict[str, list[int]], dict[str, Any]]:
     source_group = train_state["source_group"]
     selector_spec = train_state["selector_spec"]
@@ -486,7 +490,7 @@ def _predict_live_window(
     eval_rows_by_race: dict[str, list[dict[str, Any]]] = {}
     eval_rows: list[dict[str, Any]] = []
     for race_id, fallback_combo in fallback_predictions.items():
-        rows_for_race = selector_base._candidate_rows_for_race(
+        rows_for_race = candidate_rows_builder(
             race_id=race_id,
             race_rows=live_rows_by_race.get(race_id, []),
             sources=sources,
@@ -641,6 +645,7 @@ def build_artifact(
     live_source_path: Path = DEFAULT_LIVE_SOURCE,
     candidate_features_path: Path = DEFAULT_CANDIDATE_FEATURES,
     train_surface_path: Path = DEFAULT_TRAIN_SURFACE,
+    candidate_rows_builder: CandidateRowsBuilder = selector_base._candidate_rows_for_race,
 ) -> dict[str, Any]:
     source_target = _dict(_read_json(source_target_path))
     selector = _best_selector(source_target)
@@ -695,10 +700,12 @@ def build_artifact(
             }
         else:
             train_state = _load_training_state(
+                candidate_rows_builder=candidate_rows_builder,
                 train_surface_path=train_surface_path,
                 live_race_ids=race_ids,
             )
             predicted, live_prediction_diagnostics = _predict_live_window(
+                candidate_rows_builder=candidate_rows_builder,
                 race_ids=race_ids,
                 current_best_predictions=current_best_predictions,
                 live_rows_by_race=live_rows_by_race,

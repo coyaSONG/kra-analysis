@@ -1,4 +1,4 @@
-"""Live all-allowed source-pool prior-date ranker materializer tests."""
+"""Live feature-extended source-pool ranker materializer tests."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch import (  # noqa: E402
-    single_combo_live_all_allowed_source_pool_ranker_prior_date_materializer as materializer,
+    single_combo_live_all_allowed_source_pool_ranker_feature_extension_materializer as materializer,
 )
 
 
@@ -25,14 +25,15 @@ def _write_source_target(path: Path) -> None:
             "best": {
                 "candidate": (
                     "clean_current_best_all_allowed_source_pool_ranker/"
-                    "src200/match/rankw0/hgb/rows1000/pos40/cur0.25/srcw0.25/ovw0/minp0/margin0.05"
+                    "src200/exact/rankw0/hgb/rows1000/pos40/"
+                    "cur0.25/srcw0/ovw0.05/minp0/margin0"
                 ),
-                "selector_spec": "cur0.25/srcw0.25/ovw0/minp0/margin0.05",
-                "source_group_spec": "src200/match/rankw0",
+                "model_spec": "hgb/rows1000/pos40",
+                "selector_spec": "cur0.25/srcw0/ovw0.05/minp0/margin0",
+                "source_group_spec": "src200/exact/rankw0",
                 "summary": {
-                    "overfit_safe_exact_rate": 0.543103,
-                    "test_exact_3of3_rate": 0.55102,
-                    "robust_pool_oracle_exact_rate": 0.939655,
+                    "overfit_safe_exact_rate": 0.538462,
+                    "test_exact_3of3_rate": 0.564626,
                 },
                 "windows": [
                     {
@@ -40,7 +41,7 @@ def _write_source_target(path: Path) -> None:
                         "diagnostics": {
                             "model_fit": True,
                             "selection_uses_labels": False,
-                            "switch_rate": 0.013605,
+                            "switch_rate": 0.054422,
                         },
                     }
                 ],
@@ -92,7 +93,7 @@ def _write_passed_source(path: Path, race_ids: list[str]) -> None:
 def test_build_artifact_blocks_when_row_cache_source_is_missing(
     tmp_path: Path,
 ) -> None:
-    source_target = tmp_path / "source-pool-target.json"
+    source_target = tmp_path / "feature-extension-target.json"
     candidates = tmp_path / "candidates.json"
     _write_source_target(source_target)
     _write_candidates(candidates)
@@ -104,55 +105,19 @@ def test_build_artifact_blocks_when_row_cache_source_is_missing(
     )
 
     assert result["status"] == "blocked_missing_live_source_artifact"
-    assert result["live_source_context"]["status"] == "missing"
     assert result["recommended_next_action"]["action"] == (
         "port_locked_best_row_cache_rank_pattern_prior_date_source_to_live_runner"
     )
-    assert result["coverage"]["predicted_race_count"] == 0
     assert result["predictions_by_window"] == {}
-    assert result["policy"]["ranker_must_not_be_treated_as_pass_through"]
-    assert not result["counts_as_70_percent_evidence"]
-
-
-def test_build_artifact_follows_row_cache_child_action(tmp_path: Path) -> None:
-    source_target = tmp_path / "source-pool-target.json"
-    candidates = tmp_path / "candidates.json"
-    source = tmp_path / "row-cache-source.json"
-    _write_source_target(source_target)
-    _write_candidates(candidates, race_count=1)
-    _write_json(
-        source,
-        {
-            "coverage": {"coverage_rate": 0.0, "predicted_race_count": 0},
-            "recommended_next_action": {
-                "action": "implement_locked_best_row_cache_rank_pattern_prior_date_prediction_logic",
-                "blocking": False,
-                "queue_priority_score": 94.88,
-                "reason": "row-cache prior-date scoring is pending",
-            },
-            "status": "blocked_pending_row_cache_rank_pattern_prior_date_prediction_logic",
-        },
-    )
-
-    result = materializer.build_artifact(
-        candidate_features_path=candidates,
-        live_source_path=source,
-        source_target_path=source_target,
-    )
-
-    assert result["status"] == "blocked_live_source_child_dependency"
-    assert result["recommended_next_action"]["action"] == (
-        "implement_locked_best_row_cache_rank_pattern_prior_date_prediction_logic"
-    )
-    assert result["recommended_next_action"]["upstream_action"] == (
-        "port_locked_best_all_allowed_source_pool_ranker_prior_date_source_to_live_runner"
+    assert result["selector_diagnostics"]["selector"] == (
+        "source_pool_ranker_feature_extension_prior_date"
     )
 
 
 def test_build_artifact_blocks_when_train_surface_is_missing(
     tmp_path: Path,
 ) -> None:
-    source_target = tmp_path / "source-pool-target.json"
+    source_target = tmp_path / "feature-extension-target.json"
     candidates = tmp_path / "candidates.json"
     source = tmp_path / "row-cache-source.json"
     _write_source_target(source_target)
@@ -168,21 +133,19 @@ def test_build_artifact_blocks_when_train_surface_is_missing(
 
     assert (
         result["status"]
-        == "blocked_missing_all_allowed_source_pool_ranker_train_surface"
+        == "blocked_missing_all_allowed_source_pool_ranker_feature_extension_train_surface"
     )
-    assert result["diagnostic_only"] is True
-    assert result["predictions_by_window"] == {}
     assert result["recommended_next_action"]["action"] == (
-        "repair_all_allowed_source_pool_ranker_train_surface_before_live_port"
+        "repair_all_allowed_source_pool_ranker_feature_extension_train_surface_before_live_port"
     )
-    assert result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
+    assert result["predictions_by_window"] == {}
 
 
-def test_build_artifact_emits_predictions_after_train_surface_is_ready(
+def test_build_artifact_emits_feature_extension_predictions(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    source_target = tmp_path / "source-pool-target.json"
+    source_target = tmp_path / "feature-extension-target.json"
     candidates = tmp_path / "candidates.json"
     source = tmp_path / "row-cache-source.json"
     train_surface = tmp_path / "train-surface.json"
@@ -192,14 +155,14 @@ def test_build_artifact_emits_predictions_after_train_surface_is_ready(
     _write_json(
         train_surface,
         {
-            "source_group_spec": "src200/match/rankw0",
+            "source_group_spec": "src200/exact/rankw0",
             "model_spec": "hgb/rows1000/pos40",
-            "selector_spec": "cur0.25/srcw0.25/ovw0/minp0/margin0.05",
+            "selector_spec": "cur0.25/srcw0/ovw0.05/minp0/margin0",
         },
     )
 
     monkeypatch.setattr(
-        materializer,
+        materializer.base_materializer,
         "_live_rows_by_race_from_candidate_payload",
         lambda _payload, *, expected_race_ids: {
             race_id: [{"race_id": race_id, "chulNo": 1}] * 3
@@ -207,7 +170,7 @@ def test_build_artifact_emits_predictions_after_train_surface_is_ready(
         },
     )
     monkeypatch.setattr(
-        materializer,
+        materializer.base_materializer,
         "_load_training_state",
         lambda *, candidate_rows_builder, train_surface_path, live_race_ids: {
             "surface_payload": {"train_prediction_contract": "safe"},
@@ -215,7 +178,7 @@ def test_build_artifact_emits_predictions_after_train_surface_is_ready(
         },
     )
     monkeypatch.setattr(
-        materializer,
+        materializer.base_materializer,
         "_predict_live_window",
         lambda **_kwargs: (
             {
@@ -241,13 +204,9 @@ def test_build_artifact_emits_predictions_after_train_surface_is_ready(
     assert result["status"] == "passed"
     assert result["diagnostic_only"] is False
     assert result["coverage"]["coverage_rate"] == 1.0
-    assert result["coverage"]["predicted_race_count"] == 2
-    assert result["predictions_by_window"] == {
-        "live": {
-            race_ids[0]: [2, 3, 4],
-            race_ids[1]: [3, 4, 5],
-        }
-    }
-    assert result["selector_diagnostics"]["selection_uses_live_labels"] is False
-    assert not result["counts_as_70_percent_evidence"]
+    assert result["predictions_by_window"]["live"][race_ids[0]] == [2, 3, 4]
+    assert result["feature_extension"]["adds_horse_pair_aggregates"]
+    assert result["recommended_next_action"]["action"] == (
+        "materialize_locked_best_source_pool_variant_calibration_from_passed_feature_extension_ranker"
+    )
     assert not result["policy"]["hgb_model_prediction_logic_must_be_ported_before_emit"]
