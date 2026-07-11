@@ -38,7 +38,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   uvicorn
 coverage==7.10.7
     # via pytest-cov
-cryptography==46.0.1
+cryptography==48.0.1
     # via
     #   pyjwt
     #   python-jose
