@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import settings
+from utils.database_url import is_supabase_pooler_url
 
 logger = structlog.get_logger()
 
@@ -101,7 +102,7 @@ async def test_sqlalchemy_connection():
         # infrastructure/database.py와 동일한 설정
         db_url = settings.database_url
 
-        if "pooler.supabase.com" in db_url:
+        if is_supabase_pooler_url(db_url):
             base_url = db_url.split("?")[0]
             from sqlalchemy.pool import NullPool
 
