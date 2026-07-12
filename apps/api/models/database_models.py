@@ -76,7 +76,7 @@ class PostgresEnum(TypeDecorator):
         return value
 
 
-class JobStatus(str, enum.Enum):
+class JobStatus(enum.StrEnum):
     """작업 상태"""
 
     PENDING = "pending"
@@ -87,7 +87,7 @@ class JobStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
-class JobType(str, enum.Enum):
+class JobType(enum.StrEnum):
     """작업 유형"""
 
     COLLECTION = "collection"
@@ -98,7 +98,7 @@ class JobType(str, enum.Enum):
     BATCH = "batch"
 
 
-class DataStatus(str, enum.Enum):
+class DataStatus(enum.StrEnum):
     """데이터 상태"""
 
     PENDING = "pending"

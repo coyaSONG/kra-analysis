@@ -6,7 +6,7 @@ Pipeline Base Classes
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -14,7 +14,7 @@ import structlog
 logger = structlog.get_logger()
 
 
-class StageStatus(str, Enum):
+class StageStatus(StrEnum):
     """파이프라인 단계 상태"""
 
     PENDING = "pending"
@@ -24,7 +24,7 @@ class StageStatus(str, Enum):
     SKIPPED = "skipped"
 
 
-class PipelineStatus(str, Enum):
+class PipelineStatus(StrEnum):
     """파이프라인 전체 상태"""
 
     IDLE = "idle"

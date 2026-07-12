@@ -119,6 +119,15 @@ jobs:
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          python-version: '3.13'
+      - name: Python dependency audit
+        run: |
+          uvx pip-audit -r apps/api/requirements.txt
+          uv export --all-packages --all-groups --format requirements-txt --no-hashes --no-emit-project --no-emit-workspace --output-file /tmp/all-requirements.txt
+          uvx pip-audit -r /tmp/all-requirements.txt
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
       - name: Setup Node.js
@@ -129,8 +138,23 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm audit --audit-level=low
-        continue-on-error: true
-      - name: Node.js audit gate (critical)
-        run: pnpm audit --audit-level=critical
       - name: Repository hygiene checks
         run: bash .github/scripts/security_checks.sh
+
+  docker-build:
+    name: API Docker Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build API image
+        run: docker build -f apps/api/Dockerfile -t kra-api-ci .
+      - name: Smoke-test application import
+        run: |
+          docker run --rm \
+            -e SECRET_KEY=ci-secret-key-ci-secret-key \
+            -e DATABASE_URL=postgresql+asyncpg://test:test@localhost:5432/test_db \
+            -e REDIS_URL=redis://localhost:6379/15 \
+            kra-api-ci \
+            python -c 'from main_v2 import app; print(app.title)'

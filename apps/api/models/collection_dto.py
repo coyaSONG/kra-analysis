@@ -4,7 +4,7 @@
 
 import re
 from datetime import date, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field, validator
@@ -148,7 +148,7 @@ class ResultCollectionRequest(BaseModel):
         }
 
 
-class DataStatus(str, Enum):
+class DataStatus(StrEnum):
     """데이터 상태"""
 
     PENDING = "pending"

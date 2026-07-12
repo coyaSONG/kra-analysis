@@ -3,13 +3,13 @@
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class JobType(str, Enum):
+class JobType(StrEnum):
     """작업 유형"""
 
     COLLECTION = "collection"
@@ -20,7 +20,7 @@ class JobType(str, Enum):
     BATCH = "batch"
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     """작업 상태"""
 
     PENDING = "pending"

@@ -6,11 +6,11 @@ API 키 및 JWT 토큰 검증
 import re
 from datetime import UTC, datetime, timedelta
 
+import jwt
 import structlog
 from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.params import Depends as DependsMarker
-from jose import jwt
-from jose.exceptions import ExpiredSignatureError, JWTError
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -257,7 +257,7 @@ def verify_token(token: str) -> dict | None:
     except ExpiredSignatureError:
         logger.warning("Token has expired")
         return None
-    except JWTError as e:
+    except PyJWTError as e:
         logger.warning(f"Token verification failed: {e}")
         return None
 
