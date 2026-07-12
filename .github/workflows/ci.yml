@@ -123,7 +123,6 @@ jobs:
         uses: astral-sh/setup-uv@v8.2.0
         with:
           python-version: '3.13'
-          enable-cache: true
       - name: Python dependency audit
         run: |
           uvx pip-audit -r apps/api/requirements.txt
