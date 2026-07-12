@@ -17,6 +17,7 @@ from infrastructure.migration_manifest import (
     get_active_migration_names,
     get_required_migration_head,
 )
+from utils.database_url import is_supabase_pooler_url
 
 logger = structlog.get_logger()
 
@@ -65,7 +66,7 @@ if "sqlite" in database_url:
     engine = create_async_engine(database_url, echo=settings.debug)
 else:
     # For Supabase/pgbouncer, use NullPool to avoid connection pooling issues
-    if "pooler.supabase.com" in database_url:
+    if is_supabase_pooler_url(database_url):
         engine = create_async_engine(
             database_url,
             echo=settings.debug,

@@ -5,11 +5,7 @@ import os
 from urllib.parse import unquote
 
 import requests
-import urllib3
 from dotenv import load_dotenv
-
-# SSL 경고 비활성화
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # 환경 변수 로드
 load_dotenv()
@@ -44,11 +40,11 @@ params = {
 
 print(f"\nTesting KRA API with date: {test_date}")
 print(f"URL: {url}")
-print(f"Params: {params}")
+safe_params = {**params, "serviceKey": "<redacted>"}
+print(f"Params: {safe_params}")
 
 try:
-    # SSL 검증 비활성화 (개발 환경용)
-    response = requests.get(url, params=params, verify=False, timeout=30)
+    response = requests.get(url, params=params, timeout=30)
     print(f"\nStatus Code: {response.status_code}")
 
     if response.status_code == 200:
