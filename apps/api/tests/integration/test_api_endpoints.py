@@ -57,8 +57,8 @@ class TestHealthEndpoints:
             def ping(self):
                 raise RuntimeError("redis down")
 
-        api_app.dependency_overrides[health_router.get_optional_redis] = (
-            lambda: FailPing()
+        api_app.dependency_overrides[health_router.get_optional_redis] = lambda: (
+            FailPing()
         )
         try:
             response = await authenticated_client.get("/health/detailed")

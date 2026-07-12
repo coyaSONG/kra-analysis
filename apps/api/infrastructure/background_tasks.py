@@ -10,7 +10,7 @@ import traceback
 import uuid
 from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -22,7 +22,7 @@ logger = structlog.get_logger()
 # ---------------------------------------------------------------------------
 
 
-class TaskState(str, Enum):
+class TaskState(StrEnum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"

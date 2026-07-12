@@ -2,11 +2,11 @@
 Canonical job vocabulary used internally by the job service layer.
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class DispatchAction(str, Enum):
+class DispatchAction(StrEnum):
     COLLECT_RACE = "collect_race"
     PREPROCESS_RACE = "preprocess_race"
     ENRICH_RACE = "enrich_race"
@@ -17,7 +17,7 @@ class DispatchAction(str, Enum):
     FULL_PIPELINE = "full_pipeline"
 
 
-class LifecycleStatus(str, Enum):
+class LifecycleStatus(StrEnum):
     PENDING = "pending"
     QUEUED = "queued"
     PROCESSING = "processing"

@@ -93,8 +93,8 @@ class TestDetailedHealthBranches:
             def ping(self):
                 raise ConnectionError("down")
 
-        api_app.dependency_overrides[health_mod.get_optional_redis] = (
-            lambda: BadPingRedis()
+        api_app.dependency_overrides[health_mod.get_optional_redis] = lambda: (
+            BadPingRedis()
         )
         try:
             r = await authenticated_client.get("/health/detailed")
@@ -109,8 +109,8 @@ class TestDetailedHealthBranches:
         class NoPingRedis:
             pass
 
-        api_app.dependency_overrides[health_mod.get_optional_redis] = (
-            lambda: NoPingRedis()
+        api_app.dependency_overrides[health_mod.get_optional_redis] = lambda: (
+            NoPingRedis()
         )
         try:
             r = await authenticated_client.get("/health/detailed")

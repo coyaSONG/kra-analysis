@@ -1,35 +1,30 @@
 # Python 3.13 + uv 기반 이미지
 FROM python:3.13-slim
 
+COPY --from=ghcr.io/astral-sh/uv:0.11.17 /uv /uvx /bin/
+
 # 작업 디렉토리 설정
-WORKDIR /app
+WORKDIR /workspace/apps/api
 
-# 시스템 패키지 및 빌드 요구사항 설치
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# uv 설치 (https://astral.sh/uv)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh -s -- -y \
-    && echo 'export PATH="/root/.local/bin:$PATH"' >> /etc/profile
-ENV PATH="/root/.local/bin:${PATH}"
-
-# 프로젝트 메타파일만 복사하여 의존성 레이어 캐시 최적화
-COPY pyproject.toml uv.lock ./
+# 내보낸 프로덕션 의존성만 복사하여 의존성 레이어 캐시 최적화
+COPY apps/api/requirements.txt ./
 
 # 프로덕션 의존성만 설치 (가상환경은 /app/.venv)
-ENV UV_PROJECT_ENVIRONMENT=/app/.venv
-RUN uv sync --no-dev --frozen
+ENV UV_PROJECT_ENVIRONMENT=/workspace/apps/api/.venv
+RUN uv venv /workspace/apps/api/.venv \
+    && uv pip install --python /workspace/apps/api/.venv/bin/python -r requirements.txt
 
 # 애플리케이션 코드 복사
-COPY . .
+COPY apps/api ./
+COPY packages/scripts/evaluation /workspace/packages/scripts/evaluation
+COPY packages/scripts/ml /workspace/packages/scripts/ml
+COPY packages/scripts/shared /workspace/packages/scripts/shared
+COPY data/contracts /workspace/data/contracts
 
 # 런타임 환경 변수
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/workspace/apps/api
 ENV PYTHONUNBUFFERED=1
-ENV PATH="/app/.venv/bin:${PATH}"
+ENV PATH="/workspace/apps/api/.venv/bin:${PATH}"
 
 # 포트 노출
 EXPOSE 8000
