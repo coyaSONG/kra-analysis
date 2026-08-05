@@ -32,7 +32,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   typer
-cryptography==48.0.1
+cryptography==50.0.0
     # via pyjwt
 deprecation==2.1.0
     # via
