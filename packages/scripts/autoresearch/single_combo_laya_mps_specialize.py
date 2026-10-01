@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-FORMAT_VERSION = "single-combo-laya-mps-specialization-v2"
+FORMAT_VERSION = "single-combo-laya-mps-specialization-v3"
 QUESTION_ID = "top3_combo"
 NONE_OPTION = "NONE"
 DEFAULT_MODEL_REVISION = "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851"
@@ -102,6 +102,18 @@ def epoch_rows(
     if len(race_ids) != len(set(race_ids)):
         raise ValueError("an epoch may contain only one row per independent race")
     return sorted(selected, key=_race_id)
+
+
+def limit_training_rows(
+    rows: list[dict[str, Any]], max_train_races: int | None
+) -> list[dict[str, Any]]:
+    if max_train_races is None:
+        return rows
+    if max_train_races < 1:
+        raise ValueError("max_train_races must be positive")
+    retained_race_ids = sorted({_race_id(row) for row in rows})[:max_train_races]
+    retained = set(retained_race_ids)
+    return [row for row in rows if _race_id(row) in retained]
 
 
 def _question(row: dict[str, Any]) -> dict[str, Any]:
@@ -393,9 +405,11 @@ def _train_epoch(
     micro_batch: int,
     grad_accum: int,
     seed: int,
+    train_encoder: bool,
 ) -> dict[str, float]:
     model.train()
-    model.encoder.eval()
+    if not train_encoder:
+        model.encoder.eval()
     shuffled = list(items)
     random.Random(seed + epoch).shuffle(shuffled)
     optimizer.zero_grad(set_to_none=True)
@@ -418,7 +432,7 @@ def _train_epoch(
             marker_pos,
             marker_mask,
             qtype,
-            detach_encoder=True,
+            detach_encoder=not train_encoder,
         )
         logits = logits.float()
         option_count = marker_mask.sum(-1, keepdim=True).float()
@@ -558,7 +572,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         raise FileNotFoundError(f"Laya checkpoint not found: {model_dir}")
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    train_rows = _load_jsonl(args.train)
+    train_rows = limit_training_rows(
+        _load_jsonl(args.train),
+        args.max_train_races,
+    )
     validation_rows = _load_jsonl(args.validation)
     schedule = validate_training_schedule(train_rows)
     validation_race_ids = {_race_id(row) for row in validation_rows}
@@ -590,9 +607,15 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     model = build_model(config, encoder_dir=model_dir / "encoder")
     model.load_state_dict(load_file(str(model_dir / "model.safetensors")), strict=True)
     model.float()
+    train_encoder = args.encoder_learning_rate > 0.0
+    if train_encoder:
+        model.encoder.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
+        model.head_checkpointing = True
     for name, parameter in model.named_parameters():
-        parameter.requires_grad = not (
-            name.startswith("encoder.") or name.startswith("act_head.")
+        parameter.requires_grad = not name.startswith("act_head.") and (
+            train_encoder or not name.startswith("encoder.")
         )
     device_name = args.device
     if device_name == "auto":
@@ -622,20 +645,30 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         flush=True,
     )
 
-    trainable_parameters = [
-        parameter for parameter in model.parameters() if parameter.requires_grad
+    named_parameters = list(model.named_parameters())
+    encoder_parameters = [
+        parameter
+        for name, parameter in named_parameters
+        if name.startswith("encoder.") and parameter.requires_grad
     ]
-    optimizer = torch.optim.AdamW(
-        trainable_parameters,
-        lr=args.learning_rate,
-        weight_decay=args.weight_decay,
-    )
+    head_parameters = [
+        parameter
+        for name, parameter in named_parameters
+        if not name.startswith("encoder.") and parameter.requires_grad
+    ]
+    optimizer_groups = [{"params": head_parameters, "lr": args.learning_rate}]
+    if encoder_parameters:
+        optimizer_groups.insert(
+            0,
+            {"params": encoder_parameters, "lr": args.encoder_learning_rate},
+        )
+    optimizer = torch.optim.AdamW(optimizer_groups, weight_decay=args.weight_decay)
     batches_per_epoch = math.ceil(schedule["independent_race_count"] / args.micro_batch)
     updates_per_epoch = math.ceil(batches_per_epoch / args.grad_accum)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer,
         T_max=max(1, updates_per_epoch * args.epochs),
-        eta_min=args.learning_rate * 0.1,
+        eta_min=1e-6 if train_encoder else args.learning_rate * 0.1,
     )
 
     best_epoch = 0
@@ -669,6 +702,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             micro_batch=args.micro_batch,
             grad_accum=args.grad_accum,
             seed=args.seed,
+            train_encoder=train_encoder,
         )
         validation_records = _evaluate(
             model,
@@ -727,12 +761,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     config.pop("temperature_by_options", None)
     config["fine_tuned"] = True
     config["training"] = {
-        "method": "head_only_one_option_order_per_race_per_epoch",
+        "method": (
+            "full_encoder_one_option_order_per_race_per_epoch"
+            if train_encoder
+            else "head_only_one_option_order_per_race_per_epoch"
+        ),
         "independent_race_count": schedule["independent_race_count"],
         "augmentations_per_race": schedule["augmentations_per_race"],
         "epochs_completed": args.epochs,
         "best_epoch": best_epoch,
         "learning_rate": args.learning_rate,
+        "encoder_learning_rate": args.encoder_learning_rate,
         "weight_decay": args.weight_decay,
         "micro_batch": args.micro_batch,
         "grad_accum": args.grad_accum,
@@ -762,6 +801,13 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "validation_path": str(args.validation),
         "validation_sha256": _sha256_file(args.validation),
         "schedule": schedule,
+        "max_train_races": args.max_train_races,
+        "training_mode": "full_encoder" if train_encoder else "head_only",
+        "trainable_parameter_count": sum(
+            parameter.numel()
+            for parameter in model.parameters()
+            if parameter.requires_grad
+        ),
         "max_len": args.max_len,
         "head_max_len": args.head_max_len,
         "device": str(device),
@@ -792,10 +838,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--eval-batch", type=int, default=4)
     parser.add_argument("--grad-accum", type=int, default=8)
     parser.add_argument("--learning-rate", type=float, default=1e-4)
+    parser.add_argument("--encoder-learning-rate", type=float, default=0.0)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--max-len", type=int, default=1024)
     parser.add_argument("--head-max-len", type=int, default=512)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    parser.add_argument("--max-train-races", type=int)
     return parser
 
 
@@ -803,6 +851,10 @@ def main() -> int:
     args = _parser().parse_args()
     if min(args.epochs, args.micro_batch, args.eval_batch, args.grad_accum) < 1:
         raise ValueError("epoch and batch arguments must be positive")
+    if args.learning_rate <= 0.0 or args.encoder_learning_rate < 0.0:
+        raise ValueError("learning rates must be positive or zero for a frozen encoder")
+    if args.max_train_races is not None and args.max_train_races < 1:
+        raise ValueError("max_train_races must be positive")
     manifest = run(args)
     print(json.dumps(manifest, ensure_ascii=False, sort_keys=True), flush=True)
     return 0

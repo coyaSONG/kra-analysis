@@ -52,6 +52,22 @@ def test_epoch_schedule_uses_one_variant_per_independent_race() -> None:
     assert len({row["state"]["race_id"] for row in second_epoch}) == 2
 
 
+def test_limit_training_rows_keeps_every_variant_for_selected_races() -> None:
+    rows = [
+        _row(race_id, augmentation)
+        for race_id in ("20251001_1_2", "20251001_1_1", "20251001_1_3")
+        for augmentation in range(2)
+    ]
+
+    limited = specialize.limit_training_rows(rows, 2)
+
+    assert {row["state"]["race_id"] for row in limited} == {
+        "20251001_1_1",
+        "20251001_1_2",
+    }
+    assert specialize.validate_training_schedule(limited)["training_row_count"] == 4
+
+
 def test_schedule_rejects_missing_or_duplicate_augmentations() -> None:
     with pytest.raises(ValueError, match="duplicate augmentation"):
         specialize.validate_training_schedule(
