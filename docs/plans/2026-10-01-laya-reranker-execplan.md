@@ -23,7 +23,10 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-01 Asia/Seoul) Refit only the selected XGBoost specification on the 292 train-plus-validation races and froze model SHA-256 `f4770458fc121db3d30a2c070420c28f1cd6361a37eb13ed2af73a29130cbb56`. Repeated selection reproduced the manifest, predictions, and model byte for byte; final-test inference was false at freeze time.
 - [x] (2026-10-01 Asia/Seoul) Evaluated the precommitted frozen feature ranker exactly once on the December `fold_c` test. It scored 79/147 = 53.7415%, versus 80/147 = 54.4218% for the existing strict current-best fallback on the identical race IDs. The model is rejected for promotion and this holdout is now spent.
 - [x] (2026-10-01 Asia/Seoul) Added `single_combo_laya_oof_training_dataset.py`, which caches the date-ordered `fold_a` train candidate rows and exports only train plus October validation JSONL. Focused tests pass `11 passed`; a real one-date smoke materialized 9 races and 176 candidate rows in 130 seconds, and the exporter correctly refused that partial cache.
-- [ ] Materialize all 112 `fold_a` train date groups, validate the expanded JSONL with the pinned official Laya parser, and run the candidate-feature control on the 1,319-race training surface.
+- [x] (2026-10-02 Asia/Seoul) Materialized all 112 `fold_a` train date groups in 946 seconds. The resulting 1,319-race train and 116-race October validation files passed timing, leakage, byte-reproducibility, token-loss, and official Laya parser checks. Retained candidate oracle rates are 85.5951% and 93.1034%; train and validation SHA-256 values are `f9437f845c190f61b6c132bf325c080db39a74bc55b5593469fca7f774f3500b` and `8151aa4bddc49a01b4bd2631d1cbcb600a9a031389fe787dc5ad390144b7c6c6`.
+- [x] (2026-10-02 Asia/Seoul) Corrected both Laya and XGBoost evaluation so a correct `NONE` classification does not count as a top-three prediction hit. The expanded XGBoost control then scored 57/116 = 49.1379%, below the strict fallback's 63/116 = 54.3103% on the same October races.
+- [x] (2026-10-02 Asia/Seoul) Ran a two-epoch expanded head-only Laya probe. Its best checkpoint scored 12/116 = 10.3448%, so frozen-encoder specialization remains rejected.
+- [x] (2026-10-02 Asia/Seoul) Matched the official Laya fine-tuning recipe by enabling ModernBERT encoder adaptation at `2.5e-5` with head learning rate `1e-4` and gradient checkpointing. A 16-race MPS smoke passed, and the full 1,319-race first epoch improved zero-shot 4/116 = 3.4483% to 35/116 = 30.1724% in 1,388 seconds. This is meaningful adaptation but remains below both controls and is not promoted.
 - [ ] Backfill multiple prior years and designate a new untouched 2026 forward window before making another promotion decision. The current environment has no `KRA_API_KEY`, and December 2025 remains spent.
 - [x] (2026-10-01 Asia/Seoul) Closed validation order-sensitivity and calibration without running them because the Laya checkpoint did not improve validation exact accuracy.
 - [x] (2026-10-01 Asia/Seoul) Applied the promotion gate: neither candidate improved the existing strict baseline on final evidence, so no model was merged.
@@ -71,6 +74,12 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Observation: The repository's public-data client can discover races monthly, but the current wrapper only exposes a day-and-meeting call and the collection routes require callers to know race numbers already.
   Evidence: The official `API72_2` contract accepts `rc_year`, `rc_month`, and optional `meet`, while `KRAAPIService.get_race_plan` currently fixes `rc_date`, `meet`, `numOfRows=50`, and `pageNo=1`. No KRA credential is available in the current environment, so live backfill remains blocked until configuration is supplied.
+
+- Observation: The official Laya fine-tuning result depends on adapting the encoder, not only the typed-decision head.
+  Evidence: The pinned notebook trains the full encoder at `2.5e-5` and the decision head at `1e-4` over 1,200 cases. On the expanded KRA data, head-only training peaked at 10.3448%, while one full-encoder epoch reached 30.1724% and reduced validation NLL from 2.80764 to 2.44217.
+
+- Observation: Choice accuracy and top-three prediction accuracy diverge when the expected option is `NONE`.
+  Evidence: A model may correctly detect that its candidate pool missed the answer without producing the required three-horse combination. The v2/v3 evaluators therefore report `top3_exact_accuracy` separately and use it as the primary checkpoint-selection metric.
 
 ## Decision Log
 
@@ -122,9 +131,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Rationale: The repository already has audited date-ordered OOF coverage for all 1,319 races through September and a strict October validation surface. Training-time upstream policy selection still uses the complete target training period, so these rows are valid training material rather than deployment-equivalent performance evidence. Omitting a test file prevents accidental reuse of the spent December outcomes.
   Date/Author: 2026-10-01 / Codex
 
+- Decision: Continue Laya only through staged full-encoder validation probes; do not extend the failed head-only route or touch December again.
+  Rationale: Full encoder adaptation produced a large first-epoch gain, while head-only training and the expanded feature control both failed their same-window baselines. Further compute is justified only while October top-three accuracy improves materially, and promotion still requires a newly collected forward holdout.
+  Date/Author: 2026-10-02 / Codex
+
 ## Outcomes & Retrospective
 
-The Laya route has a validated, lossless dataset and training pipeline but has not produced promotion evidence. The current deterministic dataset has 439 non-overlapping October-through-December races, no missing or duplicated races, no rendered target or candidate-label fields, a maximum of 20 choices, and a robust candidate ceiling above 93%. The first head-only specialization did not improve validation exact accuracy beyond 6.25%, despite a small NLL improvement. A simple feature ranker reached 60.23% on validation, proving that useful signal survived rendering, but fell to 53.74% on the precommitted December test and lost by one race to the existing strict fallback. No model is promoted. The next iteration must increase the 116-race independent training sample and reserve a new forward holdout; December may no longer be reused as unbiased evidence.
+The Laya route now has a deterministic 1,319-race OOF training corpus and a lossless 116-race October validation corpus, with candidate ceilings of 85.60% and 93.10%. Expanded head-only Laya remains ineffective at 10.34%, while official-style full-encoder adaptation reaches 30.17% after one epoch. That gain proves domain adaptation is functioning, but it remains below the expanded feature control at 49.14% and the strict fallback at 54.31% on identical October races. No model is promoted. A staged continuation may test whether full-encoder validation keeps improving, but any promotion claim still requires new public-data backfill and a forward holdout because December 2025 is spent.
 
 ## Context and Orientation
 
@@ -287,3 +300,5 @@ Revision note, 2026-10-01 / Codex: Froze the validation-selected candidate-featu
 Revision note, 2026-10-01 / Codex: Completed the one-time frozen test. The feature ranker fell to 53.74% and lost one race to the strict current-best fallback on identical IDs, so no promotion or merge is allowed. The December holdout is now spent; further Laya work requires a larger prior-date corpus and a new forward window.
 
 Revision note, 2026-10-01 / Codex: Added the reusable `fold_a` inner-OOF candidate cache and train-plus-October exporter after rejecting the low-ceiling 67-component shortcut. The code and one-date CLI smoke are complete; full 112-date materialization and validation remain in progress, and no test split is emitted.
+
+Revision note, 2026-10-02 / Codex: Completed the 1,319-race OOF dataset, corrected `NONE`-inflated scoring, rejected the expanded head-only and feature controls, and validated official-style full-encoder Laya adaptation at 30.17% after one epoch. No model is promoted; staged October-only continuation and a new forward holdout remain.
