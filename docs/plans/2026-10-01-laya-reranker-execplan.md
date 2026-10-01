@@ -22,7 +22,9 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-01 Asia/Seoul) Measured a frozen candidate-feature baseline. A nine-spec train-to-validation XGBoost ranker search selected depth 4 with 100 estimators at 106/176 = 60.2273%, versus 88/176 = 50.0% for the default-candidate heuristic and 11/176 = 6.25% for Laya.
 - [x] (2026-10-01 Asia/Seoul) Refit only the selected XGBoost specification on the 292 train-plus-validation races and froze model SHA-256 `f4770458fc121db3d30a2c070420c28f1cd6361a37eb13ed2af73a29130cbb56`. Repeated selection reproduced the manifest, predictions, and model byte for byte; final-test inference was false at freeze time.
 - [x] (2026-10-01 Asia/Seoul) Evaluated the precommitted frozen feature ranker exactly once on the December `fold_c` test. It scored 79/147 = 53.7415%, versus 80/147 = 54.4218% for the existing strict current-best fallback on the identical race IDs. The model is rejected for promotion and this holdout is now spent.
-- [ ] Expand the strict prior-date candidate/training surface to materially more independent races and designate a new untouched forward window before any further Laya model selection.
+- [x] (2026-10-01 Asia/Seoul) Added `single_combo_laya_oof_training_dataset.py`, which caches the date-ordered `fold_a` train candidate rows and exports only train plus October validation JSONL. Focused tests pass `11 passed`; a real one-date smoke materialized 9 races and 176 candidate rows in 130 seconds, and the exporter correctly refused that partial cache.
+- [ ] Materialize all 112 `fold_a` train date groups, validate the expanded JSONL with the pinned official Laya parser, and run the candidate-feature control on the 1,319-race training surface.
+- [ ] Backfill multiple prior years and designate a new untouched 2026 forward window before making another promotion decision. The current environment has no `KRA_API_KEY`, and December 2025 remains spent.
 - [x] (2026-10-01 Asia/Seoul) Closed validation order-sensitivity and calibration without running them because the Laya checkpoint did not improve validation exact accuracy.
 - [x] (2026-10-01 Asia/Seoul) Applied the promotion gate: neither candidate improved the existing strict baseline on final evidence, so no model was merged.
 
@@ -63,6 +65,12 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Observation: The validation-selected feature ranker did not transfer enough to the sealed month to beat the existing strict selector.
   Evidence: After refitting the frozen specification on 292 October-plus-November races, the one-time December result was 79/147 = 53.7415%. The existing strict current-best fallback scored 80/147 = 54.4218% on the exact same `fold_c` race IDs, while its project-wide current-best report remains 81/147 = 55.1020% on the canonical `test` alias and 53.8462% at the robust floor.
+
+- Observation: The already-materialized broad 67-component OOF prediction cache cannot replace the support-union candidate surface.
+  Evidence: Its 1,319-race `fold_a` train surface has at most 41.6224% answer coverage across every unique component output, and October validation has only 50.8621% coverage. The support-union October surface retains 93.1034%, so the more expensive candidate-row replay is necessary.
+
+- Observation: The repository's public-data client can discover races monthly, but the current wrapper only exposes a day-and-meeting call and the collection routes require callers to know race numbers already.
+  Evidence: The official `API72_2` contract accepts `rc_year`, `rc_month`, and optional `meet`, while `KRAAPIService.get_race_plan` currently fixes `rc_date`, `meet`, `numOfRows=50`, and `pageNo=1`. No KRA credential is available in the current environment, so live backfill remains blocked until configuration is supplied.
 
 ## Decision Log
 
@@ -108,6 +116,10 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Decision: Do not promote either the Laya checkpoint or its XGBoost control, and retire the current December holdout from future model selection.
   Rationale: Laya failed validation outright, and the frozen control lost one exact hit to the existing strict fallback on the same final-test universe. Further tuning against December would convert the holdout into validation data. The next credible experiment needs more prior races and a newly designated forward window.
+  Date/Author: 2026-10-01 / Codex
+
+- Decision: Expand Laya training from the `fold_a` target-train surface, but export no test split.
+  Rationale: The repository already has audited date-ordered OOF coverage for all 1,319 races through September and a strict October validation surface. Training-time upstream policy selection still uses the complete target training period, so these rows are valid training material rather than deployment-equivalent performance evidence. Omitting a test file prevents accidental reuse of the spent December outcomes.
   Date/Author: 2026-10-01 / Codex
 
 ## Outcomes & Retrospective
@@ -176,6 +188,18 @@ Select and freeze the candidate-feature control without opening the test split:
 Only after the selection manifest and frozen-model hash are recorded, run the one-time sealed evaluation:
 
     .venv/bin/python packages/scripts/autoresearch/single_combo_laya_feature_ranker.py --evaluate-test --require-pass
+
+Materialize the expanded OOF training candidates and export train plus October validation only:
+
+    .venv/bin/python packages/scripts/autoresearch/single_combo_laya_oof_training_dataset.py --refresh-candidate-cache --progress-every 10 --require-pass
+
+Validate both expanded splits with the pinned official parser:
+
+    for split in train validation; do PYTHONPATH=.cache/vendor/laya .cache/laya-venv/bin/python -m laya.evals_cli validate ".cache/autoresearch/laya_oof_training_dataset/${split}.jsonl"; done
+
+Run the feature control without opening any test file:
+
+    .venv/bin/python packages/scripts/autoresearch/single_combo_laya_feature_ranker.py --train .cache/autoresearch/laya_oof_training_dataset/train.jsonl --validation .cache/autoresearch/laya_oof_training_dataset/validation.jsonl --output-dir .cache/autoresearch/laya_oof_feature_ranker --require-pass
 
 ## Validation and Acceptance
 
@@ -261,3 +285,5 @@ Revision note, 2026-10-01 / Codex: Completed lossless v5 token rendering and the
 Revision note, 2026-10-01 / Codex: Froze the validation-selected candidate-feature control at 60.23%. This establishes that the current fields generalize materially better than Laya and creates a precommitted model for one sealed-test evaluation.
 
 Revision note, 2026-10-01 / Codex: Completed the one-time frozen test. The feature ranker fell to 53.74% and lost one race to the strict current-best fallback on identical IDs, so no promotion or merge is allowed. The December holdout is now spent; further Laya work requires a larger prior-date corpus and a new forward window.
+
+Revision note, 2026-10-01 / Codex: Added the reusable `fold_a` inner-OOF candidate cache and train-plus-October exporter after rejecting the low-ceiling 67-component shortcut. The code and one-date CLI smoke are complete; full 112-date materialization and validation remain in progress, and no test split is emitted.
