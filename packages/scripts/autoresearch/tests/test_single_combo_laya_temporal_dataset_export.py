@@ -213,7 +213,8 @@ def test_caps_combo_options_and_keeps_all_races_with_none_target() -> None:
         criteria = rows[0]["questions"][export.QUESTION_ID]["criteria"]
         expected = rows[0]["expected"][export.QUESTION_ID]
         assert len(criteria) == 20
-        assert criteria[expected].startswith("No listed combination")
+        assert criteria[expected] == export.NONE_OPTION
+        assert tuple(criteria) == export.OPTION_LABELS
         assert manifest["split_summaries"][split_name]["none_target_count"] == 1
 
 

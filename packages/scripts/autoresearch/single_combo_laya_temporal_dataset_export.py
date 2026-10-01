@@ -30,7 +30,7 @@ FORMAT_VERSION = "single-combo-laya-temporal-dataset-v1"
 SOURCE_FORMAT_VERSION = "single-combo-primary-route-candidate-row-cache-v1"
 SOURCE_SELECTION_CONTRACT = "primary_row_feature_support_union_candidate_row_cache"
 SOURCE_TIMING_CONTRACT = "pre_race_candidate_features_with_completed_race_labels"
-RENDERING_VERSION = "kra-laya-choice-rendering-v1"
+RENDERING_VERSION = "kra-laya-choice-rendering-v5"
 QUESTION_ID = "top3_combo"
 DEFAULT_SEED = "kra-laya-v1"
 DEFAULT_CANDIDATE_CACHE = (
@@ -44,37 +44,19 @@ SPLIT_WINDOWS = {
 }
 MAX_COMBO_OPTIONS = 19
 NONE_OPTION = "NONE"
+OPTION_LABELS = tuple("ABCDEFGHIJKLMNOPQRST")
 
-RUNNER_FEATURES = {
-    "age": "age",
-    "sex_code": "sex_code",
-    "rating": "rating",
-    "rating_rank": "rating_rank",
-    "carried_weight": "wgBudam",
-    "carried_weight_rank": "wg_budam_rank",
-    "horse_weight_delta": "weight_delta",
-    "horse_place_rate": "horse_place_rate",
-    "recent_top3_rate": "recent_top3_rate",
-    "jockey_top3_rate": "jockey_hist_top3_rate",
-    "trainer_top3_rate": "trainer_hist_top3_rate",
-    "rest_days": "rest_days",
-}
-
-CANDIDATE_FEATURES = (
-    "is_default",
-    "default_overlap",
-    "member_mean",
-    "member_min",
-    "member_mean_delta",
-    "member_rank_sum",
-    "top3_count",
-    "top5_count",
-    "support_count",
-    "source_score",
-    "ensemble_score",
-    "probability",
-    "probability_delta",
-    "model_rank",
+RUNNER_FEATURES = (
+    ("age", "age", 1),
+    ("sex", "sex_code", 1),
+    ("rating", "rating", 1),
+    ("carried_x10", "wgBudam", 10),
+    ("weight_delta", "weight_delta", 1),
+    ("horse_place_x10", "horse_place_rate", 10),
+    ("recent_top3_x1000", "recent_top3_rate", 1000),
+    ("jockey_top3_x1000", "jockey_hist_top3_rate", 1000),
+    ("trainer_top3_x1000", "trainer_hist_top3_rate", 1000),
+    ("rest", "rest_days", 1),
 )
 
 FORBIDDEN_RENDERED_KEYS = {
@@ -106,13 +88,25 @@ def _json_number(value: Any) -> int | float | None:
     return round(number, 8)
 
 
-def _format_number(value: Any) -> str:
+def _render_state_number(value: Any, scale: int) -> int | float | None:
     number = _json_number(value)
     if number is None:
-        return "missing"
+        return number
+    if scale != 1:
+        return int(round(float(number) * scale))
     if isinstance(number, int):
-        return str(number)
-    return f"{number:.6g}"
+        return number
+    return round(number, 3)
+
+
+def _format_integer(value: Any) -> str:
+    number = _json_number(value)
+    return "NA" if number is None else str(int(round(float(number))))
+
+
+def _format_milli(value: Any) -> str:
+    number = _json_number(value)
+    return "NA" if number is None else str(int(round(float(number) * 1000)))
 
 
 def _normalise_json(value: Any) -> Any:
@@ -192,29 +186,29 @@ def _race_state(race_id: str, race_rows: list[dict[str, Any]]) -> dict[str, Any]
     parts = race_id.split("_")
     meeting_code = int(parts[-2]) if len(parts) >= 3 and parts[-2].isdigit() else None
     race_number = int(parts[-1]) if parts and parts[-1].isdigit() else None
-    runner_fields = ["number", *RUNNER_FEATURES]
+    runner_fields = ["number", *(name for name, _source, _scale in RUNNER_FEATURES)]
     runners: list[list[int | float | None]] = []
     for row in race_rows:
         runners.append(
             [
                 int(row["chulNo"]),
                 *[
-                    _json_number(row.get(source_name))
-                    for source_name in RUNNER_FEATURES.values()
+                    _render_state_number(row.get(source_name), scale)
+                    for _name, source_name, scale in RUNNER_FEATURES
                 ],
             ]
         )
     return {
         "race_id": race_id,
-        "race_date": _race_date(race_id),
-        "meeting_code": meeting_code,
-        "race_number": race_number,
-        "distance_m": _json_number(first.get("dist")),
+        "date": _race_date(race_id),
+        "meet": meeting_code,
+        "race_no": race_number,
+        "distance": _json_number(first.get("dist")),
         "field_size": len(race_rows),
-        "class_code": _json_number(first.get("class_code")),
-        "weather_code": _json_number(first.get("weather_code")),
-        "track_moisture_pct": _json_number(first.get("track_pct")),
-        "wet_track": _json_number(first.get("wet_track")),
+        "class": _json_number(first.get("class_code")),
+        "weather": _json_number(first.get("weather_code")),
+        "track_pct": _json_number(first.get("track_pct")),
+        "wet": _json_number(first.get("wet_track")),
         "handicap": _json_number(first.get("is_handicap")),
         "runner_fields": runner_fields,
         "runner_values": runners,
@@ -256,10 +250,17 @@ def _candidate_description(row: dict[str, Any]) -> str:
     combo = _combo(row.get("combo"))
     if combo is None:
         raise ValueError("candidate combo is invalid")
-    features = "; ".join(
-        f"{name}={_format_number(row.get(name))}" for name in CANDIDATE_FEATURES
+    features = (
+        _format_integer(row.get("is_default")),
+        _format_integer(row.get("default_overlap")),
+        _format_milli(row.get("source_score")),
+        _format_milli(row.get("ensemble_score")),
+        _format_integer(row.get("model_rank")),
+        _format_milli(row.get("member_mean")),
+        _format_milli(row.get("probability")),
     )
-    return f"horses={','.join(str(item) for item in combo)}; {features}"
+    horses = ",".join(str(item) for item in combo)
+    return f"{horses}|{','.join(features)}"
 
 
 def _option_order_key(seed: str, race_id: str, option_id: str) -> str:
@@ -292,7 +293,7 @@ def _render_example(
     option_rows.append(
         (
             NONE_OPTION,
-            "No listed combination is correct; use the fallback policy.",
+            NONE_OPTION,
             None,
         )
     )
@@ -301,8 +302,8 @@ def _render_example(
     criteria: dict[str, str] = {}
     expected_label = ""
     candidate_hit = False
-    for index, (_option_id, description, combo) in enumerate(option_rows, start=1):
-        label = f"C{index:02d}"
+    for index, (_option_id, description, combo) in enumerate(option_rows):
+        label = OPTION_LABELS[index]
         criteria[label] = description
         if combo == answer:
             expected_label = label
@@ -313,7 +314,7 @@ def _render_example(
         expected_label = next(
             label
             for label, description in criteria.items()
-            if description.startswith("No listed combination")
+            if description == NONE_OPTION
         )
 
     example = {
@@ -322,9 +323,10 @@ def _render_example(
             QUESTION_ID: {
                 "type": "choice",
                 "instructions": (
-                    "Select the listed unordered three-horse combination most likely "
-                    "to equal the official top three. Choose the no-listed-combination "
-                    "option only when every listed combination is wrong."
+                    "Choose the correct unordered top three. Format: "
+                    "horses|default,overlap,source,ensemble,rank,member,probability. "
+                    "Source, ensemble, member, and probability use x1000. "
+                    "Choose NONE only if no listed combination is correct."
                 ),
                 "criteria": criteria,
             }
