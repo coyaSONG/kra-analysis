@@ -15,7 +15,7 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-01 Asia/Seoul) Implemented and verified `single_combo_laya_data_capacity_audit.py`. Focused pytest passed `4 passed`; the real cache audit passed with 18,742 rows, 1,758 usable races, no duplicate entry keys, complete labels, 10.4968% missing feature cells, and the expected 20250103 through 20251228 coverage.
 - [x] (2026-10-01 Asia/Seoul) Materialized a strict prior-date historical rank-pattern candidate surface over 1,254 post-warm-up races. All races passed the timing and coverage gates, but the 19-option diagnostic oracle was 71.6906% overall and only 61.7486% in the weakest block, so this surface is not suitable for Laya training.
 - [x] (2026-10-01 Asia/Seoul) Audited the existing primary-route support-union cache as the replacement Laya surface. Its canonical non-overlapping `fold_a`, `fold_b`, and `fold_c` windows contain 116, 176, and 147 races, at most 20 candidates per race, and candidate-pool oracle rates of 93.1034%, 96.5909%, and 96.5986% respectively.
-- [ ] Export deterministic Laya train, validation, and test JSONL files grouped by complete race dates.
+- [x] (2026-10-01 Asia/Seoul) Exported deterministic Laya JSONL from the support-union cache: 116 train races, 176 validation races, and 147 untouched test races. The official Laya 0.3.22 validator at commit `6d942c92081fbc139e736bbd9ac0023223c29b7f` accepted all three files, and a second export reproduced every dataset and manifest SHA-256 exactly.
 - [ ] Run a zero-shot baseline, a lightweight specialization probe, calibration, and the existing strict walk-forward comparison.
 - [ ] Promote, commit, push, and integrate only a result that improves the existing strict single-combination baseline without weakening any leakage or coverage gate.
 
@@ -38,6 +38,12 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Observation: The existing support-union surface is a much stronger match for Laya's bounded choice head.
   Evidence: `.cache/autoresearch/single_combo_primary_route_candidate_rows_summary.json` reports 11 to 20 candidates per race and pool-oracle rates of 93.1034% on `fold_a`, 96.5909% on `fold_b`, and 96.5986% on `fold_c`. The cache builder uses answer keys only to attach completed-race labels and calculate diagnostics; candidate combinations and their feature fields are formed without the active answer.
+
+- Observation: Reserving one `NONE` choice does not reduce candidate coverage on the current rolling surface.
+  Evidence: Only one 20-combination race in each of train and validation needed pruning to 19 combinations. The removed combination was not the answer, so retained oracle rates remain 93.1034%, 96.5909%, and 96.5986% for train, validation, and test.
+
+- Observation: A compact tabular runner state materially reduces truncation risk without dropping the selected features.
+  Evidence: Replacing repeated per-runner keys with one `runner_fields` schema plus `runner_values` arrays reduced the maximum state size from 4,196 to 1,300 characters. The maximum state plus instruction plus one criterion is now 1,779 characters.
 
 ## Decision Log
 
@@ -65,9 +71,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Rationale: The three rolling windows are date-disjoint and preserve an untouched December test period. The aliases overlap `fold_b` and `fold_c` and would duplicate races across splits.
   Date/Author: 2026-10-01 / Codex
 
+- Decision: Keep every race by adding a deterministically permuted `NONE` option and cap ordinary combinations at 19.
+  Rationale: Silently dropping the 19 races whose answers are outside the retained candidate pool would inflate accuracy. The explicit choice preserves full coverage while keeping the total option count at 20 or less.
+  Date/Author: 2026-10-01 / Codex
+
 ## Outcomes & Retrospective
 
-The Laya route is approved for implementation but has not yet produced promotion evidence. The capacity audit passes, and the first strict 19-pattern replay has now ruled out a weak candidate representation without claiming model progress. The stronger support-union surface supplies 439 non-overlapping October-through-December races and a robust candidate ceiling above 93%, but this is still a small first probe compared with the planning target of 20,000 independent races. No selected-model metric changed in these milestones.
+The Laya route is approved for model evaluation but has not yet produced promotion evidence. The current deterministic dataset has 439 non-overlapping October-through-December races, no missing or duplicated races, no rendered target or candidate-label fields, a maximum of 20 choices, and a robust candidate ceiling above 93%. It passes Laya's official parser and byte-for-byte reproducibility checks. This remains a small first probe compared with the planning target of 20,000 independent races, and no selected-model metric has changed yet.
 
 ## Context and Orientation
 
@@ -105,7 +115,17 @@ Inspect the concise fields:
 
     jq '{status, grain, date_coverage, label_quality, duplicate_quality, missingness, projections}' .cache/autoresearch/single_combo_laya_data_capacity_audit.json
 
-Later milestones will add exact commands for candidate replay, JSONL validation with `laya-evals validate`, zero-shot evaluation, specialization, and strict comparison. Record actual command transcripts here as those interfaces become real.
+Later milestones will add exact commands for zero-shot evaluation, specialization, calibration, and strict comparison. Record actual command transcripts here as those interfaces become real.
+
+Generate the temporal Laya dataset:
+
+    .venv/bin/python packages/scripts/autoresearch/single_combo_laya_temporal_dataset_export.py --output-dir .cache/autoresearch/laya_temporal_dataset --require-pass
+
+Validate all splits against the pinned official Laya source:
+
+    for split in train validation test; do PYTHONPATH=.cache/vendor/laya .venv/bin/python -m laya.evals_cli validate ".cache/autoresearch/laya_temporal_dataset/${split}.jsonl"; done
+
+The pinned source revision for this validation is `6d942c92081fbc139e736bbd9ac0023223c29b7f`, which reports Laya version 0.3.22.
 
 ## Validation and Acceptance
 
@@ -132,6 +152,13 @@ The initial measured cache profile is:
     date_min=20250103
     date_max=20251228
 
+The first temporal Laya dataset hashes are:
+
+    train.jsonl      f5d0ea9b60deb322ad41fcbbcc77f04e88a86ac54186c631d2a44f753b0ba759
+    validation.jsonl 54071884350da7239f042266358e198e685c0f68519d1254fc0bd73f9f8705f2
+    test.jsonl       8e01892b880f315e0762d569cf2f9ef12e0f75791925bbbe5152c67b09b1adf7
+    manifest.json    cf50eaad273b1cbb9a325ee5511a2b4d6dd5e09994ae3fb9f18d85928b47e83b
+
 The official Laya evaluation row shape used by this plan is equivalent to:
 
     {"state": {...}, "questions": {"top3_combo": {"type": "choice", "instructions": "Select the most likely unordered top-three combination.", "criteria": {"C01": "...", "C02": "..."}}}, "expected": {"top3_combo": "C02"}, "tags": ["split:train"], "language": "en"}
@@ -153,3 +180,5 @@ Revision note, 2026-10-01 / Codex: Created the dedicated Laya reranker ExecPlan 
 Revision note, 2026-10-01 / Codex: Recorded the completed capacity-audit milestone and its real-cache evidence. The next implementation milestone is the strict prior-date candidate surface.
 
 Revision note, 2026-10-01 / Codex: Recorded the completed strict rank-pattern replay, rejected it because of its 61.75% weakest-block oracle, and selected the existing support-union rolling surface for the first leakage-safe Laya dataset.
+
+Revision note, 2026-10-01 / Codex: Completed the deterministic temporal dataset exporter, official Laya parser validation, label-leakage audit, bounded-input rendering, and byte reproducibility check. The next milestone is a pinned zero-shot baseline followed by train-only specialization and validation-only selection.
