@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-FORMAT_VERSION = "single-combo-laya-mps-specialization-v1"
+FORMAT_VERSION = "single-combo-laya-mps-specialization-v2"
 QUESTION_ID = "top3_combo"
 NONE_OPTION = "NONE"
 DEFAULT_MODEL_REVISION = "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851"
@@ -292,6 +292,8 @@ def score_records(
         "race_count": len(records),
         "exact_accuracy": correct / len(records),
         "correct_count": correct,
+        "top3_exact_accuracy": candidate_correct / len(records),
+        "top3_correct_count": candidate_correct,
         "candidate_target_count": candidate_count,
         "candidate_target_accuracy": (
             candidate_correct / candidate_count if candidate_count else None
@@ -501,6 +503,8 @@ def _restore_trainable_state(model: Any, state: dict[str, Any]) -> None:
 
 
 def _is_better(candidate: dict[str, Any], incumbent: dict[str, Any]) -> bool:
+    if candidate["top3_exact_accuracy"] != incumbent["top3_exact_accuracy"]:
+        return candidate["top3_exact_accuracy"] > incumbent["top3_exact_accuracy"]
     if candidate["exact_accuracy"] != incumbent["exact_accuracy"]:
         return candidate["exact_accuracy"] > incumbent["exact_accuracy"]
     return candidate["nll"] < incumbent["nll"]
@@ -532,6 +536,10 @@ def _write_records(path: Path, records: list[dict[str, Any]]) -> None:
                 "predicted_description": record["descriptions"][predicted_index],
                 "confidence": probabilities[predicted_index],
                 "correct": predicted_index == record["expected_index"],
+                "top3_correct": (
+                    predicted_index == record["expected_index"]
+                    and record["expected_description"] != NONE_OPTION
+                ),
             }
             handle.write(
                 json.dumps(output, ensure_ascii=False, separators=(",", ":")) + "\n"

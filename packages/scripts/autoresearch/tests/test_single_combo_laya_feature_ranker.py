@@ -70,9 +70,12 @@ def test_scores_one_prediction_per_race_and_none_strata() -> None:
     )
 
     assert metrics["exact_accuracy"] == 1.0
+    assert metrics["top3_exact_accuracy"] == 0.5
+    assert metrics["top3_correct_count"] == 1
     assert metrics["candidate_target_accuracy"] == 1.0
     assert metrics["none_target_accuracy"] == 1.0
     assert metrics["predicted_none_count"] == 1
+    assert [prediction["top3_correct"] for prediction in predictions] == [True, False]
     assert len(predictions) == 2
 
 

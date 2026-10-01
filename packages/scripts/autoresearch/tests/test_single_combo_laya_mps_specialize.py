@@ -75,7 +75,7 @@ def test_score_records_reports_exact_and_none_strata() -> None:
             "expected_description": "1,2,3",
         },
         {
-            "logits": [2.0, 1.0],
+            "logits": [1.0, 2.0],
             "expected_index": 1,
             "expected_description": specialize.NONE_OPTION,
         },
@@ -84,10 +84,12 @@ def test_score_records_reports_exact_and_none_strata() -> None:
     metrics = specialize.score_records(records)
 
     assert metrics["race_count"] == 2
-    assert metrics["exact_accuracy"] == 0.5
+    assert metrics["exact_accuracy"] == 1.0
+    assert metrics["top3_exact_accuracy"] == 0.5
+    assert metrics["top3_correct_count"] == 1
     assert metrics["candidate_target_accuracy"] == 1.0
-    assert metrics["none_target_accuracy"] == 0.0
-    assert metrics["predicted_position_distribution"] == {"1": 2}
+    assert metrics["none_target_accuracy"] == 1.0
+    assert metrics["predicted_position_distribution"] == {"1": 1, "2": 1}
 
 
 def test_temperature_fit_is_bounded_and_reduces_nll() -> None:
@@ -110,13 +112,20 @@ def test_temperature_fit_is_bounded_and_reduces_nll() -> None:
 
 
 def test_model_selection_prefers_accuracy_then_nll() -> None:
-    incumbent = {"exact_accuracy": 0.5, "nll": 1.0}
+    incumbent = {"top3_exact_accuracy": 0.5, "exact_accuracy": 0.5, "nll": 1.0}
     assert specialize._is_better(  # noqa: SLF001
-        {"exact_accuracy": 0.6, "nll": 2.0}, incumbent
+        {"top3_exact_accuracy": 0.6, "exact_accuracy": 0.5, "nll": 2.0},
+        incumbent,
     )
     assert specialize._is_better(  # noqa: SLF001
-        {"exact_accuracy": 0.5, "nll": 0.9}, incumbent
+        {"top3_exact_accuracy": 0.5, "exact_accuracy": 0.6, "nll": 2.0},
+        incumbent,
+    )
+    assert specialize._is_better(  # noqa: SLF001
+        {"top3_exact_accuracy": 0.5, "exact_accuracy": 0.5, "nll": 0.9},
+        incumbent,
     )
     assert not specialize._is_better(  # noqa: SLF001
-        {"exact_accuracy": 0.5, "nll": 1.1}, incumbent
+        {"top3_exact_accuracy": 0.5, "exact_accuracy": 0.5, "nll": 1.1},
+        incumbent,
     )

@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 from xgboost import XGBRanker
 
-FORMAT_VERSION = "single-combo-laya-feature-ranker-v1"
+FORMAT_VERSION = "single-combo-laya-feature-ranker-v2"
 QUESTION_ID = "top3_combo"
 NONE_OPTION = "NONE"
 DEFAULT_TRAIN = Path(".cache/autoresearch/laya_temporal_dataset/train.jsonl")
@@ -239,6 +239,7 @@ def score_predictions(
                 "predicted_label": example["labels"][predicted_index],
                 "predicted_description": example["descriptions"][predicted_index],
                 "correct": correct,
+                "top3_correct": correct and not expected_none,
                 "score_margin": margin,
             }
         )
@@ -248,6 +249,8 @@ def score_predictions(
         "race_count": len(examples),
         "correct_count": correct_count,
         "exact_accuracy": correct_count / len(examples),
+        "top3_correct_count": candidate_correct,
+        "top3_exact_accuracy": candidate_correct / len(examples),
         "candidate_target_count": candidate_count,
         "candidate_target_accuracy": (
             candidate_correct / candidate_count if candidate_count else None
@@ -362,6 +365,7 @@ def select_and_freeze(
     selected = max(
         results,
         key=lambda result: (
+            result["validation"]["top3_exact_accuracy"],
             result["validation"]["exact_accuracy"],
             -int(result["spec"]["max_depth"]),
             -int(result["spec"]["n_estimators"]),
@@ -453,14 +457,14 @@ def evaluate_frozen_test(
         "strict_baseline_sha256": _sha256_file(strict_baseline_path),
         "strict_baseline": strict_baseline,
         "test_correct_delta_vs_strict_baseline": (
-            metrics["correct_count"] - strict_baseline["correct_count"]
+            metrics["top3_correct_count"] - strict_baseline["correct_count"]
         ),
         "test_accuracy_delta_vs_strict_baseline": (
-            metrics["exact_accuracy"] - strict_baseline["exact_accuracy"]
+            metrics["top3_exact_accuracy"] - strict_baseline["exact_accuracy"]
         ),
         "final_test_inference_run": True,
         "final_test_labels_used_for_selection": False,
-        "goal_met_on_test": metrics["exact_accuracy"] >= 0.70,
+        "goal_met_on_test": metrics["top3_exact_accuracy"] >= 0.70,
         "recommended_next_action": "compare_with_strict_existing_selector",
     }
     _write_json(output_dir / "test_report.json", report)
