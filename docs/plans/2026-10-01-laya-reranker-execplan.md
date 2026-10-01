@@ -29,6 +29,7 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-02 Asia/Seoul) Matched the official Laya fine-tuning recipe by enabling ModernBERT encoder adaptation at `2.5e-5` with head learning rate `1e-4` and gradient checkpointing. A 16-race MPS smoke passed, and the full 1,319-race first epoch improved zero-shot 4/116 = 3.4483% to 35/116 = 30.1724% in 1,388 seconds. This is meaningful adaptation but remains below both controls and is not promoted.
 - [x] (2026-10-02 Asia/Seoul) Ran the predeclared second full-encoder stage from the 30.1724% checkpoint with the second option-order variant. It collapsed to 6/116 = 5.1724% top-three accuracy while `NONE` accuracy rose to 5/8; `best_epoch=0` correctly preserved checkpoint SHA-256 `76c521bc37afe7aa72db5cb4fe387ec1596c385a3ae752e3151b9d2f2b2a4c44`.
 - [x] (2026-10-02 Asia/Seoul) Evaluated that preserved checkpoint over all 1,878 cyclic option rotations. Only 66/116 races were prediction-stable, but probability averaging reproduced rather than improved the canonical 35/116 = 30.1724%. Full-universe rotations ranged from 29/116 to 38/116, confirming material presentation sensitivity without a usable ensemble gain.
+- [x] (2026-10-02 Asia/Seoul) Built a 93-feature structured candidate ranker that excludes `NONE` from ranking and aggregates each candidate's three runners across pre-race horse, jockey, trainer, and recent-form fields. Selection used only the final 20% of dates inside the 1,319-race training period. Structured features improved the internal block from 47.1910% to 49.4382% and October from 47.4138% to 50.0000%, but remained below the strict fallback's 54.3103%.
 - [ ] Backfill multiple prior years and designate a new untouched 2026 forward window before making another promotion decision. The current environment has no `KRA_API_KEY`, and December 2025 remains spent.
 - [x] (2026-10-01 Asia/Seoul) Closed validation order-sensitivity and calibration without running them because the Laya checkpoint did not improve validation exact accuracy.
 - [x] (2026-10-01 Asia/Seoul) Applied the promotion gate: neither candidate improved the existing strict baseline on final evidence, so no model was merged.
@@ -89,6 +90,9 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - Observation: A lower training loss can coincide with catastrophic loss of the actual top-three objective.
   Evidence: The continuation stage reduced training cross-entropy from 2.2521 to 2.1853 but validation top-three hits fell from 35 to 6 while correct `NONE` choices increased from one to five. Checkpoint selection by `top3_exact_accuracy` prevented the regressed model from replacing the first epoch.
 
+- Observation: Direct runner aggregates add some transferable signal, but not enough complementary answers to support a 70% selector.
+  Evidence: The structured ranker gained six internal-validation hits over the base feature ranker and three October hits, reaching 58/116. Its perfect hindsight union with the strict fallback is only 70/116 = 60.3448% because 51 hits overlap, with seven structured-only and twelve strict-only hits.
+
 ## Decision Log
 
 - Decision: Use Laya as a second-stage candidate reranker, not as a replacement for public-data collection or the first-stage horse models.
@@ -147,9 +151,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Rationale: The predeclared continuation catastrophically regressed, exhaustive option-rotation averaging added zero hits, and the best checkpoint remains 22 and 28 hits behind the feature control and strict fallback respectively. More October-guided tuning would increase validation overfit without creating promotion evidence.
   Date/Author: 2026-10-02 / Codex
 
+- Decision: Reject the structured candidate ranker and do not build a switch gate between it and the strict fallback.
+  Rationale: Even an answer-aware oracle choosing between the two reaches only 60.34%, so no deployable gate over that pair can attain the 70% objective. New candidate-quality information or additional historical data is required before selector tuning resumes.
+  Date/Author: 2026-10-02 / Codex
+
 ## Outcomes & Retrospective
 
-The Laya route now has a deterministic 1,319-race OOF training corpus and a lossless 116-race October validation corpus, with candidate ceilings of 85.60% and 93.10%. Expanded head-only Laya remains ineffective at 10.34%; official-style full-encoder adaptation reaches 30.17% after one epoch, then collapses under the predeclared continuation. Exhaustive cyclic option averaging also remains at 30.17%. The best Laya checkpoint is therefore rejected behind the expanded feature control at 49.14% and the strict fallback at 54.31% on identical October races. No model is promoted. Further progress now requires a structured candidate model plus new public-data backfill and a forward holdout because December 2025 is spent.
+The project now has a deterministic 1,319-race OOF training corpus and a lossless 116-race October validation corpus, with candidate ceilings of 85.60% and 93.10%. Expanded head-only Laya remains ineffective at 10.34%; official-style full-encoder adaptation reaches 30.17% after one epoch, then collapses under the predeclared continuation. Exhaustive cyclic option averaging also remains at 30.17%. A structured candidate ranker reaches 50.00%, but its hindsight union with the 54.31% strict fallback is only 60.34%. No model is promoted. Further progress requires new candidate-quality information, historical public-data backfill, and a forward holdout because December 2025 is spent.
 
 ## Context and Orientation
 
@@ -316,3 +324,5 @@ Revision note, 2026-10-01 / Codex: Added the reusable `fold_a` inner-OOF candida
 Revision note, 2026-10-02 / Codex: Completed the 1,319-race OOF dataset, corrected `NONE`-inflated scoring, rejected the expanded head-only and feature controls, and validated official-style full-encoder Laya adaptation at 30.17% after one epoch. No model is promoted; staged October-only continuation and a new forward holdout remain.
 
 Revision note, 2026-10-02 / Codex: Closed the current Laya path after the staged continuation fell to 5.17% and exhaustive cyclic order averaging produced no gain over 30.17%. The preserved checkpoint is diagnostic only; the next research route is structured candidate ranking and new forward data.
+
+Revision note, 2026-10-02 / Codex: Rejected the 93-feature structured candidate ranker at 50.00% October accuracy and a 60.34% two-model oracle with the strict fallback. Selector work is now blocked on new signal or data rather than model gating.
