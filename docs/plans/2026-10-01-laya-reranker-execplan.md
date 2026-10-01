@@ -27,6 +27,8 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-02 Asia/Seoul) Corrected both Laya and XGBoost evaluation so a correct `NONE` classification does not count as a top-three prediction hit. The expanded XGBoost control then scored 57/116 = 49.1379%, below the strict fallback's 63/116 = 54.3103% on the same October races.
 - [x] (2026-10-02 Asia/Seoul) Ran a two-epoch expanded head-only Laya probe. Its best checkpoint scored 12/116 = 10.3448%, so frozen-encoder specialization remains rejected.
 - [x] (2026-10-02 Asia/Seoul) Matched the official Laya fine-tuning recipe by enabling ModernBERT encoder adaptation at `2.5e-5` with head learning rate `1e-4` and gradient checkpointing. A 16-race MPS smoke passed, and the full 1,319-race first epoch improved zero-shot 4/116 = 3.4483% to 35/116 = 30.1724% in 1,388 seconds. This is meaningful adaptation but remains below both controls and is not promoted.
+- [x] (2026-10-02 Asia/Seoul) Ran the predeclared second full-encoder stage from the 30.1724% checkpoint with the second option-order variant. It collapsed to 6/116 = 5.1724% top-three accuracy while `NONE` accuracy rose to 5/8; `best_epoch=0` correctly preserved checkpoint SHA-256 `76c521bc37afe7aa72db5cb4fe387ec1596c385a3ae752e3151b9d2f2b2a4c44`.
+- [x] (2026-10-02 Asia/Seoul) Evaluated that preserved checkpoint over all 1,878 cyclic option rotations. Only 66/116 races were prediction-stable, but probability averaging reproduced rather than improved the canonical 35/116 = 30.1724%. Full-universe rotations ranged from 29/116 to 38/116, confirming material presentation sensitivity without a usable ensemble gain.
 - [ ] Backfill multiple prior years and designate a new untouched 2026 forward window before making another promotion decision. The current environment has no `KRA_API_KEY`, and December 2025 remains spent.
 - [x] (2026-10-01 Asia/Seoul) Closed validation order-sensitivity and calibration without running them because the Laya checkpoint did not improve validation exact accuracy.
 - [x] (2026-10-01 Asia/Seoul) Applied the promotion gate: neither candidate improved the existing strict baseline on final evidence, so no model was merged.
@@ -79,7 +81,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Evidence: The pinned notebook trains the full encoder at `2.5e-5` and the decision head at `1e-4` over 1,200 cases. On the expanded KRA data, head-only training peaked at 10.3448%, while one full-encoder epoch reached 30.1724% and reduced validation NLL from 2.80764 to 2.44217.
 
 - Observation: Choice accuracy and top-three prediction accuracy diverge when the expected option is `NONE`.
-  Evidence: A model may correctly detect that its candidate pool missed the answer without producing the required three-horse combination. The v2/v3 evaluators therefore report `top3_exact_accuracy` separately and use it as the primary checkpoint-selection metric.
+  Evidence: A model may correctly detect that its candidate pool missed the answer without producing the required three-horse combination. Evaluator v2 and later therefore report `top3_exact_accuracy` separately and use it as the primary checkpoint-selection metric.
+
+- Observation: The adapted Laya checkpoint remains materially sensitive to option position even after deterministic option-order augmentation.
+  Evidence: Across all cyclic rotations, only 56.90% of races retained one predicted label and each race averaged 1.655 distinct predictions. Position-balanced probability averaging still scored exactly 35/116, so the documented Laya mitigation removed no errors on this validation set.
+
+- Observation: A lower training loss can coincide with catastrophic loss of the actual top-three objective.
+  Evidence: The continuation stage reduced training cross-entropy from 2.2521 to 2.1853 but validation top-three hits fell from 35 to 6 while correct `NONE` choices increased from one to five. Checkpoint selection by `top3_exact_accuracy` prevented the regressed model from replacing the first epoch.
 
 ## Decision Log
 
@@ -135,9 +143,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Rationale: Full encoder adaptation produced a large first-epoch gain, while head-only training and the expanded feature control both failed their same-window baselines. Further compute is justified only while October top-three accuracy improves materially, and promotion still requires a newly collected forward holdout.
   Date/Author: 2026-10-02 / Codex
 
+- Decision: Stop further Laya tuning on the current validation universe and retain it only as a rejected research checkpoint.
+  Rationale: The predeclared continuation catastrophically regressed, exhaustive option-rotation averaging added zero hits, and the best checkpoint remains 22 and 28 hits behind the feature control and strict fallback respectively. More October-guided tuning would increase validation overfit without creating promotion evidence.
+  Date/Author: 2026-10-02 / Codex
+
 ## Outcomes & Retrospective
 
-The Laya route now has a deterministic 1,319-race OOF training corpus and a lossless 116-race October validation corpus, with candidate ceilings of 85.60% and 93.10%. Expanded head-only Laya remains ineffective at 10.34%, while official-style full-encoder adaptation reaches 30.17% after one epoch. That gain proves domain adaptation is functioning, but it remains below the expanded feature control at 49.14% and the strict fallback at 54.31% on identical October races. No model is promoted. A staged continuation may test whether full-encoder validation keeps improving, but any promotion claim still requires new public-data backfill and a forward holdout because December 2025 is spent.
+The Laya route now has a deterministic 1,319-race OOF training corpus and a lossless 116-race October validation corpus, with candidate ceilings of 85.60% and 93.10%. Expanded head-only Laya remains ineffective at 10.34%; official-style full-encoder adaptation reaches 30.17% after one epoch, then collapses under the predeclared continuation. Exhaustive cyclic option averaging also remains at 30.17%. The best Laya checkpoint is therefore rejected behind the expanded feature control at 49.14% and the strict fallback at 54.31% on identical October races. No model is promoted. Further progress now requires a structured candidate model plus new public-data backfill and a forward holdout because December 2025 is spent.
 
 ## Context and Orientation
 
@@ -302,3 +314,5 @@ Revision note, 2026-10-01 / Codex: Completed the one-time frozen test. The featu
 Revision note, 2026-10-01 / Codex: Added the reusable `fold_a` inner-OOF candidate cache and train-plus-October exporter after rejecting the low-ceiling 67-component shortcut. The code and one-date CLI smoke are complete; full 112-date materialization and validation remain in progress, and no test split is emitted.
 
 Revision note, 2026-10-02 / Codex: Completed the 1,319-race OOF dataset, corrected `NONE`-inflated scoring, rejected the expanded head-only and feature controls, and validated official-style full-encoder Laya adaptation at 30.17% after one epoch. No model is promoted; staged October-only continuation and a new forward holdout remain.
+
+Revision note, 2026-10-02 / Codex: Closed the current Laya path after the staged continuation fell to 5.17% and exhaustive cyclic order averaging produced no gain over 30.17%. The preserved checkpoint is diagnostic only; the next research route is structured candidate ranking and new forward data.

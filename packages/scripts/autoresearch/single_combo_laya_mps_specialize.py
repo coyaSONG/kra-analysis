@@ -379,6 +379,7 @@ def _evaluate(
                 records.append(
                     {
                         "race_id": item["race_id"],
+                        "augmentation_index": item["augmentation_index"],
                         "logits": logits[index, :option_count].float().cpu().tolist(),
                         "expected_index": item["expected_index"],
                         "expected_label": item["expected_label"],
