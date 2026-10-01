@@ -12,7 +12,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-FORMAT_VERSION = "single-combo-laya-mps-specialization-v3"
+FORMAT_VERSION = "single-combo-laya-mps-specialization-v4"
 QUESTION_ID = "top3_combo"
 NONE_OPTION = "NONE"
 DEFAULT_MODEL_REVISION = "55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851"
@@ -679,9 +679,10 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         (item["race_id"], item["augmentation_index"]): item for item in train_items
     }
     for epoch in range(1, args.epochs + 1):
+        schedule_epoch = args.augmentation_offset + epoch
         selected_rows = epoch_rows(
             train_rows,
-            epoch=epoch,
+            epoch=schedule_epoch,
             augmentations_per_race=schedule["augmentations_per_race"],
         )
         selected_items = [
@@ -715,7 +716,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         validation_metrics = score_records(validation_records)
         entry = {
             "epoch": epoch,
-            "augmentation_index": (epoch - 1) % schedule["augmentations_per_race"],
+            "augmentation_index": (schedule_epoch - 1)
+            % schedule["augmentations_per_race"],
             "training": training_metrics,
             "validation": validation_metrics,
         }
@@ -768,6 +770,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "independent_race_count": schedule["independent_race_count"],
         "augmentations_per_race": schedule["augmentations_per_race"],
+        "augmentation_offset": args.augmentation_offset,
         "epochs_completed": args.epochs,
         "best_epoch": best_epoch,
         "learning_rate": args.learning_rate,
@@ -801,6 +804,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "validation_path": str(args.validation),
         "validation_sha256": _sha256_file(args.validation),
         "schedule": schedule,
+        "augmentation_offset": args.augmentation_offset,
         "max_train_races": args.max_train_races,
         "training_mode": "full_encoder" if train_encoder else "head_only",
         "trainable_parameter_count": sum(
@@ -844,6 +848,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--head-max-len", type=int, default=512)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--max-train-races", type=int)
+    parser.add_argument("--augmentation-offset", type=int, default=0)
     return parser
 
 
@@ -855,6 +860,8 @@ def main() -> int:
         raise ValueError("learning rates must be positive or zero for a frozen encoder")
     if args.max_train_races is not None and args.max_train_races < 1:
         raise ValueError("max_train_races must be positive")
+    if args.augmentation_offset < 0:
+        raise ValueError("augmentation_offset must be non-negative")
     manifest = run(args)
     print(json.dumps(manifest, ensure_ascii=False, sort_keys=True), flush=True)
     return 0
