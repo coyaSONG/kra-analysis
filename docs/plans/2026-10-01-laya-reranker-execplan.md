@@ -19,7 +19,9 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-01 Asia/Seoul) Reworked the rendering to `kra-laya-choice-rendering-v5`. At `max_len=1024` and `head_max_len=512`, all 439 examples retain every candidate token and every state token, with zero collapsed option spans.
 - [x] (2026-10-01 Asia/Seoul) Built 928 deterministic option-order training rows from 116 independent train races, while scheduling exactly one variant of each race per epoch. Focused tests pass `16 passed`, and the official Laya validator still accepts all train, validation, and sealed-test JSONL files.
 - [x] (2026-10-01 Asia/Seoul) Ran the pinned Laya zero-shot and eight-epoch head-only specialization on validation only. Zero-shot and the selected epoch 5 checkpoint both scored 11/176 = 6.25%; specialization reduced NLL from 2.72475 to 2.71863 but did not change exact selections, so it is rejected for promotion.
-- [ ] Measure a simple candidate-feature supervised baseline, then use it to decide whether to unfreeze encoder layers or reject the current Laya specialization route.
+- [x] (2026-10-01 Asia/Seoul) Measured a frozen candidate-feature baseline. A nine-spec train-to-validation XGBoost ranker search selected depth 4 with 100 estimators at 106/176 = 60.2273%, versus 88/176 = 50.0% for the default-candidate heuristic and 11/176 = 6.25% for Laya.
+- [x] (2026-10-01 Asia/Seoul) Refit only the selected XGBoost specification on the 292 train-plus-validation races and froze model SHA-256 `f4770458fc121db3d30a2c070420c28f1cd6361a37eb13ed2af73a29130cbb56`. Repeated selection reproduced the manifest, predictions, and model byte for byte; final-test inference is still false.
+- [ ] Evaluate the frozen feature ranker exactly once on the sealed December test, then use that result to decide whether to unfreeze Laya encoder layers or prioritize larger strict-temporal data collection.
 - [ ] Run validation order-sensitivity, calibration, and the existing strict walk-forward comparison only for a validation-improving checkpoint.
 - [ ] Promote, commit, push, and integrate only a result that improves the existing strict single-combination baseline without weakening any leakage or coverage gate.
 
@@ -54,6 +56,9 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Observation: The unmodified typed-decisions checkpoint does not transfer zero-shot to KRA ranking, and head-only tuning is insufficient at the current sample size.
   Evidence: The pinned checkpoint scored 11/176 = 6.25% on validation, predicted position 1 or 3 on 135/176 races, and missed all six `NONE` targets. Eight head-only epochs covered all eight option-order variants once, but the selected epoch 5 checkpoint still scored 11/176; only NLL improved from 2.72475 to 2.71863.
+
+- Observation: The same compact candidate fields do contain a generalizable validation signal that Laya failed to learn.
+  Evidence: A fixed nine-spec XGBoost pairwise-ranker search trained only on October races selected depth 4 and 100 estimators at 106/176 = 60.2273% on November. It improved the default-candidate heuristic by 18 races and the specialized Laya checkpoint by 95 races on the identical validation universe. Runner-state aggregates and CatBoost probes did not improve this result.
 
 ## Decision Log
 
@@ -93,9 +98,13 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
   Rationale: Validation exact accuracy did not improve over zero-shot. A lower validation NLL alone cannot justify touching the final test or integrating the model.
   Date/Author: 2026-10-01 / Codex
 
+- Decision: Freeze the XGBoost depth-4, 100-estimator feature ranker before final-test inference.
+  Rationale: It is the best validation-only model in the declared grid, has full race coverage, uses only fields already proven pre-race-safe in the Laya surface, and reproduces byte for byte after refitting on train plus validation. Freezing its specification and model hash prevents post-test tuning.
+  Date/Author: 2026-10-01 / Codex
+
 ## Outcomes & Retrospective
 
-The Laya route has a validated, lossless dataset and training pipeline but has not produced promotion evidence. The current deterministic dataset has 439 non-overlapping October-through-December races, no missing or duplicated races, no rendered target or candidate-label fields, a maximum of 20 choices, and a robust candidate ceiling above 93%. The first head-only specialization did not improve validation exact accuracy beyond 6.25%, despite a small NLL improvement. This is consistent with the official project's warning that typed-decision workflows require domain specialization, but 116 independent train races are far short of the planning target of 20,000. The final December test remains untouched by model inference.
+The Laya route has a validated, lossless dataset and training pipeline but has not produced promotion evidence. The current deterministic dataset has 439 non-overlapping October-through-December races, no missing or duplicated races, no rendered target or candidate-label fields, a maximum of 20 choices, and a robust candidate ceiling above 93%. The first head-only specialization did not improve validation exact accuracy beyond 6.25%, despite a small NLL improvement. In contrast, a simple feature ranker reached 60.23% on the identical validation universe, proving that useful signal survived the rendering and isolating Laya adaptation as the immediate failure. The final December test remains untouched by model inference until the feature ranker is frozen and reviewed.
 
 ## Context and Orientation
 
@@ -152,6 +161,14 @@ Generate the option-order specialization data and run the head-only validation p
 
 The probe uses the pinned model bundle revision `55cf4c4ebb4ebe31b2550e8bdf3bd21b99753851`, selects epochs on validation exact accuracy with NLL as a tie-breaker, and writes only diagnostic artifacts under `.cache/autoresearch/laya_specialization/head_only_best`.
 
+Select and freeze the candidate-feature control without opening the test split:
+
+    .venv/bin/python packages/scripts/autoresearch/single_combo_laya_feature_ranker.py --require-pass
+
+Only after the selection manifest and frozen-model hash are recorded, run the one-time sealed evaluation:
+
+    .venv/bin/python packages/scripts/autoresearch/single_combo_laya_feature_ranker.py --evaluate-test --require-pass
+
 ## Validation and Acceptance
 
 The capacity milestone is accepted when its focused tests pass and the current row cache reports 18,742 rows, 1,758 unique races, zero duplicate `(race_id, chulNo)` keys, 1,758 complete valid top-three labels, a date range from 20250103 through 20251228, and approximately 10.5% missing feature cells. The artifact must explicitly set `counts_as_70_percent_evidence` to false.
@@ -194,6 +211,16 @@ The selected head-only checkpoint is diagnostic only:
     selected epoch        5
     final test inference  not run
 
+The frozen feature-ranker selection is:
+
+    selected specification  xgb_pairwise_d4_e100
+    default validation      88/176 = 0.500000
+    selected validation    106/176 = 0.602273
+    frozen fit races       292
+    frozen model SHA-256   f4770458fc121db3d30a2c070420c28f1cd6361a37eb13ed2af73a29130cbb56
+    selection manifest     8f2c94153a94bac7818421bda717d87efa808ee280093c0474d788d22bf7d7fb
+    final test inference   not run
+
 The official Laya evaluation row shape used by this plan is equivalent to:
 
     {"state": {...}, "questions": {"top3_combo": {"type": "choice", "instructions": "Select the most likely unordered top-three combination.", "criteria": {"C01": "...", "C02": "..."}}}, "expected": {"top3_combo": "C02"}, "tags": ["split:train"], "language": "en"}
@@ -219,3 +246,5 @@ Revision note, 2026-10-01 / Codex: Recorded the completed strict rank-pattern re
 Revision note, 2026-10-01 / Codex: Completed the deterministic temporal dataset exporter, official Laya parser validation, label-leakage audit, bounded-input rendering, and byte reproducibility check. The next milestone is a pinned zero-shot baseline followed by train-only specialization and validation-only selection.
 
 Revision note, 2026-10-01 / Codex: Completed lossless v5 token rendering and the first pinned head-only specialization. The checkpoint failed to improve validation exact accuracy, so the test split remains sealed and the next step is a simple feature-baseline diagnosis before expanding trainable Laya layers.
+
+Revision note, 2026-10-01 / Codex: Froze the validation-selected candidate-feature control at 60.23%. This establishes that the current fields generalize materially better than Laya and creates a precommitted model for one sealed-test evaluation.
