@@ -31,6 +31,7 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - [x] (2026-10-02 Asia/Seoul) Evaluated that preserved checkpoint over all 1,878 cyclic option rotations. Only 66/116 races were prediction-stable, but probability averaging reproduced rather than improved the canonical 35/116 = 30.1724%. Full-universe rotations ranged from 29/116 to 38/116, confirming material presentation sensitivity without a usable ensemble gain.
 - [x] (2026-10-02 Asia/Seoul) Built a 93-feature structured candidate ranker that excludes `NONE` from ranking and aggregates each candidate's three runners across pre-race horse, jockey, trainer, and recent-form fields. Selection used only the final 20% of dates inside the 1,319-race training period. Structured features improved the internal block from 47.1910% to 49.4382% and October from 47.4138% to 50.0000%, but remained below the strict fallback's 54.3103%.
 - [ ] Backfill multiple prior years and designate a new untouched 2026 forward window before making another promotion decision. The current environment has no `KRA_API_KEY`, and December 2025 remains spent.
+- [x] (2026-10-02 Asia/Seoul) Extended `apps/api/scripts/batch_backfill.py` with monthly `API72_2` discovery, full pagination, deduplication, partial-month filtering, a deterministic discovery manifest, and a `collect` command that sends every discovered race through `RaceProcessingWorkflow.collect`. Focused tests pass `5 passed` with `--no-cov`, Ruff passes, and the CLI exposes `discover` and `collect`; a live run remains blocked only by the missing `KRA_API_KEY`.
 - [x] (2026-10-01 Asia/Seoul) Closed validation order-sensitivity and calibration without running them because the Laya checkpoint did not improve validation exact accuracy.
 - [x] (2026-10-01 Asia/Seoul) Applied the promotion gate: neither candidate improved the existing strict baseline on final evidence, so no model was merged.
 
@@ -93,6 +94,9 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 - Observation: Direct runner aggregates add some transferable signal, but not enough complementary answers to support a 70% selector.
   Evidence: The structured ranker gained six internal-validation hits over the base feature ranker and three October hits, reaching 58/116. Its perfect hindsight union with the strict fallback is only 70/116 = 60.3448% because 51 hits overlap, with seven structured-only and twelve strict-only hits.
 
+- Observation: No unused pre-2025 bulk race corpus exists in the checked-in data or snapshot directories.
+  Evidence: The only large race snapshots cover full-year 2025 plus seventeen races from 2026-06-13. Existing backfill code could fill results, odds, and enrichment only after a race already existed in the database; the new monthly discovery stage closes that missing first step.
+
 ## Decision Log
 
 - Decision: Use Laya as a second-stage candidate reranker, not as a replacement for public-data collection or the first-stage horse models.
@@ -153,6 +157,10 @@ The first observable result is a data-capacity JSON artifact. Running the capaci
 
 - Decision: Reject the structured candidate ranker and do not build a switch gate between it and the strict fallback.
   Rationale: Even an answer-aware oracle choosing between the two reaches only 60.34%, so no deployable gate over that pair can attain the 70% objective. New candidate-quality information or additional historical data is required before selector tuning resumes.
+  Date/Author: 2026-10-02 / Codex
+
+- Decision: Make monthly race-plan discovery the entry point for historical backfill, while leaving the existing `all` command's semantics unchanged.
+  Rationale: `API72_2` can enumerate a year and month without pre-known race numbers. A separate `discover`/`collect` path is resumable through the saved manifest and database while avoiding a surprising expansion of the established results/enrichment/odds workflow.
   Date/Author: 2026-10-02 / Codex
 
 ## Outcomes & Retrospective
@@ -326,3 +334,5 @@ Revision note, 2026-10-02 / Codex: Completed the 1,319-race OOF dataset, correct
 Revision note, 2026-10-02 / Codex: Closed the current Laya path after the staged continuation fell to 5.17% and exhaustive cyclic order averaging produced no gain over 30.17%. The preserved checkpoint is diagnostic only; the next research route is structured candidate ranking and new forward data.
 
 Revision note, 2026-10-02 / Codex: Rejected the 93-feature structured candidate ranker at 50.00% October accuracy and a 60.34% two-model oracle with the strict fallback. Selector work is now blocked on new signal or data rather than model gating.
+
+Revision note, 2026-10-02 / Codex: Added the missing monthly race-discovery and initial-collection stage to the API backfill script. The implementation is tested and ready; live multi-year collection awaits a configured `KRA_API_KEY`.

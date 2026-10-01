@@ -15,10 +15,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
+import math
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Path setup
@@ -36,7 +40,9 @@ from infrastructure.database import async_session_maker, close_db  # noqa: E402
 from models.database_models import DataStatus, Race  # noqa: E402
 from services.kra_api_service import KRAAPIService  # noqa: E402
 from services.race_processing_workflow import (  # noqa: E402
+    CollectRaceCommand,
     MaterializeRaceCommand,
+    RaceKey,
     build_race_processing_workflow,
 )
 from services.result_collection_service import (  # noqa: E402
@@ -56,10 +62,189 @@ logger = logging.getLogger("batch_backfill")
 
 API_DELAY_SECONDS = 1.0
 MEET_NAMES = {1: "서울", 2: "제주", 3: "부산경남"}
+DEFAULT_DISCOVERY_OUTPUT = (
+    API_DIR.parent.parent / ".cache/autoresearch/kra_race_plan_discovery.json"
+)
 
 
 def _build_workflow(kra_api: KRAAPIService, db):
     return build_race_processing_workflow(kra_api, db)
+
+
+def _response_body(response: dict[str, Any]) -> dict[str, Any]:
+    envelope = response.get("response")
+    body = envelope.get("body") if isinstance(envelope, dict) else None
+    if not isinstance(body, dict):
+        raise ValueError("KRA race-plan response is missing response.body")
+    return body
+
+
+def _page_items(body: dict[str, Any]) -> list[dict[str, Any]]:
+    items_container = body.get("items")
+    raw_items = (
+        items_container.get("item") if isinstance(items_container, dict) else None
+    )
+    if raw_items in (None, ""):
+        return []
+    if isinstance(raw_items, dict):
+        return [raw_items]
+    if isinstance(raw_items, list) and all(isinstance(item, dict) for item in raw_items):
+        return raw_items
+    raise ValueError("KRA race-plan response has an invalid item collection")
+
+
+def _int_value(item: dict[str, Any], *keys: str) -> int:
+    for key in keys:
+        value = item.get(key)
+        if value not in (None, ""):
+            try:
+                return int(str(value).strip())
+            except ValueError as error:
+                raise ValueError(f"invalid integer field {key}: {value!r}") from error
+    raise ValueError(f"missing required field: {'/'.join(keys)}")
+
+
+def _race_key_from_plan_item(item: dict[str, Any]) -> RaceKey:
+    raw_date = _int_value(item, "rcDate", "rc_date")
+    race_date = f"{raw_date:08d}"
+    datetime.strptime(race_date, "%Y%m%d")
+    raw_meet = item.get("meet")
+    meet_names = {"서울": 1, "제주": 2, "부산": 3, "부산경남": 3}
+    if isinstance(raw_meet, str) and raw_meet.strip() in meet_names:
+        meet = meet_names[raw_meet.strip()]
+    else:
+        meet = _int_value(item, "meet")
+    race_number = _int_value(item, "rcNo", "rc_no")
+    if meet not in MEET_NAMES or race_number < 1:
+        raise ValueError(f"invalid race key fields: {item!r}")
+    return RaceKey(race_date=race_date, meet=meet, race_number=race_number)
+
+
+async def discover_race_plan_month(
+    kra_api: KRAAPIService,
+    *,
+    year: int,
+    month: int,
+    meet: int | None = None,
+    num_rows: int = 100,
+) -> list[RaceKey]:
+    """API72_2 월 조회를 끝까지 페이지네이션해 고유 경주를 반환한다."""
+    if year < 1990 or not 1 <= month <= 12:
+        raise ValueError("year/month is outside the supported range")
+    if meet is not None and meet not in MEET_NAMES:
+        raise ValueError("meet must be one of 1, 2, or 3")
+    if num_rows < 1:
+        raise ValueError("num_rows must be positive")
+
+    page_number = 1
+    discovered: dict[str, RaceKey] = {}
+    while True:
+        params: dict[str, Any] = {
+            "rc_year": f"{year:04d}",
+            "rc_month": f"{month:02d}",
+            "numOfRows": num_rows,
+            "pageNo": page_number,
+        }
+        if meet is not None:
+            params["meet"] = str(meet)
+        response = await kra_api._make_request(  # noqa: SLF001
+            endpoint="API72_2/racePlan_2",
+            params=params,
+        )
+        body = _response_body(response)
+        for item in _page_items(body):
+            key = _race_key_from_plan_item(item)
+            if not key.race_date.startswith(f"{year:04d}{month:02d}"):
+                raise ValueError(f"race plan returned an out-of-month date: {key.race_id}")
+            if meet is not None and key.meet != meet:
+                raise ValueError(f"race plan returned an unexpected meet: {key.race_id}")
+            discovered[key.race_id] = key
+
+        total_count = int(body.get("totalCount") or len(discovered))
+        response_rows = int(body.get("numOfRows") or num_rows)
+        if response_rows < 1:
+            response_rows = num_rows
+        page_count = max(1, math.ceil(total_count / response_rows))
+        if page_number >= page_count:
+            break
+        page_number += 1
+    return sorted(
+        discovered.values(),
+        key=lambda key: (key.race_date, key.meet, key.race_number),
+    )
+
+
+def _month_starts(start: str, end: str) -> list[tuple[int, int]]:
+    start_date = datetime.strptime(start, "%Y%m%d")
+    end_date = datetime.strptime(end, "%Y%m%d")
+    if start_date > end_date:
+        raise ValueError("start must not be later than end")
+    year, month = start_date.year, start_date.month
+    result: list[tuple[int, int]] = []
+    while (year, month) <= (end_date.year, end_date.month):
+        result.append((year, month))
+        if month == 12:
+            year += 1
+            month = 1
+        else:
+            month += 1
+    return result
+
+
+async def discover_race_range(
+    kra_api: KRAAPIService,
+    *,
+    start: str,
+    end: str,
+    meet: int | None = None,
+) -> list[RaceKey]:
+    discovered: dict[str, RaceKey] = {}
+    for year, month in _month_starts(start, end):
+        monthly = await discover_race_plan_month(
+            kra_api,
+            year=year,
+            month=month,
+            meet=meet,
+        )
+        for key in monthly:
+            if start <= key.race_date <= end:
+                discovered[key.race_id] = key
+    return sorted(
+        discovered.values(),
+        key=lambda key: (key.race_date, key.meet, key.race_number),
+    )
+
+
+def write_discovery_manifest(
+    path: Path,
+    *,
+    start: str,
+    end: str,
+    meet: int | None,
+    races: list[RaceKey],
+) -> None:
+    payload = {
+        "format_version": "kra-race-plan-discovery-v1",
+        "endpoint": "API72_2/racePlan_2",
+        "start": start,
+        "end": end,
+        "meet": meet,
+        "race_count": len(races),
+        "races": [
+            {
+                "race_id": key.race_id,
+                "race_date": key.race_date,
+                "meet": key.meet,
+                "race_number": key.race_number,
+            }
+            for key in races
+        ],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -304,10 +489,86 @@ async def backfill_odds(start: str | None, end: str | None) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Race discovery and initial collection
+# ---------------------------------------------------------------------------
+async def discover_or_collect_races(
+    *,
+    start: str,
+    end: str,
+    meet: int | None,
+    output: Path,
+    collect: bool,
+) -> None:
+    kra_api = KRAAPIService()
+    try:
+        races = await discover_race_range(
+            kra_api,
+            start=start,
+            end=end,
+            meet=meet,
+        )
+        write_discovery_manifest(
+            output,
+            start=start,
+            end=end,
+            meet=meet,
+            races=races,
+        )
+        logger.info("경주 발견 완료: %d건, manifest=%s", len(races), output)
+        if not collect:
+            return
+
+        collected = 0
+        failed = 0
+        for index, key in enumerate(races, start=1):
+            try:
+                async with async_session_maker() as db:
+                    workflow = _build_workflow(kra_api, db)
+                    await workflow.collect(CollectRaceCommand(key=key))
+                collected += 1
+            except Exception as error:
+                failed += 1
+                logger.error("초기 경주 수집 실패: %s error=%s", key.race_id, error)
+            if index % 20 == 0 or index == len(races):
+                logger.info(
+                    "[%d/%d] 초기 수집: 완료=%d, 실패=%d",
+                    index,
+                    len(races),
+                    collected,
+                    failed,
+                )
+            await asyncio.sleep(API_DELAY_SECONDS)
+        logger.info(
+            "초기 경주 수집 완료: 성공=%d, 실패=%d (총 %d건)",
+            collected,
+            failed,
+            len(races),
+        )
+    finally:
+        await kra_api.close()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-async def main(command: str, start: str | None, end: str | None) -> None:
+async def main(
+    command: str,
+    start: str | None,
+    end: str | None,
+    meet: int | None,
+    output: Path,
+) -> None:
     try:
+        if command in ("discover", "collect"):
+            if not start or not end:
+                raise ValueError("discover/collect requires --start and --end")
+            await discover_or_collect_races(
+                start=start,
+                end=end,
+                meet=meet,
+                output=output,
+                collect=command == "collect",
+            )
         if command in ("results", "all"):
             await backfill_results(start, end)
         if command in ("enrich", "all"):
@@ -323,14 +584,19 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="KRA 데이터 백필")
     parser.add_argument(
         "command",
-        choices=["results", "enrich", "odds", "all"],
-        help="results=결과수집, enrich=enrichment, odds=배당률, all=전체 순차 실행",
+        choices=["discover", "collect", "results", "enrich", "odds", "all"],
+        help=(
+            "discover=경주목록, collect=신규경주수집, results=결과수집, "
+            "enrich=enrichment, odds=배당률, all=기존경주 후처리"
+        ),
     )
     parser.add_argument("--start", default=None, help="시작일 (YYYYMMDD)")
     parser.add_argument("--end", default=None, help="종료일 (YYYYMMDD)")
+    parser.add_argument("--meet", type=int, choices=sorted(MEET_NAMES), default=None)
+    parser.add_argument("--output", type=Path, default=DEFAULT_DISCOVERY_OUTPUT)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    asyncio.run(main(args.command, args.start, args.end))
+    asyncio.run(main(args.command, args.start, args.end, args.meet, args.output))
