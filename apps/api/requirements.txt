@@ -151,7 +151,7 @@ pydantic-settings==2.14.2
     #   kra-race-prediction-api
 pygments==2.20.0
     # via rich
-pyjwt==2.13.0
+pyjwt==2.15.0
     # via
     #   kra-race-prediction-api
     #   supabase-auth
