@@ -85,3 +85,38 @@ def test_rejects_invalid_candidate_vector_and_duplicate_race() -> None:
         )
     with pytest.raises(ValueError, match="duplicate race_id"):
         ranker.build_examples([_row(), _row()])
+
+
+def test_strict_baseline_comparison_requires_identical_race_universe() -> None:
+    artifact = {
+        "format_version": "fixture-v1",
+        "best": {
+            "candidate": "fixture/fallback",
+            "windows": [
+                {
+                    "name": "fold_c",
+                    "summary": {
+                        "races": 2,
+                        "exact_3of3": 1,
+                        "exact_3of3_rate": 0.5,
+                    },
+                }
+            ],
+        },
+        "predictions_by_window": {
+            "fold_c": {"20251201_1_1": [1, 2, 3], "20251201_1_2": [1, 2, 4]}
+        },
+    }
+
+    comparison = ranker.strict_baseline_comparison(
+        artifact,
+        race_ids={"20251201_1_1", "20251201_1_2"},
+    )
+
+    assert comparison["correct_count"] == 1
+    assert comparison["exact_accuracy"] == 0.5
+    with pytest.raises(ValueError, match="race universe"):
+        ranker.strict_baseline_comparison(
+            artifact,
+            race_ids={"20251201_1_1"},
+        )

@@ -18,6 +18,11 @@ DEFAULT_TRAIN = Path(".cache/autoresearch/laya_temporal_dataset/train.jsonl")
 DEFAULT_VALIDATION = Path(".cache/autoresearch/laya_temporal_dataset/validation.jsonl")
 DEFAULT_TEST = Path(".cache/autoresearch/laya_temporal_dataset/test.jsonl")
 DEFAULT_OUTPUT_DIR = Path(".cache/autoresearch/laya_feature_ranker")
+DEFAULT_STRICT_BASELINE = Path(
+    ".cache/autoresearch/"
+    "clean_release_current_best_cross_surface_union_prior_date_selector_"
+    "rerun_repro_diagnostic.json"
+)
 FEATURE_NAMES = (
     "is_none",
     "is_default",
@@ -285,6 +290,45 @@ def _write_predictions(path: Path, predictions: list[dict[str, Any]]) -> None:
             )
 
 
+def strict_baseline_comparison(
+    artifact: dict[str, Any],
+    *,
+    race_ids: set[str],
+    window_name: str = "fold_c",
+) -> dict[str, Any]:
+    predictions_by_window = artifact.get("predictions_by_window")
+    predictions = (
+        predictions_by_window.get(window_name)
+        if isinstance(predictions_by_window, dict)
+        else None
+    )
+    if not isinstance(predictions, dict) or set(predictions) != race_ids:
+        raise ValueError("strict baseline race universe does not match frozen test")
+    best = artifact.get("best")
+    windows = best.get("windows") if isinstance(best, dict) else None
+    if not isinstance(windows, list):
+        raise ValueError("strict baseline is missing best-window summaries")
+    window = next(
+        (
+            item
+            for item in windows
+            if isinstance(item, dict) and item.get("name") == window_name
+        ),
+        None,
+    )
+    summary = window.get("summary") if isinstance(window, dict) else None
+    if not isinstance(summary, dict) or int(summary.get("races", -1)) != len(race_ids):
+        raise ValueError("strict baseline summary does not match frozen test")
+    return {
+        "artifact_format_version": artifact.get("format_version"),
+        "candidate": best.get("candidate"),
+        "window": window_name,
+        "race_count": int(summary["races"]),
+        "correct_count": int(summary["exact_3of3"]),
+        "exact_accuracy": float(summary["exact_3of3_rate"]),
+    }
+
+
 def select_and_freeze(
     *,
     train_path: Path,
@@ -365,6 +409,7 @@ def evaluate_frozen_test(
     *,
     test_path: Path,
     output_dir: Path,
+    strict_baseline_path: Path = DEFAULT_STRICT_BASELINE,
 ) -> dict[str, Any]:
     selection_path = output_dir / "selection_manifest.json"
     selection = json.loads(selection_path.read_text(encoding="utf-8"))
@@ -386,6 +431,13 @@ def evaluate_frozen_test(
         raise ValueError(f"frozen fit/test overlap: {overlap[:5]}")
     metrics, predictions = _evaluate_model(model, test_examples)
     _write_predictions(output_dir / "test_predictions.jsonl", predictions)
+    strict_baseline_artifact = json.loads(
+        strict_baseline_path.read_text(encoding="utf-8")
+    )
+    strict_baseline = strict_baseline_comparison(
+        strict_baseline_artifact,
+        race_ids={example["race_id"] for example in test_examples},
+    )
     report = {
         "format_version": FORMAT_VERSION,
         "status": "passed",
@@ -397,6 +449,15 @@ def evaluate_frozen_test(
         "test_path": str(test_path),
         "test_sha256": _sha256_file(test_path),
         "test": metrics,
+        "strict_baseline_path": str(strict_baseline_path),
+        "strict_baseline_sha256": _sha256_file(strict_baseline_path),
+        "strict_baseline": strict_baseline,
+        "test_correct_delta_vs_strict_baseline": (
+            metrics["correct_count"] - strict_baseline["correct_count"]
+        ),
+        "test_accuracy_delta_vs_strict_baseline": (
+            metrics["exact_accuracy"] - strict_baseline["exact_accuracy"]
+        ),
         "final_test_inference_run": True,
         "final_test_labels_used_for_selection": False,
         "goal_met_on_test": metrics["exact_accuracy"] >= 0.70,
@@ -411,12 +472,17 @@ def main() -> int:
     parser.add_argument("--train", type=Path, default=DEFAULT_TRAIN)
     parser.add_argument("--validation", type=Path, default=DEFAULT_VALIDATION)
     parser.add_argument("--test", type=Path, default=DEFAULT_TEST)
+    parser.add_argument("--strict-baseline", type=Path, default=DEFAULT_STRICT_BASELINE)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--evaluate-test", action="store_true")
     parser.add_argument("--require-pass", action="store_true")
     args = parser.parse_args()
     if args.evaluate_test:
-        result = evaluate_frozen_test(test_path=args.test, output_dir=args.output_dir)
+        result = evaluate_frozen_test(
+            test_path=args.test,
+            output_dir=args.output_dir,
+            strict_baseline_path=args.strict_baseline,
+        )
     else:
         result = select_and_freeze(
             train_path=args.train,
