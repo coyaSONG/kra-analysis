@@ -25,7 +25,7 @@ _Avoid_: top-3 prediction (영문은 OK이지만 베팅 맥락에서는 삼복�
 배당 종류 코드. WIN(단승), PLC(연승), QNL(복승), EXA(쌍승), QPL(복연승), TLA(삼복승), TRI(삼쌍승), XLA(쌍복승).
 
 **Horse / horse-in-race**:
-경주 출전마. 1마리는 글로벌 `hr_no`(마번)을 갖고, *특정 경주 안에서는* `chul_no`(출전번호, 게이트)를 갖는다.
+경주 출전마. 1마리는 글로벌 `hr_no`(마번)을 갖고, _특정 경주 안에서는_ `chul_no`(출전번호, 게이트)를 갖는다.
 
 **chul_no / hr_no / jk_no / tr_no / ow_no**:
 출전번호 / 마번 / 기수번호 / 조교사번호 / 마주번호. 모두 KRA 공식 식별자.
@@ -70,7 +70,7 @@ basic_data 위에 derived feature(past_stats, weather_impact 등)를 더하는 �
 _Avoid_: prerace를 변형별로 별도 용어로 쪼개기.
 
 **postrace data**:
-경주 완료 후에만 알 수 있는 정보. `ord`, `ordBigo`, `rcTime`, 구간 기록(sj*/bu*/se*), 확정 배당. 모델 입력에 *반드시 차단*.
+경주 완료 후에만 알 수 있는 정보. `ord`, `ordBigo`, `rcTime`, 구간 기록(sj\*/bu\*/se\*), 확정 배당. 모델 입력에 _반드시 차단_.
 
 **basic_data** (column on `races`):
 DB에 저장되는 기본 수집 산출물. raw 응답 + 정규화 + KRA detail 블록 포함. 활성 컬럼.
@@ -115,7 +115,7 @@ _Avoid_: type / status enum (legacy 컬럼명, cutover 후 폐기 예정).
 Job이 실행하는 구체 명령. 값: `COLLECT_RACE`, `PREPROCESS_RACE`, `ENRICH_RACE`, `ANALYSIS`, `PREDICTION`, `IMPROVEMENT`, `BATCH_COLLECT`, `FULL_PIPELINE`. Command Pattern의 Command에 해당.
 
 **Task** (구현 세부):
-Job을 실행하는 in-process `asyncio.Task`. 현재 durable queue 미도입이라 서버 재시작 시 사라진다. CONTEXT 어휘 아님 — Job의 *실행 메커니즘*으로만 언급.
+Job을 실행하는 in-process `asyncio.Task`. 현재 durable queue 미도입이라 서버 재시작 시 사라진다. GLOSSARY 어휘 아님 — Job의 *실행 메커니즘*으로만 언급.
 
 **KRA API source**:
 KRA 공공 데이터 포털 endpoint. 코드: `API214_1`(출전표), `API72_2`(경주계획), `API189_1`(주로/날씨), `API9_1`(취소마), `API8_2`(말 상세), `API12_1`(기수 상세), `API19_1`(조교사 상세), `API11_1`(기수 누적), `API14_1`(마주), `API329`(조교현황), `API160_1`(라이브 배당), `API301`(확정 배당), `API299`(결과).
