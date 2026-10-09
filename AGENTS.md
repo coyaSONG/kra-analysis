@@ -48,3 +48,8 @@
 ## ExecPlans
 
 When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.
+
+## Research Goal Operations
+- The target is 70% race-level exact success for one unordered three-horse prediction, using only pre-race information and the complete frozen race universe. Do not substitute top-k, portfolio, retrospective proxy, or skipped-race subset metrics.
+- When research becomes difficult, consolidate the evidence and open questions and consult the user's ChatGPT Pro model through the authorized browser. Wait for the completed response without stopping generation or imposing a short response timeout. If access is unavailable, record the blocker and never claim a consultation occurred.
+- For the owner's ongoing research request, commit, push, and merge validated improvements in small increments after tests and required checks pass. Isolate unrelated working-tree changes and never force a failing merge.

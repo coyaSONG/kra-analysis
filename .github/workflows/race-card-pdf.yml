@@ -1,0 +1,52 @@
+name: Race Card PDF Checks
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/race-card-pdf.yml'
+      - 'packages/scripts/shared/kra_entry_sheet.py'
+      - 'packages/scripts/shared/kra_race_card_pdf*.py'
+      - 'packages/scripts/shared/operational_cutoff.py'
+      - 'packages/scripts/shared/entry_snapshot_metadata.py'
+      - 'packages/scripts/autoresearch/kra_*_snapshot.py'
+      - 'packages/scripts/autoresearch/tests/*race_card_pdf*.py'
+      - 'packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py'
+      - 'packages/scripts/pyproject.toml'
+      - 'uv.lock'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/race-card-pdf.yml'
+      - 'packages/scripts/shared/kra_*.py'
+      - 'packages/scripts/autoresearch/kra_*_snapshot.py'
+      - 'packages/scripts/autoresearch/tests/*race_card_pdf*.py'
+      - 'packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py'
+      - 'packages/scripts/pyproject.toml'
+      - 'uv.lock'
+
+permissions:
+  contents: read
+
+jobs:
+  race-card-pdf:
+    name: Race Card PDF Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: packages/scripts
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.2.0
+        with:
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install PDF research dependencies
+        run: uv sync --frozen --extra race-card-pdf --group dev
+      - name: Lint and check formatting
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check shared/kra_entry_sheet.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_snapshot.py autoresearch/tests/race_card_pdf_fixture.py autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_card_pdf.py autoresearch/tests/test_kra_race_card_pdf_audit.py autoresearch/tests/test_kra_race_card_pdf_snapshot.py
+          uv run --frozen --extra race-card-pdf ruff format --check shared/kra_entry_sheet.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_snapshot.py autoresearch/tests/race_card_pdf_fixture.py autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_card_pdf.py autoresearch/tests/test_kra_race_card_pdf_audit.py autoresearch/tests/test_kra_race_card_pdf_snapshot.py
+      - name: Test collection, parsing, joins, and cutoff guards
+        run: uv run --frozen --extra race-card-pdf pytest -q autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_card_pdf.py autoresearch/tests/test_kra_race_card_pdf_audit.py autoresearch/tests/test_kra_race_card_pdf_snapshot.py
