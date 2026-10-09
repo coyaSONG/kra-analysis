@@ -279,13 +279,15 @@ def main() -> int:
             indent=2,
         )
     )
-    if args.require_eligible and not result["eligible_for_prerace_features"]:
-        return 2
+    if (
+        result["collection_status"] != "captured"
+        or parsed.get("parser_status") != "parsed"
+    ):
+        return 1
     return (
-        0
-        if result["collection_status"] == "captured"
-        and parsed.get("parser_status") == "parsed"
-        else 1
+        2
+        if args.require_eligible and not result["eligible_for_prerace_features"]
+        else 0
     )
 
 

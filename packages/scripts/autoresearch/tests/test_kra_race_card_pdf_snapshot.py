@@ -15,9 +15,18 @@ from autoresearch import kra_race_card_pdf_snapshot as snapshot
 from autoresearch.tests.race_card_pdf_fixture import HORSE_NAME, make_card_pdf
 
 
-@pytest.mark.parametrize("eligible,exit_code", [(True, 0), (False, 2)])
+@pytest.mark.parametrize(
+    "eligible,status,parser_status,exit_code",
+    [
+        (True, "captured", "parsed", 0),
+        (False, "captured", "parsed", 2),
+        (False, "fetch_error", None, 1),
+        (False, "parse_error", None, 1),
+        (False, "captured", "blocked", 1),
+    ],
+)
 def test_cli_auto_entries_derive_schedule_and_require_eligibility(
-    monkeypatch, tmp_path, capsys, eligible, exit_code
+    monkeypatch, tmp_path, capsys, eligible, status, parser_status, exit_code
 ):
     monkeypatch.setenv("KRA_API_KEY", "cli-test-credential")
     monkeypatch.setattr(
@@ -49,10 +58,10 @@ def test_cli_auto_entries_derive_schedule_and_require_eligibility(
         return {
             "race_id": "20260627_1_1",
             "manifest_path": "snapshot.json",
-            "collection_status": "captured",
+            "collection_status": status,
             "collected_at": entries["collected_at"],
             "sha256": "0" * 64,
-            "parsed": {"parser_status": "parsed"},
+            "parsed": {"parser_status": parser_status},
             "audit": {},
             "eligible_for_prerace_features": eligible,
         }
