@@ -1,0 +1,7 @@
+# Exact env-file false positives in the original PDF capture commit.
+# These are Python keyword arguments, not persisted runtime credentials.
+# Runtime variable passed to the API26 collector:
+ef648bdd774f1ae067871499e715006659205821:packages/scripts/autoresearch/kra_race_card_pdf_snapshot.py:env-file:228
+# Synthetic test credential and runtime test variable:
+ef648bdd774f1ae067871499e715006659205821:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:175
+ef648bdd774f1ae067871499e715006659205821:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:233
