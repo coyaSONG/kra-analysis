@@ -16,7 +16,7 @@ The archive is not a prediction holdout or proof of a complete evaluation univer
 - [x] (2026-10-09 16:59Z) Implement an immutable feature archive with nine numeric columns, missing flags, source identities, plan-time checks, and every declared race retained.
 - [x] (2026-10-09 16:59Z) Pass all 179 offline source tests and lint/format for 15 Python files; extend dedicated PDF CI. Lockfile and diff checks pass without dependency changes.
 - [x] (2026-10-09 17:00Z) Replay all 28 actual captures without fetching outcomes: 27 eligible races/282 rows, one blocked race, one unresolved scope. Reusing the exact pinned plan gives identical semantic output, excluding only export time.
-- [ ] Commit, push, and normally merge after required Python CI and dedicated PDF tests pass; record any baseline security audit failure without overriding protection.
+- [x] (2026-10-09 17:08Z) Commit `e16d524`, push, and normally merge PR #61 after required Python CI and dedicated PDF tests pass. Merge commit is `f794ffc24414117420004ca45bd8ae20a04385db`. Gitleaks, scripts, and Docker pass; the baseline dependency-audit failure remains without a protection override.
 
 ## Surprises & Discoveries
 
@@ -52,7 +52,7 @@ Date/Author: 2026-10-09 / Codex.
 
 ## Outcomes & Retrospective
 
-The consumption boundary is implemented and validated on 179 offline tests and all 28 original captures. The archive preserves the complete declared capture inventory, one blocked source, and one unresolved meeting/date. Only 282 verified horse feature rows are emitted. A pinned-plan rerun reproduces all semantic output. The first failed development export is retained, not overwritten. Remote CI and normal merge remain pending.
+The consumption boundary is implemented, validated on 179 offline tests and all 28 original captures, and merged into main through PR #61 at 2026-10-09 17:08:16Z. The archive preserves the complete declared capture inventory, one blocked source, and one unresolved meeting/date. Only 282 verified horse feature rows are emitted. A pinned-plan rerun reproduces all semantic output. The first failed development export is retained, not overwritten. Required Python CI, the dedicated PDF suite, scripts, Docker, and Gitleaks pass. The separate pre-existing dependency audit fails; it is not suppressed or bypassed.
 
 The overall 70% Goal is not complete, and automatic continuation remains paused. Pro advice is blocked on the owner's ChatGPT login. Do not claim consultation or stop a future Pro response while it is generating. A verified archive is useful preparation but does not replace baseline inference parity, a full future universe, predeclared ablation, pre-race predictions, or eventual outcome evaluation.
 
@@ -98,6 +98,8 @@ The original cohort checksum is `c0e7ff433484652753e2207b3005dd783186280b204519f
 
 The final export is `.cache/autoresearch/race_card_pdf_bundles/20261009T165933.854898Z_51a041eda9e6/feature_bundle.json`, SHA-256 `8061a185401bf72c4bfee2751529acb164b695eb2985dbf4d6a43e187a8ecdd6`; its input-plan SHA-256 is `0ac4a309d07901d6f4da8c4503c937fee9529fb5e05871cfdcd5252116a52be0`. The pinned replay is `20261009T170031.529322Z_69881123d72c/feature_bundle.json`, SHA-256 `bb75f109f1565c7b8239ba0cc42755eab85636353df8e912b5698fe7c0d541c6`. `diff -u` of sorted JSON with only `exported_at` removed exits 0 with no differences. `--require-complete` exits 2 for both, as expected; unknown Busan scope is not a zero-race assumption. The engineering report is `docs/research/2026-10-10-verified-pdf-feature-archive.md`.
 
+Remote verification: PR `https://github.com/coyaSONG/kra-analysis/pull/61`, required Python workflow `https://github.com/coyaSONG/kra-analysis/actions/runs/37963820526`, and PDF workflow `https://github.com/coyaSONG/kra-analysis/actions/runs/37963820598`. The PDF job reports `179 passed in 8.96s` with all 15 files linted/formatted. The security job's Gitleaks step succeeds and only the existing Python dependency audit fails. No override, force push, or branch-protection change was used.
+
 ## Interfaces and Dependencies
 
 Define `replay_race_card_snapshot(manifest_path, *, archive_root, expected_sha256, expected_identity, expected_pdf_sha256=None, expected_entry_manifest_sha256=None) -> dict[str, Any]`. It returns `eligible_for_prerace_features`, `reasons`, `feature_rows`, identity, and checksum-backed evidence. Define `build_bundle(plan, *, archive_root) -> dict[str, Any]` and CLI `main() -> int` in the bundle module. Use existing parsers and the optional `race-card-pdf` dependency set; no new dependency or production API change is required.
@@ -105,3 +107,5 @@ Define `replay_race_card_snapshot(manifest_path, *, archive_root, expected_sha25
 Revision note (2026-10-09): Created this plan before implementation to close the raw-evidence consumption gap without conflating source coverage with the 70% model objective.
 
 Revision note (2026-10-09 17:00Z): Recorded implementation, 179-test evidence, real/pinned replay checksums, and the discovery/correction of shared same-date entry provenance. Preserve all blockers and remaining model-evaluation gates while remote checks are pending.
+
+Revision note (2026-10-09 17:08Z): Closed this source-consumption milestone with verified remote checks and the actual normal merge of PR #61. This does not complete or resume the overall 70% Goal.
