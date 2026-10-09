@@ -37,6 +37,8 @@ The in-app browser is unavailable in this session. The connected Chrome opens Ch
 
 The initial clean-main dependency audit still reports findings in anyio, cryptography, and urllib3. The integration branch updates them to 4.14.2, 50.0.2, and 2.8.0 and regenerates API requirements from the lock. MLflow 3.14 explicitly requires cryptography <49, so the solver also moves its three-package family to 3.17.0. Its tracking wrapper passes an isolated SQLite smoke check. An all-workspace/all-extra audit still reports 94 entries (including duplicate advisory IDs) across 13 other existing packages; this is not a clean whole-repository security bill. The latest main CI already fails its security audit while Python, scripts, and Docker jobs pass. GitHub currently requires the Python Checks status, with strict up-to-date enforcement.
 
+The first PR #55 run passes Python, PDF, scripts, and Docker checks but stops its security job on three env-file false positives: Python `api_key=key` keyword arguments and a synthetic test credential. Inspecting the exact immutable commit confirms no real credential literal. `.gitleaksignore` lists only those three commit/path/rule/line fingerprints; it does not disable the rule or allow arbitrary files or future commits. Rerun CI to distinguish these false positives from the existing dependency audit failure.
+
 ## Decision Log
 
 Decision: Implement an additive research source, keeping PDF libraries out of the API runtime and keeping live model behavior unchanged. Rationale: new data quality must be demonstrated before production integration or model promotion. Date/Author: 2026-10-09 / Codex.
@@ -121,3 +123,5 @@ Plan revision: 2026-10-09, initial self-contained source-ingestion plan after pe
 Plan revision: 2026-10-09, record completed implementation, API pagination and numeric-ID discoveries, two-digit runner recovery, actual cohort evidence, strict unresolved joins, Pro login handoff, and isolated integration requirements.
 
 Plan revision: 2026-10-09 16:05Z, record source push, clean-main replay and dependency/compatibility checks, CLI failure precedence, and the distinction between a clean capture dependency closure and pre-existing whole-repository audit failures.
+
+Plan revision: 2026-10-09, record PR #55 and three reviewed, commit-specific Gitleaks false positives without broadening the secret-scan allowlist.
