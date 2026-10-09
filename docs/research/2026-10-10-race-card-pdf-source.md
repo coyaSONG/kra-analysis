@@ -72,7 +72,9 @@ Before a model consumes this cache, recheck raw checksums, source manifests, exa
 
 ## Verification and Next Research Gate
 
-The focused suite currently passes 107 tests, including generated real-PDF round trips for all three meetings, two-digit joined headers, pagination, numeric IDs, duplicate/missing joins, actual completion-time cutoffs, retrospective capture rejection, credential-safe errors, and CLI exit behavior. Dedicated CI installs the optional extra so the PDF cases cannot be silently skipped through absent dependencies.
+The focused suite currently passes 110 tests, including generated real-PDF round trips for all three meetings, two-digit joined headers, pagination, numeric IDs, duplicate/missing joins, actual completion-time cutoffs, retrospective capture rejection, credential-safe errors, and CLI failure precedence. Dedicated CI installs the optional extra so the PDF cases cannot be silently skipped through absent dependencies.
+
+The clean integration branch updates anyio/cryptography/urllib3 to 4.14.2/50.0.2/2.8.0 and the solver-required MLflow family to 3.17.0. The PDF capture dependency closure passes pip-audit with no known findings. All 28 cached raw-PDF replays match the original parsed/audited output; 35 API auth tests pass (two existing skips), RSA/JWT round-trip smoke passes, and the MLflow wrapper passes isolated SQLite tracking. The original research branch's older environment was not overwritten. A broad workspace audit still reports existing findings in 13 other packages, and main CI already fails its security job; those findings are not suppressed or claimed fixed. Require the normal protected-branch Python status and the dedicated PDF check before merging this increment, without an admin override.
 
 ```sh
 .venv/bin/python -m pytest -q \

@@ -15,7 +15,9 @@ The observable result is a runnable collector that produces a raw PDF, a SHA-256
 - [x] (2026-10-09 15:38Z) Implement the parser, collector, API26 pagination, original-byte manifests, and fail-closed complete joins and timing checks; validate Seoul race 1 against all 11 official entries.
 - [x] (2026-10-09 15:43Z) Capture 28 scheduled Seoul/Jeju races and 294 horse rows for October 10-11; 27 races/282 rows pass. Preserve one name-prefix mismatch and the separate empty Busan API response as unresolved evidence.
 - [x] (2026-10-09 15:47Z) Run 107 focused tests, Ruff, and the workspace lock check; add dedicated CI coverage and persistent Pro/push/merge operating instructions.
-- [ ] Complete the dependency audit and clean-main integration checks; commit and push only this increment, then merge if all required checks pass.
+- [x] (2026-10-09 15:54Z) Commit and push the isolated source increment as `e250b20`; copy only that increment onto clean main as `ef648bd`.
+- [x] (2026-10-09 16:05Z) Validate clean-main replay of all 28 raw PDFs, 110 focused tests, 35 API auth tests (two pre-existing skips), RSA/JWT crypto smoke, and the MLflow tracking wrapper. The PDF capture dependency closure has no known pip-audit findings after targeted updates.
+- [ ] Push the clean-main integration branch, verify the required Python CI and dedicated PDF checks, and merge normally if both pass. Record the pre-existing repository-wide security failure separately without weakening protections or suppressing findings.
 
 ## Surprises & Discoveries
 
@@ -33,6 +35,8 @@ October 11 Seoul race 8 has nine API names prefixed with the regional label Yeon
 
 The in-app browser is unavailable in this session. The connected Chrome opens ChatGPT without a login. A login handoff has been requested; no Pro question or reply has occurred in this increment.
 
+The initial clean-main dependency audit still reports findings in anyio, cryptography, and urllib3. The integration branch updates them to 4.14.2, 50.0.2, and 2.8.0 and regenerates API requirements from the lock. MLflow 3.14 explicitly requires cryptography <49, so the solver also moves its three-package family to 3.17.0. Its tracking wrapper passes an isolated SQLite smoke check. An all-workspace/all-extra audit still reports 94 entries (including duplicate advisory IDs) across 13 other existing packages; this is not a clean whole-repository security bill. The latest main CI already fails its security audit while Python, scripts, and Docker jobs pass. GitHub currently requires the Python Checks status, with strict up-to-date enforcement.
+
 ## Decision Log
 
 Decision: Implement an additive research source, keeping PDF libraries out of the API runtime and keeping live model behavior unchanged. Rationale: new data quality must be demonstrated before production integration or model promotion. Date/Author: 2026-10-09 / Codex.
@@ -46,6 +50,8 @@ Decision: Add an API26 capture option with complete pagination and exact respons
 Decision: Persist the owner's research operating rules in `AGENTS.md`: consult the browser Pro model when research becomes difficult, wait for completion without a short timeout or stopping generation, and commit/push/merge validated increments. Rationale: these rules must survive future goal continuations; unavailable access must be reported honestly. Date/Author: 2026-10-09 / Codex.
 
 Decision: Integrate through a separate clean-main worktree and cherry-pick only this increment. Rationale: the current branch has 25 earlier commits not present on main; merging that whole branch would exceed this change's reviewed scope. Date/Author: 2026-10-09 / Codex.
+
+Decision: Apply only the capture dependency security updates and the solver-required MLflow family update on the clean integration branch, keeping the owner's dirty working tree untouched. Rationale: the optional PDF path must not introduce known vulnerable dependencies; repository-wide unrelated maintenance requires its own review. Keep existing failed audit evidence visible, and do not use an admin override or alter required checks. Date/Author: 2026-10-09 / Codex.
 
 ## Outcomes & Retrospective
 
@@ -71,7 +77,7 @@ API normalization belongs in `packages/scripts/shared/kra_entry_sheet.py`, and H
 
 ## Concrete Steps
 
-All commands run from `/Users/coyasong/Developer/coyasong/kra-analysis` unless explicitly stated otherwise. Install the research extra with `uv sync --package kra-scripts --extra race-card-pdf --group dev --inexact`; the last option preserves separately installed model-research dependencies. Run the focused tests with `.venv/bin/python -m pytest -q packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf_audit.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf_snapshot.py`. The current result is 107 passed, with no skipped PDF round trips when the extra is installed.
+All commands run from `/Users/coyasong/Developer/coyasong/kra-analysis` unless explicitly stated otherwise. Install the research extra with `uv sync --package kra-scripts --extra race-card-pdf --group dev --inexact`; the last option preserves separately installed model-research dependencies. Run the focused tests with `.venv/bin/python -m pytest -q packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf_audit.py packages/scripts/autoresearch/tests/test_kra_race_card_pdf_snapshot.py`. The current result is 110 passed, with no skipped PDF round trips when the extra is installed. The clean integration worktree is `/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf` on `codex/race-card-pdf-snapshots`; the dependency audit and broad compatibility checks refer to that newer environment, not the original research branch's older lockfile.
 
 The collector CLI accepts `--meet`, `--race-date`, `--race-no`, `--output-dir`, optional `--entries` JSON or mutually exclusive `--fetch-entries`, and optional `--scheduled-start-time` in HHMM format. An entries file contains `meet`, `race_date`, `race_no`, timezone-aware `collected_at`, `scheduled_start_time`, and an `entries` list with `chulNo`, `hrName`, and optional `hrNo`. Both capture times must pass the deadline, and PDF and API start times must agree. Automatic API capture requires `KRA_API_KEY`, an explicit `--api-key-file`, or the owner's existing local secret file at `~/.codex/secrets/kra_api_key`. Only the credential value is read; it is never persisted.
 
@@ -113,3 +119,5 @@ The research extra will contain pdfplumber. HTTP requests use existing httpx. Pe
 Plan revision: 2026-10-09, initial self-contained source-ingestion plan after permission restoration.
 
 Plan revision: 2026-10-09, record completed implementation, API pagination and numeric-ID discoveries, two-digit runner recovery, actual cohort evidence, strict unresolved joins, Pro login handoff, and isolated integration requirements.
+
+Plan revision: 2026-10-09 16:05Z, record source push, clean-main replay and dependency/compatibility checks, CLI failure precedence, and the distinction between a clean capture dependency closure and pre-existing whole-repository audit failures.
