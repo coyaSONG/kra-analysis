@@ -17,7 +17,7 @@ The observable result is a runnable collector that produces a raw PDF, a SHA-256
 - [x] (2026-10-09 15:47Z) Run 107 focused tests, Ruff, and the workspace lock check; add dedicated CI coverage and persistent Pro/push/merge operating instructions.
 - [x] (2026-10-09 15:54Z) Commit and push the isolated source increment as `e250b20`; copy only that increment onto clean main as `ef648bd`.
 - [x] (2026-10-09 16:05Z) Validate clean-main replay of all 28 raw PDFs, 110 focused tests, 35 API auth tests (two pre-existing skips), RSA/JWT crypto smoke, and the MLflow tracking wrapper. The PDF capture dependency closure has no known pip-audit findings after targeted updates.
-- [ ] Push the clean-main integration branch, verify the required Python CI and dedicated PDF checks, and merge normally if both pass. Record the pre-existing repository-wide security failure separately without weakening protections or suppressing findings.
+- [x] (2026-10-09 16:24Z) Push the clean-main integration branch and normally merge PR #55 into main as `ae9207f`. Python, PDF, scripts, Docker, and the Gitleaks step pass. The pre-existing dependency audit remains failed and is explicitly documented; no admin override or branch-protection change is used.
 
 ## Surprises & Discoveries
 
@@ -57,7 +57,7 @@ Decision: Apply only the capture dependency security updates and the solver-requ
 
 ## Outcomes & Retrospective
 
-Source ingestion is implemented and demonstrated with actual pre-race captures. All 28 Seoul/Jeju PDFs parse, training counts/minutes are present for 294/294 horses, and complete identity/timing eligibility passes for 27/28 races. The unresolved name-prefix race contributes zero usable feature rows and remains in the recorded universe. These are source coverage figures, not prediction accuracy. No new exact-match result or model promotion is claimed. The spent December 2025 holdout must not be reused for model selection. A new, frozen forward holdout and a preregistered ablation remain necessary. Repository integration is still pending.
+Source ingestion is implemented, demonstrated with actual pre-race captures, pushed, and merged through [PR #55](https://github.com/coyaSONG/kra-analysis/pull/55). All 28 Seoul/Jeju PDFs parse, training counts/minutes are present for 294/294 horses, and complete identity/timing eligibility passes for 27/28 races. The unresolved name-prefix race contributes zero usable feature rows and remains in the recorded universe. These are source coverage figures, not prediction accuracy. No new exact-match result or model promotion is claimed. The spent December 2025 holdout must not be reused for model selection. A new, frozen forward holdout and a preregistered ablation remain necessary. This source-ingestion ExecPlan is complete; the 70% research Goal is not complete and its automatic continuation remains paused.
 
 ## Context and Orientation
 
@@ -112,6 +112,8 @@ The existing offline leader's 83/147 = 56.46% is not a validated forward result 
 
 The local cohort manifest is `.cache/autoresearch/race_card_pdf_snapshots/cohort_20261010_11_capture.json`, SHA-256 `c0e7ff433484652753e2207b3005dd783186280b204519f63cdf1c844962576c`. PDF captures span 2026-10-09 15:42:01Z through 15:42:41Z, equivalent to October 10 00:42 KST. The captured subsets contain October 10 Seoul 10 races/108 horses, October 10 Jeju 7/65, and October 11 Seoul 11/121. Do not count the unresolved Busan universe as zero races when assessing nationwide coverage.
 
+Merge evidence: PR #55 is MERGED at 2026-10-09 16:24:48Z, commit `ae9207fd02e8723353899c99f0bd368e6b796c61`. The [final PR CI run](https://github.com/coyaSONG/kra-analysis/actions/runs/37958404047) passes Python, scripts, Docker, and its Gitleaks step; its existing dependency audit fails. The [dedicated PDF run](https://github.com/coyaSONG/kra-analysis/actions/runs/37958404095) passes. GitHub required Python Checks at merge time. No claim of whole-repository security clearance is made.
+
 ## Interfaces and Dependencies
 
 The research extra will contain pdfplumber. HTTP requests use existing httpx. Persistent JSON uses the standard json parser; dates use timezone-aware datetime values. The parser must expose a public `parse_race_card_pdf` function accepting bytes and explicit requested race identity. The collector must expose an injectable HTTP collection function so no unit test needs KRA network access. The join/timing audit must be a deterministic public function and must not inspect result labels.
@@ -125,3 +127,5 @@ Plan revision: 2026-10-09, record completed implementation, API pagination and n
 Plan revision: 2026-10-09 16:05Z, record source push, clean-main replay and dependency/compatibility checks, CLI failure precedence, and the distinction between a clean capture dependency closure and pre-existing whole-repository audit failures.
 
 Plan revision: 2026-10-09, record PR #55 and three reviewed, commit-specific Gitleaks false positives without broadening the secret-scan allowlist.
+
+Plan revision: 2026-10-09 16:24Z, close the ingestion plan with verified normal merge and CI evidence, keeping source/model readiness and the paused research Goal distinct.
