@@ -71,6 +71,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/october_paired_error_audit.py ../../packages/scripts/autoresearch/tests/test_october_paired_error_audit.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/october_paired_error_audit.py ../../packages/scripts/autoresearch/tests/test_october_paired_error_audit.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_october_paired_error_audit.py -o addopts=''
+      - name: Horse entry interval diagnostic regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/horse_entry_interval_audit.py ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/horse_entry_interval_audit.py ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py -o addopts=''
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
