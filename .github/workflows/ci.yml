@@ -140,6 +140,12 @@ jobs:
       - name: PDF entry replay regressions
         working-directory: ./packages/scripts
         run: uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_kra_race_card_pdf_replay.py autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
+      - name: Pre-race public hash witness regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/prerace_hash_witness.py autoresearch/tests/test_prerace_hash_witness.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prerace_hash_witness.py autoresearch/tests/test_prerace_hash_witness.py
+          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prerace_hash_witness.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 

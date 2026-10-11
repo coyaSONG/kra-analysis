@@ -1,5 +1,12 @@
 # Verified pre-race PDF feature archive
 
+Later evidence note (2026-10-11): the exact bundle/plan hashes below were already
+present in PR61's pre-race merge tree. A live GitHub merge-record and full local
+raw replay now establish a separate public content-existence bound. See the
+[hash-witness audit](2026-10-11-prerace-hash-witness.md). Original local capture
+timestamps and historical findings below remain unchanged; this does not itself
+approve training, outcomes or prediction performance.
+
 The original 28-race capture inventory now has a reproducible feature-consumption boundary. All PDF bytes, entry-sheet pages, capture ordering, complete joins, saved projections, and cutoff decisions are replayed before any features are exported. The export retains 28 race records, authorizes 27 sources and 282 horse rows, blocks the known Seoul name mismatch, and preserves the unresolved Busan meeting/date scope. This is source verification, not a new prediction model or evidence of 70% success.
 
 ## Scope and Grain
