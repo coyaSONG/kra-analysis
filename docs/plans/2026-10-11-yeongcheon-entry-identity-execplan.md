@@ -20,7 +20,9 @@ This increment makes code 4 usable for API entry capture and collection requests
 - [x] (2026-10-11 08:30Z) Recorded the qualified source, runtime, and historical timing findings in the research note.
 - [x] (2026-10-11 08:35Z) Audited all six race projections of the same live response: races 4 and 5 remain blocked by declared-count mismatches. Recorded the later race-6 schedule without backdating any cutoff.
 - [x] (2026-10-11 08:36Z) Passed both observed-count capture regressions and reran the source suite: 219 passed; lint and formatting checks remain green.
-- [ ] Commit, push, and normally merge after required remote checks pass.
+- [x] (2026-10-11 08:37Z) Committed be0cf95, pushed the isolated branch, opened and attached PR #63. Remote source, script, and Docker checks passed on that revision.
+- [x] (2026-10-11 08:38Z) Identified three exact Gitleaks env-file false positives: added Python keyword arguments containing the literal synthetic test-credential, not real keys. Added narrowly scoped historical fingerprints using the existing repository pattern.
+- [ ] Revalidate Gitleaks and required Python Checks on the final PR revision, then normally merge without a bypass.
 
 ## Surprises & Discoveries
 
@@ -31,6 +33,8 @@ The Yeongnam PDF board advertises an October 11 attachment with a legacy b_run_h
 The actual API26 venue-4 response returned 63 rows despite requesting race 1, consistent with earlier observed ignored race filters. The capture completion time is after the card's cutoff, so it establishes response shape only. The first real replay supplied the narrower .cache archive root even though manifest paths are repository-relative; all races were safely blocked. Using the documented repository-root archive base restored 27 sources/282 rows with no source or path-validation relaxation.
 
 The same raw response contains ten race-4 rows with declared dusu=9 and eleven race-5 rows with declared dusu=10. Both strict projections raise incomplete_entry_field; races 1, 2, 3, and 6 pass the field check only. Runner and horse IDs are unique in each race. Race 6 reports 16:35 rather than the earlier web observation's 16:30. The mismatch cause and historical effective schedule remain unproven. Keep raw evidence and failed rows, do not infer scratches or rewrite a historical cutoff from a later observation.
+
+The first PR security check matched three synthetic Python api_key keyword arguments with the case-insensitive env-file assignment rule. The log fingerprints identify be0cf95 and lines 148, 175, and 202 of the entry capture test. They are not API credentials. The repository already records exact commit/file/rule/line false positives in .gitleaksignore; no secret rule, scan step, or broad path allowance is removed. The base main revision's Gitleaks passed, while its Python dependency audit failed. Confirm the new revision's actual outcome rather than assuming the failure stage stays unchanged.
 
 Read-only probes on the owner's existing artifacts showed that the 28-feature saved LogReg model can perform synthetic venue-4 inference without reading prediction caches. However, 12 features require captured or stored-as-of source evidence. Its named historical training snapshot has 1,520 selected races and 16,146 horse rows, with no per-race snapshot metadata. The 1,758-race dataset manifest is a legacy compatibility manifest: it passes the compatibility branch but fails the strict timestamp audit. This is missing evidence, not proof of leakage. No model is promoted.
 
@@ -48,10 +52,13 @@ Read-only probes on the owner's existing artifacts showed that the 28-feature sa
 - Decision: Keep the two live venue-4 field mismatches blocked and add explicit capture regressions.
   Rationale: Accepting the physical venue does not prove a current complete field. A post-cutoff discrepancy cannot justify removing a runner or weakening the declared-count gate.
   Date/Author: 2026-10-11 / Codex.
+- Decision: Annotate only the three proven historical synthetic-argument fingerprints in .gitleaksignore.
+  Rationale: A new commit cannot erase a scan finding in an earlier pushed commit. Exact fingerprints preserve existing scanning for other lines and real credentials without rewriting published history or weakening the rule.
+  Date/Author: 2026-10-11 / Codex.
 
 ## Outcomes & Retrospective
 
-The venue-4 implementation and local validation are complete: 219 source tests, 82 API/collection tests, lint, formatting, a credential-safe real post-cutoff API shape check, and unchanged original archive replay. Commit, push, and required remote checks remain. The final research Goal is active, not complete. A prior browser consultation with the owner's Pro model completed after 16 minutes 44 seconds; it prioritized freezing the full universe, reproducing a minimal baseline, registering unique timestamped predictions, auditing point-in-time sources, and only then performing a fixed-budget feature comparison. Login is no longer the recorded blocker. Do not publish the private conversation URL or claim a new consultation here.
+The venue-4 implementation and local validation are complete: 219 source tests, 82 API/collection tests, lint, formatting, a credential-safe real post-cutoff API shape check, and unchanged original archive replay. The implementation is pushed in PR #63, but final remote validation and normal merge remain. The final research Goal is active, not complete. A prior browser consultation with the owner's Pro model completed after 16 minutes 44 seconds; it prioritized freezing the full universe, reproducing a minimal baseline, registering unique timestamped predictions, auditing point-in-time sources, and only then performing a fixed-budget feature comparison. Login is no longer the recorded blocker. Do not publish the private conversation URL or claim a new consultation here.
 
 ## Context and Orientation
 
@@ -110,3 +117,5 @@ Revision note (2026-10-11): Created before implementation after scoped write app
 Revision note (2026-10-11 08:30Z): Recorded passing local validation, the strictly post-cutoff live schema observation, and unchanged original-source replay. Kept remote publication and merge incomplete until their authoritative results are available.
 
 Revision note (2026-10-11 08:35Z): Recorded per-race source checks, the two declared-field blockers, and the schedule discrepancy. Added regression coverage without relaxing eligibility or treating the four complete source projections as an evaluation subset.
+
+Revision note (2026-10-11 08:38Z): Recorded the first pushed revision, PR #63, and the narrowly established synthetic-keyword scanner false positives. Kept final remote checks and merge pending until verified on the updated head.
