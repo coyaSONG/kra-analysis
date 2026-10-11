@@ -12,7 +12,7 @@ The October development audit found that all 116 races had the same saved `rest`
 - [x] (2026-10-11) Traced `compute_features` assigning `ilsu` directly to `rest_days`. Existing field inventory describes a racing-day/session identifier; the official entry API catalog only calls it day count, not rest interval.
 - [x] (2026-10-11) Implemented a read-only, pinned-input diagnostic with 36 passing focused regressions. Combined source/identity/paired-audit/training-admission checks: 229 passed, 15 existing joblib/NumPy deprecation warnings. Ruff lint/format and diff whitespace checks passed.
 - [x] (2026-10-11) Actual comparison retained all 116 races/1,308 runners: 1,192 prior observations, 116 null gaps, one equality to the saved proxy, 111 races with varying observed gaps. Documented results and uncertainty.
-- [ ] Pass tests, push, and merge normally after required CI.
+- [x] (2026-10-11 10:53Z) Pushed and normally merged PR #70 as edb67132fea5f292acb1172038eee3386e3c9487. Required Python, Scripts and Docker checks passed. Gitleaks passed; the separate dependency audit exactly matched the prior 17-record baseline and remains unresolved.
 
 ## Surprises & Discoveries
 

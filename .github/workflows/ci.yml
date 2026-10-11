@@ -77,6 +77,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/horse_entry_interval_audit.py ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/horse_entry_interval_audit.py ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_horse_entry_interval_audit.py -o addopts=''
+      - name: Official result evidence regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
+          uv run --frozen ruff format --check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
@@ -130,7 +136,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Install Python dependencies
         working-directory: ./packages/scripts
-        run: uv sync --group dev
+        run: uv sync --frozen --group dev --extra race-card-pdf
+      - name: PDF entry replay regressions
+        working-directory: ./packages/scripts
+        run: uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_kra_race_card_pdf_replay.py autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 
