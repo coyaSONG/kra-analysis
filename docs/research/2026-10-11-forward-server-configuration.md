@@ -128,6 +128,11 @@ success cannot substitute for one exact three-horse prediction per race.
 
 ## Current Status
 
+On 2026-10-12 KST the owner explicitly deferred paid servers and directed local
+research to continue. Do not provision or purchase this proposed configuration
+without a later authorization. No owner/runtime credentials are needed for the
+current local official-history reconciliation work.
+
 Configuration selected; paid resources, roles, credentials, network rules,
 worker scheduler and backups have **not** been created. This decision answers
 the owner's server question; it does not unblock operational forward submission
