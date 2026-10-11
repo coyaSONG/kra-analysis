@@ -53,6 +53,12 @@ jobs:
         run: bash apps/api/scripts/run_quality_ci.sh format
       - name: Type check (mypy changed files)
         run: bash .github/scripts/mypy_changed.sh
+      - name: Production training evidence regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/training_evidence.py ../../packages/scripts/autoresearch/parameter_context.py ../../packages/scripts/ml/train_clean.py ../../packages/scripts/autoresearch/tests/test_training_evidence.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/training_evidence.py ../../packages/scripts/autoresearch/parameter_context.py ../../packages/scripts/ml/train_clean.py ../../packages/scripts/autoresearch/tests/test_training_evidence.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_training_evidence.py -o addopts=''
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
