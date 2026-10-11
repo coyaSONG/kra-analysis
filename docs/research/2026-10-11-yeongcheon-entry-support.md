@@ -14,6 +14,8 @@ The retained October 10-11 capture inventory contains 28 known races, including 
 
 The HTTP collection models accept code 4, and an authenticated mocked request to `/api/v2/collection/` passes it unchanged into the collection command. This proves the request boundary, not successful live behavior for every enrichment or result endpoint.
 
+The production SQL baseline previously rejected venue 4 even though the ORM test schema did not. The additive `008_add_yeongcheon_meet.sql` replaces only `races_meet_check` with a validated 1-4 check and is registered in the active migration manifest. Historical migration files are unchanged. The startup guard rejects a database missing 008. PostgreSQL acceptance, unsupported-code rejection, preserved rows and uniqueness, repeat application, and transactional rollback must pass the isolated CI tests before merge; this is not yet evidence of a migrated live Supabase database.
+
 PDF URL construction and parsing still reject code 4 before guessing a path or accepting a Busan document. No PDF prefix, directory, footer alias, horse-name normalization, or parser version is broadened. The new validator is included in implementation fingerprints; old pinned plans reject implementation drift and need a newly reviewed plan, never edited acquisition timestamps or patched old checksums.
 
 ## Live API Shape Check
@@ -37,9 +39,15 @@ All rows identify the physical venue as Yeongcheon. Each race has unique runner 
 
 ## Validation
 
-Before the implementation, all eight added venue-4 entry regression cases failed at the PDF-only identity guard. After implementation, formatting, and the two observed-count regressions, the focused source suite passes 219 tests, and the wider API/request/router/collection suite passes 82 tests. Changed Python files pass Ruff lint and formatting checks. Tests include booleans and unsupported venue rejection, all old canonical PDF URLs, credential-safe raw capture, rejection of inconsistent venue-4 counts without losing raw evidence, HTTP identity propagation, and rejection of a changed validator fingerprint.
+Before the implementation, all eight added venue-4 entry regression cases failed at the PDF-only identity guard. After implementation, formatting, and the two observed-count regressions, the focused source suite passes 219 tests. The widened API/request/router/collection/migration suite passes 139 tests locally, with three PostgreSQL tests explicitly skipped because the local Docker daemon is unavailable. A skip is not a SQL validation pass; the required CI runs these tests against its isolated loopback PostgreSQL service. Changed Python files pass Ruff lint and formatting checks. Tests include booleans and unsupported venue rejection, all old canonical PDF URLs, credential-safe raw capture, rejection of inconsistent venue-4 counts without losing raw evidence, HTTP identity propagation, and rejection of a changed validator fingerprint.
 
 Replaying the 28 original raw captures under a new implementation plan preserves 27 eligible sources and 282 feature rows, with the same Seoul race 8 name mismatch and the same unresolved old venue-3 scope. `--require-complete` correctly exits 2. A first replay used the wrong archive root and emitted zero features; it remains in its separate ignored output directory. The documented repository-root archive base restores the expected result without relaxing path safety or modifying original evidence.
+
+## Database Rollout
+
+Run `uv run python scripts/apply_migrations.py --dry-run` from apps/api against the intended deployment configuration, review the pending 008 migration, then run the same command without --dry-run before deploying this API revision. The existing runner uses transactions, stored checksums, and an advisory lock. No live database was changed in this research increment. New code intentionally refuses a stale migration manifest rather than allowing a request that cannot be persisted.
+
+Do not restore the old 1-3 check, delete venue-4 rows, or rewrite migration history as an automatic rollback. Keep or redeploy a compatible application version and handle any schema recovery through a separately reviewed deployment procedure.
 
 ## Baseline Qualification
 

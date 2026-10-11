@@ -46,6 +46,19 @@ async def test_require_migration_manifest_rejects_mismatch(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_missing_yeongcheon_migration_is_not_a_ready_database(monkeypatch):
+    names = database.get_active_migration_names()
+    assert names[-1] == "008_add_yeongcheon_meet.sql"
+
+    async def previous_manifest():
+        return dict.fromkeys(names[:-1], "prior-checksum")
+
+    monkeypatch.setattr(database, "get_applied_migrations", previous_manifest)
+    with pytest.raises(RuntimeError, match="008_add_yeongcheon_meet.sql"):
+        await database.require_migration_manifest()
+
+
+@pytest.mark.asyncio
 async def test_init_db_raises_in_production_when_migration_guard_fails(monkeypatch):
     async def boom():
         raise RuntimeError("guard failed")

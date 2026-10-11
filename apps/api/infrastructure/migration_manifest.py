@@ -12,6 +12,7 @@ ACTIVE_MIGRATIONS = [
     "005_add_usage_events.sql",
     "006_canonical_job_status_backfill.sql",
     "007_runtime_db_hardening.sql",
+    "008_add_yeongcheon_meet.sql",
 ]
 
 
