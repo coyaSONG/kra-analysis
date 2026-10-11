@@ -47,6 +47,29 @@ Replay verifies exact original bytes against their hashes and sizes before parsi
 
 Local source, identity, entry-sheet, and training-admission regressions: **179 passed**, with 15 existing joblib/NumPy deprecation warnings. Focused cases cover every physical venue, source/member/time/count conflicts, malformed/truncated/empty HTML, bad clocks/pins, altered originals, symlinks, redirects, non-HTML/oversized responses, slow streams, late/backdated freezes, and existing-output preservation. Required Python CI now includes the focused schedule cases. Synthetic successful freezing demonstrates software behavior only.
 
-The authorized Pro model was asked about the next baseline and server-registration milestone at approximately 09:57 UTC. Its response is still generating as of this initial record; no completed advice is claimed here. The request preceded discovery of the national dated list, so any source recommendation must be reconciled with that newer observation.
+PR #68 merged normally at 10:21:33 UTC as `472f005dfc342d3691eea0c3ae45b0bce1f7e9eb`, after required Python Checks, Scripts Checks, PDF tests and Docker build passed on `5e30bbc72094951d09ee6c8b02f05ddc918426d8`. The separate Security Checks failure contains the same 17 dependency records in h2/multidict/pyjwt as the existing baseline. Gitleaks passed; later Node audit/hygiene steps were skipped, not verified. No check or protection was weakened.
 
-Next: complete the Pro consultation; define a runnable fixed baseline from qualified current entrants; bind the full universe and one choice per study/race/arm to a server-observed receipt; test concurrency, identical/conflicting retries and deadline enforcement at the actual persistence boundary. Preserve all frozen races in outcome joins. No production database migration or credential-dependent operation was performed in this increment.
+## Completed Pro consultation
+
+The authorized Pro model was asked at approximately 09:57 UTC. At 10:22 UTC the browser showed response completion and a 20m 40s processing duration. The full answer, including its final independent-research recommendation, was read only after generation ended. No short response deadline or stop action was used. This is methodological advice, not a rerun of our tests or an approval of production data.
+
+The request preceded discovery of the national dated list. Pro's date-binding concern about the undated weekday table therefore does not invalidate the newer dated national source. Pro also reported a later 17:30 observation in the undated table, unlike our earlier 17:25 observation. That report is not a locally retained raw revision; the timing/cause of any change is unverified. Preserve the earlier observation rather than retroactively rewriting it. The implemented dated sources agree at 17:30.
+
+Adopt these boundaries for the next increment:
+
+- Use one deterministic roster B0: numeric starting-number order, exactly three distinct stable horse IDs from a qualified same-race roster, no historical prediction lookup. Preserve its input as-of and code/source hashes; this weak rule is an operational control, not the claimed best model.
+- Freeze study/arm and full membership before predictions. Keep membership, schedule, roster, registration, timing and outcome status distinct; failures never remove a race.
+- Prefer the existing API/PostgreSQL to mutable GitHub comments as the primary receipt store. Use a unique study/race/arm slot, not a key expanded with changeable universe/model/input hashes.
+- Lock an existing frozen membership row, compare existing full canonical payloads for idempotence/conflict, read `clock_timestamp()` after the lock, enforce the server-stored deadline and explicitly commit.
+- On a separate connection/transaction, read the committed payload first, then record `committed_visible_observed_at`. Reject observation in the writer transaction, including savepoint-only separation. This proves visibility by the observation time under the trusted server-clock model; it is not an exact commit timestamp.
+- Missing timely observation is timing unproven, not proof of actual late submission. Preserve the original payload/receipt on retries and response loss. An identical retry after the deadline may retrieve an existing timely receipt; it must not create a revised prediction.
+- Test on actual PostgreSQL: competing same/different payloads, lock wait across deadline, delayed commit, same-transaction observation, rollback, lost acknowledgements, forbidden runtime mutation, full-population joins and corrected outcomes.
+- Verify deployed primary/version/runtime privileges/clock operations/durability before a real study. Runtime insert-only restrictions do not make records immune to DB-owner changes. Do not describe the MVP as external notarization.
+
+The next operational deliverable must connect collection, freeze, B0 execution, registration, receipt read-back and every-race reconciliation in an executable command. A table or empty registry alone is not completion. Current source-only implementation is not yet that operational path.
+
+Independent research recommendation: compare the stored strict-fallback and structured-ranker predictions on exactly the existing October 116-race development universe, using the original corresponding labels. Recompute paired exact hits and inspect omitted/extra horses and input missingness. Do not retrain, regenerate old predictions, reuse December for selection, or infer future 70% performance. Use the result to choose one falsifiable information hypothesis.
+
+This bounded diagnostic was subsequently executed from pinned saved inputs; see [paired errors and the rest-interval hypothesis](2026-10-11-october-paired-error-audit.md). It identifies a feature-semantic concern but does not establish a new model's accuracy.
+
+No production database migration or credential-dependent operation was performed in this increment. B0, server receipts, and actual future records remain unfinished.
