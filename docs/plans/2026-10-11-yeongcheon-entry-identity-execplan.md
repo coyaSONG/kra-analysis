@@ -4,7 +4,7 @@ This ExecPlan is a living document maintained under `.agent/PLANS.md`. Keep Prog
 
 ## Purpose / Big Picture
 
-The research target remains 70% exact race-level success for one unordered three-horse prediction over the complete frozen race universe, using only pre-race information. Official October 11 entries and the national start-time table list 11 Seoul races and six Yeongcheon races. The retained research capture inventory contains the Seoul races but none of the six Yeongcheon races. The public API documents Yeongcheon as meeting code 4, but both entry capture and the HTTP request models currently reject that code.
+The research target remains 70% exact race-level success for one unordered three-horse prediction over the complete frozen race universe, using only pre-race information. Official October 11 entries and the national start-time table list 11 Seoul races and six Yeongcheon races. The retained research capture inventory contains the Seoul races but none of the six Yeongcheon races. The public API documents Yeongcheon as meeting code 4, but entry capture, HTTP request models, and the canonical SQL constraint rejected that code at the start of this increment.
 
 This increment makes code 4 usable for API entry capture and collection requests. It does not claim a complete national universe, collect retrospective observations as pre-race evidence, approve an existing model, or improve an accuracy score. PDF parsing remains restricted to the three independently verified source profiles. A source profile is the checked PDF directory, filename prefix, and physical venue printed in the document; an API meeting code alone does not verify a PDF profile.
 
@@ -25,8 +25,8 @@ This increment makes code 4 usable for API entry capture and collection requests
 - [x] (2026-10-11 08:41Z) Required Python Checks, source tests, scripts, Docker, and Gitleaks passed on 1935aa6. The remaining dependency audit has the same 17 findings in three packages as base main; it is not a passing security suite.
 - [x] (2026-10-11 08:42Z) Found the active unified SQL baseline still rejects meet=4; ORM-created test databases did not reproduce this constraint. Deferred merge to close the persistence boundary.
 - [x] (2026-10-11 08:45Z) Added and registered migration 008 without changing historical SQL. Passed 139 API/migration regressions and lint/format checks locally; three SQL tests are explicitly skipped without the local PostgreSQL service.
-- [ ] Validate acceptance of 1-4, rejection of 0/5, retained uniqueness, repeat application, and atomic rollback in isolated PostgreSQL CI schemas.
-- [ ] Revalidate Gitleaks and required Python Checks on the final PR revision, then normally merge without a bypass.
+- [x] (2026-10-11 08:48Z) Actual isolated PostgreSQL CI passed all three migration cases, with no skips, in the 34-pass integration run. Required Python Checks, dedicated source tests, scripts, Docker, and Gitleaks passed on final head c68743c.
+- [x] (2026-10-11 08:49Z) Recorded the unchanged non-required dependency audit failure and normally merged PR #63 at ca3c6d255a3276a7364b0f3047c687aeb8ce7b64, without an administrator bypass or forced merge.
 
 ## Surprises & Discoveries
 
@@ -40,7 +40,7 @@ The same raw response contains ten race-4 rows with declared dusu=9 and eleven r
 
 The first PR security check matched three synthetic Python api_key keyword arguments with the case-insensitive env-file assignment rule. The log fingerprints identify be0cf95 and lines 148, 175, and 202 of the entry capture test. They are not API credentials. The repository already records exact commit/file/rule/line false positives in .gitleaksignore; no secret rule, scan step, or broad path allowance is removed. The base main revision's Gitleaks passed, while its Python dependency audit failed. Confirm the new revision's actual outcome rather than assuming the failure stage stays unchanged.
 
-The production source of truth is the SQL migration manifest, not ORM create_all. The active 001_unified_schema.sql defines races_meet_check for codes 1-3. HTTP and SQLite tests therefore cannot prove venue-4 persistence. Add a new 008 migration and append it to ACTIVE_MIGRATIONS; do not rewrite baseline SQL. The local Docker daemon is unavailable, so PostgreSQL behavior must be demonstrated in the existing CI PostgreSQL service before merging, not represented as locally tested.
+The production source of truth is the SQL migration manifest, not ORM create_all. The active 001_unified_schema.sql defines races_meet_check for codes 1-3. HTTP and SQLite tests therefore cannot prove venue-4 persistence. The new 008 migration is appended to ACTIVE_MIGRATIONS without rewriting baseline SQL. The local Docker daemon was unavailable; actual PostgreSQL CI, not local ORM tests, demonstrated the three SQL acceptance cases before merge.
 
 Read-only probes on the owner's existing artifacts showed that the 28-feature saved LogReg model can perform synthetic venue-4 inference without reading prediction caches. However, 12 features require captured or stored-as-of source evidence. Its named historical training snapshot has 1,520 selected races and 16,146 horse rows, with no per-race snapshot metadata. The 1,758-race dataset manifest is a legacy compatibility manifest: it passes the compatibility branch but fails the strict timestamp audit. This is missing evidence, not proof of leakage. No model is promoted.
 
@@ -67,7 +67,11 @@ Read-only probes on the owner's existing artifacts showed that the 28-feature sa
 
 ## Outcomes & Retrospective
 
-The entry implementation and local source/request validation are complete: 219 source tests, 139 API/migration tests, lint, formatting, a credential-safe real post-cutoff API shape check, and unchanged original archive replay. Three PostgreSQL tests are explicitly skipped locally, not passed. PR #63 is pushed; its additive SQL migration still needs actual PostgreSQL validation before final remote validation and normal merge. The final research Goal is active, not complete. A prior browser consultation with the owner's Pro model completed after 16 minutes 44 seconds; it prioritized freezing the full universe, reproducing a minimal baseline, registering unique timestamped predictions, auditing point-in-time sources, and only then performing a fixed-budget feature comparison. Login is no longer the recorded blocker. Do not publish the private conversation URL or claim a new consultation here.
+This increment is implemented, tested, pushed, and normally merged in PR #63. Local validation is 219 source tests and 139 API/migration tests; the three SQL cases were skipped locally and then actually passed in the 34-case PostgreSQL-backed CI integration run. Required Python Checks, dedicated source tests, scripts, Docker, and Gitleaks passed on c68743c. The non-required dependency audit still reports the same 17 records in three packages as base main, with later security steps skipped; this is not a green security suite. No live Supabase migration or application deployment occurred.
+
+The lesson is that physical venue acceptance must be checked through the actual SQL source of truth, not just request and ORM tests. The post-cutoff API source discrepancies and old archive blockers remain intact. No model was trained or promoted and no accuracy increase is claimed. The full 70% research Goal remains active, with next work on strict historical training eligibility, a complete future universe, point-in-time source revisions, and unique trusted-time predictions.
+
+A prior browser consultation with the owner's Pro model completed after 16 minutes 44 seconds; it prioritized freezing the full universe, reproducing a minimal baseline, registering unique timestamped predictions, auditing point-in-time sources, and only then performing a fixed-budget feature comparison. Login is no longer the recorded blocker. Do not publish the private conversation URL or claim a new consultation here.
 
 ## Context and Orientation
 
@@ -91,9 +95,9 @@ Add apps/api/tests/integration/test_yeongcheon_migration.py using a dedicated KR
 
 The first milestone separates physical venue identity from PDF source acceptance. It is verified by the eight originally failing cases, the 219-case source suite, the real post-cutoff shape observation, and unchanged historical archive replay. None of these is an accuracy or pre-race qualification result.
 
-The second milestone closes persistence using migration 008. The 139-case local API/migration suite checks the request and manifest guard; its three skipped SQL tests must pass with the explicit isolated PostgreSQL DSN in CI. This milestone is incomplete until those actual SQL executions succeed.
+The second milestone closes persistence using migration 008. The 139-case local API/migration suite checks the request and manifest guard. All three SQL cases that were skipped locally passed with the explicit isolated PostgreSQL DSN in CI; the persistence acceptance milestone is complete. Live deployment and database migration were not part of this milestone.
 
-The final milestone publishes the isolated changes, waits for required checks on the exact head, verifies the Gitleaks result and remaining dependency audit against base main, and performs a normal merge. The complete research Goal remains active after this venue-support milestone; missing source timing, full future-universe coverage, and trusted prediction receipts are subsequent gates.
+The final milestone published the isolated changes, waited for required checks on the exact head, verified Gitleaks and the remaining dependency audit against base main, and normally merged PR #63. The complete research Goal remains active after this venue-support milestone; missing source timing, full future-universe coverage, and trusted prediction receipts are subsequent gates.
 
 ## Concrete Steps
 
@@ -111,7 +115,7 @@ The actual focused API command (working directory apps/api) is:
 
 It reports 82 passed. The local override avoids generating whole-app coverage reports for a focused invocation; the required full Python CI check is unchanged. The source suite reports 219 passed after the two observed-count regressions. Use Ruff --no-cache for read-only check commands; formatter writes require the reviewed write path.
 
-The final widened API command appends tests/unit/test_database_migration_guard.py, tests/unit/test_job_service.py, tests/unit/test_coverage_low_files.py, and tests/integration/test_yeongcheon_migration.py to the same invocation. It reports 139 passed and 3 skipped locally. CI sets KRA_MIGRATION_TEST_DSN=postgresql://test:test@localhost:5432/test_db for integration and coverage; the three migration cases must report passes there.
+The final widened API command appends tests/unit/test_database_migration_guard.py, tests/unit/test_job_service.py, tests/unit/test_coverage_low_files.py, and tests/integration/test_yeongcheon_migration.py to the same invocation. It reports 139 passed and 3 skipped locally. CI sets KRA_MIGRATION_TEST_DSN=postgresql://test:test@localhost:5432/test_db. The integration step reports 34 passed, including all three new SQL cases; the existing coverage step selects unit tests and does not establish additional PostgreSQL executions.
 
 ## Validation and Acceptance
 
@@ -127,13 +131,15 @@ The SQL migration must pass all three isolated PostgreSQL integration tests in t
 
 Old captures and model files are never rewritten. Existing pinned PDF plans must reject implementation drift; create a newly reviewed plan from unchanged original bytes instead of modifying old hashes or acquisition timestamps. Re-running mocked tests writes only test artifacts. If remote checks fail, preserve the branch and diagnose the failure without changing the owner's checkout or overriding branch protection.
 
-Migration 008 runs in the existing transaction and does not remove data. A rejected new constraint rolls the transaction back. Reapplication through the runner is a no-op when the recorded checksum matches. To recover from deployment problems, keep the previous application version or repair its configuration; do not blindly restore a 1-3 constraint after venue-4 rows exist, delete those rows, rewrite migration history, or alter a live database without a separately reviewed deployment procedure.
+Migration 008 runs in the existing transaction and does not remove data. A rejected new constraint rolls the transaction back. Reapplication through the runner is a no-op when the recorded checksum matches. Coordinate the schema and application rollout: older code's strict manifest guard rejects an unexpected 008, so do not restart an old revision against the new manifest or assume it is a compatible rollback. Recover using an application version that recognizes 008 or a separately reviewed procedure; do not blindly restore a 1-3 constraint after venue-4 rows exist, delete those rows, rewrite migration history, or alter a live database without review.
 
 ## Artifacts and Notes
 
 Official API26 metadata: https://www.data.go.kr/data/15058677/openapi.do?recommendDataYn=Y (modified 2026-08-06, rechecked 2026-10-11).
 
 Official national start-time table: https://race.kra.co.kr/thisweekrace/ThisWeekBaljuTime.do . Official Yeongnam entry table: https://race.kra.co.kr/chulmainfo/ChulmaDetailInfoList.do?Act=02&Sub=1&meet=3 . These are source references, not immutable raw observations or proof of a frozen evaluation cohort.
+
+Merged implementation: https://github.com/coyaSONG/kra-analysis/pull/63 at 2026-10-11T08:49:07Z, final head c68743c2156f98ff8ea10246d4b0e8d829e87153, merge ca3c6d255a3276a7364b0f3047c687aeb8ce7b64. Exact-head Python/SQL/script/Docker/security-stage evidence is in https://github.com/coyaSONG/kra-analysis/actions/runs/38125986105 and dedicated source evidence is in https://github.com/coyaSONG/kra-analysis/actions/runs/38125986094. Base-main dependency audit comparison is https://github.com/coyaSONG/kra-analysis/actions/runs/37964641112.
 
 ## Interfaces and Dependencies
 
@@ -150,3 +156,5 @@ Revision note (2026-10-11 08:38Z): Recorded the first pushed revision, PR #63, a
 Revision note (2026-10-11 08:43Z): Extended the plan before editing SQL to close the newly discovered production constraint. Defined isolated PostgreSQL acceptance, unchanged historical checksums, migration-before-deployment, and non-destructive recovery; normal merge remains pending.
 
 Revision note (2026-10-11 08:45Z): Recorded additive migration implementation, the wider local regression result, explicitly skipped PostgreSQL tests, and rollout instructions. Preserved the requirement for actual SQL execution in CI before normal merge.
+
+Revision note (2026-10-11 08:49Z): Closed this increment from actual exact-head CI and normal merge results. Distinguished skipped local SQL tests from real CI executions, documented the existing security failure, and clarified strict-manifest rollout compatibility without marking the 70% research Goal complete.
