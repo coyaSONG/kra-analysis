@@ -1,0 +1,86 @@
+{
+  "arm": "API27_fixed_v1",
+  "comparison": "separate_full_population_arms_no_or_no_automatic_promotion",
+  "counts_as_70_percent_evidence": false,
+  "fit_receipt_sha256": "b91d7b85cef9038a742f2a68a616cc56c627793d5efa4046c21178d00a6833ea",
+  "format_version": "kra-api27-forward-contract-v1",
+  "input_policy": "original_m0_reserved_api26_or_same_packet_source_no_new_capture",
+  "m0_scoring_success_required": false,
+  "model_promoted": false,
+  "model_sha256": "5f33dfd1e45c493fc5edfd90a8250ac5e91bb841b29124e5988b657994dc17b4",
+  "parent_contract": {
+    "arm": "M0",
+    "counts_as_70_percent_evidence": false,
+    "cutoff_minutes": 30,
+    "fallback": "none_invalid_input_is_missing_prediction_in_full_population",
+    "fit_receipt_sha256": "70cf1f7de5a51ae68f4706b6349686276c6bf23978d37f116072bcd61a7ef69b",
+    "format_version": "kra-local-m0-contract-v1",
+    "implementation": {
+      "dependency_versions": {
+        "joblib": "1.5.3",
+        "numpy": "2.5.1",
+        "pdfminer.six": "20260107",
+        "pdfplumber": "0.11.10",
+        "pypdfium2": "5.14.0",
+        "scikit-learn": "1.9.0",
+        "scipy": "1.18.0"
+      },
+      "python_version": "3.13.13",
+      "source_sha256": {
+        "autoresearch/kra_entry_sheet_snapshot.py": "0e0ff51f19f5ddfd0517e53b912547bcb09cf5a5d22706e95e0b22573e72e0cf",
+        "autoresearch/kra_race_card_pdf_bundle.py": "92f8b09a174ad5d766276fa05a9c88b9bccc2f45ec57dcb3f75bc70d2621d36d",
+        "autoresearch/kra_race_card_pdf_replay.py": "2db618a34a77fe7ff03b8ea30e38e00a5d79ca94dbba75ffdb9a616a41ab45e0",
+        "autoresearch/kra_race_card_pdf_snapshot.py": "f0e1fac4bcd23361586754aa836ff7c4fa8e9cece377fecae0c9408a07434421",
+        "autoresearch/kra_result_population_audit.py": "1452e2e70dd437feb07a04beb5c630ba542c71c015df73c0a5e67d57093672bc",
+        "autoresearch/kra_result_snapshot.py": "6497066c152a61dd2a3f25ae09905ef859220f1e2ebfca070e9d009dcecc2a15",
+        "autoresearch/kra_schedule_snapshot.py": "c30b53ea50a6a9982273668ed040e0dc6844e633ba26b7d20fde4af1f4cc6d9f",
+        "autoresearch/local_m0_forward.py": "d15effab38c82ec8f9e1151f5960fd1ff99368a7cdbfdfd222dcb7d6264dae4e",
+        "autoresearch/local_m0_inference.py": "597b993daa6b76daaedb22afa59ebf635520c71861a2c93a154c41976e330351",
+        "autoresearch/observed_history_seed.py": "c13960243a967e69e2e50d88b5e9463da42a4d1f3053ee7bf1b3339036463f6a",
+        "autoresearch/prerace_hash_witness.py": "349a7028444ff349ddef4d28fffb6159ff71e2bb42243a589f40366efb85b16d",
+        "autoresearch/restricted_ablation.py": "2dc1f11bef99df0e7ddc16ede039cffa0e1a16ee82bb63736fe16d037529d48a",
+        "autoresearch/restricted_cohort.py": "a2ec2dbe30a97624d508a9aa5b40f70010b615e01b4449574a6fff35fd29cf1c",
+        "shared/entry_snapshot_metadata.py": "f5b2def9b0b144242cf5e8c3721f48d345241cbd2fb2d82a734d71d352c9981b",
+        "shared/kra_entry_sheet.py": "9fbc330976d58f7453e3a8b73721771db768e717e38a7010f6bd18e58f654cc6",
+        "shared/kra_race_card_pdf.py": "858251b3eaa1831ecfe86a70e04bb477b69f91abb850cce4332a5a6fb9a068e3",
+        "shared/kra_race_card_pdf_audit.py": "dd88c836605284cc5c14ae2a89131011bee4c6f0a845a59675a231bb437b814a",
+        "shared/kra_race_identity.py": "ed31af384a25e7474fca052e8fa5fe7adee23edc6081af232f215f609b43a945",
+        "shared/kra_result_history.py": "55e3005677f0bf18de5a0235d60423a705ab2e77e76a3dca86cb775b81e53050",
+        "shared/kra_schedule.py": "8041d2d8f60980993b960b8e2475f3f8f401e32d27d2ea0d7196b7c7d6f9e251",
+        "shared/operational_cutoff.py": "024ddf61c06ccc696f563bc8f8d2aaf60ed6a4f17ed0b2b1ef0a1acb2958e2cd",
+        "uv.lock": "ca794caccd1cf97615c3b04ae8181aedf89fcde4c00a8f7d91daa81aa26853ae"
+      }
+    },
+    "input_attempt_policy": "one_capture_per_unsealed_race_per_invocation_before_cutoff",
+    "model_promoted": false,
+    "model_sha256": "0c0078fb513d4acc2695427475b91668f20441bfab1f4ce05e0418277c8bbb74",
+    "outcomes": "not_joined_here_no_ordinary_outcome_subset_accuracy",
+    "population": "all_reconciled_national_races_each_declared_date",
+    "race_dates": [
+      "20261016",
+      "20261017",
+      "20261018"
+    ],
+    "review_sha256": "d29499f0b9e409c25e6446ce8d4fe7abcbab71101af0399b72377c3610a5e60f",
+    "selection": "one_unordered_three_first_valid_capture_no_fallback",
+    "series": "local_m0_20261016_18_v1",
+    "trust": "local_owner_and_system_clock_not_independent_registration"
+  },
+  "parent_contract_sha256": "ffd068ed7c507e2cf0bef63ed2dcbebf01fdcdd0e38d89c849d03d60c448f59c",
+  "parent_series": "local_m0_20261016_18_v1",
+  "population": "same_complete_national_three_day_block_not_success_subset",
+  "publication": "exact_paired_commitments_before_first_block_cutoff",
+  "race_dates": [
+    "20261016",
+    "20261017",
+    "20261018"
+  ],
+  "selection": "first_single_unordered_three_no_fallback_no_overwrite",
+  "series": "api27_shared_20261016_18_v1",
+  "sources": {
+    "api27_evaluation.py": "cc7c5e6c9408945256114651aad477059082f06d7b0a10877b6e385aa4e8594b",
+    "api27_forward.py": "2c9de5f9a4d8388c6d9d4b6323a0a83cca3243d173881622dbd57a5297ef6c2e",
+    "local_m0_evaluation.py": "abc06b963a2ecc62cd247d67bc902e40aae78b9a4c8760b4cdc18ded8a443139"
+  },
+  "trust": "cooperative_owner_canonical_files_local_clock_and_github_hash_bound"
+}

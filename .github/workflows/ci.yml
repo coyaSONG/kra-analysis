@@ -89,6 +89,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/api27_refit.py ../../packages/scripts/autoresearch/tests/test_api27_refit.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/api27_refit.py ../../packages/scripts/autoresearch/tests/test_api27_refit.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_api27_refit.py -o addopts=''
+      - name: API27 shared-input forward regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/api27_forward.py ../../packages/scripts/autoresearch/api27_evaluation.py ../../packages/scripts/autoresearch/tests/test_api27_forward.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/api27_forward.py ../../packages/scripts/autoresearch/api27_evaluation.py ../../packages/scripts/autoresearch/tests/test_api27_forward.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_api27_forward.py -o addopts=''
       - name: Prospective training input regressions
         working-directory: ./apps/api
         run: |
