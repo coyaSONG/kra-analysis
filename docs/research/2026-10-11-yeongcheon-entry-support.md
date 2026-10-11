@@ -14,7 +14,7 @@ The retained October 10-11 capture inventory contains 28 known races, including 
 
 The HTTP collection models accept code 4, and an authenticated mocked request to `/api/v2/collection/` passes it unchanged into the collection command. This proves the request boundary, not successful live behavior for every enrichment or result endpoint.
 
-The production SQL baseline previously rejected venue 4 even though the ORM test schema did not. The additive `008_add_yeongcheon_meet.sql` replaces only `races_meet_check` with a validated 1-4 check and is registered in the active migration manifest. Historical migration files are unchanged. The startup guard rejects a database missing 008. PostgreSQL acceptance, unsupported-code rejection, preserved rows and uniqueness, repeat application, and transactional rollback must pass the isolated CI tests before merge; this is not yet evidence of a migrated live Supabase database.
+The production SQL baseline previously rejected venue 4 even though the ORM test schema did not. The additive `008_add_yeongcheon_meet.sql` replaces only `races_meet_check` with a validated 1-4 check and is registered in the active migration manifest. Historical migration files are unchanged. The startup guard rejects a database missing 008. Actual isolated PostgreSQL CI passed acceptance, unsupported-code rejection, preserved rows and uniqueness, repeat application, and transactional rollback before merge. This is not evidence of a migrated live Supabase database.
 
 PDF URL construction and parsing still reject code 4 before guessing a path or accepting a Busan document. No PDF prefix, directory, footer alias, horse-name normalization, or parser version is broadened. The new validator is included in implementation fingerprints; old pinned plans reject implementation drift and need a newly reviewed plan, never edited acquisition timestamps or patched old checksums.
 
@@ -43,11 +43,19 @@ Before the implementation, all eight added venue-4 entry regression cases failed
 
 Replaying the 28 original raw captures under a new implementation plan preserves 27 eligible sources and 282 feature rows, with the same Seoul race 8 name mismatch and the same unresolved old venue-3 scope. `--require-complete` correctly exits 2. A first replay used the wrong archive root and emitted zero features; it remains in its separate ignored output directory. The documented repository-root archive base restores the expected result without relaxing path safety or modifying original evidence.
 
+## Remote Integration
+
+[PR #63](https://github.com/coyaSONG/kra-analysis/pull/63) was pushed and normally merged at 2026-10-11T08:49:07Z, without an administrator bypass or forced merge. Final head is c68743c2156f98ff8ea10246d4b0e8d829e87153 and merge commit is ca3c6d255a3276a7364b0f3047c687aeb8ce7b64.
+
+[Exact-head CI](https://github.com/coyaSONG/kra-analysis/actions/runs/38125986105) passed required Python Checks, Scripts Checks, and API Docker Build. The integration step reports 34 passes, including all three PostgreSQL migration cases with no skips. The [dedicated source suite](https://github.com/coyaSONG/kra-analysis/actions/runs/38125986094) also passed. Gitleaks passed after exact historical fingerprints for three synthetic Python keyword arguments were recorded using the existing repository pattern; no scan rule or broad path allowance was removed.
+
+Security Checks as a whole remains failed at the dependency audit, with the same 17 records in h2 4.3.0, multidict 6.7.1, and pyjwt 2.13.0 as the [base-main run](https://github.com/coyaSONG/kra-analysis/actions/runs/37964641112). Node audit and repository hygiene steps were skipped by that failure, not passed. Dependency files are unchanged and this existing security risk is not repaired or hidden by the research increment.
+
 ## Database Rollout
 
 Run `uv run python scripts/apply_migrations.py --dry-run` from apps/api against the intended deployment configuration, review the pending 008 migration, then run the same command without --dry-run before deploying this API revision. The existing runner uses transactions, stored checksums, and an advisory lock. No live database was changed in this research increment. New code intentionally refuses a stale migration manifest rather than allowing a request that cannot be persisted.
 
-Do not restore the old 1-3 check, delete venue-4 rows, or rewrite migration history as an automatic rollback. Keep or redeploy a compatible application version and handle any schema recovery through a separately reviewed deployment procedure.
+Coordinate schema and application rollout: an older application revision's strict manifest guard rejects an unexpected 008, so do not restart it against the upgraded database or assume it is a compatible rollback. Do not restore the old 1-3 check, delete venue-4 rows, or rewrite migration history automatically. Recover using a version that recognizes 008 and handle any schema recovery through a separately reviewed deployment procedure.
 
 ## Baseline Qualification
 
@@ -62,3 +70,5 @@ The inspected local artifact hashes are model `bde9fdfaee00c898ef468789e93219c03
 Freeze the complete next future race universe across all physical venues, retain missing sources and failures, and verify entry revisions at the declared cutoff. Join global change notices by date, physical venue, race number, and runner number; the existing helper can misapply a different venue's notice when mixed inputs are provided. Current live caller mixing was not established, and changed_jockey_flag is not one of this saved model's 28 inputs.
 
 Separate legacy offline diagnostics from strict training eligibility, prove source timing, freeze one reproducible baseline and fallback, and register one unique trusted-time three-horse receipt for every race before evaluation. A completed prior Pro consultation recommended this ordering, followed by a fixed-budget structured-versus-PDF comparison. No new training, model promotion, retrospective score selection, or 70% claim accompanies this increment.
+
+The next implementation priority is a strict training entry point that rejects legacy compatibility manifests before fitting or writing a model, while leaving existing offline diagnostics available and clearly unqualified. Freeze and audit actual source bytes and timing before claiming a model is trained on pre-race-safe inputs; compatibility field names alone do not supply that evidence.
