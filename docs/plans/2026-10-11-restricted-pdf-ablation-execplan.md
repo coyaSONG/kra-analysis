@@ -16,9 +16,9 @@ Nothing here certifies the 70% goal, replaces the champion or submits prediction
 
 - [x] (2026-10-11) Revalidate PR74 merge, clean isolated checkout, actual source evidence and completed Pro advice.
 - [x] Verify installed sklearn 1.9.0 uses l2_reg_strength=1/(C*sum(weights)); official API26 catalogue lists selected field meanings.
-- [ ] Implement source-only projection, pinned result replay and full inventory selection ledger.
-- [ ] Review actual frozen corpus and register its exact restricted research recipe before fitting.
-- [ ] Fit fixed M0/M1 date replay and full-cohort models; verify saved-model inference and receipts.
+- [x] (2026-10-11) Implement source-only projection, pinned result replay and full inventory selection ledger; 279 focused/shared tests passed.
+- [x] (2026-10-11) Review actual 20-race/209-row frozen corpus and register its exact restricted research recipe before fitting.
+- [x] (2026-10-11T12:54Z) Fit fixed M0/M1 date replay and full-cohort models; independently verify all nine artifact hashes, saved-model predictions and paired matrices.
 - [ ] Run focused and shared regressions, publish evidence, push and ordinarily merge after required checks.
 
 ## Context and Orientation
@@ -127,7 +127,8 @@ change the full frozen future universe or the goal definition.
 
 The API26 source roster matches all 27 feature-eligible result rosters, even where
 a later schedule count differs. The conservative ordinary intersection is 20
-races/209 rows, 13 on October 10 and seven on October 11, pending full review.
+races/209 rows, 13 on October 10 and seven on October 11. Source, identity,
+current label version and feature ranges/missingness have now been reviewed.
 
 ## Interfaces and Dependencies
 
@@ -139,7 +140,12 @@ equal per-race weights therefore require C=1/R for fixed lambda=1.
 
 ## Outcomes & Retrospective
 
-Implementation and actual fits are pending. The 70% goal remains unproven.
+Implementation, actual corpus review and four fits are complete. M0 and M1 each
+hit 1/7 previously observed development races; neither improves on the other by
+exact hit count. All seven combinations differ; each arm alone hits one race.
+This does not establish a best model or support a future 70% claim. Source and
+model pins, missingness and negative ablation results are preserved in
+`docs/research/2026-10-11-restricted-pdf-ablation.md`.
 The owner subsequently requested the server configuration first. That decision
 is recorded in `docs/research/2026-10-11-forward-server-configuration.md`;
 provisioning and payment are not performed. Resume the fixed local model work
@@ -150,3 +156,11 @@ training, following the completed Pro advice and authoritative PR74 evidence.
 
 Revision: preserve the not-yet-executed model plan while answering the owner's
 server-configuration request first; no fit, approval or model output occurred.
+
+Revision: implement and validate the restricted pipeline, replay the actual raw
+archive/results, inspect all selected top-three labels and freeze the reviewed
+corpus/implementation/recipe approval before the first actual fit.
+
+Revision: retain the first actual outcomes without tuning, complete all four
+fixed fits and verify nine artifacts independently. Required remote checks and
+ordinary merge remain the final delivery milestone.
