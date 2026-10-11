@@ -57,6 +57,22 @@ pnpm --filter=@repo/scripts run test
 
 후보와 함께 `.joblib.receipt.json` 완료 기록을 저장합니다. 실제 학습 행렬·정답·가중치·출전마 순서·학습 집합 및 모델 파일 해시가 연결됩니다. 모델과 완료 기록이 모두 존재하고 모델 해시가 일치해야 완료로 취급합니다. 저장 중단으로 기록만 남은 경우에는 자동 덮어쓰기 없이 원인을 확인해야 합니다.
 
+## 공식 경기 목록 수집과 로컬 동결
+
+전국 날짜별 목록과 지역별 목록 3개를 함께 저장하고, 전체 경주 키·출발 시각·출전 두수를 대조합니다. 영남 메뉴에는 부산경남과 영천이 함께 있으므로 실제 개최지를 경주 식별자로 사용합니다. API 키는 필요하지 않습니다.
+
+저장소 루트에서 API 의존성이 설치된 Python으로 실행합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot capture --output-dir .cache/autoresearch/forward-schedule
+PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot audit --capture <capture.json> --race-date <YYYYMMDD>
+PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze --capture <capture.json> --race-date <YYYYMMDD> --output <new-universe.json>
+```
+
+`audit`은 원문 해시와 네 출처를 재검증하며, 불완전·불일치·미공표 상태에서는 종료 코드 2를 반환합니다. 미공표 날짜는 경주가 없는 날로 확정하지 않습니다. `freeze`는 해당 날짜의 첫 경주 30분 전보다 이른 시점에만 허용되며 기존 출력은 덮어쓰지 않습니다. 다른 날짜의 출처 충돌도 해결되기 전에는 동결하지 않습니다.
+
+동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)
