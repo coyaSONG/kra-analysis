@@ -79,6 +79,20 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze 
 
 출력 `days_since_prior_observed_entry`는 **관측된 이전 출전표와의 날짜 간격**이며 실제 출발 이력의 완전성이나 경주 전 가용성을 보증하지 않습니다. 기존 모델의 `rest_days`를 변경하거나 학습 승인에 쓰지 않습니다. 재현 명령과 실제 116경주 결과는 [휴양 대용값 연구 기록](../../docs/research/2026-10-11-horse-entry-interval-audit.md)에 있습니다.
 
+## 공식 결과 원문 수집
+
+`autoresearch.kra_result_snapshot`은 API214의 개최장·날짜 전체 페이지를 저장합니다. 순위 필터 없이 취소·제외·중지·불성립 행도 보존합니다. API 키는 파일에서 읽으며 출력과 원문 묶음에 기록하지 않습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_result_snapshot capture --meet <1..4> --race-date <YYYYMMDD> --api-key-file <secret-file> --output-dir .cache/autoresearch/prior-results
+PYTHONPATH=packages/scripts python -m autoresearch.kra_result_snapshot audit --capture <capture.json>
+PYTHONPATH=packages/scripts python -m autoresearch.kra_result_population_audit --plan <pinned-plan.json> --output <new-audit.json>
+```
+
+결과 원문에 개최지가 없으면 요청 파라미터만으로 채우지 않습니다. `audit`에 `--entry-capture <entry_capture.json> --archive-root <archive-root>`를 추가하면 검증된 API26 날짜 전체 원문과 경주·출주번호·안정 말 ID를 양방향 대조합니다. 경주 후 두수가 다른 명부는 식별자 대조에만 사용할 수 있으며 사전 명부 적격성이 되지 않습니다.
+
+수집·재생 성공은 실제 출발 이력 완전성이나 독립적인 시각 증명이 아닙니다. 대사 보고서는 누락·추가 경주와 두수 불일치를 남기며, 불일치가 있으면 종료 코드 2를 반환합니다. 과거 자료의 당일 수집은 과거 PIT 승인이나 70% 성능 근거가 아닙니다. 계획 형식과 실제 원문 해시는 [결과 수집 연구 기록](../../docs/research/2026-10-11-prior-result-capture.md)을 참고하세요.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)

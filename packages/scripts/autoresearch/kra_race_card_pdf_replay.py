@@ -22,6 +22,7 @@ from shared.kra_race_card_pdf import (
     validate_identity,
 )
 from shared.kra_race_card_pdf_audit import audit_race_card_snapshot
+from shared.kra_race_identity import validate_race_identity
 
 from autoresearch.kra_entry_sheet_snapshot import (
     ENTRY_URL,
@@ -145,13 +146,15 @@ def _checked_raw(
     return content, {"path": str(path), "sha256": digest, "byte_count": len(content)}
 
 
-def _replay_entries(
+def replay_entry_pages(
     path: Path,
     *,
     archive_root: Path,
-    identity: dict[str, Any],
-    expected_sha256: str | None,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+    meet: int,
+    race_date: str,
+    expected_sha256: str | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
+    """Verify original API26 pages, independently of a PDF or active-roster view."""
     content = read_bytes(path, limit=MAX_MANIFEST_BYTES)
     digest = sha256(content)
     if expected_sha256 is not None and digest != checked_digest(expected_sha256):
@@ -160,8 +163,8 @@ def _replay_entries(
     source_identity = {
         key: manifest.get(key) for key in ("meet", "race_date", "race_no")
     }
-    validate_identity(**source_identity)
-    _matching_identity(manifest, {key: identity[key] for key in ("meet", "race_date")})
+    validate_race_identity(**source_identity)
+    _matching_identity(manifest, {"meet": meet, "race_date": race_date})
     source_race_id = (
         f"{source_identity['race_date']}_{source_identity['meet']}_"
         f"{source_identity['race_no']}"
@@ -189,8 +192,8 @@ def _replay_entries(
         if not isinstance(page, dict) or type(page.get("page_no")) is not int:
             raise ReplayError("invalid_entry_page_record")
         params = {
-            "meet": identity["meet"],
-            "rc_date": identity["race_date"],
+            "meet": meet,
+            "rc_date": race_date,
             "rc_no": source_identity["race_no"],
             "numOfRows": PAGE_SIZE,
             "pageNo": number,
@@ -235,6 +238,33 @@ def _replay_entries(
         or manifest["total_count"] != total
     ):
         raise ReplayError("incomplete_entry_capture")
+    return (
+        rows,
+        manifest,
+        {
+            "manifest_path": str(path),
+            "manifest_sha256": digest,
+            "pages": evidence,
+        },
+    )
+
+
+def _replay_entries(
+    path: Path,
+    *,
+    archive_root: Path,
+    identity: dict[str, Any],
+    expected_sha256: str | None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    rows, manifest, evidence = replay_entry_pages(
+        path,
+        archive_root=archive_root,
+        meet=identity["meet"],
+        race_date=identity["race_date"],
+        expected_sha256=expected_sha256,
+    )
+    source_identity = {key: manifest[key] for key in ("meet", "race_date", "race_no")}
+    captured = _timestamp(manifest["collected_at"])
     rebuilt = build_entry_snapshot(rows, **source_identity, collected_at=captured)
     rebuilt["source_manifest_path"] = manifest["manifest_path"]
     if rebuilt != manifest.get("entry_snapshot"):
@@ -250,12 +280,10 @@ def _replay_entries(
     target_entries = build_entry_snapshot(rows, **identity, collected_at=captured)
     target_entries["source_manifest_path"] = manifest["manifest_path"]
     return target_entries, {
-        "manifest_path": str(path),
-        "manifest_sha256": digest,
+        **evidence,
         "entry_projection_sha256": sha256(entry_content),
         "source_requested_identity": source_identity,
         "target_identity": identity,
-        "pages": evidence,
     }
 
 
