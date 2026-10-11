@@ -39,6 +39,11 @@ projection files are unchanged. Do not relax that refit gate. Existing portable
 JSON models can be admitted separately against their original fit receipt,
 review, exact artifact bytes and unchanged inference dependencies.
 
+The first remote CI run put the new tests in the lightweight scripts environment,
+which has no NumPy. Move the step into Python Checks using the existing API
+environment, alongside the restricted model tests. No dependency or lockfile
+changes are needed; the model and already saved local contract stay unchanged.
+
 ## Decision Log
 
 Choose M0 for its lack of PDF dependency, not because its 1/7 observed-development
@@ -156,3 +161,5 @@ Revision 2026-10-12: initial plan based on the owner's paid-server deferral and
 verified existing model/source availability. Updated after completed Pro advice,
 actual 28/294 plus 50-race replay, zero-difference matrix comparison, 206 tests
 and the three-date live unpublished-card check. Publication remains pending.
+CI follow-up: corrected the test job environment after the first remote run
+reported `ModuleNotFoundError: numpy`; rerun all required checks before merging.
