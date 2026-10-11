@@ -19,7 +19,8 @@ Nothing here certifies the 70% goal, replaces the champion or submits prediction
 - [x] (2026-10-11) Implement source-only projection, pinned result replay and full inventory selection ledger; 279 focused/shared tests passed.
 - [x] (2026-10-11) Review actual 20-race/209-row frozen corpus and register its exact restricted research recipe before fitting.
 - [x] (2026-10-11T12:54Z) Fit fixed M0/M1 date replay and full-cohort models; independently verify all nine artifact hashes, saved-model predictions and paired matrices.
-- [ ] Run focused and shared regressions, publish evidence, push and ordinarily merge after required checks.
+- [x] (2026-10-11T13:02Z) Run 279 focused/shared regressions, publish evidence, push and ordinarily merge PR76 after required checks.
+- [x] (2026-10-11T13:14Z) Receive the completed follow-up Pro consultation without interrupting generation; record source-expansion advice and unchanged training restrictions.
 
 ## Context and Orientation
 
@@ -164,3 +165,15 @@ corpus/implementation/recipe approval before the first actual fit.
 Revision: retain the first actual outcomes without tuning, complete all four
 fixed fits and verify nine artifacts independently. Required remote checks and
 ordinary merge remain the final delivery milestone.
+
+Revision: PR76 head `2bd072bcf5ceda53cbccf6f262da9a8c47c02efe` passed Python,
+Scripts and Docker checks; both new regression steps executed. Gitleaks passed.
+The non-required Security audit retained exactly the same 17 package/version/
+advisory rows as PR75; later audit steps were skipped. Ordinary merge, without
+admin override, produced `5cfd45eba2a4800f2d8ad97dda13ec1e76d58a27` at
+2026-10-11T13:02:13Z. Post-merge Python/Scripts/Docker checks also passed.
+
+Revision: the follow-up Pro answer completed after a displayed 12m18s. Its
+recommendation and our acceptance boundary are recorded in the experiment report.
+Do not re-tune this completed ablation. Next, expand actual event-source capture
+and pure lagged transformations without treating retrospective timing as proven.

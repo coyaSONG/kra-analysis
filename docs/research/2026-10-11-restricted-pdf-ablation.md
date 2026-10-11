@@ -200,3 +200,89 @@ PYTHONPATH=packages/scripts .venv/bin/python -m autoresearch.restricted_ablation
 The command creates a fresh directory; it does not replace the original run.
 Completion timestamps differ on replay. The original receipt and artifacts
 above remain the evidence for this experiment.
+
+## Delivery And Completed Follow-Up Advice
+
+[PR76](https://github.com/coyaSONG/kra-analysis/pull/76) merged normally at
+2026-10-11T13:02:13Z, commit `5cfd45eba2a4800f2d8ad97dda13ec1e76d58a27`.
+On exact head `2bd072bcf5ceda53cbccf6f262da9a8c47c02efe`, required Python Checks,
+Scripts Checks and API Docker Build passed. Both new regression steps executed;
+Gitleaks passed. The Security audit failed with the same 17 package/version/
+advisory rows as PR75; subsequent audit steps were skipped. No all-security-pass
+claim or administrator override. Post-merge Python/Scripts/Docker checks passed.
+
+After the negative ablation, Codex submitted the aggregate evidence and next-step
+questions to the owner's authorized ChatGPT Pro browser conversation. Generation
+was neither stopped nor given a short completion deadline. The completed answer
+was read only after generation ended; the UI displayed 12m18s and completion.
+Pro reviewed the public pinned PR76 report, not the local raw data or fitted
+artifacts. Its advice is a proposal, not independent validation or authorization
+to relax the Goal's training rule.
+
+The recommendation is a bounded 90-day observed-event history experiment, not
+more tuning on these seven development outcomes. Use independent target rosters,
+strictly earlier-date API214 events for features, and separately joined target
+outcomes. Preserve acquisition/revision timing and row-level lineage. Do not
+backdate today's cumulative API26 fields, rating or result odds.
+
+Pro proposed historical targets in July-August 2025 for training and September
+2025 for exploratory development, with April 2-September 30 event backfill, plus
+an actual current July 14-October 11, 2026 source seed for future cards. It did
+not verify the historical target roster counts or historical point-in-time
+availability. These windows are proposed work bounds, not optimized periods or
+new untouched holdouts. Current-view historical records must be labeled
+`retrospective_current_revision`, with historical availability unverified.
+
+The [official API214 catalogue](https://www.data.go.kr/data/15063979/openapi.do)
+describes per-race venue/date, ranks, status notes and elapsed records. It also
+lists four venues and a development request allowance; actual account allowance
+and current usage still need checking. The catalogue does not certify which
+revision was available at any historical cutoff. Full pagination is not proof
+of complete real-world start history, and an empty API response is not proof
+that no races occurred.
+
+Suggested H0 comprises observed 90-day normal finishes, wins, top-three count,
+top-three fraction and unresolved-event count. H1 adds 30-day normal finishes,
+days since last observed normal finish, that finish's rank, mean rank of up to
+three latest normal finishes and newer unresolved-event presence. Include roster
+gate/physical venue/field size and missing/coverage flags in both. Names must say
+"observed"; do not rename these quantities complete career starts or true rest
+intervals. Missing windows must not silently become zero-count history.
+
+Pro suggested exactly two XGBRanker fits, H0 and H1, with no early stopping,
+seed search or extra full refit: pairwise objective, histogram trees, 300 trees,
+depth 3, learning rate 0.03, min child weight 5, L2 10, L1 0, full row/column
+sampling, mean pair sampling with eight pairs per sample, seed 42, one thread.
+This is a research proposal, not an executed model or a claim of superiority.
+The [official ranking guide](https://xgboost.readthedocs.io/en/stable/tutorials/learning_to_rank.html)
+describes grouped ranking and pairwise surrogate learning; it does not guarantee
+exact three-horse success. Group weights must not copy the prior logistic
+runner-level 1/n array. Pin the installed supported version before adopting any
+configuration. The user's "laya/jev" suggestion remains unidentified, not guessed.
+
+### Accepted Next Action And Unchanged Limits
+
+Immediately prioritize the concrete current 90-day raw source seed and a pure
+lagged-event transformer, with request/coverage ledger, page pins, normalized
+events and actual replay outputs. Prepare an ExecPlan before that implementation.
+Use existing collectors; cap HTTP attempts at 2,000 or the lower actual quota,
+resume the same fixed plan and keep failures visible. This work can proceed
+locally without purchasing the proposed server. Publish the seed manifest hash
+in a fixed commit before future cutoffs, preserving the existing witness trust
+assumptions. Do not invent a future card or claim a national freeze.
+
+The Goal still permits training/promotion only on reviewed pre-race-safe frozen
+data. Therefore the proposed historical H0/H1 fits are NOT automatically approved:
+event-date ordering alone does not establish historical revision availability.
+Source collection and transformation can proceed; historical fitting must wait
+for the required source review and cannot reuse PR76's exact-byte approval.
+This restriction must not block collecting today's actual future-input seed.
+No production rule, old 2025 bootstrap rejection, B0 identity or full future
+denominator changes as a result of the consultation.
+
+Required counterexamples for the next transformation: target/future outcomes
+cannot change target X; target result deletions cannot shrink the roster; partial
+pages cannot become zero history; venue/ID collisions cannot multiply rows;
+later corrections cannot overwrite frozen views; same X must reload to the same
+scores/three horses if an eligible model is eventually fit. A negative H1 result
+is reportable progress, not permission to tune the seen development set.
