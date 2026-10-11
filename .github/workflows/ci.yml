@@ -206,6 +206,12 @@ jobs:
           uv run --frozen ruff check autoresearch/versioned_result_observations.py autoresearch/tests/test_versioned_result_observations.py
           uv run --frozen ruff format --check autoresearch/versioned_result_observations.py autoresearch/tests/test_versioned_result_observations.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_versioned_result_observations.py -o addopts=''
+      - name: API training opportunity regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/api_training_opportunity.py autoresearch/tests/test_api_training_opportunity.py
+          uv run --frozen ruff format --check autoresearch/api_training_opportunity.py autoresearch/tests/test_api_training_opportunity.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_api_training_opportunity.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 
