@@ -158,6 +158,12 @@ jobs:
           uv run --frozen --extra race-card-pdf ruff check autoresearch/restricted_cohort.py autoresearch/tests/test_restricted_cohort.py
           uv run --frozen --extra race-card-pdf ruff format --check autoresearch/restricted_cohort.py autoresearch/tests/test_restricted_cohort.py
           uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_restricted_cohort.py -o addopts=''
+      - name: Observed history seed regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/observed_history_seed.py shared/observed_result_history.py autoresearch/tests/test_observed_history_seed.py autoresearch/tests/test_observed_result_history.py
+          uv run --frozen ruff format --check autoresearch/observed_history_seed.py shared/observed_result_history.py autoresearch/tests/test_observed_history_seed.py autoresearch/tests/test_observed_result_history.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_observed_history_seed.py autoresearch/tests/test_observed_result_history.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 
