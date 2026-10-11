@@ -170,6 +170,12 @@ jobs:
           uv run --frozen ruff check autoresearch/history_identity_audit.py autoresearch/tests/test_history_identity_audit.py
           uv run --frozen ruff format --check autoresearch/history_identity_audit.py autoresearch/tests/test_history_identity_audit.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_history_identity_audit.py autoresearch/tests/test_kra_result_snapshot.py -o addopts=''
+      - name: Frozen partial history regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/frozen_history_view.py autoresearch/observed_partial_projection.py shared/observed_partial_history.py autoresearch/tests/test_frozen_partial_history.py
+          uv run --frozen ruff format --check autoresearch/frozen_history_view.py autoresearch/observed_partial_projection.py shared/observed_partial_history.py autoresearch/tests/test_frozen_partial_history.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_frozen_partial_history.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 

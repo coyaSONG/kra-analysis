@@ -90,6 +90,12 @@ def audit_history(root: Path, seed_path: Path, seed_sha256: str) -> dict:
         k: v for k, v in current.items() if k not in ignored
     }:
         raise ValueError("collision_seed_replay_mismatch")
+    return audit_replayed_seed(root, seed, seed_sha256)
+
+
+def audit_replayed_seed(root: Path, seed: dict, seed_sha256: str) -> dict:
+    """Audit a caller-verified latest or explicitly selected-source seed."""
+    root = root.resolve()
     admitted, unbound, source_pins = [], [], []
     for unit in seed["inventory"]:
         if unit["status"] not in ("api_reported_rows", "identity_unresolved"):
@@ -154,7 +160,7 @@ def audit_history(root: Path, seed_path: Path, seed_sha256: str) -> dict:
     }
     return {
         "format_version": "kra-history-identity-audit-v1",
-        "seed_sha256": digest(original),
+        "seed_sha256": seed_sha256,
         "plan_sha256": seed["plan_sha256"],
         "implementation": {
             **implementation(),
