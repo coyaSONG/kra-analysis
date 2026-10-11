@@ -14,6 +14,106 @@ from autoresearch.kra_result_population_audit import reconcile_observations
 from autoresearch.kra_result_snapshot import collect_result_snapshot
 
 
+def finish(rank, horse=None, evidence="ranked_finish_observed"):
+    return {
+        "race_id": "20261010_1_1",
+        "chul_no": int(rank),
+        "horse_id": horse or str(100 + int(rank)),
+        "raw_ord": rank,
+        "raw_ord_bigo": None,
+        "evidence": evidence,
+    }
+
+
+def test_unique_top3_candidate_is_unordered_and_not_final_truth():
+    rows = [finish("2", "20"), finish(3, "3"), finish(1, "100"), finish(4)]
+    result = audit.inspect_top3(rows, 4)
+    assert result["candidate_top3_horse_ids"] == ["3", "20", "100"]
+    assert result["status"] == "ordinary_rank_observation"
+    assert result["blockers"] == []
+    assert not result["official_finality_verified"]
+    assert not result["counts_as_70_percent_evidence"]
+    assert audit.inspect_top3(list(reversed(rows)), 4) == result
+
+
+@pytest.mark.parametrize(
+    "ranks,candidate,blocker",
+    [
+        ([1, 1, 3, 4], None, "duplicate_finish_rank_requires_policy"),
+        ([1, 2, 3, 3], None, "missing_or_ambiguous_top3"),
+        ([1, 2, 4], None, "missing_or_ambiguous_top3"),
+        ([1, 2, 3, 5], ["100", "101", "102"], "nonconsecutive_finish_ranks"),
+        (
+            [1, 2, 3, 4, 4],
+            ["100", "101", "102"],
+            "duplicate_finish_rank_requires_policy",
+        ),
+    ],
+)
+def test_ties_and_rank_gaps_require_review(ranks, candidate, blocker):
+    rows = [finish(rank, str(100 + index)) for index, rank in enumerate(ranks)]
+    result = audit.inspect_top3(rows, len(rows))
+    assert result["status"] == "requires_review"
+    assert result["candidate_top3_horse_ids"] == candidate
+    assert blocker in result["blockers"]
+
+
+@pytest.mark.parametrize("horse", [None, "", "0001", "0", "-1", "a", 1, "123456789"])
+def test_invalid_normalized_identity_never_yields_candidate(horse):
+    rows = [finish(i) for i in (1, 2, 3)]
+    rows[0]["horse_id"] = horse
+    result = audit.inspect_top3(rows, 3)
+    assert "invalid_horse_identity" in result["blockers"]
+    assert result["candidate_top3_horse_ids"] is None
+
+
+def test_duplicate_horse_never_yields_candidate():
+    rows = [finish(i, "123") for i in (1, 2, 3)]
+    result = audit.inspect_top3(rows, 3)
+    assert "duplicate_horse_identity" in result["blockers"]
+    assert result["candidate_top3_horse_ids"] is None
+
+
+@pytest.mark.parametrize("rank", [True, 1.0, "1.0", None, 0, 21])
+def test_invalid_normalized_rank_requires_review(rank):
+    rows = [finish(i) for i in (1, 2, 3)]
+    rows[0]["raw_ord"] = rank
+    result = audit.inspect_top3(rows, 3)
+    assert "invalid_finish_rank" in result["blockers"]
+    assert result["candidate_top3_horse_ids"] is None
+
+
+def test_exceptional_runner_is_not_dropped_to_approve_top3():
+    rows = [finish(i) for i in (1, 2, 3)] + [finish(94, evidence="unresolved")]
+    result = audit.inspect_top3(rows, 3)
+    assert result["candidate_top3_horse_ids"] == ["101", "102", "103"]
+    assert "runner_count_mismatch" in result["blockers"]
+    assert "unresolved_runner_status" in result["blockers"]
+    assert result["status"] == "requires_review"
+
+
+def test_unresolved_duplicate_top_rank_cannot_leave_an_unambiguous_candidate():
+    rows = [finish(i) for i in (1, 2, 3)] + [finish(3, "999", "unresolved")]
+    result = audit.inspect_top3(rows, 4)
+    assert result["candidate_top3_horse_ids"] is None
+    assert "duplicate_finish_rank_requires_policy" in result["blockers"]
+
+
+def test_top3_totals_keep_void_and_missing_races():
+    result = reconcile_observations(
+        {"20261010_1_1": 3, "20261010_1_2": 1, "20261010_1_3": 3},
+        [finish(i) for i in (1, 2, 3)] + [record("20261010_1_2")],
+    )
+    assert result["top3_observation_counts"] == {
+        "ordinary_rank_observation": 1,
+        "requires_review": 2,
+    }
+    assert sum(result["top3_observation_counts"].values()) == 3
+    assert len(result["ledger"]) == result["scheduled_race_count"] == 3
+    assert result["top3_blocker_counts"]["missing_results"] == 1
+    assert not result["counts_as_70_percent_evidence"]
+
+
 def record(race="20261010_1_1", gate=1, note="경주불성립"):
     return {
         "race_id": race,

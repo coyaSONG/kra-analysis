@@ -93,6 +93,8 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_result_population_audit -
 
 수집·재생 성공은 실제 출발 이력 완전성이나 독립적인 시각 증명이 아닙니다. 대사 보고서는 누락·추가 경주와 두수 불일치를 남기며, 불일치가 있으면 종료 코드 2를 반환합니다. 과거 자료의 당일 수집은 과거 PIT 승인이나 70% 성능 근거가 아닙니다. 계획 형식과 실제 원문 해시는 [결과 수집 연구 기록](../../docs/research/2026-10-11-prior-result-capture.md)을 참고하세요.
 
+각 경주의 `top3_observation`은 순위·말 ID 중복, 순위 누락, 미해결 상태와 두수 불일치를 별도로 검사합니다. `candidate_top3_horse_ids`는 순서 무관 관측 후보일 뿐 공식 확정 결과가 아니며, `requires_review` 경주도 전체 목록에 남습니다. 종료 코드는 기존 두수 대사 기준을 유지하므로 코드 0만으로 결과 확정을 판단하지 마세요. [50경주 상위 3두 관측 기록](../../docs/research/2026-10-11-result-top3-readiness.md)에 재현 결과와 한계가 있습니다.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)

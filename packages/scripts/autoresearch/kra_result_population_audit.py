@@ -14,6 +14,70 @@ from autoresearch.kra_result_snapshot import replay_result_snapshot
 from autoresearch.kra_schedule_snapshot import replay_schedule_snapshot
 
 
+def inspect_top3(rows: list[dict[str, Any]], scheduled_count: int) -> dict[str, Any]:
+    """Describe normalized observations, never certify a final settlement result."""
+    blockers = []
+    if not rows:
+        blockers.append("missing_results")
+    if len(rows) != scheduled_count:
+        blockers.append("runner_count_mismatch")
+    if any(row["evidence"] != "ranked_finish_observed" for row in rows):
+        blockers.append("unresolved_runner_status")
+    ranks: dict[int, list[str]] = defaultdict(list)
+    raw_ranks: Counter[int] = Counter()
+    horse_ids = []
+    for row in rows:
+        horse = row.get("horse_id")
+        if (
+            not isinstance(horse, str)
+            or not horse.isascii()
+            or not horse.isdecimal()
+            or not 1 <= len(horse) <= 8
+            or horse.startswith("0")
+        ):
+            blockers.append("invalid_horse_identity")
+            continue
+        horse_ids.append(horse)
+        raw_rank = row.get("raw_ord")
+        if type(raw_rank) is int:
+            rank = raw_rank
+        elif isinstance(raw_rank, str) and raw_rank.isascii() and raw_rank.isdecimal():
+            rank = int(raw_rank)
+        else:
+            rank = 0
+        if 1 <= rank <= 20:
+            raw_ranks[rank] += 1
+        if row["evidence"] == "ranked_finish_observed" and 1 <= rank <= 20:
+            ranks[rank].append(horse)
+        elif row["evidence"] == "ranked_finish_observed":
+            blockers.append("invalid_finish_rank")
+    if len(set(horse_ids)) != len(horse_ids):
+        blockers.append("duplicate_horse_identity")
+    if any(count > 1 for count in raw_ranks.values()):
+        blockers.append("duplicate_finish_rank_requires_policy")
+    unique_top3 = all(
+        len(ranks[rank]) == 1 and raw_ranks[rank] == 1 for rank in (1, 2, 3)
+    )
+    if not unique_top3:
+        blockers.append("missing_or_ambiguous_top3")
+    if sorted(rank for rank, horses in ranks.items() if horses) != list(
+        range(1, len(rows) + 1)
+    ):
+        blockers.append("nonconsecutive_finish_ranks")
+    candidate = [ranks[rank][0] for rank in (1, 2, 3)] if unique_top3 else None
+    if candidate is not None and len(set(candidate)) != 3:
+        candidate = None
+    if "invalid_horse_identity" in blockers or "duplicate_horse_identity" in blockers:
+        candidate = None
+    return {
+        "status": "ordinary_rank_observation" if not blockers else "requires_review",
+        "candidate_top3_horse_ids": sorted(candidate, key=int) if candidate else None,
+        "blockers": sorted(set(blockers)),
+        "official_finality_verified": False,
+        "counts_as_70_percent_evidence": False,
+    }
+
+
 def reconcile_observations(
     scheduled: dict[str, int], records: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -48,6 +112,7 @@ def reconcile_observations(
                         if row["raw_ord_bigo"] not in (None, "", "-")
                     )
                 ),
+                "top3_observation": inspect_top3(rows, count),
             }
         )
     extras = sorted(set(grouped) - set(scheduled))
@@ -67,6 +132,14 @@ def reconcile_observations(
         "counts_as_70_percent_evidence": False,
         "historical_capture_only": True,
         "complete_actual_start_history_verified": False,
+        "top3_observation_counts": dict(
+            Counter(r["top3_observation"]["status"] for r in ledger)
+        ),
+        "top3_blocker_counts": dict(
+            Counter(
+                blocker for r in ledger for blocker in r["top3_observation"]["blockers"]
+            )
+        ),
         "ledger": ledger,
     }
 
