@@ -83,6 +83,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/api_training_opportunity.py ../../packages/scripts/autoresearch/tests/test_api_training_opportunity.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/api_training_opportunity.py ../../packages/scripts/autoresearch/tests/test_api_training_opportunity.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_api_training_opportunity.py -o addopts=''
+      - name: Prospective training input regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/prospective_training_inputs.py ../../packages/scripts/autoresearch/tests/test_prospective_training_inputs.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/prospective_training_inputs.py ../../packages/scripts/autoresearch/tests/test_prospective_training_inputs.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_prospective_training_inputs.py -o addopts=''
       - name: Official schedule regressions
         working-directory: ./apps/api
         run: |
