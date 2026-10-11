@@ -64,7 +64,7 @@ h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-h2==4.3.0
+h2==4.4.1
     # via httpx
 hpack==4.2.0
     # via h2
@@ -102,7 +102,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.7.1
+multidict==6.9.1
     # via yarl
 narwhals==2.23.0
     # via scikit-learn
@@ -151,7 +151,7 @@ pydantic-settings==2.14.2
     #   kra-race-prediction-api
 pygments==2.20.0
     # via rich
-pyjwt==2.13.0
+pyjwt==2.15.1
     # via
     #   kra-race-prediction-api
     #   supabase-auth
