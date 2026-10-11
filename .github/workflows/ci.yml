@@ -182,6 +182,12 @@ jobs:
           uv run --frozen ruff check autoresearch/official_history_support.py shared/official_result_support.py autoresearch/tests/test_official_history_support.py
           uv run --frozen ruff format --check autoresearch/official_history_support.py shared/official_result_support.py autoresearch/tests/test_official_history_support.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_official_history_support.py -o addopts=''
+      - name: Local M0 forward regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/local_m0_inference.py autoresearch/local_m0_forward.py autoresearch/tests/test_local_m0_forward.py
+          uv run --frozen ruff format --check autoresearch/local_m0_inference.py autoresearch/local_m0_forward.py autoresearch/tests/test_local_m0_forward.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_local_m0_forward.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 
