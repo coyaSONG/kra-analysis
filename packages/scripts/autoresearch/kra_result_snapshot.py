@@ -175,9 +175,8 @@ async def collect_result_snapshot(
     return path
 
 
-def replay_result_snapshot(
-    path: Path, *, entry_capture: Path | None = None, archive_root: Path | None = None
-) -> dict[str, Any]:
+def replay_result_pages(path: Path) -> dict[str, Any]:
+    """Verify captured bytes, not event identity; raw rows may lack venue."""
     original = path.read_bytes()
     manifest = parse_json(original)
     if manifest.get("format_version") != FORMAT or manifest.get("url") != RESULT_URL:
@@ -246,6 +245,22 @@ def replay_result_snapshot(
         or len(pages) != max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
     ):
         raise ValueError("incomplete_result_capture")
+    return {
+        "manifest": manifest,
+        "rows": rows,
+        "capture_manifest_sha256": _hash(original),
+        "page_pins": pins,
+        "event_identity_verified": False,
+    }
+
+
+def replay_result_snapshot(
+    path: Path, *, entry_capture: Path | None = None, archive_root: Path | None = None
+) -> dict[str, Any]:
+    raw = replay_result_pages(path)
+    manifest, rows = raw["manifest"], raw["rows"]
+    meet, day = manifest["meet"], manifest["race_date"]
+    end = _utc(manifest["capture_completed_at"])
     entry_rosters, entry_pins, available_at = None, None, end
     if entry_capture is not None:
         if archive_root is None:
@@ -283,8 +298,8 @@ def replay_result_snapshot(
         ),
         "capture_completed_at": end.isoformat(),
         "combined_sources_available_at": available_at.isoformat(),
-        "capture_manifest_sha256": _hash(original),
-        "page_pins": pins,
+        "capture_manifest_sha256": raw["capture_manifest_sha256"],
+        "page_pins": raw["page_pins"],
         "entry_binding_pins": entry_pins,
         "independent_timestamp_verified": False,
     }
