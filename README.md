@@ -126,6 +126,8 @@ uv run python scripts/apply_migrations.py
 
 현재 활성 스키마 기준선은 `apps/api/migrations/001_unified_schema.sql` 계열입니다. 초기 Supabase/legacy 경로를 전제로 한 오래된 SQL 파일도 저장소에 남아 있으므로, 새 환경을 올릴 때는 최신 문서와 현재 스크립트를 먼저 확인해야 합니다.
 
+영천(`meet=4`) 수집 지원에는 `008_add_yeongcheon_meet.sql`이 필요합니다. 해당 API 버전을 배포하기 전에 기존 마이그레이션 스크립트로 적용해야 하며, 누락된 DB는 앱 시작 시 거부됩니다. [배포 조건과 검증 기록](docs/research/2026-10-11-yeongcheon-entry-support.md)을 참고하세요.
+
 주의:
 
 - 앱은 현재 `SQLAlchemy ORM + PostgreSQL` 중심입니다.

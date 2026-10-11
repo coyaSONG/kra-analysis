@@ -17,7 +17,7 @@ from shared.kra_entry_sheet import (
     build_entry_snapshot,
     parse_entry_sheet_page,
 )
-from shared.kra_race_card_pdf import validate_identity
+from shared.kra_race_identity import validate_race_identity
 
 ENTRY_URL = "https://apis.data.go.kr/B551015/API26_2/entrySheet_2"
 PAGE_SIZE = 100
@@ -42,7 +42,7 @@ async def collect_entry_sheet_snapshot(
     clock: Callable[[], datetime] = lambda: datetime.now(UTC),
 ) -> dict[str, Any]:
     """The entry capture time is completion of every required response page."""
-    validate_identity(meet, race_date, race_no)
+    validate_race_identity(meet, race_date, race_no)
     key = unquote(api_key.strip())
     if not key:
         raise ValueError("missing_kra_api_key")

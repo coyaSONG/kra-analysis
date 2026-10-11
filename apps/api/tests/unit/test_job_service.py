@@ -10,8 +10,8 @@ from services.job_service import JobService
 
 
 @pytest.mark.unit
-def test_required_migration_head_tracks_runtime_db_hardening():
-    assert get_required_migration_head() == "007_runtime_db_hardening.sql"
+def test_required_migration_head_tracks_yeongcheon_support():
+    assert get_required_migration_head() == "008_add_yeongcheon_meet.sql"
 
 
 @pytest.mark.unit

@@ -33,6 +33,7 @@ BUNDLE_VERSION = "kra-race-card-pdf-feature-bundle-v1"
 SCOPE_BASIS = "capture_inventory_not_evaluation_universe"
 DEFAULT_OUTPUT_DIR = Path(".cache/autoresearch/race_card_pdf_bundles")
 IMPLEMENTATION_FILES = (
+    "shared/kra_race_identity.py",
     "shared/kra_race_card_pdf.py",
     "shared/kra_race_card_pdf_audit.py",
     "shared/kra_entry_sheet.py",

@@ -102,6 +102,117 @@ def test_numeric_horse_id_is_preserved_without_guessing_leading_zeroes():
     assert build(rows)["entries"][1]["hrNo"] == "1412244"
 
 
+@pytest.mark.parametrize("raw_meet", [4, "4", "\uc601\ucc9c"])
+def test_yeongcheon_entries_preserve_physical_venue_four(raw_meet):
+    rows = [entry(1), entry(2)]
+    for row in rows:
+        row["meet"] = raw_meet
+    result = build_entry_snapshot(
+        rows, meet=4, race_date="20260627", race_no=1, collected_at=CAPTURED
+    )
+    assert result["meet"] == 4
+    assert [row["hrNo"] for row in result["entries"]] == ["001", "002"]
+
+
+@pytest.mark.parametrize("raw_meet", [3, "3", "\ubd80\uacbd"])
+def test_busan_entries_are_not_relabelled_as_yeongcheon(raw_meet):
+    rows = [entry(1), entry(2)]
+    for row in rows:
+        row["meet"] = raw_meet
+    with pytest.raises(ValueError, match="entry_date_or_meeting_mismatch"):
+        build_entry_snapshot(
+            rows, meet=4, race_date="20260627", race_no=1, collected_at=CAPTURED
+        )
+
+
+@pytest.mark.asyncio
+async def test_yeongcheon_capture_requests_four_and_preserves_original_evidence(
+    tmp_path,
+):
+    rows = [entry(1), entry(2)]
+    for row in rows:
+        row["meet"] = "\uc601\ucc9c"
+    content = json.dumps(page(rows)).encode()
+    requested = []
+
+    def handler(request):
+        requested.append(dict(request.url.params))
+        return httpx.Response(200, content=content)
+
+    times = iter([CAPTURED, CAPTURED + timedelta(seconds=1)])
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=4,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: next(times),
+        )
+    assert requested[0]["meet"] == "4"
+    assert result["collection_status"] == "captured"
+    assert result["entry_snapshot"]["meet"] == 4
+    assert result["collected_at"] == (CAPTURED + timedelta(seconds=1)).isoformat()
+    assert Path(result["pages"][0]["raw_path"]).read_bytes() == content
+    assert result["pages"][0]["sha256"] == hashlib.sha256(content).hexdigest()
+    assert "test-credential" not in Path(result["manifest_path"]).read_text()
+    assert "serviceKey" not in json.dumps(result)
+
+
+@pytest.mark.asyncio
+async def test_empty_yeongcheon_response_is_not_a_complete_race(tmp_path):
+    times = iter([CAPTURED, CAPTURED + timedelta(seconds=1)])
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(
+            lambda _: httpx.Response(200, json=page([], total=0))
+        )
+    ) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=4,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: next(times),
+        )
+    assert result["collection_status"] == "validation_error"
+    assert result["error"] == "no_entries_for_requested_race"
+    assert result["entry_snapshot"] is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("row_count,declared_count", [(10, 9), (11, 10)])
+async def test_yeongcheon_count_mismatch_keeps_raw_evidence_but_blocks_snapshot(
+    tmp_path, row_count, declared_count
+):
+    rows = [entry(number, count=declared_count) for number in range(1, row_count + 1)]
+    for row in rows:
+        row["meet"] = "\uc601\ucc9c"
+    content = json.dumps(page(rows, total=row_count)).encode()
+    times = iter([CAPTURED, CAPTURED + timedelta(seconds=1)])
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, content=content))
+    ) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=4,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: next(times),
+        )
+    assert result["collection_status"] == "validation_error"
+    assert result["error"] == "incomplete_entry_field"
+    assert result["entry_snapshot"] is None
+    assert result["entry_snapshot_path"] is None
+    assert Path(result["pages"][0]["raw_path"]).read_bytes() == content
+    assert result["pages"][0]["sha256"] == hashlib.sha256(content).hexdigest()
+    assert "test-credential" not in Path(result["manifest_path"]).read_text()
+
+
 def test_naive_entry_capture_is_not_accepted():
     with pytest.raises(ValueError, match="entry_capture_requires_timezone"):
         build_entry_snapshot(

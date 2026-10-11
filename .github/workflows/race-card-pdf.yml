@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/race-card-pdf.yml'
       - 'packages/scripts/shared/kra_entry_sheet.py'
+      - 'packages/scripts/shared/kra_race_identity.py'
       - 'packages/scripts/shared/kra_race_card_pdf*.py'
       - 'packages/scripts/shared/operational_cutoff.py'
       - 'packages/scripts/shared/entry_snapshot_metadata.py'
@@ -13,6 +14,7 @@ on:
       - 'packages/scripts/autoresearch/kra_race_card_pdf_*.py'
       - 'packages/scripts/autoresearch/tests/*race_card_pdf*.py'
       - 'packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py'
+      - 'packages/scripts/autoresearch/tests/test_kra_race_identity.py'
       - 'packages/scripts/pyproject.toml'
       - 'uv.lock'
   push:
@@ -24,6 +26,7 @@ on:
       - 'packages/scripts/autoresearch/kra_race_card_pdf_*.py'
       - 'packages/scripts/autoresearch/tests/*race_card_pdf*.py'
       - 'packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py'
+      - 'packages/scripts/autoresearch/tests/test_kra_race_identity.py'
       - 'packages/scripts/pyproject.toml'
       - 'uv.lock'
 
@@ -48,7 +51,7 @@ jobs:
         run: uv sync --frozen --extra race-card-pdf --group dev
       - name: Lint and check formatting
         run: |
-          uv run --frozen --extra race-card-pdf ruff check shared/kra_entry_sheet.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_*.py autoresearch/tests/*race_card_pdf*.py autoresearch/tests/test_kra_entry_sheet_snapshot.py
-          uv run --frozen --extra race-card-pdf ruff format --check shared/kra_entry_sheet.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_*.py autoresearch/tests/*race_card_pdf*.py autoresearch/tests/test_kra_entry_sheet_snapshot.py
+          uv run --frozen --extra race-card-pdf ruff check shared/kra_entry_sheet.py shared/kra_race_identity.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_*.py autoresearch/tests/*race_card_pdf*.py autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_identity.py
+          uv run --frozen --extra race-card-pdf ruff format --check shared/kra_entry_sheet.py shared/kra_race_identity.py shared/kra_race_card_pdf.py shared/kra_race_card_pdf_audit.py autoresearch/kra_entry_sheet_snapshot.py autoresearch/kra_race_card_pdf_*.py autoresearch/tests/*race_card_pdf*.py autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_identity.py
       - name: Test collection, parsing, joins, and cutoff guards
-        run: uv run --frozen --extra race-card-pdf pytest -q autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_card_pdf*.py
+        run: uv run --frozen --extra race-card-pdf pytest -q autoresearch/tests/test_kra_race_identity.py autoresearch/tests/test_kra_entry_sheet_snapshot.py autoresearch/tests/test_kra_race_card_pdf*.py

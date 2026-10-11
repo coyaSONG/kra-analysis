@@ -9,6 +9,8 @@ from collections import Counter
 from datetime import datetime
 from typing import Any
 
+from shared.kra_race_identity import validate_race_identity
+
 PARSER_VERSION = "kra-race-card-pdf-v1"
 SOURCE_ID = "kra_official_race_card_pdf"
 MAX_PDF_BYTES = 20 * 1024 * 1024
@@ -54,11 +56,7 @@ FOOTER = re.compile(
 def validate_identity(meet: int, race_date: str, race_no: int) -> None:
     if type(meet) is not int or meet not in MEETINGS:
         raise ValueError("meet must be 1 (Seoul), 2 (Jeju), or 3 (Busan)")
-    if type(race_no) is not int or not 1 <= race_no <= 20:
-        raise ValueError("race_no must be an integer between 1 and 20")
-    if not isinstance(race_date, str) or not re.fullmatch(r"20\d{6}", race_date):
-        raise ValueError("race_date must be YYYYMMDD within 2000-2099")
-    datetime.strptime(race_date, "%Y%m%d")
+    validate_race_identity(meet, race_date, race_no)
 
 
 def race_card_url(meet: int, race_date: str, race_no: int) -> str:
