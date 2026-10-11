@@ -6,16 +6,11 @@ import re
 from datetime import UTC, datetime
 from typing import Any
 
-from shared.kra_race_card_pdf import normalize_horse_name, validate_identity
+from shared.kra_race_card_pdf import normalize_horse_name
+from shared.kra_race_identity import MEET_NAMES, validate_race_identity
 from shared.operational_cutoff import normalize_scheduled_start_time
 
 SOURCE_ID = "kra_api26_2_entry_sheet"
-MEET_NAMES = {
-    "\uc11c\uc6b8": 1,
-    "\uc81c\uc8fc": 2,
-    "\ubd80\uacbd": 3,
-    "\ubd80\uc0b0\uacbd\ub0a8": 3,
-}
 START_TIME = re.compile(r"^(?:\ucd9c\ubc1c\s*:\s*)?(?:\d{3,4}|\d{1,2}:\d{2})$")
 
 
@@ -72,7 +67,7 @@ def build_entry_snapshot(
     collected_at: datetime,
 ) -> dict[str, Any]:
     """Filter response identities, not the API's unreliable rc_no parameter."""
-    validate_identity(meet, race_date, race_no)
+    validate_race_identity(meet, race_date, race_no)
     if collected_at.tzinfo is None or collected_at.utcoffset() is None:
         raise ValueError("entry_capture_requires_timezone")
     selected = []
@@ -80,7 +75,7 @@ def build_entry_snapshot(
         raw_meet = row.get("meet")
         meeting = MEET_NAMES.get(raw_meet) if isinstance(raw_meet, str) else None
         if meeting is None:
-            meeting = _integer(raw_meet, minimum=1, maximum=3)
+            meeting = _integer(raw_meet, minimum=1, maximum=4)
         date = str(_integer(row.get("rcDate"), minimum=20000101, maximum=20991231))
         number = _integer(row.get("rcNo"), minimum=1, maximum=20)
         if meeting != meet or date != race_date:

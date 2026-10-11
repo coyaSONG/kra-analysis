@@ -42,7 +42,7 @@ class CollectionRequest(BaseModel):
         return v
 
     meet: int = Field(
-        ..., ge=1, le=3, description="경마장 (1: 서울, 2: 제주, 3: 부산경남)"
+        ..., ge=1, le=4, description="경마장 (1: 서울, 2: 제주, 3: 부산경남, 4: 영천)"
     )
     race_numbers: list[int] | None = Field(
         None, description="수집할 경주 번호 리스트. 생략시 1-15R 전체"
@@ -133,7 +133,9 @@ class ResultCollectionRequest(BaseModel):
             raise ValueError(f"validation error: 유효하지 않은 날짜: {e}") from e
         return v
 
-    meet: int = Field(..., ge=1, le=3, description="경마장")
+    meet: int = Field(
+        ..., ge=1, le=4, description="경마장 (1: 서울, 2: 제주, 3: 부산경남, 4: 영천)"
+    )
     race_number: int = Field(..., ge=1, le=20, description="경주 번호")
     async_mode: bool = Field(False, description="비동기 실행 여부")
 

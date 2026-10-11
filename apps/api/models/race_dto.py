@@ -15,7 +15,7 @@ class RaceStatus(StrEnum):
 class CollectRaceRequest(BaseModel):
     date: str = Field(..., description="날짜 (YYYYMMDD)")
     meet: int = Field(
-        ..., ge=1, le=3, description="경마장 (1:서울, 2:제주, 3:부산경남)"
+        ..., ge=1, le=4, description="경마장 (1:서울, 2:제주, 3:부산경남, 4:영천)"
     )
     race_no: int | None = Field(None, ge=1, le=20, description="경주 번호")
 

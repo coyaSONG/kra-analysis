@@ -65,6 +65,15 @@ def add_missing_race(plan):
     )
 
 
+def test_identity_validation_dependency_is_pinned_and_drift_blocks(chain, tmp_path):
+    plan = plan_for(chain)
+    sources = plan["implementation"]["source_sha256"]
+    assert "shared/kra_race_identity.py" in sources
+    sources["shared/kra_race_identity.py"] = "0" * 64
+    with pytest.raises(ReplayError, match="plan_implementation_changed"):
+        bundle.build_bundle(plan, archive_root=tmp_path)
+
+
 def test_numeric_whitelist_preserves_null_and_zero_and_excludes_history(
     chain, tmp_path
 ):
