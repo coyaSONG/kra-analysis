@@ -17,7 +17,8 @@ The future national evaluation population and the frozen M0 model stay unchanged
 - [x] (2026-10-11 20:27Z) Bounded June audit found no newly sufficient training evidence in three normalized datasets and 16 saved HTML pages.
 - [x] (2026-10-11 20:34Z) Preserved the October replay as a CLI with 22 focused tests; 130 related regressions and lint passed.
 - [x] (2026-10-11 20:35Z) Ran the CLI against the archived originals; all 28 races and 294 feature rows match the exploratory result.
-- [x] (2026-10-11 20:38Z) Read the completed Pro strategy response (11m 56s displayed), recorded its scope and adopted future 24-column input capture as the next priority.
+- [x] (2026-10-11 20:36Z) Read the completed Pro strategy response (11m 56s displayed), recorded its scope and adopted future 24-column input capture as the next priority.
+- [x] (2026-10-11 20:38Z) Fixed initial CI job placement: the reused M0 adapter needs the existing API/model dependency environment, not the minimal scripts environment.
 - [ ] Publish the bounded findings through normal reviewed Git flow.
 
 ## Context and Orientation
@@ -48,7 +49,7 @@ is diagnostic only for this explicitly API-only investigation.
 
 Add focused tests in `packages/scripts/autoresearch/tests/test_api_training_opportunity.py`
 for source timing, complete roster joins, void/unknown outcomes and unchanged
-feature projection. Add the test command to Script Checks. Record source pins,
+feature projection. Add the test command to Python Checks beside the M0 suites. Record source pins,
 the bounded June findings and completed Pro advice in a research note.
 
 ## Concrete Steps
@@ -100,6 +101,9 @@ Six old exclusions concern lower-rank completeness, not ambiguity of the first
 three horses under the newer official cross-source outcome policy. One further
 exclusion concerns PDF name joining; its API-only input still replays exactly.
 The old June HTML joins identify schedules, not complete horse-level features.
+The first remote Script Checks failed during test collection because NumPy is
+not installed in that job. Move this test to the existing API Python job with
+model dependencies; no dependency or lockfile expansion is needed.
 
 ## Decision Log
 
@@ -123,4 +127,5 @@ checks/merge remain. The increase is a data opportunity, not seven independent v
 races or a demonstrated accuracy gain.
 
 Revision: updated after actual replay, negative tests and completed advice.
+Corrected CI job placement after observing its actual missing-NumPy failure.
 Remaining work is remote publication, not implementation or local validation.

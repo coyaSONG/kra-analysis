@@ -80,6 +80,9 @@ Tests reject late publication, capture after publication, incomplete or mismatch
 rosters, invalid top-three sets and unproven source chains while preserving
 noncandidate rows. The initial test invocation used a nonexistent inference
 test filename; no tests ran in that attempt. The corrected suite above passed.
+The first remote run exposed a CI placement error: Scripts Checks lacks NumPy,
+which the reused M0 adapter imports. The new suite was moved beside the existing
+M0 suites in Python Checks, using its already-installed model dependencies.
 
 ## Bounded June audit
 
