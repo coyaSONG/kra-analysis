@@ -21,17 +21,21 @@ evidence without inventing an event identity or changing model inputs.
 - [x] (2026-10-11) Inspected original gap rows and official result-list UI;
   discovered all 16 unbound groups match an earlier Busan full roster.
 - [x] (2026-10-11) Sent evidence and methodological questions to the authorized
-  ChatGPT Pro conversation; response is still generating, not yet consulted.
+  ChatGPT Pro conversation.
 - [x] (2026-10-11) Extract the existing raw-page replay checks without weakening identity
   admission, and implement a frozen-seed collision audit.
 - [x] (2026-10-11) Test tampering, identity ambiguity, field differences and
   immutability; 451 focused regressions passed. First full actual audit retained
   368 units and found 100 identity-bound collision groups as well as 16 unbound.
 - [x] (2026-10-11) Freeze the final audit bytes and publish hashes/counts;
-  deterministic replay confirmed and final 451 tests passed.
-- [ ] Read completed Pro response without interruption and incorporate only
-  advice consistent with the original Goal and verified evidence.
-- [ ] Commit, push, pass required checks, and merge normally.
+  deterministic replay confirmed and final 452 tests passed.
+- [x] (2026-10-11) Read completed Pro response after 17m 27s without interruption;
+  record its partial-observation/cutoff guidance and limits against the new findings.
+- [x] (2026-10-11) Commit and push PR79; first-head required Python, Scripts,
+  PDF and Docker checks passed. Gitleaks passed; the same 17 dependency audit
+  rows as PR78 remain, not introduced or repaired here.
+- [ ] Push final source-review flag correction and consultation notes, check
+  the exact final head, and merge normally.
 
 ## Surprises & Discoveries
 
@@ -68,10 +72,16 @@ not a verified physical-venue lookup.
 
 ## Outcomes & Retrospective
 
-Implementation and final evidence are pending. This increment does not fit a
-model, upgrade historical availability, provision paid servers, or establish
-70% accuracy. A collision report must change the next source-quality decision,
-not serve as a replacement for actual future prediction work.
+Implemented and ran the raw-evidence audit over all 368 source units. It found
+16 unbound full-roster matches and a broader 100-group/65-pair identity-bound
+collision set. Frozen audit v2 SHA256 is
+`a98461666324507d95ded80f2ea452d6791ca6e68318b691bb26da1c7d39f3e8`;
+replay reproduces it and the old seed/plan remain unchanged. All 452 focused
+tests passed. Pro recommended a separately named partial-observation block and
+explicit frozen-receipt cutoff path, but did not see the newly discovered
+100-group issue. The next view must expose those concerns, not silently accept
+or delete collision rows. No model fit, historical-availability upgrade, paid
+server, or 70% evidence was produced. Final remote publication/merge is pending.
 
 ## Context and Orientation
 
@@ -162,3 +172,9 @@ Revision: initial plan after actual cross-date full-roster matches, before edits
 Revision: implemented the evidence reader and audit, corrected relative-root
 resolution after the real API26-bound capture exposed a CLI-only path issue,
 and recorded the broader 100-group finding after 451 passing regression tests.
+
+Revision: completed the Pro consultation, added a failed/unattempted-source
+review regression, froze v2 with identical actual findings, and updated final
+local verification to 452 tests. PR79's initial checks passed except the
+unchanged dependency-security baseline; final-head checks and ordinary merge
+remain required.

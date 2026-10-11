@@ -216,3 +216,23 @@ def test_relative_root_keeps_independent_entry_binding_valid(tmp_path, monkeypat
     assert report["observed_race_count"] == 4
     assert report["unbound_row_count"] == 0
     assert all(r["entry"] for r in report["source_pins"])
+
+
+def test_failed_and_unattempted_units_are_retained_and_require_review(tmp_path):
+    root = tmp_path / "source"
+    root.mkdir()
+    seed.save(root / "plan.json", seed.make_plan("20261011", "20261011"))
+    asyncio.run(execute(root, lambda r: httpx.Response(503)))
+    frozen = root / "frozen.json"
+    sha = seed.save(frozen, seed.replay(root))
+    report = audit.audit_history(root, frozen, sha)
+    assert [r["status"] for r in report["inventory"]] == [
+        "failed",
+        "failed",
+        "failed",
+        "not_attempted",
+    ]
+    assert report["source_review_required"]
+    assert report["observed_collision_group_count"] == 0
+    assert report["unbound_group_count"] == 0
+    assert not report["complete_actual_start_history_verified"]

@@ -177,7 +177,11 @@ def audit_history(root: Path, seed_path: Path, seed_sha256: str) -> dict:
         ),
         "unbound_groups": unresolved,
         "observed_collision_groups": observed_collisions,
-        "source_review_required": bool(unresolved or observed_collisions),
+        "source_review_required": bool(observed_collisions)
+        or any(
+            unit["status"] not in ("api_reported_rows", "empty_unconfirmed")
+            for unit in seed["inventory"]
+        ),
         "automatic_identity_resolution_allowed": False,
         "complete_actual_start_history_verified": False,
         "historical_pre_race_availability_verified": False,

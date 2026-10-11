@@ -22,7 +22,8 @@ Local root in the isolated research checkout:
 | --- | --- |
 | Original seed-final.json, unchanged | `0dbe7abe5bdfb0a0b422bb90bddbdf1a3face89e5016254807ba37be95c25c66` |
 | Original plan.json, unchanged | `86b32a93348842575d9620cf124cad31df9c4eb2fb1287a82781480a67279960` |
-| identity-audit-final.json | `303f4d5821cb5550cf297330834996867e4c5a4898f3f9d7d4e060d2781a72b8` |
+| identity-audit-v2.json, final implementation | `a98461666324507d95ded80f2ea452d6791ca6e68318b691bb26da1c7d39f3e8` |
+| identity-audit-final.json, earlier version retained | `303f4d5821cb5550cf297330834996867e4c5a4898f3f9d7d4e060d2781a72b8` |
 
 The report retains the entire inventory, original capture/page hashes, entry
 binding references, collection timestamps and current implementation fingerprint.
@@ -110,9 +111,11 @@ Focused tests cover missing venue, API26 binding, raw/page/manifest tampering,
 pagination, timestamps, frozen-seed drift, relative-root CLI paths, exact vs
 partial rosters, canonical IDs, duplicate membership, multiple candidates,
 field presence/null/type differences, exclusive output and input immutability.
-The final combined focused suite passed **451 tests**. Ruff lint/format and
+The final combined focused suite passed **452 tests**. Ruff lint/format and
 whitespace checks passed. A second real replay reproduced the frozen audit
 exactly, with the original plan/seed hashes and 398 request reservations unchanged.
+The v2 audit changes only implementation provenance for this real dataset; it
+also requires source review when failed/unattempted units exist without a match.
 Remote CI results will be recorded with the PR; local tests are not a substitute
 for required remote checks.
 
@@ -138,5 +141,34 @@ replace the existing complete-response H0 contract. Historical targets cannot
 use this October 11 capture as pre-race evidence. No new fit is authorized by
 this audit, and existing archived pre-race M0/M1 results are unchanged.
 
-Pro methodological advice was requested in the existing authorized conversation
-and is pending completion as of this draft. No partial output was used.
+## Completed Pro Consultation
+
+The authorized [research conversation](https://chatgpt.com/c/6aca2dc4-d2e8-83e8-acab-e85f281c27b7)
+returned a completed Pro answer showing **17m 27s** processing. Completion was
+confirmed by the completion notice, hidden/disabled stop control and final
+response actions before reading the answer. Generation was not stopped or given
+a short response deadline. The adviser inspected the public PR78 code/report and
+official pages, not the local raw files or a rerun of our tests.
+
+Accepted methodological guidance: preserve H0 exactly; use a separately named
+partial-observation contract only for explicitly defined verified source rows;
+keep missing/identity-unresolved/empty-response coverage separate; never turn
+observed counts into actual start counts. Quarantined ID absence, if fully
+validated, proves absence from those returned bytes only, not non-participation.
+The Pro answer explicitly withdrew the earlier unverified historical-PIT fit
+recommendation under the Goal's existing training restriction.
+
+The recommended next implementation is an explicit-receipt frozen source reader
+with timezone-aware cutoff checks, including API26 identity-binding availability,
+and separately named partial feature materialization. The current latest-receipt
+reader and event-date filter alone must not be presented as a prospective input
+proof. Historical diagnostic mode remains separate, all target roster rows remain,
+old models stay unchanged, and fit count must be zero for that increment.
+
+Important limitation: this consultation was sent before the new 100-group
+collision finding and did not assess those local bytes. The advice is **not**
+source-quality approval for all 6,816 rows. The next frozen view must retain and
+surface collision concerns, not call those groups resolved or silently delete
+one side. Dated official membership and any provider clarification remain the
+next evidence sources for event semantics. No fresh model or production input
+approval follows merely from implementing partial counts.
