@@ -123,7 +123,10 @@ async def run_day(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("frozen_b0_implementation_changed")
     universe_hash = digest(canonical(universe))
     failures = []
-    for race in universe["races"]:
+    for race in sorted(
+        universe["races"],
+        key=lambda r: (timestamp(r["feature_cutoff_at"]), r["race_id"]),
+    ):
         race_id = race["race_id"]
         request_path = directory / f"request_{race_id}.json"
         try:

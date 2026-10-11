@@ -10,10 +10,10 @@ Create an executable path from official dated schedules and API26 originals to o
 
 - [x] Revalidated PR71 merged at a3f2489c27a8c3d572b8b51b46515bcf67bea64f; created isolated `codex/forward-b0-registration` from current main.
 - [x] Read repository plan rules, existing schedule/entry replay, DB session behavior and actual PostgreSQL migration test patterns. Local PostgreSQL binaries and Docker daemon are unavailable; CI already provides PostgreSQL16.
-- [ ] Implement isolated append-only SQL ledger and service, including a separate committed-row witness.
-- [ ] Connect official capture/replay and all-race B0 execution in an API-package CLI; preserve original payloads on retry.
-- [ ] Test real PostgreSQL concurrent requests, deadline boundaries, permissions, retry and complete-population reports in CI.
-- [ ] Run an actual next-card check and report configuration/card limitations without claiming future performance.
+- [x] Implemented isolated append-only SQL ledger and service, including a separate committed-row witness for both study and predictions.
+- [x] Connected official capture/replay and all-race B0 execution in an API-package CLI; original payloads are persisted and checked on retry, existing receipts take priority over recollection.
+- [x] First CI head 27696ef passed all 16 real PostgreSQL tests without skips: concurrent requests, deadline boundaries, permissions, retry and synthetic full-path run/resume. Full API integration suite 50 passed; unit suite 339 passed, 2 existing skips. Further permission/hash/ordering and lost-universe-observation refinements require a second CI run.
+- [x] Actual next-card check at 11:39:39Z returned awaiting_card; owner/runtime environment variables absent, no operational installation or future submissions claimed.
 - [ ] Commit, push and normally merge validated work.
 
 ## Context and Orientation
@@ -54,10 +54,12 @@ Decision (2026-10-11): Follow the completed Pro consultation from PR71: B0 consu
 
 ## Outcomes & Retrospective
 
-Pending. Actual 70% success is unproven. Future card availability and operational DB configuration are separate from code correctness and must remain separately reported.
+The executable source-to-database path passed actual PostgreSQL16 CI, including separate connections, savepoints, lock waiting through cutoff, late commit observation and restricted runtime access. Synthetic HTTP fixtures traversed the same official parsers and CLI execution path for four physical venues; the incomplete-roster case kept all four memberships. This is software validation only. Actual 70% success is unproven. Future card availability and operational DB configuration remain unmet and are separate from code correctness.
 
 ## Interfaces and Dependencies
 
 Use existing asyncpg, httpx, pytest and standard-library JSON/hashlib/datetime. PostgreSQL16 supplies `clock_timestamp`, `pg_current_xact_id` and SHA-256 functions. No new dependency or version change is planned. Keep I/O in the API-package script and deterministic selection/registration contracts in its service module. The first runtime arm is fixed as `b0_numeric_gate_v1`.
 
 Revision note (2026-10-11): Created before implementation after inspecting authoritative current code and the completed Pro recommendation. The plan targets an executable registration path, not a further diagnostic registry.
+
+Revision note (2026-10-11 11:44Z): First actual CI validation completed at run 38136476926, with 16/16 new PostgreSQL cases passing. Type checking passed all 179 API source files. Gitleaks passed and the dependency audit's 17 records exactly matched PR71. Added administrative-role rejection, bounded DB command waits, earlier-cutoff scheduling, broader dependency/source pins and a real disconnect-before-universe-witness regression before final CI. This does not deploy the ledger or start genuine future submissions.

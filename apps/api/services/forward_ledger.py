@@ -38,6 +38,12 @@ def implementation_digest() -> str:
         "apps/api/scripts/run_forward_b0.py",
         "packages/scripts/shared/kra_entry_sheet.py",
         "packages/scripts/autoresearch/kra_race_card_pdf_replay.py",
+        "packages/scripts/shared/kra_race_identity.py",
+        "packages/scripts/shared/operational_cutoff.py",
+        "packages/scripts/shared/kra_schedule.py",
+        "packages/scripts/autoresearch/kra_schedule_snapshot.py",
+        "packages/scripts/autoresearch/kra_entry_sheet_snapshot.py",
+        "uv.lock",
     ]
     return digest(
         canonical(
@@ -121,8 +127,16 @@ class ForwardLedger:
         self.schema = identifier(schema)
 
     async def connect(self) -> asyncpg.Connection:
-        connection = await asyncpg.connect(self.dsn, timeout=15, statement_cache_size=0)
+        connection = await asyncpg.connect(
+            self.dsn, timeout=15, command_timeout=30, statement_cache_size=0
+        )
         try:
+            powerful = await connection.fetchval(
+                "SELECT rolsuper OR rolcreaterole OR rolcreatedb OR rolreplication OR rolbypassrls "
+                "FROM pg_roles WHERE rolname=current_user"
+            )
+            if powerful:
+                raise ValueError("forward_runtime_has_administrative_privilege")
             # Reject owner/superuser or inherited writer access in the runtime path.
             for table in (
                 "studies",

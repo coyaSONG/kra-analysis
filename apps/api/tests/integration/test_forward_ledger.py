@@ -236,7 +236,7 @@ async def test_runtime_cannot_write_tables_or_freeze_aliases(database):
             )
         with pytest.raises(asyncpg.UniqueViolationError):
             await ledger.freeze(owner, "alias", universe, synthetic=True)
-        with pytest.raises(ValueError, match="direct_write"):
+        with pytest.raises(ValueError, match="privilege"):
             await ForwardLedger(owner_dsn, schema=ledger.schema).connect()
         await ledger.submit("study", "20300101_1_1", payload)
         with pytest.raises(asyncpg.RaiseError, match="append_only"):
@@ -372,9 +372,32 @@ async def test_official_capture_to_database_runner_and_restart(
             assert requests == [1, 2, 3, 4]
 
 
-async def test_lost_universe_observation_can_be_recovered(database):
+async def test_lost_universe_observation_can_be_recovered(database, monkeypatch):
     owner, ledger, _ = database
-    universe, _, _ = await freeze(database)
-    assert await ledger.observe_study("study") == await ledger.freeze(
-        owner, "study", universe, synthetic=True
+    now = await owner.fetchval("SELECT clock_timestamp()")
+    universe = {
+        "race_date": "20300101",
+        "races": [
+            {
+                "race_id": "20300101_1_1",
+                "feature_cutoff_at": (now + timedelta(seconds=60)).isoformat(),
+            }
+        ],
+    }
+    real_connect = ledger.connect
+
+    async def disconnected():
+        raise ConnectionError("synthetic disconnect after owner commit")
+
+    monkeypatch.setattr(ledger, "connect", disconnected)
+    with pytest.raises(ConnectionError):
+        await ledger.freeze(owner, "study", universe, synthetic=True)
+    assert await owner.fetchval(f"SELECT count(*) FROM {ledger.schema}.studies") == 1
+    assert (
+        await owner.fetchval(f"SELECT count(*) FROM {ledger.schema}.study_observations")
+        == 0
     )
+    monkeypatch.setattr(ledger, "connect", real_connect)
+    observation = await ledger.observe_study("study")
+    assert observation["timely"]
+    assert observation == await ledger.freeze(owner, "study", universe, synthetic=True)
