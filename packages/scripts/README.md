@@ -73,6 +73,12 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze 
 
 동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
 
+## 말별 휴양 대용값 진단
+
+`autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
+
+출력 `days_since_prior_observed_entry`는 **관측된 이전 출전표와의 날짜 간격**이며 실제 출발 이력의 완전성이나 경주 전 가용성을 보증하지 않습니다. 기존 모델의 `rest_days`를 변경하거나 학습 승인에 쓰지 않습니다. 재현 명령과 실제 116경주 결과는 [휴양 대용값 연구 기록](../../docs/research/2026-10-11-horse-entry-interval-audit.md)에 있습니다.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)

@@ -21,7 +21,7 @@ The first observable deliverable is an executable collector and replay audit for
 - [x] (2026-10-11 10:21Z) Source milestone PR #68 passed required Python and all functional checks, was pushed and normally merged as 472f005dfc342d3691eea0c3ae45b0bce1f7e9eb. The separate security failure exactly matches the existing 17 dependency records in three packages; it was not marked passing or bypassed.
 - [ ] Implement the remaining fixed B0, server registration/commit observation, and whole-population execution path; the local freeze alone does not satisfy this milestone.
 - [x] (2026-10-11 10:31Z) Recomputed the bounded October 116-race diagnostic from pinned existing predictions/labels: 51 both hit, 12 baseline-only, seven ranker-only, 46 both miss. Discovered a constant-within-race `rest` field and documented one source-backed rest-interval hypothesis. No new inference or training.
-- [ ] Publish the completed consultation and diagnostic evidence with tested code through the same normal PR process.
+- [x] (2026-10-11 10:38Z) Published the completed consultation and diagnostic evidence in PR #69; required Python and functional checks passed, and normal merge is 2746823f51d8ffc459bd524d87ee144975d1f15b. The separate dependency security failure matched the existing baseline.
 
 ## Surprises & Discoveries
 
