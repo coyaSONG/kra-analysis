@@ -17,8 +17,11 @@ The first observable deliverable is an executable collector and replay audit for
 - [x] (2026-10-11 10:07Z) Implemented structured HTML parsing, four fixed-origin raw captures, pinned replay, and full-date reconciliation; retained the actual official originals.
 - [x] (2026-10-11 10:18Z) Source, identity, entry-sheet and training-admission regressions pass: 179 tests (15 existing joblib/NumPy deprecation warnings). Added a whole-request timeout test as well as byte/window bounds.
 - [x] (2026-10-11 10:08Z) Implemented local candidate freezing; actual October 11 is rejected as late and October 16 as unpublished. Neither produced a candidate.
-- [ ] Implement the smallest usable future freeze and baseline/registration path after integrating the completed Pro answer; preserve unresolved operational requirements explicitly.
-- [ ] Run relevant tests and required CI, commit, push, attach the PR, and merge normally.
+- [x] (2026-10-11 10:22Z) Read the completed Pro response after the stop control disappeared and the UI reported completion (20m 40s processing). No generation was interrupted.
+- [x] (2026-10-11 10:21Z) Source milestone PR #68 passed required Python and all functional checks, was pushed and normally merged as 472f005dfc342d3691eea0c3ae45b0bce1f7e9eb. The separate security failure exactly matches the existing 17 dependency records in three packages; it was not marked passing or bypassed.
+- [ ] Implement the remaining fixed B0, server registration/commit observation, and whole-population execution path; the local freeze alone does not satisfy this milestone.
+- [x] (2026-10-11 10:31Z) Recomputed the bounded October 116-race diagnostic from pinned existing predictions/labels: 51 both hit, 12 baseline-only, seven ranker-only, 46 both miss. Discovered a constant-within-race `rest` field and documented one source-backed rest-interval hypothesis. No new inference or training.
+- [ ] Publish the completed consultation and diagnostic evidence with tested code through the same normal PR process.
 
 ## Surprises & Discoveries
 
@@ -30,6 +33,12 @@ The current dated cards are October 9-11. No future full card has been verified.
 
 ## Decision Log
 
+- Decision: Use PostgreSQL for the next primary registration boundary, with an existing frozen membership row locked before the server deadline check, explicit commit, and a different transaction observing the committed payload before reading server time. Bind writer transaction identity and disallow same-transaction observations.
+  Rationale: A timestamp generated before a uniqueness lock wait or a delayed commit is not evidence of pre-deadline visibility. A late observation means timing unproven, not necessarily actual late submission. Runtime mutation restrictions are not protection against the DB owner.
+  Date/Author: 2026-10-11 / Codex, integrating completed Pro advice; implementation and deployment remain pending.
+- Decision: In parallel with the future registration milestone, audit only stored October fold_a predictions and labels for the same 116 races. Pin every input and recompute exact hits instead of trusting stored booleans or aggregate summaries.
+  Rationale: This can identify one next information hypothesis without waiting for unpublished cards or repeating model searches. It is development-only diagnosis, not a fresh holdout or production eligibility approval.
+  Date/Author: 2026-10-11 / Codex, before diagnostic implementation.
 - Decision: Reconcile the national dated list with the union of all regional dated lists before a future freeze.
   Rationale: This gives independent presentations of all four physical venues, detects missing rows, and avoids treating API empty pages as proof of no racing.
   Date/Author: 2026-10-11 / Codex.
@@ -42,7 +51,7 @@ The current dated cards are October 9-11. No future full card has been verified.
 
 ## Outcomes & Retrospective
 
-Work is in progress. No future universe, real baseline submission, accuracy measurement, model training, or 70% achievement is claimed. Source completeness, local content freezing, independent registration time, and prediction performance are separate requirements. The Goal remains active.
+The source milestone is implemented and merged in PR #68. No actual future universe, baseline submission, new future accuracy measurement, model training, or 70% achievement is claimed. Source completeness, local content freezing, independent registration time, and prediction performance are separate requirements. The Goal remains active and the server registration milestone is unfinished.
 
 ## Context and Orientation
 
@@ -76,7 +85,7 @@ Each capture has a unique new directory. Completed originals are retained even w
 
 ## Artifacts and Notes
 
-Authoritative baseline for this implementation is commit c632e9c8da7889c47bdacf7ac2ea6e5f2daf70a4. The public source observations above were made at October 11 evening KST. Capture `.cache/autoresearch/forward-schedule/20261011T100723.518882Z_a349dc8395f0/capture.json` has SHA-256 `08fe1bb58be2a394476158e8a52697a2ae2e77c9e1bf6084b1e11972fae3a7c7`. Full source hashes and findings are in `docs/research/2026-10-11-forward-race-universe.md`. The additional Pro response is pending; none of its recommendations are claimed yet.
+Authoritative baseline for the source implementation is commit c632e9c8da7889c47bdacf7ac2ea6e5f2daf70a4. The public source observations above were made at October 11 evening KST. Capture `.cache/autoresearch/forward-schedule/20261011T100723.518882Z_a349dc8395f0/capture.json` has SHA-256 `08fe1bb58be2a394476158e8a52697a2ae2e77c9e1bf6084b1e11972fae3a7c7`. Full source hashes and findings are in `docs/research/2026-10-11-forward-race-universe.md`. Completed Pro advice is summarized there without publishing the private conversation URL. The follow-up branch `codex/forward-pro-advice` starts from merged source commit 472f005dfc342d3691eea0c3ae45b0bce1f7e9eb.
 
 ## Interfaces and Dependencies
 
@@ -85,3 +94,5 @@ Use immutable parsed race values, standard-library HTMLParser/datetime/hashlib/J
 Revision note (2026-10-11 10:00Z): Created before implementation from current official pages and repository inspection. The initial uncertainty about a dated national source was resolved by locating ThisWeekDetailInfoList.do; remaining timing and registration concerns were submitted to Pro without stopping its response.
 
 Revision note (2026-10-11 10:18Z): Source capture/replay/local freeze is implemented and tested against both synthetic cases and retained official originals. This first increment deliberately does not claim a baseline execution, server receipt, production deployment, or performance result. The live registration milestone remains unfinished.
+
+Revision note (2026-10-11 10:31Z): Integrated completed Pro advice after normal source milestone merge. Added a bounded stored-prediction diagnostic and 14 regression cases, with 193 combined tests passing. The real B0/server execution milestone remains next; the diagnostic is not a replacement for it or for the 70% objective.
