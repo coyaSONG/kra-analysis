@@ -12,13 +12,14 @@ import httpx
 
 from autoresearch import local_m0_forward as forward
 from autoresearch import local_m0_inference as inference
-from autoresearch.observed_history_seed import digest, save
+from autoresearch.observed_history_seed import digest, pinned_path, save
 from autoresearch.prerace_hash_witness import collect_publication, timestamp
-from autoresearch.versioned_result_observations import replay_plan
+from autoresearch.versioned_result_observations import replay_plan, value_hash
 
 CONTRACT_SHA = "ffd068ed7c507e2cf0bef63ed2dcbebf01fdcdd0e38d89c849d03d60c448f59c"
 OUTCOME_POLICY_SHA = "389f4cffa53f5e7172383aa9e452fd53cf8afeb6091a4728379cb8b2e8a3bd28"
 OUTCOME_ADAPTER_SHA = "93b4a40c6788f3441dacc342bfc23d902104af6c80c096d811f98ad8a84a8b02"
+OUTCOME_SOURCES_SHA = "2d9f1a7aeb847048c371408aad35ac52b170526a0871acaec21fcba538d1bb3c"
 FORMAT = "kra-local-m0-evaluation-v1"
 
 
@@ -35,6 +36,34 @@ def observation(path, expected, packet_sha, created, cutoff, evaluated):
     if value["packet_sha256"] != packet_sha or not created <= observed <= evaluated:
         raise ValueError("evaluation_readback_conflict")
     return {**value, "locally_timely": observed < cutoff}
+
+
+def result_capture_evidence(plan, outcome_report):
+    """Combined availability may be later than the API214 response itself."""
+    needed = {
+        record["source_capture_sha256"]
+        for row in outcome_report["ledger"]
+        for record in row["api_records"]
+    }
+    selected = pinned(Path(plan["seed_path"]), plan["seed_sha256"])
+    root = Path(plan["seed_root"])
+    captures = {}
+    for unit in selected["inventory"]:
+        ref = unit.get("result")
+        if ref is None or ref["sha256"] not in needed:
+            continue
+        manifest = pinned(pinned_path(root, ref), ref["sha256"])
+        if ref["sha256"] in captures:
+            raise ValueError("evaluation_duplicate_result_capture")
+        captures[ref["sha256"]] = {
+            "manifest": ref,
+            "race_date": manifest["race_date"],
+            "meet": manifest["meet"],
+            "capture_completed_at": manifest["capture_completed_at"],
+        }
+    if set(captures) != needed:
+        raise ValueError("evaluation_result_capture_not_in_selected_inventory")
+    return captures
 
 
 def publication_bound(publication, commitment_sha, evaluated):
@@ -67,6 +96,8 @@ def read_prediction(
         packet = forward.recover_packet(
             packet_path, race, model, receipt, root, study_sha
         )
+        if digest(forward.encoded(packet)) != slot["packet_sha256"]:
+            raise ValueError("evaluation_packet_changed_during_replay")
         result["local_combination"] = packet["prediction"]["horse_ids"]
         result["packet_sha256"] = slot["packet_sha256"]
         if "observation_sha256" not in slot:
@@ -203,6 +234,7 @@ def evaluate(
     if (outcome_plan is None) != (outcome_sha is None):
         raise ValueError("evaluation_outcome_plan_and_pin_required_together")
     outcomes = {}
+    api_captures = {}
     outcome_report = None
     if outcome_plan is not None:
         plan = pinned(outcome_plan, outcome_sha)
@@ -214,6 +246,12 @@ def evaluate(
             or outcome_report["implementation_sha256"] != OUTCOME_ADAPTER_SHA
         ):
             raise ValueError("evaluation_outcome_policy_changed")
+        if (
+            value_hash(outcome_report["observation_source_sha256"])
+            != OUTCOME_SOURCES_SHA
+        ):
+            raise ValueError("evaluation_outcome_implementation_changed")
+        api_captures = result_capture_evidence(plan, outcome_report)
         outcomes = {r["race_id"]: r for r in outcome_report["ledger"]}
         if len(outcomes) != len(outcome_report["ledger"]):
             raise ValueError("evaluation_duplicate_outcome_race")
@@ -303,10 +341,23 @@ def evaluate(
     ledger = []
     for race, prediction in races:
         outcome = outcomes.get(race["race_id"])
+        capture_evidence = []
         if outcome and outcome["official_source"]:
+            capture_evidence = [
+                api_captures[key]
+                for key in sorted(
+                    {r["source_capture_sha256"] for r in outcome["api_records"]}
+                )
+            ]
+            if any(
+                c["race_date"] != race["race_date"] or c["meet"] != race["meet"]
+                for c in capture_evidence
+            ):
+                raise ValueError("evaluation_result_capture_identity_conflict")
             times = [
                 timestamp(r["source_available_at"]) for r in outcome["api_records"]
             ]
+            times.extend(timestamp(c["capture_completed_at"]) for c in capture_evidence)
             times.append(
                 timestamp(outcome["official_source"]["capture"]["completed_at"])
             )
@@ -326,6 +377,7 @@ def evaluate(
                 "race_id": race["race_id"],
                 "prediction": prediction,
                 "outcome": outcome,
+                "api214_capture_evidence": capture_evidence,
                 "evaluation_status": status,
                 "local_combination_match_diagnostic": diagnostic,
                 "target_defined": True

@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from autoresearch import kra_result_snapshot
+from autoresearch import kra_entry_sheet_snapshot, kra_result_snapshot
 from autoresearch import local_m0_evaluation as e
 from autoresearch import observed_history_seed as seed
 from autoresearch import official_history_support as official
@@ -20,7 +20,12 @@ from autoresearch import prerace_hash_witness as witness
 from autoresearch.observed_history_seed import save
 from autoresearch.tests.test_kra_result_snapshot import envelope, row
 from autoresearch.tests.test_kra_schedule import DATE, NOW, VENUES
-from autoresearch.tests.test_local_m0_forward import environment as environment
+from autoresearch.tests.test_local_m0_forward import (
+    environment as environment,
+)
+from autoresearch.tests.test_local_m0_forward import (
+    raw_entry,
+)
 from autoresearch.tests.test_observed_history_seed import execute
 from autoresearch.tests.test_official_history_support import html
 
@@ -40,12 +45,29 @@ def files(root):
 
 
 @pytest.fixture
-def forward_case(environment, tmp_path, monkeypatch):
+def forward_case(environment, tmp_path, monkeypatch, request):
     data = environment
     run = data["run"]()
     monkeypatch.setattr(e, "CONTRACT_SHA", run["contract_sha256"])
     for module in (seed, official, kra_result_snapshot, witness):
         monkeypatch.setattr(module, "datetime", ResultClock)
+    options = getattr(request, "param", {})
+    if options:
+        study = e.forward.read(data["root"] / DATE / "study.json")
+        start = witness.timestamp(study["universe"]["races"][0]["scheduled_start_at"])
+
+        class ApiClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return start + timedelta(minutes=options["api_offset"])
+
+        class EntryClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return start + timedelta(minutes=options["entry_offset"])
+
+        monkeypatch.setattr(kra_result_snapshot, "datetime", ApiClock)
+        monkeypatch.setattr(kra_entry_sheet_snapshot, "datetime", EntryClock)
     source = tmp_path / "results"
     source.mkdir()
     save(source / "plan.json", seed.make_plan(DATE, DATE))
@@ -61,6 +83,12 @@ def forward_case(environment, tmp_path, monkeypatch):
             }
             for n in range(1, 11)
         ]
+        if options:
+            if str(request.url.copy_with(query=None)) == seed.ENTRY_URL:
+                rows = [raw_entry(n, meet) for n in range(1, 11)]
+            else:
+                for record in rows:
+                    record.pop("meet")
         return httpx.Response(200, json=envelope(rows))
 
     asyncio.run(execute(source, result_response))
@@ -240,6 +268,31 @@ def test_lost_readback_is_not_created_by_evaluation(forward_case, tmp_path):
     result = evaluate(case, publication=proof)
     assert not path.exists()
     assert result["metrics"]["counts"]["pending_evidence"] == 1
+
+
+def test_recovered_packet_must_still_match_selected_pin(
+    forward_case, tmp_path, monkeypatch
+):
+    original = e.forward.recover_packet
+
+    def changed(*args):
+        packet = original(*args)
+        packet["prediction"]["horse_ids"] = [
+            "different-1",
+            "different-2",
+            "different-3",
+        ]
+        return packet
+
+    monkeypatch.setattr(e.forward, "recover_packet", changed)
+    result = evaluate(forward_case, publication=publication(forward_case, tmp_path))
+    assert result["metrics"]["denominator"] == 4
+    assert result["metrics"]["counts"] == {"pending_evidence": 4}
+    assert result["metrics"]["exact_hit_rate"] is None
+    assert all(
+        "evaluation_packet_changed_during_replay" in str(row["prediction"])
+        for row in result["ledger"]
+    )
 
 
 def test_partial_block_never_becomes_smaller_study(environment, monkeypatch):
@@ -447,3 +500,48 @@ def test_original_model_completion_after_target_is_rejected(forward_case):
     case["receipt"]["completed_at"] = END.isoformat()
     with pytest.raises(ValueError, match="model_fitted_after_target"):
         evaluate(case)
+
+
+@pytest.mark.parametrize(
+    "dependency",
+    [
+        "autoresearch/frozen_history_view.py",
+        "autoresearch/official_history_support.py",
+        "shared/official_result_support.py",
+    ],
+)
+def test_outcome_dependency_change_cannot_keep_old_approval(
+    forward_case, monkeypatch, dependency
+):
+    original = e.replay_plan
+
+    def changed(*args):
+        report = original(*args)
+        report["observation_source_sha256"][dependency] = "0" * 64
+        return report
+
+    monkeypatch.setattr(e, "replay_plan", changed)
+    with pytest.raises(ValueError, match="outcome_implementation_changed"):
+        evaluate(forward_case)
+
+
+@pytest.mark.parametrize(
+    "forward_case", [{"api_offset": -1, "entry_offset": 1}], indirect=True
+)
+def test_later_binding_cannot_hide_prerace_result_capture(forward_case, tmp_path):
+    report = e.replay_plan(forward_case["outcome_plan"], forward_case["outcome_sha"])
+    assert all(
+        r["venue_identity_basis"] == "api26_full_day_roster"
+        for race in report["ledger"]
+        for r in race["api_records"]
+    )
+    with pytest.raises(ValueError, match="outcome_capture_time_conflict"):
+        evaluate(forward_case, publication=publication(forward_case, tmp_path))
+
+
+@pytest.mark.parametrize(
+    "forward_case", [{"api_offset": 1, "entry_offset": -1}], indirect=True
+)
+def test_prerace_binding_with_postrace_results_is_valid(forward_case, tmp_path):
+    result = evaluate(forward_case, publication=publication(forward_case, tmp_path))
+    assert result["metrics"]["counts"] == {"verified_hit": 4}

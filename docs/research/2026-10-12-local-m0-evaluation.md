@@ -32,13 +32,22 @@ series without hidden alternative roots or deleting submissions. This is not
 tamper-proof storage, a database registration receipt, or proof of publisher
 finality. A GitHub witness cannot authenticate the truth of arbitrary local clocks.
 
-The result adapter and its policy are pinned to the PR83 implementation. Changing
+The result adapter, its policy and all eleven dependency hashes are pinned to the
+PR83 implementation. The fixed dependency-map digest is
+`2d9f1a7aeb847048c371408aad35ac52b170526a0871acaec21fcba538d1bb3c`.
+Changing
 that policy requires explicit review rather than silently changing a result
 definition during this series. All selected result source bytes are replayed;
-API and HTML capture times must be after the scheduled start and no later than
+API214 capture completion, combined API26 binding availability and HTML capture
+times must be at or after the scheduled start and no later than
 the evaluation time. Earlier versions remain available when corrected outcomes
 produce new explicitly selected reports. Do not select a favorable older result
 version after inspecting model matches.
+
+The actual API214 completion comes from its hash-pinned capture manifest in the
+selected seed inventory. A later API26 binding cannot conceal an early API214
+response. API26 itself may precede the start; only the actual result observation
+and combined availability must satisfy the result timing gate.
 
 ## Full Population Metrics
 
@@ -91,6 +100,11 @@ incomplete forward evaluation, not a 0% or 100% result. The final local report i
 `.cache/autoresearch/local-m0-evaluation-final.json`, SHA256
 `0d8c06a9f8d606c257401976a67d216e9669c8964fd1453da3da23c644bc2be9`.
 
+After the Pro-review fixes, replay at **2026-10-11T20:02:43.580937Z** produced the
+same incomplete status in `.cache/autoresearch/local-m0-evaluation-final-v2.json`,
+SHA256 `98f238552d928571b1bd8ba91e900c12440c7dfe8769e5ab34a3ee893678838b`.
+This re-evaluates the existing commitment, not a new card collection.
+
 Two internal replays at the same explicitly fixed diagnostic evaluation time
 were identical, and all **36 canonical archive files** retained identical bytes.
 The current inference contract still equals the original saved contract with hash
@@ -119,14 +133,33 @@ real published commitment; no such future prediction witness is claimed here.
 Evaluation outputs and witness directories must be outside the canonical archive.
 Reports use atomic exclusive creation and cannot replace older reports.
 
-The **226-test** focused regression run passed, including **23 new evaluation
-tests**, with Ruff lint/format and diff checks passing. Source-backed synthetic
+The final **250-test** regression run passed across the evaluation, forward,
+versioned outcomes, seed, official history, publication witness, API214 and
+schedule suites, including **29 new evaluation tests**, with Ruff lint/format
+and diff checks passing. Source-backed synthetic
 fixtures exercise schedule capture, API26 predictions, API214 results, official
 HTML and GitHub publication validation through mock HTTP transports. Their
 successful 4-race scenario is a software test, not real model performance.
 Cases cover wrong publication bytes, cutoff equality, missing read-back,
 tampered predictions, partial three-date blocks, absent submissions, historical
 inputs, unknown/void outcomes, changed policies and forbidden archive writes.
+
+## Completed Pro Review
+
+The authorized ChatGPT Pro browser reviewed public PR84 head
+`ecb1ea1159e3f75af948a26ac2611770c43c7c29`. Its completed response took 9m 28s;
+generation was not interrupted. It did not read local archives or run our tests.
+It identified two P2 issues: unpinned outcome dependency hashes and combined
+availability hiding an early API214 capture. Three changed-dependency cases and
+the early-API214 case failed before the fixes; the inverse valid timing case
+already passed. All five pass after the fixes. The full dependency map now needs
+explicit approval on change, and actual API214 capture time is checked separately.
+An additional test verifies that recovered prediction content still matches the
+selected commitment pin. All 36 canonical archive files remain unchanged after
+repeat replay, and historical outcome dates remain rejected.
+
+Pro reported no other concrete merge blocker under the declared trust assumptions.
+That is neither a review of the subsequent fixes nor approval of model accuracy.
 
 ## Remaining Research Work
 
@@ -137,8 +170,7 @@ groups happened to return results. Collect and pin post-race source versions;
 define and record a consistent correction observation schedule. The read-only
 evaluator does not automate those collection or publication operations.
 
-This work implements the evaluation half of the completed Pro advice recorded in
-`2026-10-12-versioned-result-observations.md`; no new Pro consultation is claimed
-in this increment. No paid infrastructure, new fit, model promotion, or production
+This work implements the evaluation half of the earlier completed Pro advice and
+the additional review above. No paid infrastructure, new fit, model promotion, or production
 configuration change occurred. Real prediction success and the remaining gap to
 70% await an eligible future full-population evaluation.

@@ -24,6 +24,10 @@ clock evidence remains useful diagnostics, not an automatic verified hit.
   historical rejection and no writes to the canonical archive.
 - [x] Execute against the real canonical archive and historical rejection case;
   refresh genuine card observations without changing the original contract.
+- [x] Complete a new Pro review, reproduce its two findings and fix dependency
+  admission and actual API214 timing without changing inference dependencies.
+- [x] Pass 250 regressions, including 29 evaluator cases; repeat actual replay
+  with all 36 canonical files unchanged.
 - [ ] Push, inspect remote checks, and merge normally after required checks pass.
 
 ## Surprises & Discoveries
@@ -33,6 +37,13 @@ or prediction pins. This is an unknown universe, not a zero-race successful test
 The existing `observe_packet` helper writes observations if absent; evaluation
 must not call it. `recover_packet` is read-only and rechecks original source bytes,
 stored inference and model completion time, so it can safely be reused.
+
+Pro's completed 9m 28s review found that combined API26/API214 availability can
+hide an early result capture, and pinning just the adapter misses dependency
+changes. Regression cases reproduced four failures before the fix and passed
+afterward. Actual capture time and the full approved dependency map now bind
+outcome admission. Recovered prediction bytes are rechecked against the selected
+pin as well.
 
 ## Decision Log
 
@@ -56,7 +67,7 @@ raw combination matches are diagnostics, not the primary performance metric.
 ## Outcomes & Retrospective
 
 Implemented and verified the complete read-only evaluation path. The focused run
-passes 226 tests, including 23 new cases. Actual future cards remain unpublished
+passes 250 tests across eight suites, including 29 new evaluator cases. Actual future cards remain unpublished
 at the 19:38 UTC observation, so actual evaluation correctly has no denominator,
 rate or bounds. Historical dates are rejected. The 70% objective is unachieved.
 No paid services, new fits or production approval changes occurred. Remote
@@ -104,6 +115,11 @@ Expect exit 2, all three dates present and null metrics, not an empty successful
 study. Output files use atomic exclusive publication outside the canonical root.
 Actual report `.cache/autoresearch/local-m0-evaluation-final.json` has SHA256
 `0d8c06a9f8d606c257401976a67d216e9669c8964fd1453da3da23c644bc2be9`.
+The post-review report `.cache/autoresearch/local-m0-evaluation-final-v2.json`
+at 20:02:43 UTC has SHA256
+`98f238552d928571b1bd8ba91e900c12440c7dfe8769e5ab34a3ee893678838b`.
+It preserves the incomplete status, and replay leaves all 36 canonical files
+unchanged. It is not a new card observation.
 
 ## Validation and Acceptance
 
@@ -146,3 +162,11 @@ Revision note: implementation, source-backed tests, actual card refresh, histori
 rejection and unchanged 36-file archive replay are complete. Bounds now require
 every target to be defined, not merely absence of a reported void. Result policy
 and adapter hashes are fixed, and extra-result conflicts are reported explicitly.
+
+Revision note: completed Pro review of initial PR84 head exposed two admission
+gaps. Pin the eleven-file PR83 outcome map to
+`2d9f1a7aeb847048c371408aad35ac52b170526a0871acaec21fcba538d1bb3c`
+and resolve actual API214 capture completion from the selected seed inventory.
+Keep combined availability checks without requiring API26 itself to be post-race.
+The new source-backed regressions and real read-only replay pass; remote checks
+must run again for this revision before normal merge.
