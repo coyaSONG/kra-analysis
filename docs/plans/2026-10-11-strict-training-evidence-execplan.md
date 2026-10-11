@@ -12,7 +12,7 @@ A point-in-time input is the exact source version actually available at the pred
 
 - [x] (2026-10-11 08:54Z) Revalidated the active Goal and clean origin/main worktree without editing the owner's dirty checkout.
 - [x] (2026-10-11 08:56Z) Reproduced five synthetic timestamp cases that pass the old offline timing audit but cannot establish training eligibility.
-- [x] (2026-10-11 09:00Z) Sent a consolidated evidence question to the owner's authenticated ChatGPT Pro model through the authorized browser. Its completed answer is still pending; no new consultation result is claimed.
+- [x] (2026-10-11 09:00Z) Sent a consolidated evidence question to the owner's authenticated ChatGPT Pro model through the authorized browser; the full completed answer was read at the later milestone below.
 - [x] (2026-10-11 09:03Z) Rechecked both retained 2025 datasets: each has 1,758 races, zero per-race snapshot_meta objects, and legacy bootstrap markers.
 - [x] (2026-10-11 09:05Z) Added two actual trainer/configuration regressions; both failed before implementation, showing legacy admission reached model creation and configuration parsing differed from the hashed read.
 - [x] (2026-10-11 09:10Z) Implemented timing/full-field checks, the empty reviewed-recipe registry, single-read input buffers, implementation/environment pins, and atomic no-replacement candidate publication.
@@ -22,7 +22,9 @@ A point-in-time input is the exact source version actually available at the pred
 - [x] (2026-10-11 09:17Z) Read the completed Pro answer (UI processing duration 12 minutes 35 seconds), including its limited public-base review and source-positive admission caveat.
 - [x] (2026-10-11 09:20Z) Verified first-head required Python/41 focused cases, Scripts, Docker, and Gitleaks passes. Dependency audit fails on the same 17 records in three packages as base main; later security stages are skipped.
 - [x] (2026-10-11 09:37Z) Integrated actual fit-array/weight/order/cohort digests, normalization failure checks, external model-hash completion receipt, and owned-output rollback. Passed 375 combined regressions, including 58 focused cases, without skips.
-- [ ] Push the Pro follow-up and verify exact final-head remote CI, then normally merge PR #65 without bypassing protection.
+- [x] (2026-10-11 09:38Z) Committed and pushed the Pro follow-up as 7fe58c47f3bf4db6246b934b07cbcb22a07b1e23.
+- [x] (2026-10-11 09:48Z) Verified final-head run 38129112429: required Python Checks and its actual 58-case step, Scripts, Docker, and Gitleaks passed. The dependency audit has the same 17 records as base main; later security stages remain skipped, not passed.
+- [x] (2026-10-11 09:49Z) Normally merged PR #65 as cb401a28578f6aff6c087286164169ba541725fa at 09:49:04Z, with the exact head pinned and no protection/check bypass.
 
 ## Surprises & Discoveries
 
@@ -46,11 +48,11 @@ The clean worktree contains the canonical 2025 manifest but not its ignored cano
 
 ## Outcomes & Retrospective
 
-Implementation and local software-path acceptance are complete; remote acceptance is pending. No real-race model has been fitted, promoted, or scored, and the 70% Goal remains active. This is a narrowly scoped training admission increment, not a new evaluation universe or an accuracy improvement.
+Implementation, local software-path acceptance, exact-head required CI, and normal merge are complete. PR #65 merged at 2026-10-11 09:49:04Z as cb401a28578f6aff6c087286164169ba541725fa. Its final head is 7fe58c47f3bf4db6246b934b07cbcb22a07b1e23, and CI run 38129112429 passed required Python Checks, including the actual 58-case evidence step, plus Scripts, Docker, and Gitleaks. Security Checks is not green: the dependency audit still has the exact 17 records in h2/multidict/pyjwt found on base main, and later Node audit and hygiene stages were skipped. No dependencies, locks, or protections were changed.
 
-The implementation and local negative/positive software-path acceptance are now present. The positive fit is explicitly synthetic under an injected test review root, not a real pre-race-safe dataset. The owner's real legacy recipe is rejected without modifying any of the five retained artifacts. Actual remote checks and completed Pro advice are still required before final merge.
+Local validation passed 375 cases with no skips. The positive fit is explicitly synthetic under an injected test review root, not a real pre-race-safe dataset. The owner's real legacy recipe is rejected without modifying any of the five retained artifacts. No real-race model has been fitted, promoted, or scored, and the 70% Goal remains active. This is a narrowly scoped training admission increment, not a new evaluation universe or an accuracy improvement.
 
-The completed Pro advice is now integrated. Fit-input digests identify the exact arrays passed to fit; the declared and actual populations, normalization summaries, and external result-model hash are connected. Completion uses individually atomic no-replacement files and owned-output rollback, not a claimed two-file transaction. A crash-created orphan receipt is not successful publication. The first pushed head passed required checks; the final follow-up still requires exact-head CI and normal merge. Actual real-source positive admission remains unperformed, with zero approved real recipes.
+The completed Pro advice is integrated. Fit-input digests identify the exact arrays passed to fit; the declared and actual populations, normalization summaries, and external result-model hash are connected. Completion uses individually atomic no-replacement files and owned-output rollback, not a claimed two-file transaction. A crash-created orphan receipt is not successful publication. Actual real-source positive admission remains unperformed, with zero approved real recipes. The next research milestone is a complete future evaluation universe and a fixed minimal B0 with one trustworthy pre-deadline prediction receipt per race, alongside a two-working-day historical source-evidence search. Neither software tests nor source capture counts establish prediction success.
 
 ## Context and Orientation
 
@@ -105,3 +107,5 @@ Revision note (2026-10-11 09:12Z): Recorded reproduced failures, byte-frozen adm
 Revision note (2026-10-11 09:14Z): Recorded 358 passing combined regressions, including both parameter-context readers. The five dependency deprecation warnings in the synthetic joblib read are not failures or accuracy evidence. Remote publication and completed Pro advice remain pending.
 
 Revision note (2026-10-11 09:37Z): Integrated the completed Pro advice before final publication. Added fit-population and consumed-matrix linkage, completion model hash, failure preservation, and actual entrypoint negatives. Updated local acceptance to 375 cases, separated synthetic path validation from unperformed real-source admission, and documented the two-file crash limitation. Final exact-head checks and normal merge remain pending.
+
+Revision note (2026-10-11 09:49Z): Replaced current pending status with verified final-head CI and actual normal-merge evidence. Preserved earlier timestamped revision notes as history, the existing dependency-audit failures, zero real approved recipes, and the still-active 70% Goal. No runtime or data behavior changed in this closure update.
