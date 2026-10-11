@@ -55,6 +55,8 @@ pnpm --filter=@repo/scripts run test
 
 기본 출력은 `models/candidate_clean.joblib`입니다. 기존 출력 파일은 교체하지 않으며 챔피언 자동 승격도 하지 않습니다. 자세한 승인 기준과 실제 자료 감사는 [학습 증거 연구 기록](../../docs/research/2026-10-11-production-training-evidence.md)을 참고하세요.
 
+후보와 함께 `.joblib.receipt.json` 완료 기록을 저장합니다. 실제 학습 행렬·정답·가중치·출전마 순서·학습 집합 및 모델 파일 해시가 연결됩니다. 모델과 완료 기록이 모두 존재하고 모델 해시가 일치해야 완료로 취급합니다. 저장 중단으로 기록만 남은 경우에는 자동 덮어쓰기 없이 원인을 확인해야 합니다.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)

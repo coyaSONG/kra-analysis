@@ -496,7 +496,25 @@ def test_synthetic_reviewed_trainer_writes_candidate_and_pinned_receipt(
         "joblib",
         "pydantic",
     }
-    assert [p.name for p in output.parent.iterdir()] == ["candidate.joblib"]
+    assert sorted(p.name for p in output.parent.iterdir()) == [
+        "candidate.joblib",
+        "candidate.joblib.receipt.json",
+    ]
+    completion = json.loads(train_clean._completion_path(output).read_bytes())
+    assert completion["model"]["sha256"] == sha256(output.read_bytes()).hexdigest()
+    assert completion["training_receipt_core_sha256"] == train_clean._payload_sha256(
+        bundle["training_receipt"]
+    )
+    fit = bundle["training_receipt"]["fit_inputs"]
+    assert (
+        fit["declared_train_race_ids"] == fit["actual_fit_race_ids"] == ["20260101_1_1"]
+    )
+    assert fit["row_index"] == [["20260101_1_1", n] for n in range(1, 5)]
+    assert fit["X_sha256"] == train_clean._array_sha256(
+        np.array([[3.0], [4.0], [5.0], [6.0]])
+    )
+    assert fit["y_sha256"] == train_clean._array_sha256(np.array([1, 1, 1, 0]))
+    assert fit["sample_weight_sha256"] == train_clean._array_sha256(np.ones(4))
 
 
 def test_training_implementation_drift_is_rejected(tmp_path, monkeypatch):
@@ -569,3 +587,273 @@ def test_candidate_field_loss_is_not_silently_normalized(tmp_path, monkeypatch):
         train_clean.main()
     assert calls == []
     assert not output.parent.exists()
+
+
+def test_capture_at_cutoff_is_a_valid_minimum_condition_not_an_approval():
+    row = _timing()
+    cutoff = row["operational_cutoff_at"]
+    row.update(entry_finalized_at=cutoff, snapshot_ready_at=cutoff)
+    row["source_lookup"].update(entry_snapshot_at=cutoff, capture_completed_at=cutoff)
+    validate_minimum_training_timing(row)
+
+
+def test_label_changes_do_not_change_feature_matrix_or_candidate_order(tmp_path):
+    _strict_artifacts(tmp_path)
+    races = json.loads((tmp_path / "synthetic_training.json").read_bytes())
+    first = train_clean._build_feature_rows(races, {"20260101_1_1": [1, 2, 3]})
+    second = train_clean._build_feature_rows(races, {"20260101_1_1": [2, 3, 4]})
+    x1, y1, groups1, dates1, chuls1 = train_clean._build_arrays(first, ["age"])
+    x2, y2, groups2, dates2, chuls2 = train_clean._build_arrays(second, ["age"])
+    np.testing.assert_array_equal(x1, x2)
+    np.testing.assert_array_equal(groups1, groups2)
+    np.testing.assert_array_equal(dates1, dates2)
+    assert chuls1 == chuls2
+    assert not np.array_equal(y1, y2)
+
+
+def test_trainer_uses_frozen_bytes_even_if_input_paths_change(tmp_path, monkeypatch):
+    path = _strict_artifacts(tmp_path)
+    _synthetic_review(tmp_path, monkeypatch)
+    output = tmp_path / "candidate.joblib"
+    original_hash = sha256(
+        (tmp_path / "synthetic_training.json").read_bytes()
+    ).hexdigest()
+    original_loader = train_clean.load_reviewed_training_inputs
+
+    def load_then_change(**kwargs):
+        frozen = original_loader(**kwargs)
+        path.write_bytes(b"changed config after admission")
+        (tmp_path / "synthetic_training.json").write_bytes(
+            b"changed dataset after admission"
+        )
+        (tmp_path / "synthetic_training_answer_key.json").write_bytes(
+            b"changed labels after admission"
+        )
+        return frozen
+
+    monkeypatch.setattr(train_clean, "load_reviewed_training_inputs", load_then_change)
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["train_clean.py", "--config", str(path), "--output", str(output)]
+    )
+    assert train_clean.main() == 0
+    bundle = train_clean.joblib.load(output)
+    assert bundle["model_params"]["C"] == 0.75
+    assert bundle["n_train_rows"] == 4
+    assert bundle["training_receipt"]["artifacts"]["dataset"]["sha256"] == original_hash
+
+
+def test_fit_failure_does_not_publish_or_change_champion(tmp_path, monkeypatch):
+    path = _strict_artifacts(tmp_path)
+    _synthetic_review(tmp_path, monkeypatch)
+    output = tmp_path / "not_created" / "candidate.joblib"
+    champion = tmp_path / "champion.joblib"
+    champion.write_bytes(b"owner champion")
+
+    class FailingModel:
+        def fit(self, *_args, **_kwargs):
+            raise RuntimeError("synthetic fit failure")
+
+    monkeypatch.setattr(train_clean, "_make_model", lambda *_args: FailingModel())
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["train_clean.py", "--config", str(path), "--output", str(output)]
+    )
+    with pytest.raises(RuntimeError, match="synthetic fit failure"):
+        train_clean.main()
+    assert not output.parent.exists()
+    assert champion.read_bytes() == b"owner champion"
+
+
+def test_duplicate_feature_rows_cannot_be_silently_merged(tmp_path, monkeypatch):
+    path = _strict_artifacts(tmp_path)
+    _synthetic_review(tmp_path, monkeypatch)
+    output = tmp_path / "not_created" / "candidate.joblib"
+    original = train_clean._build_feature_rows
+
+    def duplicated(*args):
+        rows = original(*args)
+        return rows + [deepcopy(rows[0])]
+
+    monkeypatch.setattr(train_clean, "_build_feature_rows", duplicated)
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["train_clean.py", "--config", str(path), "--output", str(output)]
+    )
+    with pytest.raises(ValueError, match="normalization silently removed or merged"):
+        train_clean.main()
+    assert not output.parent.exists()
+
+
+def test_publication_race_preserves_owner_model_and_removes_our_receipt(
+    tmp_path, monkeypatch
+):
+    output = tmp_path / "candidate.joblib"
+    link = train_clean.os.link
+
+    def conflicting_model(source, target):
+        if target == output:
+            output.write_bytes(b"concurrent owner output")
+        link(source, target)
+
+    monkeypatch.setattr(train_clean.os, "link", conflicting_model)
+    with pytest.raises(FileExistsError):
+        train_clean._save_new_bundle({}, output)
+    assert output.read_bytes() == b"concurrent owner output"
+    assert not train_clean._completion_path(output).exists()
+    assert list(tmp_path.iterdir()) == [output]
+
+
+def test_existing_completion_receipt_is_never_replaced(tmp_path):
+    output = tmp_path / "candidate.joblib"
+    receipt = train_clean._completion_path(output)
+    receipt.write_bytes(b"owner receipt")
+    with pytest.raises(FileExistsError):
+        train_clean._save_new_bundle({}, output)
+    assert not output.exists()
+    assert receipt.read_bytes() == b"owner receipt"
+
+
+def test_numeric_fit_digest_includes_shape_dtype_and_order():
+    values = np.array([[1.0, 2.0], [3.0, 4.0]])
+    assert train_clean._array_sha256(values) != train_clean._array_sha256(
+        values.ravel()
+    )
+    assert train_clean._array_sha256(values) != train_clean._array_sha256(
+        values.astype(np.float32)
+    )
+    assert train_clean._array_sha256(values) != train_clean._array_sha256(values[::-1])
+    with pytest.raises(ValueError, match="Object arrays"):
+        train_clean._array_sha256(np.array(["synthetic"], dtype=object))
+
+
+def test_empty_declared_train_cohort_stops_before_fit_and_output(tmp_path, monkeypatch):
+    path = _strict_artifacts(tmp_path)
+    config = _config()
+    config["split"]["train_end"] = "20251231"
+    _write_json(path, config)
+    _synthetic_review(tmp_path, monkeypatch)
+    output = tmp_path / "not_created" / "candidate.joblib"
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["train_clean.py", "--config", str(path), "--output", str(output)]
+    )
+    with pytest.raises(SystemExit, match="Empty training mask"):
+        train_clean.main()
+    assert not output.parent.exists()
+
+
+def test_receipt_distinguishes_dataset_cohort_from_actual_train_split(
+    tmp_path, monkeypatch
+):
+    path = _strict_artifacts(tmp_path)
+    dataset_path = tmp_path / "synthetic_training.json"
+    races = json.loads(dataset_path.read_bytes())
+    future = deepcopy(races[0])
+    future.update(race_id="20260102_1_1", race_date="20260102")
+    future["race_info"]["rcDate"] = "20260102"
+    future["snapshot_meta"]["race_id"] = "20260102_1_1"
+    for field, value in (
+        ("entry_finalized_at", "2026-01-02T11:15:00+09:00"),
+        ("snapshot_ready_at", "2026-01-02T11:15:00+09:00"),
+        ("operational_cutoff_at", "2026-01-02T11:30:00+09:00"),
+        ("scheduled_start_at", "2026-01-02T12:00:00+09:00"),
+    ):
+        future["snapshot_meta"][field] = value
+    future["snapshot_meta"]["source_lookup"].update(
+        entry_snapshot_at="2026-01-02T11:15:00+09:00",
+        capture_completed_at="2026-01-02T11:15:00+09:00",
+    )
+    races.append(future)
+    _write_json(dataset_path, races)
+    _write_json(
+        tmp_path / "synthetic_training_answer_key.json",
+        {"20260101_1_1": [1, 2, 3], "20260102_1_1": [2, 3, 4]},
+    )
+    _write_json(
+        tmp_path / "synthetic_training_manifest.json",
+        {
+            "dataset": "synthetic_training",
+            "races": [race["snapshot_meta"] for race in races],
+        },
+    )
+    _synthetic_review(tmp_path, monkeypatch)
+    output = tmp_path / "candidate.joblib"
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys, "argv", ["train_clean.py", "--config", str(path), "--output", str(output)]
+    )
+    assert train_clean.main() == 0
+    fit = train_clean.joblib.load(output)["training_receipt"]["fit_inputs"]
+    assert fit["declared_dataset_race_ids"] == ["20260101_1_1", "20260102_1_1"]
+    assert (
+        fit["declared_train_race_ids"] == fit["actual_fit_race_ids"] == ["20260101_1_1"]
+    )
+    assert fit["n_rows"] == 4
+
+
+@pytest.mark.parametrize(
+    "case,expected",
+    [
+        ("unbounded", "cutoff_unbounded"),
+        ("unknown_source", "timestamp_source"),
+        ("schedule_only", "timestamp_source"),
+        ("excluded", "include_in_strict_dataset"),
+        ("naive", "timezone"),
+        ("late_acquisition", "capture/ready/entry"),
+        ("metadata_only", "source lineage is unreviewed"),
+    ],
+)
+def test_actual_production_entrypoint_stops_each_unsafe_timing_case(
+    tmp_path, monkeypatch, case, expected
+):
+    config_path = _strict_artifacts(tmp_path)
+    manifest_path = tmp_path / "synthetic_training_manifest.json"
+    manifest = json.loads(manifest_path.read_bytes())
+    row = manifest["races"][0]
+    if case == "unbounded":
+        row.update(
+            cutoff_unbounded=True, operational_cutoff_at=None, scheduled_start_at=None
+        )
+    elif case == "unknown_source":
+        row.update(
+            timestamp_source="unverified_source", timestamp_confidence="unverified"
+        )
+    elif case == "schedule_only":
+        row.update(
+            timestamp_source="derived_from_schedule",
+            timestamp_confidence="low",
+            snapshot_ready_at=None,
+        )
+    elif case == "excluded":
+        row["include_in_strict_dataset"] = False
+    elif case == "naive":
+        row.update(
+            entry_finalized_at="2026-01-01T02:15:00",
+            snapshot_ready_at="2026-01-01T02:15:00",
+        )
+    elif case == "late_acquisition":
+        row.update(
+            timestamp_source="source_revision",
+            timestamp_confidence="high",
+            snapshot_ready_at="2026-01-01T11:35:00+09:00",
+        )
+        row["source_lookup"]["capture_completed_at"] = row["snapshot_ready_at"]
+    _write_json(manifest_path, manifest)
+    dataset_path = tmp_path / "synthetic_training.json"
+    races = json.loads(dataset_path.read_bytes())
+    races[0]["snapshot_meta"] = deepcopy(row)
+    _write_json(dataset_path, races)
+    output = tmp_path / "not_created" / "candidate.joblib"
+    monkeypatch.setattr(train_clean, "SNAPSHOT_DIR", tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["train_clean.py", "--config", str(config_path), "--output", str(output)],
+    )
+    calls = _forbid_fit(monkeypatch)
+    with pytest.raises(ValueError, match=expected):
+        train_clean.main()
+    assert calls == []
+    assert not output.parent.exists()
+    assert json.loads(manifest_path.read_bytes()) == manifest

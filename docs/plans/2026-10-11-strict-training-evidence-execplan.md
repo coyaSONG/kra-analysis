@@ -18,8 +18,11 @@ A point-in-time input is the exact source version actually available at the pred
 - [x] (2026-10-11 09:10Z) Implemented timing/full-field checks, the empty reviewed-recipe registry, single-read input buffers, implementation/environment pins, and atomic no-replacement candidate publication.
 - [x] (2026-10-11 09:11Z) Passed 138 local training/compatibility tests and the actual owner's negative admission check; configuration, dataset, labels, manifest, and champion hashes are unchanged and no output directory was created.
 - [x] (2026-10-11 09:14Z) Passed 358 combined tests: 41 training-evidence cases, 98 existing diagnostic/script cases, and 219 source/PDF cases. Ruff lint, formatting, and diff checks passed with no test skips.
-- [ ] Commit and push the tested increment; complete exact-head remote checks.
-- [ ] Integrate the completed Pro advice, validate local and actual remote CI, and normally merge an isolated increment.
+- [x] (2026-10-11 09:15Z) Committed/pushed 86cdf92 and opened/attached draft PR #65; no owner-checkout files were staged or changed.
+- [x] (2026-10-11 09:17Z) Read the completed Pro answer (UI processing duration 12 minutes 35 seconds), including its limited public-base review and source-positive admission caveat.
+- [x] (2026-10-11 09:20Z) Verified first-head required Python/41 focused cases, Scripts, Docker, and Gitleaks passes. Dependency audit fails on the same 17 records in three packages as base main; later security stages are skipped.
+- [x] (2026-10-11 09:37Z) Integrated actual fit-array/weight/order/cohort digests, normalization failure checks, external model-hash completion receipt, and owned-output rollback. Passed 375 combined regressions, including 58 focused cases, without skips.
+- [ ] Push the Pro follow-up and verify exact final-head remote CI, then normally merge PR #65 without bypassing protection.
 
 ## Surprises & Discoveries
 
@@ -46,6 +49,8 @@ The clean worktree contains the canonical 2025 manifest but not its ignored cano
 Implementation and local software-path acceptance are complete; remote acceptance is pending. No real-race model has been fitted, promoted, or scored, and the 70% Goal remains active. This is a narrowly scoped training admission increment, not a new evaluation universe or an accuracy improvement.
 
 The implementation and local negative/positive software-path acceptance are now present. The positive fit is explicitly synthetic under an injected test review root, not a real pre-race-safe dataset. The owner's real legacy recipe is rejected without modifying any of the five retained artifacts. Actual remote checks and completed Pro advice are still required before final merge.
+
+The completed Pro advice is now integrated. Fit-input digests identify the exact arrays passed to fit; the declared and actual populations, normalization summaries, and external result-model hash are connected. Completion uses individually atomic no-replacement files and owned-output rollback, not a claimed two-file transaction. A crash-created orphan receipt is not successful publication. The first pushed head passed required checks; the final follow-up still requires exact-head CI and normal merge. Actual real-source positive admission remains unperformed, with zero approved real recipes.
 
 ## Context and Orientation
 
@@ -98,3 +103,5 @@ Revision note (2026-10-11 09:04Z): Created before implementation from reproduced
 Revision note (2026-10-11 09:12Z): Recorded reproduced failures, byte-frozen admission and implementation/environment bounds, local tests, and the actual owner-artifact negative check. Added a synthetic fit only as a software-path test. Remote checks and completed Pro consultation remain incomplete.
 
 Revision note (2026-10-11 09:14Z): Recorded 358 passing combined regressions, including both parameter-context readers. The five dependency deprecation warnings in the synthetic joblib read are not failures or accuracy evidence. Remote publication and completed Pro advice remain pending.
+
+Revision note (2026-10-11 09:37Z): Integrated the completed Pro advice before final publication. Added fit-population and consumed-matrix linkage, completion model hash, failure preservation, and actual entrypoint negatives. Updated local acceptance to 375 cases, separated synthetic path validation from unperformed real-source admission, and documented the two-file crash limitation. Final exact-head checks and normal merge remain pending.
