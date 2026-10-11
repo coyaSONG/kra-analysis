@@ -304,12 +304,13 @@ def main(argv: list[str] | None = None) -> int:
     audit.add_argument("--archive-root", type=Path)
     args = parser.parse_args(argv)
     if args.command == "capture":
+        credentials = {"api_key": args.api_key_file.read_text()}
         path = asyncio.run(
             collect_result_snapshot(
                 meet=args.meet,
                 race_date=args.race_date,
-                api_key=args.api_key_file.read_text(),
                 output_dir=args.output_dir,
+                **credentials,
             )
         )
         print(json.dumps({"capture": str(path)}))

@@ -10,3 +10,6 @@ ef648bdd774f1ae067871499e715006659205821:packages/scripts/autoresearch/tests/tes
 be0cf95ca297c10ecf59e8b71aa54cecb0bd52d8:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:148
 be0cf95ca297c10ecf59e8b71aa54cecb0bd52d8:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:175
 be0cf95ca297c10ecf59e8b71aa54cecb0bd52d8:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:202
+# Exact env-file false positive: Python keyword reading a caller-provided file.
+# The committed expression contains no credential; other lines remain scanned.
+581cf2f27118dfe9676bee2a3e9cfddb3eeda565:packages/scripts/autoresearch/kra_result_snapshot.py:env-file:311
