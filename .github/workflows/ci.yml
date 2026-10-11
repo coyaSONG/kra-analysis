@@ -59,6 +59,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/training_evidence.py ../../packages/scripts/autoresearch/parameter_context.py ../../packages/scripts/ml/train_clean.py ../../packages/scripts/autoresearch/tests/test_training_evidence.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/training_evidence.py ../../packages/scripts/autoresearch/parameter_context.py ../../packages/scripts/ml/train_clean.py ../../packages/scripts/autoresearch/tests/test_training_evidence.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_training_evidence.py -o addopts=''
+      - name: Restricted ablation model regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py -o addopts=''
       - name: Official schedule regressions
         working-directory: ./apps/api
         run: |
@@ -146,6 +152,12 @@ jobs:
           uv run --frozen --extra race-card-pdf ruff check autoresearch/prerace_hash_witness.py autoresearch/tests/test_prerace_hash_witness.py
           uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prerace_hash_witness.py autoresearch/tests/test_prerace_hash_witness.py
           uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prerace_hash_witness.py -o addopts=''
+      - name: Restricted cohort source regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/restricted_cohort.py autoresearch/tests/test_restricted_cohort.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/restricted_cohort.py autoresearch/tests/test_restricted_cohort.py
+          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_restricted_cohort.py -o addopts=''
       - name: Scripts CI (lint + tests)
         run: pnpm run quality:scripts:ci
 
