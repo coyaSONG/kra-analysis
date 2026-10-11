@@ -194,6 +194,12 @@ jobs:
           uv run --frozen ruff check autoresearch/official_history_support.py shared/official_result_support.py autoresearch/tests/test_official_history_support.py
           uv run --frozen ruff format --check autoresearch/official_history_support.py shared/official_result_support.py autoresearch/tests/test_official_history_support.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_official_history_support.py -o addopts=''
+      - name: Official history recency regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/official_history_recency.py autoresearch/tests/test_official_history_recency.py
+          uv run --frozen ruff format --check autoresearch/official_history_recency.py autoresearch/tests/test_official_history_recency.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_official_history_recency.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |
