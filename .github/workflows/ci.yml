@@ -65,6 +65,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py -o addopts=''
+      - name: Local M0 forward regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/local_m0_inference.py ../../packages/scripts/autoresearch/local_m0_forward.py ../../packages/scripts/autoresearch/tests/test_local_m0_forward.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/local_m0_inference.py ../../packages/scripts/autoresearch/local_m0_forward.py ../../packages/scripts/autoresearch/tests/test_local_m0_forward.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_local_m0_forward.py -o addopts=''
       - name: Official schedule regressions
         working-directory: ./apps/api
         run: |
