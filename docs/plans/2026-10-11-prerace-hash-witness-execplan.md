@@ -16,11 +16,13 @@ evaluation universe, or automatic training approval.
 
 - [x] Verify PR73 is merged and resolve its CI skip question: all PDF tests ran in the separate dependency-enabled Scripts job.
 - [x] Confirm PR61 server merge time is 2026-10-09T17:08:16Z and inspect its exact merge-tree document.
-- [x] Send the new evidence question to the user's selected Pro model; response is generating and must finish without interruption.
+- [x] Send the new evidence question to the user's selected Pro model and wait uninterrupted for its completed response.
 - [x] Implement bounded live GitHub evidence acquisition and complete local source replay.
 - [x] Exercise tampering, late publication, wrong tree, incomplete joins and original eligibility preservation: 28 focused tests pass, 462 regressions pass.
 - [x] Run the actual 28-race archive: 28 source chains have a pre-cutoff content bound; 27 races/282 feature rows reproduce; the original blocked race remains blocked.
-- [ ] Read the completed Pro response, reconcile its advice with actual evidence, and publish tested work.
+- [x] Read the complete Pro response after its 12-minute processing/completion indicator; reconcile the conditional advice with the actual local replay.
+- [x] Push PR74; initial exact head passes required Python, Scripts and Docker checks, including 28 witness tests without skips.
+- [ ] Publish the completed advice and merge after final exact-head required checks pass.
 
 ## Surprises & Discoveries
 
@@ -38,6 +40,15 @@ Rationale: this can yield actual positive source evidence rather than another
 empty approval mechanism. External publication is an existence bound, not a
 replacement for feature semantics and source review.
 Date/Author: 2026-10-11, Codex.
+
+Decision: accept the completed Pro recommendation for a separate restricted
+PDF/API26 cohort and one fixed L2 logistic model with API-only/PDF-added variants.
+Rationale: actual source evidence now supports a positive candidate; stable-ID
+label review must precede fitting. Keep all 28 inventory rows and preserve the
+legacy refusal. Use fixed current-result versions without claiming permanent
+finality or an untouched holdout. The next increment must aim at actual cohort,
+matrix and completed-model artifacts, not just another empty gate.
+Date/Author: 2026-10-11, Codex, after reading the completed browser Pro response.
 
 ## Context and Orientation
 
@@ -120,11 +131,16 @@ does not have a short generation deadline.
 
 The actual chain supports a positive public content-existence bound for all 28
 retained races under the explicit service/hash trust model, with 27 source-review
-candidates. A candidate corpus with independently reviewed labels and the completed
-Pro advice remains to be addressed. Pro advice alone is not approval.
+candidates. The completed Pro advice supports the bounded next training increment;
+a candidate corpus with reviewed, version-pinned labels remains to be built.
+Pro advice alone is not approval. No model was fitted or promoted in this audit.
 
 Revision: initialized on 2026-10-11 after checking a previously overlooked
 server-timed publication of the original archive hashes.
 
 Revision: after actual execution, recorded 28/27/282 evidence and 462 passing
 tests. Original source files, timestamps, model and training registry are unchanged.
+
+Revision: recorded the completed Pro consultation, the fixed next experiment,
+and initial PR74 CI evidence. Security audit retains the same 17 pre-existing
+dependency findings; Gitleaks passes. No force merge or check bypass is proposed.

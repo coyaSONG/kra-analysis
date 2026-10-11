@@ -126,6 +126,55 @@ tests. That was not an async-coverage gap, and no repair to that job was require
 
 ## Pro Review
 
-The selected Pro model is reviewing this new evidence question. Do not treat
-its in-progress observations as a completed consultation or source approval.
-Final advice will be recorded after the generation finishes without interruption.
+The selected Pro model completed its response on 2026-10-11 (the UI reported
+12 minutes of processing). The complete response was read after the completion
+indicator appeared; generation was neither stopped nor given a short deadline.
+The adviser reviewed public GitHub evidence, not our local raw files or tests.
+
+Its methodological advice agrees with the actual local audit: under the declared
+GitHub/hash/collector trust assumptions, the closed chain provides an external
+content-existence bound. It does not independently authenticate KRA or establish
+the exact acquisition time, final roster, historical prediction or national
+universe. Keep original bytes unchanged and append current verification receipts.
+
+The next increment should produce an actual reviewed cohort and two fixed model
+artifacts, not another empty approval registry. Adopt a separate restricted
+`pdf_api26_restricted_v1` feature contract; do not relax the legacy production
+gate or fabricate its missing source flags. Preserve the entire 28-race inventory,
+with separate source, label and training-selection statuses. Freeze a reviewed
+current official result version; do not claim permanent finality. Require stable
+horse-ID and full-roster reconciliation, retaining leading-zero identity evidence.
+Void races, ambiguous top-three ranks and unresolved identity joins remain out of
+supervised fitting, with explicit reasons. Do not remove late scratches from the
+historically observed input roster.
+
+The proposed fixed experiment is L2 logistic scoring with two feature sets:
+M0 uses a small source-reviewed API26 block; M1 adds the existing PDF block,
+including missing and truncation indicators. Both use exactly the same races,
+runner rows, labels, preprocessing policy and deterministic top-three tie-break.
+Do not use horse identity, `ilsu`, result codes or receipt times as features.
+Fix lambda=1, equal total race weights, and train-only imputation/scaling; verify
+the installed library's objective before setting C=1/(lambda * training_races).
+No hyperparameter or per-PDF-column search is proposed.
+
+Fit October 10 and replay October 11 once as already-observed development data,
+then refit both unchanged recipes on the complete selected training cohort.
+Retain matrix, label, implementation, dependency and completed-model receipts.
+Feature generation must consume the verified bytes, not reread unverified paths.
+Report exact counts and paired differences without an untouched-holdout or 70%
+claim. Future challenger registration needs a distinct arm contract; never replace
+B0 silently or count success across several arms as one prediction.
+
+These are reviewed next-step decisions, not claims that the cohort, fit or
+forward deployment has already been completed. The present increment ends at
+the actual source witness; the original 2025 training refusal remains in force.
+
+## CI Evidence
+
+Initial PR74 head `744fc48d2624ed7fef2c7d05aa9e27bc8104d8e1` passed required
+Python Checks, Scripts Checks and Docker build in run `38138820677`. The Scripts
+job actually ran all 28 new witness tests and all 70 PDF replay/bundle tests
+without skips. Gitleaks found no secrets. Security Checks is not green: its
+dependency audit reports the same 17 package/version/advisory rows as the PR73
+baseline (h2, multidict and pyjwt). No dependency changes or security bypasses
+are included in this increment.
