@@ -115,8 +115,10 @@ def _stable_payload_sha256(payload: Any) -> str:
     ).hexdigest()
 
 
-def _load_config_payload(config_path: Path) -> dict[str, Any]:
-    payload = _read_json(config_path)
+def _parse_config_payload(config_bytes: bytes, config_path: Path) -> dict[str, Any]:
+    payload = json.loads(config_bytes)
+    if not isinstance(payload, dict):
+        raise ValueError(f"JSON object expected: {config_path}")
     try:
         validated = AutoresearchConfig.model_validate(payload)
     except ValidationError:
@@ -375,6 +377,7 @@ def load_evaluation_parameter_context(
     run_id: str | None = None,
     runtime_params_path: Path | None = None,
     model_random_state: int | None = None,
+    config_bytes: bytes | None = None,
 ) -> EvaluationParameterContext:
     """설정 파일을 단일 소스로 읽어 불변 실행 컨텍스트를 만든다.
 
@@ -382,8 +385,9 @@ def load_evaluation_parameter_context(
     기존 호출부와의 호환을 위해 config 기반 해석 결과와 일치하는지만 검증한다.
     """
 
-    config_bytes = config_path.read_bytes()
-    config = _load_config_payload(config_path)
+    if config_bytes is None:
+        config_bytes = config_path.read_bytes()
+    config = _parse_config_payload(config_bytes, config_path)
     (
         config_evaluation_seeds,
         resolved_seed_index,
@@ -446,7 +450,7 @@ def load_seed_matrix_parameter_context(
 ) -> SeedMatrixParameterContext:
     if config_path.exists():
         config_bytes = config_path.read_bytes()
-        config = _load_config_payload(config_path)
+        config = _parse_config_payload(config_bytes, config_path)
     else:
         config_bytes = b"{}"
         config = {}

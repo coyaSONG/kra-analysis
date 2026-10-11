@@ -47,6 +47,14 @@ pnpm --filter=@repo/scripts run test
 - lint와 test는 `uv` 기반 Python 실행을 사용합니다.
 - 운영 수집은 현재 별도 Node collector 앱이 아니라 `apps/api`의 collection 엔드포인트 기준으로 보는 것이 맞습니다.
 
+## 운영 모델 학습 승인
+
+`ml/train_clean.py`는 경주 전 원본과 피처 생성 근거를 검토한 정확한 입력 묶음만 학습합니다. `data/contracts/production_training_reviews_v1.json`의 승인 목록은 현재 비어 있습니다. 기존 2025 legacy bootstrap 자료는 오프라인 진단에는 사용할 수 있지만 운영 학습에는 사용할 수 없습니다. 시간 필드나 `passed=true`를 추가하는 것만으로 승인되지 않습니다.
+
+설정·데이터·정답·매니페스트는 한 번 읽은 바이트로 검증하고 학습합니다. 승인에는 변환 코드, 계약, 잠금 파일, 실행 환경과 소스 검토 문서의 해시도 묶습니다. 입력을 승인하려면 실제 원본 수집·공개 버전, 피처별 과거 시점 근거, 조인·전체 출전마 검토를 완료한 뒤 별도 PR로 추가해야 합니다.
+
+기본 출력은 `models/candidate_clean.joblib`입니다. 기존 출력 파일은 교체하지 않으며 챔피언 자동 승격도 하지 않습니다. 자세한 승인 기준과 실제 자료 감사는 [학습 증거 연구 기록](../../docs/research/2026-10-11-production-training-evidence.md)을 참고하세요.
+
 ## 관련 문서
 
 - [루트 README](/Users/chsong/Developer/Personal/kra-analysis/README.md)
