@@ -194,6 +194,9 @@ def test_implementation_drift_and_parallel_process_lock(tmp_path, monkeypatch):
     monkeypatch.setattr(m, "implementation", lambda: {"changed": True})
     with pytest.raises(ValueError, match="implementation_changed"):
         m.load_plan(root)
+    replayed = m.replay(root)
+    assert replayed["implementation"] == {"changed": True}
+    assert replayed["collection_implementation"] != replayed["implementation"]
 
 
 def test_export_never_overwrites(tmp_path):
@@ -202,3 +205,31 @@ def test_export_never_overwrites(tmp_path):
     with pytest.raises(FileExistsError):
         m.save(path, {"second": True})
     assert json.loads(path.read_bytes()) == {"first": True}
+
+
+def test_interrupted_publication_never_exposes_partial_json(tmp_path, monkeypatch):
+    def interrupt(*args):
+        raise RuntimeError("simulated interruption before publication")
+
+    monkeypatch.setattr(m.os, "link", interrupt)
+    with pytest.raises(RuntimeError):
+        m.save(tmp_path / "receipt.json", {"completed": True})
+    assert not list(tmp_path.iterdir())
+
+
+def test_interrupted_request_reservation_is_counted_on_resume(tmp_path, monkeypatch):
+    root = initialized(tmp_path)
+    original = m.save
+
+    def interrupt(path, value):
+        result = original(path, value)
+        if path.parent.name == "requests":
+            raise asyncio.CancelledError
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(m, "save", interrupt)
+        with pytest.raises(asyncio.CancelledError):
+            asyncio.run(execute(root, response))
+    assert asyncio.run(execute(root, response))["request_reservations"] == 5
+    assert m.replay(root)["status_counts"] == {"api_reported_rows": 4}

@@ -7,7 +7,9 @@ import asyncio
 import fcntl
 import hashlib
 import json
+import os
 import platform
+import tempfile
 from collections import Counter
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
@@ -51,8 +53,23 @@ def digest(raw: bytes) -> str:
 
 def save(path: Path, value: dict) -> str:
     raw = (json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + "\n").encode()
-    with path.open("xb") as stream:
-        stream.write(raw)
+    with tempfile.NamedTemporaryFile(
+        dir=path.parent, prefix=".history-partial-", delete=False
+    ) as stream:
+        temporary = Path(stream.name)
+        try:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+            # A hard link publishes complete bytes atomically without overwriting.
+            os.link(temporary, path)
+            directory = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+        finally:
+            temporary.unlink()
     return digest(raw)
 
 
@@ -89,10 +106,13 @@ def make_plan(start: str, end: str, budget: int = 2000) -> dict:
     }
 
 
-def load_plan(root: Path) -> tuple[dict, str]:
+def load_plan(root: Path, *, require_current: bool = True) -> tuple[dict, str]:
     raw = (root / "plan.json").read_bytes()
     plan = parse_json(raw)
-    if plan != make_plan(plan["start"], plan["end"], plan["request_budget"]):
+    expected = make_plan(plan["start"], plan["end"], plan["request_budget"])
+    if not require_current:
+        expected["implementation"] = plan["implementation"]
+    if plan != expected:
         raise ValueError("history_plan_or_implementation_changed")
     return plan, digest(raw)
 
@@ -292,7 +312,8 @@ async def collect(
 
 
 def replay(root: Path) -> dict:
-    plan, plan_hash = load_plan(root)
+    # Replaying old bytes is allowed; resuming collection still requires old code.
+    plan, plan_hash = load_plan(root, require_current=False)
     inventory, records, seen = [], [], set()
     for unit in plan["units"]:
         paths = receipts(root, unit)
@@ -318,7 +339,8 @@ def replay(root: Path) -> dict:
     return {
         "format_version": SEED_FORMAT,
         "plan_sha256": plan_hash,
-        "implementation": plan["implementation"],
+        "collection_implementation": plan["implementation"],
+        "implementation": implementation(),
         "materialized_at": datetime.now(UTC).isoformat(),
         "request_reservations": request_count(root, plan_hash),
         "status_counts": dict(Counter(r["status"] for r in inventory)),

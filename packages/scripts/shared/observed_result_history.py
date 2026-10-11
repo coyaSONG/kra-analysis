@@ -43,6 +43,8 @@ def project_history(race: dict, seed: dict) -> dict:
         if key not in coverage
         or coverage[key]["status"] not in ("api_reported_rows", "empty_unconfirmed")
     )
+    latest_missing = max((d for d, _ in missing), default=None)
+    recent_missing = latest_missing is not None and latest_missing >= recent_day
     roster = race["roster"]
     ids = [r["horse_id"] for r in roster]
     gates = [r["chul_no"] for r in roster]
@@ -127,7 +129,17 @@ def project_history(race: dict, seed: dict) -> dict:
             H1_ADDITIONS[4]: unresolved_after,
         }
         if missing:
-            values = dict.fromkeys(values)
+            for field in H0:
+                values[field] = None
+            if recent_missing:
+                values[H1_ADDITIONS[0]] = None
+            if last_day is None or latest_missing > last_day:
+                values[H1_ADDITIONS[1]] = None
+            if last_day is None or latest_missing >= last_day:
+                values[H1_ADDITIONS[2]] = None
+                values[H1_ADDITIONS[4]] = None
+            if len(ranked) < 3 or latest_missing >= ranked[-3]["race_id"][:8]:
+                values[H1_ADDITIONS[3]] = None
         output.append(
             {
                 "chul_no": runner["chul_no"],
@@ -139,6 +151,7 @@ def project_history(race: dict, seed: dict) -> dict:
                     "physical_meet": int(meet),
                     "roster_size": len(roster),
                     "response_window_incomplete": bool(missing),
+                    "response_30d_window_incomplete": recent_missing,
                 },
                 "lineage": [
                     {

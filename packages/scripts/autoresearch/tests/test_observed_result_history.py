@@ -144,3 +144,30 @@ def test_same_day_events_do_not_invent_an_observation_order():
     assert values[H1_ADDITIONS[2]] is None
     assert values[H1_ADDITIONS[3]] == 3
     assert values[H1_ADDITIONS[4]] is None
+
+
+def test_old_gap_does_not_erase_verified_recent_history():
+    race, seed = fixture()
+    for day, rank in (("20260901", 1), ("20260911", 3), ("20261001", 2)):
+        add(seed, day=day, rank=rank)
+    gap = next(r for r in seed["inventory"] if r["day"] == "20260824")
+    gap["status"] = "identity_unresolved"
+    values = project_history(race, seed)["feature_rows"][0]["features"]
+    assert all(values[k] is None for k in H0)
+    assert [values[k] for k in H1_ADDITIONS] == [2, 10, 2, 2, False]
+    assert values["response_window_incomplete"]
+    assert not values["response_30d_window_incomplete"]
+
+
+def test_gap_after_third_latest_only_invalidates_dependent_fields():
+    race, seed = fixture()
+    for day in ("20260901", "20260911", "20261001"):
+        add(seed, day=day)
+    gap = next(r for r in seed["inventory"] if r["day"] == "20260910")
+    gap["status"] = "failed"
+    values = project_history(race, seed)["feature_rows"][0]["features"]
+    assert values[H1_ADDITIONS[0]] == 2
+    assert values[H1_ADDITIONS[1]] == 10
+    assert values[H1_ADDITIONS[2]] == 2
+    assert values[H1_ADDITIONS[3]] is None
+    assert values[H1_ADDITIONS[4]] is False

@@ -16,8 +16,10 @@ rosters without training or claiming historical pre-race availability.
 - [x] (2026-10-11) Verify PR77 is merged and inspect existing capture/replay code.
 - [x] (2026-10-11T13:32Z) Implement bounded resumable collection and complete request inventory.
 - [x] (2026-10-11T13:34Z) Implement outcome-independent history transformation; 28 new tests and 347 total focused/shared regressions pass.
-- [ ] Collect and replay actual July 12-October 11 source bytes; preserve gaps (collection running, plan hash fixed).
-- [ ] Verify actual transformation, publish source hashes, run tests and merge normally.
+- [x] (2026-10-11T13:41Z) Collect all 368 units in 398 HTTP reservations; replay 671 races/6,816 usable rows and preserve three identity gaps.
+- [x] (2026-10-11) Correct feature-specific missing-window handling; preserve original seed/projection and collection fingerprint.
+- [x] (2026-10-11) Verify 28-roster/294-runner actual transformation, independently recompute 30-day counts and pass 351 focused/shared tests.
+- [ ] Publish final source hashes and ordinarily merge PR78 after exact-head required checks.
 
 ## Context And Orientation
 
@@ -66,6 +68,23 @@ Decision: no historical H0/H1 fitting or production approval in this increment.
 Rationale: the completed Pro consultation proposed retrospective fits, but the
 Goal still requires reviewed pre-race-safe training data. Current raw acquisition
 can support future source review, not backdate historical revision availability.
+Date/Author: 2026-10-11, Codex.
+
+Decision: missingness depends on each feature's required dates, not every feature's
+entire 90-day window. Retain 90-day aggregate nulls for any missing unit, but allow
+30-day counts when those 30 days are complete. Latest-event statistics require
+complete coverage from their relevant latest/third-latest date to the target;
+unknown older events cannot change these already observed recent statistics.
+Rationale: actual gaps on August 24/25/31 otherwise erased verified September/
+October information. No outcomes or model scores guided this correctness fix.
+Date/Author: 2026-10-11, Codex.
+
+Decision: collection resume still requires the original exact implementation;
+read-only replay may use a revised implementation and records both original
+collection and current replay source fingerprints. Never rewrite the old plan.
+Rationale: validated raw bytes should not require new network requests merely
+because a downstream transformation was corrected. Every raw/receipt/plan pin
+is still checked, and neither replay version confers training approval.
 Date/Author: 2026-10-11, Codex.
 
 ## Plan Of Work
@@ -136,6 +155,8 @@ before requests. Resume the same root; existing successful captures are replayed
 and skipped. Failed attempt files remain. New exports use exclusive creation.
 An OS lock is released by process exit; a filename alone is not proof of a live
 collector. Poll the actual process handle before restarting interrupted work.
+After code changes, replay retains original collection provenance separately;
+collection resume must use its original pinned code/environment or a new plan.
 
 ## Surprises & Discoveries
 
@@ -148,9 +169,16 @@ race number across venues; ambiguous last-rank/last-three boundaries remain null
 
 ## Outcomes & Retrospective
 
-Implementation and 347 focused/shared regressions are complete. Actual collection
-is running under the fixed plan SHA256
+Implementation and 351 focused/shared regressions are complete. Actual collection
+completed under the fixed plan SHA256
 `86b32a93348842575d9620cf124cad31df9c4eb2fb1287a82781480a67279960`.
+All 368 units were attempted using 398 reservations. There are 80 usable nonempty
+units, 285 empty unconfirmed units and three identity-unresolved August venue-4
+units. Usable history has 671 races/6,816 rows. Actual projection preserves all
+28 rosters/294 runners; 30-day counts are known for all, latest normal-finish
+date/rank for 158, while 90-day aggregates remain null. No fitting occurred.
+Frozen source/projection hashes and QA are recorded in
+`docs/research/2026-10-11-observed-history-seed.md`.
 The Goal remains active; 70% future exact success is unproven and paid server
 provisioning is unapproved.
 
@@ -159,3 +187,11 @@ implementation, following completed Pro advice while retaining training rules.
 
 Revision: record implemented collection/transformation, live actual collection
 and passing tests before publishing the first code increment. No fitting occurs.
+
+Revision: actual collection completed, initial seed and projection retained.
+Three old identity gaps motivated dependency-specific null handling. Preserve
+collection bytes/fingerprint while explicitly recording the new replay version.
+
+Revision: complete final source replay and independent feature QA. Add atomic
+exclusive JSON publication and interrupted-reservation resume tests. Publish
+the actual partial coverage honestly; no 70% or training approval claim.
