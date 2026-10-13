@@ -1,0 +1,33 @@
+{
+  "format_version": "history-form-exploration-plan-v1",
+  "purpose": "fixed_predictor_diagnostic_no_fit_no_promotion",
+  "target": {
+    "root": ".cache/autoresearch/observed-history-20261011",
+    "seed": ".cache/autoresearch/observed-history-20261011/seed-final.json",
+    "seed_sha256": "0dbe7abe5bdfb0a0b422bb90bddbdf1a3face89e5016254807ba37be95c25c66",
+    "archive": ".cache/autoresearch/official-history-20261012-v2",
+    "archive_sha256": "eaece57cdd27ee4e348e171e04368440da9d82a4417110476f0a1a1400e934e2"
+  },
+  "earlier": {
+    "root": ".cache/autoresearch/observed-history-extension-20260705-11",
+    "seed": ".cache/autoresearch/observed-history-extension-20260705-11/seed-final.json",
+    "seed_sha256": "8892efdc45e910cec965e13f498042cf2132e9fed0ebdabf8b590010c38ffa81",
+    "archive": ".cache/autoresearch/official-history-extension-20260705-11",
+    "archive_sha256": "8f636085beff392bcb93b913dd6e8014752ccd68de625be7a09040d283e2b7f1"
+  },
+  "catalog": {
+    "directory": ".cache/autoresearch/official-june-catalog-20261013",
+    "discovery": ".cache/autoresearch/official-june-discovery-20261013",
+    "index_sha256": "2bc608269678ba7ebcfa55a8a7650cbc7b4d7987435dee367f2da0f5976dd7dd",
+    "archive_sha256": "5208e231e93289ca1a9e3d21e68d4e5051f830dd7b1afa3246fe00a2415fb220"
+  },
+  "expected_target_races": 671,
+  "expected_target_rows": 6816,
+  "arms": ["gate", "dual90", "expanded90", "expanded180", "top3_90"],
+  "rank_pseudo_count": 2,
+  "rank_prior_mean": "1/2",
+  "top3_pseudo_count": 2,
+  "top3_prior_mean": "3/10",
+  "training_approved": false,
+  "counts_as_70_percent_evidence": false
+}
