@@ -164,7 +164,7 @@ def form_score(prior, arm):
 
 def predict(targets, history):
     indexed, withheld = index_history(history)
-    output = []
+    output, diagnostics = [], defaultdict(Counter)
     if not targets:
         raise ValueError("form_empty_targets")
     for identity, roster in sorted(targets.items()):
@@ -206,9 +206,37 @@ def predict(targets, history):
                 if len(rows) >= 3
                 else "insufficient_archived_roster",
                 "rows": rows,
+                "boundary_score_tie": len(ordered) > 3
+                and Fraction(ordered[2]["score_fraction"])
+                == Fraction(ordered[3]["score_fraction"]),
             }
+            diagnostics[arm].update(
+                {
+                    "races": 1,
+                    "runner_rows": len(rows),
+                    "selection_count": int(len(rows) >= 3),
+                    "boundary_score_ties": int(arms[arm]["boundary_score_tie"]),
+                    "selected_without_prior": sum(
+                        not r["prior_ids"] for r in ordered[:3]
+                    )
+                    if len(rows) >= 3
+                    else 0,
+                }
+            )
+            for row in rows:
+                n = len(row["prior_ids"])
+                diagnostics[arm][
+                    f"prior_count_{min(n, 3)}{'_plus' if n >= 3 else ''}"
+                ] += 1
+                diagnostics[arm].update(
+                    f"used_{tier}_observations" for tier in row["prior_tiers"]
+                )
         output.append({"race_id": identity, "arms": arms})
-    return {"ledger": output, "invalid_rank_size_history_withheld": withheld}
+    return {
+        "ledger": output,
+        "diagnostics": diagnostics,
+        "invalid_rank_size_history_withheld": withheld,
+    }
 
 
 def evaluate(predictions, outcomes):
@@ -232,7 +260,9 @@ def evaluate(predictions, outcomes):
         for arm in ARMS:
             chosen = prediction["arms"][arm]["horse_ids"]
             state = "pending"
-            if outcome["status"] == "void_reported_no_top3":
+            if chosen is None:
+                state = "execution_failure"
+            elif outcome["status"] == "void_reported_no_top3":
                 state = "undefined"
             elif outcome["status"] == "unique_top3_observed" and chosen is not None:
                 if len(chosen) != 3 or len(set(chosen)) != 3:
@@ -279,7 +309,6 @@ def run(plan_path, plan_sha, directory):
     ):
         raise ValueError("form_unrecognized_protocol")
     targets, outcomes, history = load_sources(plan)
-    predictions = predict(targets, history)
     directory.mkdir(parents=True, exist_ok=False)
     flags = {
         "training_approved": False,
@@ -289,6 +318,9 @@ def run(plan_path, plan_sha, directory):
         "counts_as_70_percent_evidence": False,
         "untouched_holdout": False,
         "prediction_success_rate": None,
+        "complete_future_national_universe": False,
+        "complete_actual_start_history_verified": False,
+        "fit_count": 0,
     }
     implementations = source_hashes()
     for name in ("history_form_research.py", "official_history_catalog.py"):
@@ -302,11 +334,34 @@ def run(plan_path, plan_sha, directory):
         "scope": "retrospective_full_archived_population_not_national_forward_test",
         **flags,
     }
+    target_rows = [
+        {"race_id": identity, **row}
+        for identity, roster in sorted(targets.items())
+        for row in sorted(roster, key=lambda r: r["chul_no"])
+    ]
+    common["target_manifest_sha256"] = save(
+        directory / "targets.json",
+        {
+            "membership_basis": "pinned_archived_result_roster",
+            "plan_sha256": plan_sha,
+            "rows": target_rows,
+        },
+    )
+    common["history_view_sha256"] = save(
+        directory / "history.json",
+        {
+            "plan_sha256": plan_sha,
+            "records": history,
+            **flags,
+        },
+    )
+    predictions = predict(targets, history)
     prediction_sha = save(directory / "predictions.json", {**common, **predictions})
     report = {
         **common,
         "prediction_sha256": prediction_sha,
         "outcome_status_counts": dict(Counter(r["status"] for r in outcomes.values())),
+        "diagnostics": predictions["diagnostics"],
         **evaluate(predictions, outcomes),
     }
     report_sha = save(directory / "report.json", report)

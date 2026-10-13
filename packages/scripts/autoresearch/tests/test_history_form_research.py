@@ -123,6 +123,52 @@ def test_shuffled_rosters_and_history_are_deterministic():
     assert m.predict(targets, history) == m.predict(shuffled, list(reversed(history)))
 
 
+def test_diagnostics_reconcile_rows_and_selected_fallbacks():
+    targets, history = inputs()
+    history = history[:1]
+    result = m.predict(targets, history)
+    stats = result["diagnostics"]["dual90"]
+    assert stats["runner_rows"] == 4
+    assert stats["prior_count_0"] == 3
+    assert stats["prior_count_1"] == 1
+    assert stats["selected_without_prior"] == 3
+    assert stats["used_dual_supported_observations"] == 1
+    assert stats["boundary_score_ties"] == 0
+    assert m.predict(targets, [])["diagnostics"]["dual90"]["boundary_score_ties"] == 1
+
+
+def test_source_span_implies_equal_windows_and_october_source_arms():
+    targets, history = inputs()
+    roster = next(iter(targets.values()))
+    for row in history:
+        row.update(race_id="20260601_1_1", tier="html_only")
+    early = m.predict({"20260830_1_1": roster}, history)["ledger"][0]["arms"]
+    assert early["expanded90"] == early["expanded180"]
+    for row in history:
+        row["race_id"] = "20260704_1_1"
+    late = m.predict({"20261003_1_1": roster}, history)["ledger"][0]["arms"]
+    assert late["dual90"] == late["expanded90"]
+
+
+def test_past_outcome_changes_only_later_target_scores():
+    targets, history = inputs()
+    roster = next(iter(targets.values()))
+    targets["20260701_1_1"] = roster
+    before = m.predict(targets, history)
+    history[0]["rank"] = 1
+    after = m.predict(targets, history)
+    assert before["ledger"][0] == after["ledger"][0]
+    assert before["ledger"][1] != after["ledger"][1]
+
+
+def test_normalization_uses_full_prior_roster_not_numeric_row_count():
+    targets, history = inputs()
+    history = history[:1]
+    history[0].update(rank=2, observed_roster_size=10)
+    row = m.predict(targets, history)["ledger"][0]["arms"]["dual90"]["rows"][0]
+    assert row["score_fraction"] == "17/27"
+
+
 @pytest.mark.parametrize("kind", ["horse", "gate", "history", "leak"])
 def test_invalid_inputs_fail(kind):
     targets, history = inputs()
@@ -181,7 +227,10 @@ def test_insufficient_roster_is_retained():
     predictions = m.predict(targets, history)
     assert predictions["ledger"][0]["arms"]["gate"]["horse_ids"] is None
     assert (
-        m.evaluate(predictions, outcomes())["totals"]["all"]["dual90"]["pending"] == 1
+        m.evaluate(predictions, outcomes())["totals"]["all"]["dual90"][
+            "execution_failure"
+        ]
+        == 1
     )
 
 

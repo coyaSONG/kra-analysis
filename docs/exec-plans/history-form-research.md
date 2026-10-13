@@ -17,8 +17,9 @@ even target rosters are reconstructed from result archives, not frozen entry car
 - [x] (2026-10-13) Inspect existing fit gates, frozen contracts and outcome adapter.
 - [x] Request Pro critique of a non-fitting, fixed-candidate experiment.
 - [x] Implement a pinned protocol, raw replay, predictors and full-population ledger.
-- [x] Pass 26 tests for date boundaries, label isolation, missingness, ambiguity and replay pins; Ruff passes.
-- [ ] Execute once on the real archives, interpret all candidates and await Pro completion.
+- [x] Pass 30 new tests and 261 related regressions; Ruff passes.
+- [x] Execute all five candidates on real archives and reproduce the first run byte-for-byte.
+- [x] Receive completed Pro advice, add manifests/diagnostics without changing scores, and independently check 34,080 scores and 3,355 combinations.
 - [ ] Run regressions, document findings, commit, push and normally merge after required CI.
 
 ## Context and Orientation
@@ -78,8 +79,11 @@ gate. Their formulas are hypotheses for feature development, not fitted models.
 Do not use present-race rank, recorded time, odds, or an outcome-derived subset
 as a predictive input. Target IDs and gates remain post-result reconstructed
 context, so chronological exclusion alone does not prove historical availability.
-Record all five arms, including weak results. Pro advice is pending and is not
-authorization to relax source or training gates.
+Record all five arms, including weak results. Completed Pro advice supports this
+non-fitting experiment, not relaxation of source/training gates. Its suggested
+0.5 top-three prior differs from our already frozen 0.3; retain the frozen rule
+after inspecting results. Adopt manifests, explicit execution-failure states,
+source-span invariants and tie/fallback diagnostics without changing selections.
 
 ## Surprises & Discoveries
 
@@ -97,8 +101,18 @@ Normal PR merge only after required checks; document existing security failures.
 
 ## Outcomes & Retrospective
 
-Pending actual execution. The 70% goal remains unverified regardless of these
-retrospective diagnostic results.
+Actual execution produced all 3,355 selections with no failures. Counts are
+10/28/28/29/28 matches for gate/dual90/expanded90/expanded180/top3_90; each arm
+retains 57 pending and one undefined outcome. Expanded90 changed 395 combinations,
+gaining 15 and losing 15 matches. Fallback and ties fell but matches did not rise.
+No parameter tuning or promotion followed. The next hypothesis concerns distance
+and class comparability, not another search of these outcomes. Exact pins and
+commands are in `docs/research/2026-10-13-history-form-research.md`. The 70% goal
+remains unverified. Publication and required CI are pending.
 
 Revision 2026-10-13: establish concrete non-fitting model research using existing
 history, so useful predictive experiments do not depend on API recovery.
+
+Revision 2026-10-13: completed actual execution, Pro consultation and 261 tests.
+Preserved the first two runs and proved diagnostic additions leave all scores
+and selections unchanged. Publication closure will be recorded on the PR.
