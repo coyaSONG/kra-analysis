@@ -242,6 +242,13 @@ jobs:
           uv run --frozen ruff check autoresearch/history_form_research.py autoresearch/tests/test_history_form_research.py
           uv run --frozen ruff format --check autoresearch/history_form_research.py autoresearch/tests/test_history_form_research.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_history_form_research.py -o addopts=''
+
+      - name: Check condition-matched historical form research
+        working-directory: packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/race_conditions.py autoresearch/condition_form_research.py autoresearch/tests/test_condition_form_research.py
+          uv run --frozen ruff format --check autoresearch/race_conditions.py autoresearch/condition_form_research.py autoresearch/tests/test_condition_form_research.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_condition_form_research.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |

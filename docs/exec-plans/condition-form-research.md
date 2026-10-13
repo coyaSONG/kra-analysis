@@ -15,9 +15,10 @@ Result-derived target rosters and conditions were captured after the races.
 - [x] Inspect logged-in API approvals: API214 10,000/day, API26 3,000/day.
 - [x] Bounded probes return HTTP 200, code 00 for both APIs on June 7.
 - [x] Resume the existing June collection with preserved failed receipts.
-- [ ] Freeze condition comparisons before looking at their outcomes.
-- [ ] Implement additive pinned condition extraction and focused tests.
-- [ ] Execute the full-population experiment and reconcile recovered June rows.
+- [x] Freeze condition comparisons in c08cb77 before looking at their outcomes.
+- [x] Implement additive pinned condition extraction and 48 focused tests.
+- [x] Execute 3,355 selections; independently reproduce 34,080 scores and reconcile recovered June rows.
+- [x] Receive completed Pro critique; add diagnostic-only partitions and prove all scores/selections unchanged.
 - [ ] Run regressions, document all results, push and normally merge after CI.
 
 ## Context and Orientation
@@ -67,6 +68,14 @@ API214 expires 2027-05-24; API26 expires 2028-06-15. Both are development accoun
 Do not publish credentials, account IDs, cookies or personal contact details.
 The existing 512-request June plan is below either daily limit but is not a
 claim about the account's other usage. Preserve failed and successful receipts.
-Never overwrite artifacts or frozen production contracts. Outcomes pending.
+Never overwrite artifacts or frozen production contracts. Joint90 matched 32
+versus baseline28, gaining eight and losing four; no promotion. The recovered
+API seed has 237 races/2,375 rows, of which 2,339 have numeric HTML corroboration.
+Exact hashes, all candidates and limitations are in the dated research note.
 
 Revision 2026-10-13: initial plan written before condition-arm execution.
+
+Revision 2026-10-13: actual experiment and API recovery audit complete; 246 tests
+pass. Pro consultation completed after 8m19s without interruption. Retained the
+fixed recipe and source tiers; added only diagnostics and counterexamples after
+first results, proving score/selection invariance. Publication closure goes on PR.
