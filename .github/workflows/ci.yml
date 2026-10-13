@@ -249,6 +249,12 @@ jobs:
           uv run --frozen ruff check autoresearch/race_conditions.py autoresearch/condition_form_research.py autoresearch/tests/test_condition_form_research.py
           uv run --frozen ruff format --check autoresearch/race_conditions.py autoresearch/condition_form_research.py autoresearch/tests/test_condition_form_research.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_condition_form_research.py -o addopts=''
+      - name: Pre-race condition input regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/prerace_conditions.py autoresearch/tests/test_prerace_conditions.py
+          uv run --frozen ruff format --check autoresearch/prerace_conditions.py autoresearch/tests/test_prerace_conditions.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_prerace_conditions.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |
