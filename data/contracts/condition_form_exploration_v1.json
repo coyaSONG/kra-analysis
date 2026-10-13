@@ -1,0 +1,15 @@
+{
+  "format_version": "condition-form-exploration-plan-v1",
+  "source_plan": "data/contracts/history_form_exploration_v1.json",
+  "source_plan_sha256": "c4a1173a7883f11e60a9234160c8c231cb0a2e730479607f84dac766f77225a9",
+  "arms": ["expanded90", "venue90", "distance90", "class90", "joint90"],
+  "distance_tolerance_metres": 200,
+  "class_rule": "exact_label_same_physical_venue",
+  "condition_source": "pinned_official_dated_header_only",
+  "missing_context_or_empty_eligible_history": "per_runner_expanded90_fallback",
+  "window_days": 90,
+  "rank_pseudo_count": 2,
+  "rank_prior_mean": "1/2",
+  "training_approved": false,
+  "counts_as_70_percent_evidence": false
+}
