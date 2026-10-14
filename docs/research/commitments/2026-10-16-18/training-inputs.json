@@ -1,0 +1,901 @@
+{
+  "completed_at": "2026-10-14T06:28:11.171335+00:00",
+  "contract_sha256": "3dd3bc49ec64e9c34e8b616f109ab660e305f2edd30f28176cc67ccb50c202b2",
+  "counts_as_70_percent_evidence": false,
+  "days": [
+    {
+      "ledger": [
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.087001+00:00",
+            "packet_sha256": "69f5f485b9f41940c9240acf80216fe2880efa4b8ca54d43dffd82de7b68af3c",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "8e0f765c30aad4ff9ac7b238f0d1a1304a0f0acca4ed75fec526f20cac3dcaf9",
+          "occupied_packet_sha256": "69f5f485b9f41940c9240acf80216fe2880efa4b8ca54d43dffd82de7b68af3c",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_1.json",
+          "packet_sha256": "69f5f485b9f41940c9240acf80216fe2880efa4b8ca54d43dffd82de7b68af3c",
+          "race_id": "20261016_2_1",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.088555+00:00",
+            "packet_sha256": "092a9880c9bc932f29c9f3e41e5b54b76416b2b472061a015d55ff02145a0ee9",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "8fc75472faa7b227085da6abb4522666d7470affb90cabd286195371fc0a39dd",
+          "occupied_packet_sha256": "092a9880c9bc932f29c9f3e41e5b54b76416b2b472061a015d55ff02145a0ee9",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_2.json",
+          "packet_sha256": "092a9880c9bc932f29c9f3e41e5b54b76416b2b472061a015d55ff02145a0ee9",
+          "race_id": "20261016_2_2",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.090124+00:00",
+            "packet_sha256": "968c5b02edc256a77f5992d7ab9f5927b9ed735947e7671063f125e91f7f6072",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "b9f7151561532294998144bc5794aaa702b4df9f5601ddfd6dc7c09a7e6be1eb",
+          "occupied_packet_sha256": "968c5b02edc256a77f5992d7ab9f5927b9ed735947e7671063f125e91f7f6072",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_3.json",
+          "packet_sha256": "968c5b02edc256a77f5992d7ab9f5927b9ed735947e7671063f125e91f7f6072",
+          "race_id": "20261016_2_3",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.091936+00:00",
+            "packet_sha256": "9d8549028dc662af48551f400e515f3021d29d7c529a39683849ec3de854e6c2",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "bd0c635a8a5ed347397501106d0362fd35828bc4daf1f0cdf7d1342665b0f32b",
+          "occupied_packet_sha256": "9d8549028dc662af48551f400e515f3021d29d7c529a39683849ec3de854e6c2",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_4.json",
+          "packet_sha256": "9d8549028dc662af48551f400e515f3021d29d7c529a39683849ec3de854e6c2",
+          "race_id": "20261016_2_4",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.093579+00:00",
+            "packet_sha256": "3b8e3831413e922d5f19c39472be089d9056fb9b36b494e8d21bbff6c466404c",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "c068d8fbbdd1000b14401d5122332c8ce275c5d5c58c98cdde57baba2cfdb039",
+          "occupied_packet_sha256": "3b8e3831413e922d5f19c39472be089d9056fb9b36b494e8d21bbff6c466404c",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_5.json",
+          "packet_sha256": "3b8e3831413e922d5f19c39472be089d9056fb9b36b494e8d21bbff6c466404c",
+          "race_id": "20261016_2_5",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.095084+00:00",
+            "packet_sha256": "35200da2cba8946a6c0c16e73cfc0a478ba4cf449d900ea15e1379d42d9e4a4e",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "f2597c855a6d5ae61d2e41e687b0530b3c8908e1f88fd3f6818e2e0f40c8f94b",
+          "occupied_packet_sha256": "35200da2cba8946a6c0c16e73cfc0a478ba4cf449d900ea15e1379d42d9e4a4e",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_6.json",
+          "packet_sha256": "35200da2cba8946a6c0c16e73cfc0a478ba4cf449d900ea15e1379d42d9e4a4e",
+          "race_id": "20261016_2_6",
+          "runner_count": 8,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.096612+00:00",
+            "packet_sha256": "4a56f039b0499cbdd9ec00965a067fd5653b29c283b3c589bc61e05b0345f7ec",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "f4cc6b081b1b9a79644c50cee6c2a21f22cd7ad2f3b17b516ffae20e9aa7f4eb",
+          "occupied_packet_sha256": "4a56f039b0499cbdd9ec00965a067fd5653b29c283b3c589bc61e05b0345f7ec",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_7.json",
+          "packet_sha256": "4a56f039b0499cbdd9ec00965a067fd5653b29c283b3c589bc61e05b0345f7ec",
+          "race_id": "20261016_2_7",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.098228+00:00",
+            "packet_sha256": "839e6b8920a789a9c33842a76a4cedd43db17b6bc0de3d5b41e85ffb3416a195",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "7fd0adf8f92bd5ba68ccf1a75377dc1ea23a1b509f6c92710be7f39f2ad59271",
+          "occupied_packet_sha256": "839e6b8920a789a9c33842a76a4cedd43db17b6bc0de3d5b41e85ffb3416a195",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_1.json",
+          "packet_sha256": "839e6b8920a789a9c33842a76a4cedd43db17b6bc0de3d5b41e85ffb3416a195",
+          "race_id": "20261016_3_1",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.099651+00:00",
+            "packet_sha256": "64d282b4da00b2ee37487edf31daea015ed4e5852b8398bccd9118eb076b1f5d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "6ebcce0ffb8dacb53c8777dd322dc073bdb22cab607fb5a0fecef65a36596b2e",
+          "occupied_packet_sha256": "64d282b4da00b2ee37487edf31daea015ed4e5852b8398bccd9118eb076b1f5d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_2.json",
+          "packet_sha256": "64d282b4da00b2ee37487edf31daea015ed4e5852b8398bccd9118eb076b1f5d",
+          "race_id": "20261016_3_2",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.101110+00:00",
+            "packet_sha256": "afbfff4f7176323044a391bc239178544200af1c56c666e2ebc1f100d7f9cbc6",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "31bd8c6ac0b70ede456ca209efa9c5c2a715f68156efaf872735de20143b13af",
+          "occupied_packet_sha256": "afbfff4f7176323044a391bc239178544200af1c56c666e2ebc1f100d7f9cbc6",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_3.json",
+          "packet_sha256": "afbfff4f7176323044a391bc239178544200af1c56c666e2ebc1f100d7f9cbc6",
+          "race_id": "20261016_3_3",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.102539+00:00",
+            "packet_sha256": "84a04eae4f718cd561f90fa3b66d40241af5ef041f02073e9285439039b2f48f",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "1dcdbd59045e8c752c639af326eaeb9d691e4fef719eeb21ae67072e36b3fc61",
+          "occupied_packet_sha256": "84a04eae4f718cd561f90fa3b66d40241af5ef041f02073e9285439039b2f48f",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_4.json",
+          "packet_sha256": "84a04eae4f718cd561f90fa3b66d40241af5ef041f02073e9285439039b2f48f",
+          "race_id": "20261016_3_4",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.104128+00:00",
+            "packet_sha256": "1eef62d3dd87d717a868bfaf2c37654cb8ed22e31835e9b5ab62997a65b16763",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "35432d9f73316826c6a0038adc7fd4006d4d873bb8cbebd42bb191056ceecde1",
+          "occupied_packet_sha256": "1eef62d3dd87d717a868bfaf2c37654cb8ed22e31835e9b5ab62997a65b16763",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_5.json",
+          "packet_sha256": "1eef62d3dd87d717a868bfaf2c37654cb8ed22e31835e9b5ab62997a65b16763",
+          "race_id": "20261016_3_5",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.105910+00:00",
+            "packet_sha256": "cec516d502ecc9a6850a06b9fece1125b2f2f69e0b78f0d98433529257126838",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "560b3d2c28c9570e7e02e6eec74bbc08bb27d82958c1590d37340fdcaa435b83",
+          "occupied_packet_sha256": "cec516d502ecc9a6850a06b9fece1125b2f2f69e0b78f0d98433529257126838",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_6.json",
+          "packet_sha256": "cec516d502ecc9a6850a06b9fece1125b2f2f69e0b78f0d98433529257126838",
+          "race_id": "20261016_3_6",
+          "runner_count": 14,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.107380+00:00",
+            "packet_sha256": "854a601e7369e366e3c7203f1acf11f7678f229fa6799e1dae1a25e0c9602e2e",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "d90beec9d36df2dce39aeec41deb84a2303104291144d12947d0a4f07ab50232",
+          "occupied_packet_sha256": "854a601e7369e366e3c7203f1acf11f7678f229fa6799e1dae1a25e0c9602e2e",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_7.json",
+          "packet_sha256": "854a601e7369e366e3c7203f1acf11f7678f229fa6799e1dae1a25e0c9602e2e",
+          "race_id": "20261016_3_7",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.108837+00:00",
+            "packet_sha256": "311794c7899d427e3be45900174e061d7bd86e2c777955ea21be914cd262129d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "d5560a5c13d54251a8ea3926151e043302a0aaae226131d82a870a771827bd25",
+          "occupied_packet_sha256": "311794c7899d427e3be45900174e061d7bd86e2c777955ea21be914cd262129d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_8.json",
+          "packet_sha256": "311794c7899d427e3be45900174e061d7bd86e2c777955ea21be914cd262129d",
+          "race_id": "20261016_3_8",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.110444+00:00",
+            "packet_sha256": "372f262c3b2d88eeb8e3f1808dc85f7772d43df4080e789c1ce6c11944e393ff",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "34cd47ad87aef5f2d13c634b02869d5b2e99090e64f3f3e86a6bfda4c8edaa75",
+          "occupied_packet_sha256": "372f262c3b2d88eeb8e3f1808dc85f7772d43df4080e789c1ce6c11944e393ff",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_9.json",
+          "packet_sha256": "372f262c3b2d88eeb8e3f1808dc85f7772d43df4080e789c1ce6c11944e393ff",
+          "race_id": "20261016_3_9",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        }
+      ],
+      "race_count": 16,
+      "race_date": "20261016",
+      "status": "study_available",
+      "study_sha256": "0be7231e38cdb626600c49021174e7a146219dafdb894ba60e8a27ed6245bbc2"
+    },
+    {
+      "ledger": [
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.111987+00:00",
+            "packet_sha256": "15f5a660ad5f5db8a02a81870c9d2cb0d3c023d830df84addeb38cffca278291",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "9ed36b2fe90ac92c54894674f1f04ad8e66c0cb577b34c4e6dceafbe003e2f6c",
+          "occupied_packet_sha256": "15f5a660ad5f5db8a02a81870c9d2cb0d3c023d830df84addeb38cffca278291",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_1.json",
+          "packet_sha256": "15f5a660ad5f5db8a02a81870c9d2cb0d3c023d830df84addeb38cffca278291",
+          "race_id": "20261017_1_1",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.113433+00:00",
+            "packet_sha256": "2854e82d26ce711b6ebb10f9aa43a8a02c2b2864d74a3520b0ebbb5f46eccbff",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "17bf43d16bb51b37cae27d4ebcceafc3ebf1896c78cb89cb4636ca0e9766519a",
+          "occupied_packet_sha256": "2854e82d26ce711b6ebb10f9aa43a8a02c2b2864d74a3520b0ebbb5f46eccbff",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_2.json",
+          "packet_sha256": "2854e82d26ce711b6ebb10f9aa43a8a02c2b2864d74a3520b0ebbb5f46eccbff",
+          "race_id": "20261017_1_2",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.114942+00:00",
+            "packet_sha256": "8f4f6dfb1240f8a91e4024dbd6ce8d2eda618358080fbd880db01c3db5fd9876",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "5cae30d4944dd2cf07a891d67907dca436d0f05e243af9862a08b6f31f00a60d",
+          "occupied_packet_sha256": "8f4f6dfb1240f8a91e4024dbd6ce8d2eda618358080fbd880db01c3db5fd9876",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_3.json",
+          "packet_sha256": "8f4f6dfb1240f8a91e4024dbd6ce8d2eda618358080fbd880db01c3db5fd9876",
+          "race_id": "20261017_1_3",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.116400+00:00",
+            "packet_sha256": "b2fdcb20d38deddf9aa534b130e14cf577b0d71629189617761e3f07c305e1db",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "d8da3b26111185ae87101b5a968857ef298be23422f86fc0db3fc4f2dc0597cc",
+          "occupied_packet_sha256": "b2fdcb20d38deddf9aa534b130e14cf577b0d71629189617761e3f07c305e1db",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_4.json",
+          "packet_sha256": "b2fdcb20d38deddf9aa534b130e14cf577b0d71629189617761e3f07c305e1db",
+          "race_id": "20261017_1_4",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.117957+00:00",
+            "packet_sha256": "b8b8f2dafafe7ec7bbf4da6bfd6c7ee9794ef0ed5518f714c92f458d42f5f312",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "ed7025ef83175246d7b9a5e1b629dd6b21c653d8f004458637062162be359ee0",
+          "occupied_packet_sha256": "b8b8f2dafafe7ec7bbf4da6bfd6c7ee9794ef0ed5518f714c92f458d42f5f312",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_5.json",
+          "packet_sha256": "b8b8f2dafafe7ec7bbf4da6bfd6c7ee9794ef0ed5518f714c92f458d42f5f312",
+          "race_id": "20261017_1_5",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.119408+00:00",
+            "packet_sha256": "c7ebdc60d57f7805a39852df666497d8b4a5e4336ea771395def9761bb334f2c",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "4805be2da791cde521b8b2dd730f8eb0c5daa437575e2e23c2c33f875fdf36f3",
+          "occupied_packet_sha256": "c7ebdc60d57f7805a39852df666497d8b4a5e4336ea771395def9761bb334f2c",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_6.json",
+          "packet_sha256": "c7ebdc60d57f7805a39852df666497d8b4a5e4336ea771395def9761bb334f2c",
+          "race_id": "20261017_1_6",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.120802+00:00",
+            "packet_sha256": "2adce64492710c8f10b461a292dcdbda7450b4539075fba8652bed340f1c29ab",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "84bd48055970abaaa7c96ce73a1a0d7f77a7c1cd4024848ce2fcfc43dd8937bb",
+          "occupied_packet_sha256": "2adce64492710c8f10b461a292dcdbda7450b4539075fba8652bed340f1c29ab",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_7.json",
+          "packet_sha256": "2adce64492710c8f10b461a292dcdbda7450b4539075fba8652bed340f1c29ab",
+          "race_id": "20261017_1_7",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.122298+00:00",
+            "packet_sha256": "46d0987a5b7a41ba2340b4cc352bf1af80c818efd10a486b5b99d9038d6f3ec9",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "1656bda5ecaad333dbfc5f3a05ff452dc4066a2307203b53dd502696d73ec3a0",
+          "occupied_packet_sha256": "46d0987a5b7a41ba2340b4cc352bf1af80c818efd10a486b5b99d9038d6f3ec9",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_8.json",
+          "packet_sha256": "46d0987a5b7a41ba2340b4cc352bf1af80c818efd10a486b5b99d9038d6f3ec9",
+          "race_id": "20261017_1_8",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.123748+00:00",
+            "packet_sha256": "1ed87d997cceeae9a86eb122a3853dda001edb1e2308b6d1856871848c0fe3c0",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "cced1a590582ef07fe27c9777f9258ef99486a9abf759b2efc98977473b6d5a2",
+          "occupied_packet_sha256": "1ed87d997cceeae9a86eb122a3853dda001edb1e2308b6d1856871848c0fe3c0",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_9.json",
+          "packet_sha256": "1ed87d997cceeae9a86eb122a3853dda001edb1e2308b6d1856871848c0fe3c0",
+          "race_id": "20261017_1_9",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.125296+00:00",
+            "packet_sha256": "a91f65482b5c341fe6d1a77d85c8a8bfd973e60b7bc41809e805f7381fce70b0",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "70f4bcffc474d5140e4a2e46bd2e4ab9de691cb2c55db143dc97d407376a9b9e",
+          "occupied_packet_sha256": "a91f65482b5c341fe6d1a77d85c8a8bfd973e60b7bc41809e805f7381fce70b0",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_10.json",
+          "packet_sha256": "a91f65482b5c341fe6d1a77d85c8a8bfd973e60b7bc41809e805f7381fce70b0",
+          "race_id": "20261017_1_10",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.126616+00:00",
+            "packet_sha256": "c9d888a654aa1e4e7cf2c894b75601f0f9d8a4894e2755ceac5647688579414d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "1540e995b337f30c4fdd4e586eda6f33fca62966c15316252dc839f3065e0ca3",
+          "occupied_packet_sha256": "c9d888a654aa1e4e7cf2c894b75601f0f9d8a4894e2755ceac5647688579414d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_1.json",
+          "packet_sha256": "c9d888a654aa1e4e7cf2c894b75601f0f9d8a4894e2755ceac5647688579414d",
+          "race_id": "20261017_2_1",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.127988+00:00",
+            "packet_sha256": "43d9d6a7e540c92cbca42c0d91caf98a87e2aad002ccce28f2a6132445fe4b2d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "0a76e3e4f0a50e0c9715074cf2069248b22545664ab46392a537df5877017d03",
+          "occupied_packet_sha256": "43d9d6a7e540c92cbca42c0d91caf98a87e2aad002ccce28f2a6132445fe4b2d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_2.json",
+          "packet_sha256": "43d9d6a7e540c92cbca42c0d91caf98a87e2aad002ccce28f2a6132445fe4b2d",
+          "race_id": "20261017_2_2",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.129378+00:00",
+            "packet_sha256": "318115e5610b01355499d7efdf1a77f2023a21d01d54cccd64bb8f6331467be5",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "417a057e004afbb4bdbbd474228dc2d855f771f32761671ed9f729ff3d9955f0",
+          "occupied_packet_sha256": "318115e5610b01355499d7efdf1a77f2023a21d01d54cccd64bb8f6331467be5",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_3.json",
+          "packet_sha256": "318115e5610b01355499d7efdf1a77f2023a21d01d54cccd64bb8f6331467be5",
+          "race_id": "20261017_2_3",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.130865+00:00",
+            "packet_sha256": "977f160fbc9816eb0bd210d97a1329c5525da9b8ac36b0de9ab3bebd5169e713",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "9a72cc142f9123f0ec1ce8249268a6dbb4f56332a2604a4f8bb4d7455c2a3104",
+          "occupied_packet_sha256": "977f160fbc9816eb0bd210d97a1329c5525da9b8ac36b0de9ab3bebd5169e713",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_4.json",
+          "packet_sha256": "977f160fbc9816eb0bd210d97a1329c5525da9b8ac36b0de9ab3bebd5169e713",
+          "race_id": "20261017_2_4",
+          "runner_count": 9,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.132450+00:00",
+            "packet_sha256": "4915cc7d31c15097812e363c7caba42f7f89d07c87075f0404736232a537fee1",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "9a94554777aca0cd7078405b5189291bb1a68d2c1bc0acbd7ca4d4ff15fb59d3",
+          "occupied_packet_sha256": "4915cc7d31c15097812e363c7caba42f7f89d07c87075f0404736232a537fee1",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_5.json",
+          "packet_sha256": "4915cc7d31c15097812e363c7caba42f7f89d07c87075f0404736232a537fee1",
+          "race_id": "20261017_2_5",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.133929+00:00",
+            "packet_sha256": "cd81cc127799d201ec8359d19a3f2859e2715226db52060b5421f199548a585d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "0bdd4fc433030b6460610b12048e82b4e89f8407a400ea63834ccf205829df54",
+          "occupied_packet_sha256": "cd81cc127799d201ec8359d19a3f2859e2715226db52060b5421f199548a585d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_6.json",
+          "packet_sha256": "cd81cc127799d201ec8359d19a3f2859e2715226db52060b5421f199548a585d",
+          "race_id": "20261017_2_6",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.135388+00:00",
+            "packet_sha256": "cc563b7f9315ca8334851855b9a97c027e82736f0393b0b96cdc1bad3c977011",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "79450190f6aad382f42c146888cde50ef577ea9d0ae082b2626738a1560b68ba",
+          "occupied_packet_sha256": "cc563b7f9315ca8334851855b9a97c027e82736f0393b0b96cdc1bad3c977011",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_7.json",
+          "packet_sha256": "cc563b7f9315ca8334851855b9a97c027e82736f0393b0b96cdc1bad3c977011",
+          "race_id": "20261017_2_7",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        }
+      ],
+      "race_count": 17,
+      "race_date": "20261017",
+      "status": "study_available",
+      "study_sha256": "2c2bca94b9ee55bbac8682a94d0d91a19b62848a8c547cb500a62b37a8a4fea8"
+    },
+    {
+      "ledger": [
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.136778+00:00",
+            "packet_sha256": "5a9d278c2a8cfed457ec904f2a7daac147470b217ffd5ed6a256c665f2de1f4d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "bde76203348813d705df7bcb2c8a73eb2556a02e2217bedd64a4758c24736eea",
+          "occupied_packet_sha256": "5a9d278c2a8cfed457ec904f2a7daac147470b217ffd5ed6a256c665f2de1f4d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_1.json",
+          "packet_sha256": "5a9d278c2a8cfed457ec904f2a7daac147470b217ffd5ed6a256c665f2de1f4d",
+          "race_id": "20261018_1_1",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.138304+00:00",
+            "packet_sha256": "8aea148240d0cf6c2f9ec4247fbf33611cff5a4f3d78978b1251b3965f5db7a6",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "66eb22abcce312118b02dcce8af2989e351dc50e3a3a10845a7d16f548b5ae20",
+          "occupied_packet_sha256": "8aea148240d0cf6c2f9ec4247fbf33611cff5a4f3d78978b1251b3965f5db7a6",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_2.json",
+          "packet_sha256": "8aea148240d0cf6c2f9ec4247fbf33611cff5a4f3d78978b1251b3965f5db7a6",
+          "race_id": "20261018_1_2",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.139817+00:00",
+            "packet_sha256": "9a98e6bc74bb88a206d9a4a993c2c2f6f4d5a079adffffdabb922060de5c344d",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "74ef70f4864f4f8fe0fede3724818ba9b13594a7123e0bffafec59eac3909ab8",
+          "occupied_packet_sha256": "9a98e6bc74bb88a206d9a4a993c2c2f6f4d5a079adffffdabb922060de5c344d",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_3.json",
+          "packet_sha256": "9a98e6bc74bb88a206d9a4a993c2c2f6f4d5a079adffffdabb922060de5c344d",
+          "race_id": "20261018_1_3",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.141218+00:00",
+            "packet_sha256": "b9ba6794ab5597604ff3449a56dcd74bc62bc50f548a7a21a91ffd33af5ed778",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "e6f3ad4cced2fffb10c794c27c007fe8e400bc33ffa006a507733ed843d20bf5",
+          "occupied_packet_sha256": "b9ba6794ab5597604ff3449a56dcd74bc62bc50f548a7a21a91ffd33af5ed778",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_4.json",
+          "packet_sha256": "b9ba6794ab5597604ff3449a56dcd74bc62bc50f548a7a21a91ffd33af5ed778",
+          "race_id": "20261018_1_4",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.142656+00:00",
+            "packet_sha256": "4281d2854e8cc4768e4ee5841533b204f71926147c442ffb9108d1969e77cdc4",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "2b715b6e042f099026928205aed6a6c9bed3a7bde9ed7ecb447aab5151e7063f",
+          "occupied_packet_sha256": "4281d2854e8cc4768e4ee5841533b204f71926147c442ffb9108d1969e77cdc4",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_5.json",
+          "packet_sha256": "4281d2854e8cc4768e4ee5841533b204f71926147c442ffb9108d1969e77cdc4",
+          "race_id": "20261018_1_5",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.144394+00:00",
+            "packet_sha256": "790bc23294346e1598b6fce02de6ce8fa850c0fd62eac95bc2e513924db4fe15",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "17e7efde3db825c13b671365015e6b8ef0c6908a86e9c8f4aabcbc18d8de53c9",
+          "occupied_packet_sha256": "790bc23294346e1598b6fce02de6ce8fa850c0fd62eac95bc2e513924db4fe15",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_6.json",
+          "packet_sha256": "790bc23294346e1598b6fce02de6ce8fa850c0fd62eac95bc2e513924db4fe15",
+          "race_id": "20261018_1_6",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.146135+00:00",
+            "packet_sha256": "ebf410f25ae749c423b6662570cf9793cb577b702a2b3d9f1d1a4c4e8fa4d2b7",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "8803b7336cf73610cecb7965b10cae3f9225291c84dfaa77ac7f827ee9ac06ed",
+          "occupied_packet_sha256": "ebf410f25ae749c423b6662570cf9793cb577b702a2b3d9f1d1a4c4e8fa4d2b7",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_7.json",
+          "packet_sha256": "ebf410f25ae749c423b6662570cf9793cb577b702a2b3d9f1d1a4c4e8fa4d2b7",
+          "race_id": "20261018_1_7",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.147640+00:00",
+            "packet_sha256": "d129dbb70d96d1c2e50535b2a95350f6d7fbbf74e1c521bc6ad9e7a40a328c05",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "88a5e3fdeeb62af7f7d036478897434fe314f077ba5dd6f75d05cc602faffac1",
+          "occupied_packet_sha256": "d129dbb70d96d1c2e50535b2a95350f6d7fbbf74e1c521bc6ad9e7a40a328c05",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_8.json",
+          "packet_sha256": "d129dbb70d96d1c2e50535b2a95350f6d7fbbf74e1c521bc6ad9e7a40a328c05",
+          "race_id": "20261018_1_8",
+          "runner_count": 10,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.149084+00:00",
+            "packet_sha256": "f619f2571641912a8089522ddff4c379d165616ee1a798710d8ccaecc661210e",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "637a68d13cceeee5cfa3b66c8d1c66d54ae096220f52fbb8ee4cf2016f513d5d",
+          "occupied_packet_sha256": "f619f2571641912a8089522ddff4c379d165616ee1a798710d8ccaecc661210e",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_9.json",
+          "packet_sha256": "f619f2571641912a8089522ddff4c379d165616ee1a798710d8ccaecc661210e",
+          "race_id": "20261018_1_9",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.150491+00:00",
+            "packet_sha256": "0eafb7e610f5c1885022c1ed6dd63cff11fdb1e267747e6a1ef603392ec33b1c",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "97fc2f9e9a18f9075b35cb2d00f5b757e2729f75a71be26e3dc41749294fb37a",
+          "occupied_packet_sha256": "0eafb7e610f5c1885022c1ed6dd63cff11fdb1e267747e6a1ef603392ec33b1c",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_10.json",
+          "packet_sha256": "0eafb7e610f5c1885022c1ed6dd63cff11fdb1e267747e6a1ef603392ec33b1c",
+          "race_id": "20261018_1_10",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.151911+00:00",
+            "packet_sha256": "7c58f5d876309b3d176b2d27261cd6b2b8479f2d75d2e38aebd52fdb7845cf78",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "689c3cdf6f434375ef3915393a53411f49d3e85695af984ed4bd652403a81d7c",
+          "occupied_packet_sha256": "7c58f5d876309b3d176b2d27261cd6b2b8479f2d75d2e38aebd52fdb7845cf78",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_11.json",
+          "packet_sha256": "7c58f5d876309b3d176b2d27261cd6b2b8479f2d75d2e38aebd52fdb7845cf78",
+          "race_id": "20261018_1_11",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.153391+00:00",
+            "packet_sha256": "b763789c5f576168724821b8b47efb2ac1869fce1deb2d4e2d9ff2f0de608c61",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "0e58e1c7c07a0ec906bd51e74ddacda863ed05bb2cea8aea8dbbefc929039c00",
+          "occupied_packet_sha256": "b763789c5f576168724821b8b47efb2ac1869fce1deb2d4e2d9ff2f0de608c61",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_1.json",
+          "packet_sha256": "b763789c5f576168724821b8b47efb2ac1869fce1deb2d4e2d9ff2f0de608c61",
+          "race_id": "20261018_4_1",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.154787+00:00",
+            "packet_sha256": "28a2a3a151a3023dd23ea621dd9eb444fbedf114f67f76ee0abe419e76882fee",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "f00665b2a568fb2b1691c6762784c304a0dc65c491c381befe90802edf6980ca",
+          "occupied_packet_sha256": "28a2a3a151a3023dd23ea621dd9eb444fbedf114f67f76ee0abe419e76882fee",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_2.json",
+          "packet_sha256": "28a2a3a151a3023dd23ea621dd9eb444fbedf114f67f76ee0abe419e76882fee",
+          "race_id": "20261018_4_2",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.156255+00:00",
+            "packet_sha256": "0c3984b4bccc591cb02e61933b55b751b9475e289b1f8cb7d52369edcb59526e",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "15557ea82aa57f1278f991724602e8a740d3b03795ed0014eb6b3d1dab3c4a63",
+          "occupied_packet_sha256": "0c3984b4bccc591cb02e61933b55b751b9475e289b1f8cb7d52369edcb59526e",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_3.json",
+          "packet_sha256": "0c3984b4bccc591cb02e61933b55b751b9475e289b1f8cb7d52369edcb59526e",
+          "race_id": "20261018_4_3",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.157797+00:00",
+            "packet_sha256": "baebff6f490dbc2a8510c6e90876d754697cc0081f19799da30c747c764720f9",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "c75c47cc0b9c56c0c18fa990a9239003f4958d4f051868a9530af30b2033b5a6",
+          "occupied_packet_sha256": "baebff6f490dbc2a8510c6e90876d754697cc0081f19799da30c747c764720f9",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_4.json",
+          "packet_sha256": "baebff6f490dbc2a8510c6e90876d754697cc0081f19799da30c747c764720f9",
+          "race_id": "20261018_4_4",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.159187+00:00",
+            "packet_sha256": "9d666578ab33ed5980a32d7f00882c3620f95105f72363fa02085fdcdf81378b",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "98bdf7a69de6f787b1243eb2969de4084c5130d52d230d1adbae385514b8ff59",
+          "occupied_packet_sha256": "9d666578ab33ed5980a32d7f00882c3620f95105f72363fa02085fdcdf81378b",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_5.json",
+          "packet_sha256": "9d666578ab33ed5980a32d7f00882c3620f95105f72363fa02085fdcdf81378b",
+          "race_id": "20261018_4_5",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        },
+        {
+          "independent_packet_publication_verified": false,
+          "observation": {
+            "independent_timestamp_verified": false,
+            "observed_at": "2026-10-14T06:28:11.160602+00:00",
+            "packet_sha256": "9650320ecbd93d24d621e7364424d9b37ae89b1427da6016fd1a3f5b69dad2c1",
+            "status": "locally_observed_before_cutoff"
+          },
+          "occupied_observation_sha256": "c52e8393b57c338e52bd1abcc442d2afde8f6466942990701c6233c8a5976ceb",
+          "occupied_packet_sha256": "9650320ecbd93d24d621e7364424d9b37ae89b1427da6016fd1a3f5b69dad2c1",
+          "packet_path": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_6.json",
+          "packet_sha256": "9650320ecbd93d24d621e7364424d9b37ae89b1427da6016fd1a3f5b69dad2c1",
+          "race_id": "20261018_4_6",
+          "runner_count": 11,
+          "status": "locally_sealed",
+          "timing_reasons": []
+        }
+      ],
+      "race_count": 17,
+      "race_date": "20261018",
+      "status": "study_available",
+      "study_sha256": "9d7b66f3cffb2b713478b3557dfbcfd2faf688f5808b2473fbe58beb03bf64b3"
+    }
+  ],
+  "format_version": "kra-prospective-training-input-v1",
+  "history_projection_sha256": "6ff98c375495b666735545cb227b28ba8f87e8559f6fa58f17798a1d05a2c74e",
+  "history_publication": {
+    "document_git_blob_sha": "f25c96dabaef01104a37a92ef84aeedfe67e7dd3",
+    "document_path": "docs/research/2026-10-12-official-history-recency.md",
+    "document_response_sha256": "30ab52e19b2cc29d0a43ba955f430f43c970f09f3797e2e6eafe17275a3852c5",
+    "document_sha256": "42bebb6385f704be9b657dfbba8735c0e818e7f56765fee13c0e9e467b25ac0a",
+    "merge_commit_sha": "cbd299b7f36e317a1583becaa376be9deca15e08",
+    "merged_at": "2026-10-11T20:17:47+00:00",
+    "pull_number": 85,
+    "pull_response_sha256": "9a9f00a26a71d930f4335d0146cd4f14f3c219ce1d371f252a2d24f14205bec2",
+    "repository": "coyaSONG/kra-analysis",
+    "retrieved_at": "2026-10-14T06:28:04.229564+00:00",
+    "trust_basis": "live_github_https_metadata_and_hash_preimage_resistance"
+  },
+  "independently_published_packet_count": 0,
+  "locally_timely_prospective_count": 50,
+  "mode": "prospective",
+  "packet_count": 50,
+  "training_approved": false
+}
