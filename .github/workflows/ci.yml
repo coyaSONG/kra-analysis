@@ -255,6 +255,12 @@ jobs:
           uv run --frozen ruff check autoresearch/prerace_conditions.py autoresearch/tests/test_prerace_conditions.py
           uv run --frozen ruff format --check autoresearch/prerace_conditions.py autoresearch/tests/test_prerace_conditions.py
           uv run --frozen python -m pytest -q autoresearch/tests/test_prerace_conditions.py -o addopts=''
+      - name: Fixed condition contrast diagnostic regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen ruff check autoresearch/condition_delta_diagnostic.py autoresearch/tests/test_condition_delta_diagnostic.py
+          uv run --frozen ruff format --check autoresearch/condition_delta_diagnostic.py autoresearch/tests/test_condition_delta_diagnostic.py
+          uv run --frozen python -m pytest -q autoresearch/tests/test_condition_delta_diagnostic.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |
