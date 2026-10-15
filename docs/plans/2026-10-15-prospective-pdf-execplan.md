@@ -15,9 +15,10 @@ training, scoring, new evaluation arm, prediction overwrite or success claim.
 
 - [x] (2026-10-15) Revalidated merged PR98 and read current training/PDF gates.
 - [x] (2026-10-15) Confirmed no current-block PDF archive in the research checkout.
-- [ ] Implement bounded orchestration using the existing collectors and replay.
-- [ ] Capture once, replay raw evidence and retain all 50 statuses.
-- [ ] Document source coverage and exclusions; publish hashes, test, push and merge.
+- [x] (2026-10-15) Implemented bounded orchestration; 206 local tests pass including 16 new cases. Lint cleanup committed before collection.
+- [x] (2026-10-15) Captured 44 eligible PDFs / 468 rows in 52 requests, replayed raw chains; six unsupported races / 66 rows remain in all-50 registry.
+- [x] (2026-10-15) Documented source coverage/exclusions, generated the public hash manifest and passed 307 final regressions plus exact offline replay.
+- [ ] Publish through a PR; record final required checks and normal merge receipt on that PR.
 
 ## Surprises & Discoveries
 
@@ -122,8 +123,21 @@ commitment scope and refuses late or duplicate execution.
 
 ## Outcomes & Retrospective
 
-Pending actual acquisition. More source rows do not imply more correct
-predictions. Future training admission requires explicit recipe/label review
-and later independent validation, not a claim based on this cohort's coverage.
+Actual acquisition completed at 2026-10-15T11:38:02.786250Z. The 44 PDFs
+provide features for 75/79 appearances without recent history and 173/225
+condition-fallback appearances. Full raw replay succeeded and all five fresh
+entry units equal their original frozen raw rows. More source rows do not
+imply more correct predictions. Future training admission requires explicit
+recipe/label review and later independent validation, not a coverage claim.
 
 Initial plan written before collection, with no target outcomes inspected.
+
+Acquisition update: preserve original plan/code hashes and all original files.
+The source registry and hashes are in
+`docs/research/2026-10-15-prospective-pdf-supplement.md`; remote publication and
+required-check closure remain to be completed.
+
+Validation update: the final 307-test suite includes the initial 206 tests and
+additional existing M0/API27/input-reservation regressions. An independent
+second raw replay reproduces the entire bundle and registry summary exactly.
+No sources, predictions or learning recipes changed during validation.
