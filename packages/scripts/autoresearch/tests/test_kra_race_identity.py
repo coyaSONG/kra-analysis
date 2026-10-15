@@ -10,6 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from shared.kra_race_card_pdf import parse_race_card_pdf, race_card_url
 from shared.kra_race_identity import MEET_NAMES, validate_race_identity
 
+from autoresearch.tests.race_card_pdf_fixture import make_card_pdf
+
 
 @pytest.mark.parametrize("meet", [1, 2, 3, 4])
 def test_physical_venues_accept_valid_race_identity(meet):
@@ -42,13 +44,24 @@ def test_venue_names_do_not_conflate_physical_venues_with_website_menu():
     assert "\uc601\ub0a8" not in MEET_NAMES
 
 
-def test_api_venue_four_does_not_authorize_a_guessed_pdf_profile():
-    with pytest.raises(ValueError, match="meet must be"):
-        race_card_url(4, "20261011", 1)
-    with pytest.raises(ValueError, match="meet must be"):
+def test_verified_venue_four_url_still_requires_valid_pdf_and_physical_footer():
+    assert race_card_url(4, "20261018", 1) == (
+        "https://race.kra.co.kr/down/pdf/busan/chulma/b_run_hr_261018_01.pdf"
+    )
+    with pytest.raises(ValueError, match="invalid_pdf_bytes"):
         parse_race_card_pdf(
             b"not a verified PDF", meet=4, race_date="20261011", race_no=1
         )
+    parsed = parse_race_card_pdf(
+        make_card_pdf(meet=3), meet=4, race_date="20260627", race_no=1
+    )
+    assert parsed["parser_status"] == "blocked"
+    assert parsed["rows"] == []
+
+
+def test_unverified_venue_five_has_no_pdf_profile():
+    with pytest.raises(ValueError, match="meet must be"):
+        race_card_url(5, "20261018", 1)
 
 
 @pytest.mark.parametrize(

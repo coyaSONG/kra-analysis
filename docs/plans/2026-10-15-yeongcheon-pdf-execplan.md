@@ -18,6 +18,7 @@ admit venue 4 inputs. This improves source coverage, not measured accuracy.
 - [x] (2026-10-15 12:12Z) Inspected actual PDF layout; final 360 regression tests passed after isolating the replay extension.
 - [x] (2026-10-15 12:03Z) Captured six venue-4 sources / 66 runners with seven calls, zero retries, before first block cutoff.
 - [x] (2026-10-15 12:14Z) Verified all 50 original source chains, full 534-row historical join and unchanged public predictions; real M0 model admission still passes.
+- [x] (2026-10-15 12:17Z) Expanded local suite to 390 passing tests; updated obsolete venue-4 identity assertion and made main CI install the PDF extra for replay tests.
 - [ ] Publish additive source receipt after tests and required CI, then normal merge.
 
 ## Surprises & Discoveries
@@ -144,3 +145,6 @@ their denominator. Existing httpx, pdfplumber and hashlib are sufficient.
 Initial plan records source evidence and immutable compatibility strategy.
 Revision: isolated venue-4 replay after the broad test exposed frozen model
 dependencies; retained original capture artifacts and added v2 offline review.
+Revision: remote CI exposed an obsolete unsupported-venue assertion and absent
+optional PDF dependencies in the API job. Updated the assertion to verify
+physical-footer rejection, and enabled the PDF runtime instead of skipping tests.

@@ -79,7 +79,13 @@ those tests. The separate `autoresearch/yeongcheon_pdf_replay.py` supports the
 new profile while mirroring the full existing raw-source validation contract.
 Shared helpers are reused unchanged. Negative replay tests run for both
 physical venues 1 and 4. Final focused and forward/evaluation regression suite:
-**360 passed**. Earlier 180 passes are contained in this suite, not additive.
+**390 passed**, including the cross-source physical identity tests. Earlier
+180/360 passes are contained in this suite, not additive. The first remote
+PDF run exposed an obsolete assertion that all venue-4 PDFs must be rejected;
+it now tests the observed URL while rejecting non-PDF content, a Busan footer
+and an unsupported venue. The main Python job also lacked the optional PDF
+runtime. Its result-evidence command now explicitly uses the frozen scripts
+package with the PDF extra, so these tests run rather than being skipped.
 
 The six source captures and original derived artifacts from commit `2ac5bc5`
 remain immutable. After isolating replay, v2 input-plan/bundle files record the

@@ -124,7 +124,7 @@ jobs:
         run: |
           uv run --frozen ruff check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
           uv run --frozen ruff format --check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
+          uv run --frozen --package kra-scripts --extra race-card-pdf python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
