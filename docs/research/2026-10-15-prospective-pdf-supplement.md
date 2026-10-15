@@ -138,7 +138,13 @@ condition-delta guards. The earlier 206-test run is contained in this final
 suite, not additional independent tests. A second offline replay reproduced
 the entire bundle and full-population summary exactly with zero requests.
 Ruff lint and formatting pass after the recorded cleanup. Remote CI and merge
-evidence are tracked on the publication PR. All three original
+evidence are tracked on [PR99](https://github.com/coyaSONG/kra-analysis/pull/99).
+Its first secret-scan run flagged the Python keyword `api_key=key` in commit
+`d95b004`, line 167, as an env-file assignment. Inspection of that exact commit
+confirmed a runtime variable, not a credential literal. Added only that exact
+commit/path/rule/line fingerprint to the existing `.gitleaksignore`; no path,
+rule or secret-scan job was disabled, and captured implementation bytes stay
+fixed. The final-head scan must pass before merge. All three original
 public M0/API27/training-input hashes are checked unchanged before and after
 acquisition. No target outcome endpoint was called and no prediction was made.
 

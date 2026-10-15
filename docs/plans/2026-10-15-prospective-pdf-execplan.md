@@ -18,7 +18,7 @@ training, scoring, new evaluation arm, prediction overwrite or success claim.
 - [x] (2026-10-15) Implemented bounded orchestration; 206 local tests pass including 16 new cases. Lint cleanup committed before collection.
 - [x] (2026-10-15) Captured 44 eligible PDFs / 468 rows in 52 requests, replayed raw chains; six unsupported races / 66 rows remain in all-50 registry.
 - [x] (2026-10-15) Documented source coverage/exclusions, generated the public hash manifest and passed 307 final regressions plus exact offline replay.
-- [ ] Publish through a PR; record final required checks and normal merge receipt on that PR.
+- [x] (2026-10-15) Pushed source hashes and opened PR99 before cutoff. Final-head checks and normal merge receipt are the PR closure record.
 
 ## Surprises & Discoveries
 
@@ -141,3 +141,9 @@ Validation update: the final 307-test suite includes the initial 206 tests and
 additional existing M0/API27/input-reservation regressions. An independent
 second raw replay reproduces the entire bundle and registry summary exactly.
 No sources, predictions or learning recipes changed during validation.
+
+Publication update: PR99 first flagged an exact Python keyword argument as an
+env-file secret. Inspected the committed line and added a single existing-style
+fingerprint exception; no credential literal, path exclusion or rule bypass.
+Final-head Gitleaks and required Python Checks must pass before normal merge;
+record all remaining CI failures and the final merge receipt on PR99.
