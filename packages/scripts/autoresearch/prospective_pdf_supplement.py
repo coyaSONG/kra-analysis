@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-
 from shared.kra_entry_sheet import build_entry_snapshot
 from shared.kra_race_card_pdf import NUMERIC_FIELDS
 
@@ -52,7 +51,7 @@ def finalize(targets, bundle):
         if row["race_id"] not in expected:
             raise ValueError("supplement_unexpected_feature_race")
         grouped[row["race_id"]].append(row)
-    statuses, available = [], Counter({f: 0 for f in NUMERIC_FIELDS})
+    statuses, available = [], Counter(dict.fromkeys(NUMERIC_FIELDS, 0))
     for identity, roster in sorted(targets.items()):
         required = {(r["chul_no"], r["horse_id"]) for r in roster}
         if not roster or len(required) != len(roster):

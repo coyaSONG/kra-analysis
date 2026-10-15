@@ -12,7 +12,7 @@ from autoresearch import prospective_pdf_supplement as supplement
 def inputs():
     roster = [{"horse_id": str(i), "chul_no": i} for i in range(1, 4)]
     targets = {"20261016_1_1": roster, "20261018_4_1": deepcopy(roster)}
-    features = {k: None for k in supplement.NUMERIC_FIELDS}
+    features = dict.fromkeys(supplement.NUMERIC_FIELDS)
     features.update({k + "_missing": True for k in supplement.NUMERIC_FIELDS})
     features["training_count"], features["training_count_missing"] = 0, False
     bundle = {
