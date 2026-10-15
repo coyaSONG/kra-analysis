@@ -1,0 +1,386 @@
+{
+  "accuracy": null,
+  "base_columns": [
+    "age",
+    "wgBudam",
+    "rating",
+    "rcCntT",
+    "ord1CntT",
+    "ord2CntT",
+    "ord3CntT",
+    "age_missing",
+    "wgBudam_missing",
+    "rating_missing",
+    "rcCntT_missing",
+    "ord1CntT_missing",
+    "ord2CntT_missing",
+    "ord3CntT_missing",
+    "observed_supported_ranked_finish_count_30d",
+    "days_since_last_observed_supported_ranked_date_90d",
+    "last_observed_supported_rank_90d",
+    "mean_last_three_observed_supported_ranks_90d",
+    "has_linked_api_unresolved_after_last_supported_ranked_date",
+    "observed_supported_ranked_finish_count_30d_missing",
+    "days_since_last_observed_supported_ranked_date_90d_missing",
+    "last_observed_supported_rank_90d_missing",
+    "mean_last_three_observed_supported_ranks_90d_missing",
+    "has_linked_api_unresolved_after_last_supported_ranked_date_missing"
+  ],
+  "columns": [
+    "age",
+    "wgBudam",
+    "rating",
+    "rcCntT",
+    "ord1CntT",
+    "ord2CntT",
+    "ord3CntT",
+    "age_missing",
+    "wgBudam_missing",
+    "rating_missing",
+    "rcCntT_missing",
+    "ord1CntT_missing",
+    "ord2CntT_missing",
+    "ord3CntT_missing",
+    "observed_supported_ranked_finish_count_30d",
+    "days_since_last_observed_supported_ranked_date_90d",
+    "last_observed_supported_rank_90d",
+    "mean_last_three_observed_supported_ranks_90d",
+    "has_linked_api_unresolved_after_last_supported_ranked_date",
+    "observed_supported_ranked_finish_count_30d_missing",
+    "days_since_last_observed_supported_ranked_date_90d_missing",
+    "last_observed_supported_rank_90d_missing",
+    "mean_last_three_observed_supported_ranks_90d_missing",
+    "has_linked_api_unresolved_after_last_supported_ranked_date_missing",
+    "memory_condition_delta90",
+    "memory_fallback90",
+    "memory_prior90_count",
+    "memory_similar90_count",
+    "memory_older_count",
+    "memory_older_same_venue_similar_count",
+    "memory_older_other_venue_count",
+    "memory_older_missing_condition_count",
+    "memory_older_career_form",
+    "memory_older_career_form_missing"
+  ],
+  "condition_memory_report_sha256": "0ff580a8e1ff3123f2f18ffb226ceb7ebf6c759f071697fbde0e9ad67bbb85e3",
+  "counts_as_70_percent_evidence": false,
+  "created_at": "2026-10-15T12:52:19.454815+00:00",
+  "extra_columns": [
+    "memory_condition_delta90",
+    "memory_fallback90",
+    "memory_prior90_count",
+    "memory_similar90_count",
+    "memory_older_count",
+    "memory_older_same_venue_similar_count",
+    "memory_older_other_venue_count",
+    "memory_older_missing_condition_count",
+    "memory_older_career_form",
+    "memory_older_career_form_missing"
+  ],
+  "first_cutoff": "2026-10-16T01:20:00+00:00",
+  "fit_count": 0,
+  "format_version": "condition-candidate-inputs-v1",
+  "implementation_sha256": "071ec832019359a8801fad3e81d37ca47c254f5f39fd5b830d5cbb85c933c9fb",
+  "independent_check_sha256": "e7a33a0d8b3aa176facf0e2c1f433449fe2280ebe3edb9a6356d3fc849ad583f",
+  "interpretation": "candidate_input_only_not_amendment_of_original_24_column_reservation",
+  "matrix_sha256": "7277897731011c64706f427cd7733444a5450767d312dabe8293a67c35a788a1",
+  "new_evaluation_arm_registered": false,
+  "null_counts": {
+    "age": 0,
+    "age_missing": 0,
+    "days_since_last_observed_supported_ranked_date_90d": 79,
+    "days_since_last_observed_supported_ranked_date_90d_missing": 0,
+    "has_linked_api_unresolved_after_last_supported_ranked_date": 79,
+    "has_linked_api_unresolved_after_last_supported_ranked_date_missing": 0,
+    "last_observed_supported_rank_90d": 79,
+    "last_observed_supported_rank_90d_missing": 0,
+    "mean_last_three_observed_supported_ranks_90d": 79,
+    "mean_last_three_observed_supported_ranks_90d_missing": 0,
+    "memory_condition_delta90": 0,
+    "memory_fallback90": 0,
+    "memory_older_career_form": 144,
+    "memory_older_career_form_missing": 0,
+    "memory_older_count": 0,
+    "memory_older_missing_condition_count": 0,
+    "memory_older_other_venue_count": 0,
+    "memory_older_same_venue_similar_count": 0,
+    "memory_prior90_count": 0,
+    "memory_similar90_count": 0,
+    "observed_supported_ranked_finish_count_30d": 0,
+    "observed_supported_ranked_finish_count_30d_missing": 0,
+    "ord1CntT": 0,
+    "ord1CntT_missing": 0,
+    "ord2CntT": 0,
+    "ord2CntT_missing": 0,
+    "ord3CntT": 0,
+    "ord3CntT_missing": 0,
+    "rating": 32,
+    "rating_missing": 0,
+    "rcCntT": 0,
+    "rcCntT_missing": 0,
+    "wgBudam": 0,
+    "wgBudam_missing": 0
+  },
+  "original_public_pins": {
+    "api27.json": "a51f7b8ca425251fa6bc7602788031a6675b3b9de195c55db76789d5847f6646",
+    "m0.json": "de82b4d1dc1d69b7982af04b7d83557d008381ea23202f0dff661721388f7a2c",
+    "training-inputs.json": "b4ab302c93bb01a947bd149622770d3413690f5fa95bbec8c13a00ed2808fa32"
+  },
+  "publication_review_required": true,
+  "race_count": 50,
+  "race_rows": [
+    {
+      "feature_cutoff_at": "2026-10-16T01:20:00+00:00",
+      "race_id": "20261016_2_1",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T02:10:00+00:00",
+      "race_id": "20261016_2_2",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T03:30:00+00:00",
+      "race_id": "20261016_2_3",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T04:20:00+00:00",
+      "race_id": "20261016_2_4",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T05:10:00+00:00",
+      "race_id": "20261016_2_5",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T06:00:00+00:00",
+      "race_id": "20261016_2_6",
+      "runner_count": 8
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T06:55:00+00:00",
+      "race_id": "20261016_2_7",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T01:45:00+00:00",
+      "race_id": "20261016_3_1",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T02:50:00+00:00",
+      "race_id": "20261016_3_2",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T03:55:00+00:00",
+      "race_id": "20261016_3_3",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T04:45:00+00:00",
+      "race_id": "20261016_3_4",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T05:35:00+00:00",
+      "race_id": "20261016_3_5",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T06:30:00+00:00",
+      "race_id": "20261016_3_6",
+      "runner_count": 14
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T07:25:00+00:00",
+      "race_id": "20261016_3_7",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T07:55:00+00:00",
+      "race_id": "20261016_3_8",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-16T08:25:00+00:00",
+      "race_id": "20261016_3_9",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T01:05:00+00:00",
+      "race_id": "20261017_1_1",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T08:25:00+00:00",
+      "race_id": "20261017_1_10",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T01:55:00+00:00",
+      "race_id": "20261017_1_2",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T03:15:00+00:00",
+      "race_id": "20261017_1_3",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T04:05:00+00:00",
+      "race_id": "20261017_1_4",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T04:55:00+00:00",
+      "race_id": "20261017_1_5",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T05:45:00+00:00",
+      "race_id": "20261017_1_6",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T06:35:00+00:00",
+      "race_id": "20261017_1_7",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T07:25:00+00:00",
+      "race_id": "20261017_1_8",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T07:55:00+00:00",
+      "race_id": "20261017_1_9",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T01:30:00+00:00",
+      "race_id": "20261017_2_1",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T02:35:00+00:00",
+      "race_id": "20261017_2_2",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T03:40:00+00:00",
+      "race_id": "20261017_2_3",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T04:30:00+00:00",
+      "race_id": "20261017_2_4",
+      "runner_count": 9
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T05:20:00+00:00",
+      "race_id": "20261017_2_5",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T06:10:00+00:00",
+      "race_id": "20261017_2_6",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-17T07:00:00+00:00",
+      "race_id": "20261017_2_7",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T01:05:00+00:00",
+      "race_id": "20261018_1_1",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T07:55:00+00:00",
+      "race_id": "20261018_1_10",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T08:25:00+00:00",
+      "race_id": "20261018_1_11",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T01:30:00+00:00",
+      "race_id": "20261018_1_2",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T01:55:00+00:00",
+      "race_id": "20261018_1_3",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T02:35:00+00:00",
+      "race_id": "20261018_1_4",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T03:40:00+00:00",
+      "race_id": "20261018_1_5",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T04:30:00+00:00",
+      "race_id": "20261018_1_6",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T05:20:00+00:00",
+      "race_id": "20261018_1_7",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T06:10:00+00:00",
+      "race_id": "20261018_1_8",
+      "runner_count": 10
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T07:25:00+00:00",
+      "race_id": "20261018_1_9",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T03:15:00+00:00",
+      "race_id": "20261018_4_1",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T04:05:00+00:00",
+      "race_id": "20261018_4_2",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T04:55:00+00:00",
+      "race_id": "20261018_4_3",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T05:45:00+00:00",
+      "race_id": "20261018_4_4",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T06:35:00+00:00",
+      "race_id": "20261018_4_5",
+      "runner_count": 11
+    },
+    {
+      "feature_cutoff_at": "2026-10-18T07:00:00+00:00",
+      "race_id": "20261018_4_6",
+      "runner_count": 11
+    }
+  ],
+  "runner_count": 534,
+  "target_outcomes_loaded": false,
+  "training_approved": false
+}
