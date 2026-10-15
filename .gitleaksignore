@@ -17,3 +17,6 @@ be0cf95ca297c10ecf59e8b71aa54cecb0bd52d8:packages/scripts/autoresearch/tests/tes
 # Keep the active collector bytes fixed; all other lines and commits stay scanned.
 e3491e2a4cc77f784b52e3ef91e5b2420f6b961b:packages/scripts/autoresearch/observed_history_seed.py:env-file:252
 e3491e2a4cc77f784b52e3ef91e5b2420f6b961b:packages/scripts/autoresearch/observed_history_seed.py:env-file:268
+# Exact env-file false positive: api_key=key forwards a runtime variable.
+# Verified against the committed line; no credential literal. Do not skip paths.
+d95b0048841ca9e3ca61dec635a9c178f8fba838:packages/scripts/autoresearch/prospective_pdf_supplement.py:env-file:167
