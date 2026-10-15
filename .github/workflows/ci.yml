@@ -124,7 +124,7 @@ jobs:
         run: |
           uv run --frozen ruff check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
           uv run --frozen ruff format --check ../../packages/scripts/shared/kra_result_history.py ../../packages/scripts/autoresearch/kra_result_snapshot.py ../../packages/scripts/autoresearch/kra_result_population_audit.py ../../packages/scripts/autoresearch/kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
+          uv run --frozen --package kra-scripts --extra race-card-pdf python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_result_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_result_population_audit.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_replay.py ../../packages/scripts/autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
       - name: Unit tests
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test_db
@@ -276,9 +276,9 @@ jobs:
       - name: Prospective PDF supplement regressions
         working-directory: ./packages/scripts
         run: |
-          uv run --frozen --extra race-card-pdf ruff check autoresearch/prospective_pdf_supplement.py autoresearch/tests/test_prospective_pdf_supplement.py
-          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prospective_pdf_supplement.py autoresearch/tests/test_prospective_pdf_supplement.py
-          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prospective_pdf_supplement.py -o addopts=''
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/prospective_pdf_supplement.py autoresearch/yeongcheon_pdf_replay.py shared/kra_race_card_pdf.py autoresearch/tests/test_prospective_pdf_supplement.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prospective_pdf_supplement.py autoresearch/yeongcheon_pdf_replay.py shared/kra_race_card_pdf.py autoresearch/tests/test_prospective_pdf_supplement.py
+          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prospective_pdf_supplement.py autoresearch/tests/test_kra_race_card_pdf.py autoresearch/tests/test_kra_race_card_pdf_snapshot.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |

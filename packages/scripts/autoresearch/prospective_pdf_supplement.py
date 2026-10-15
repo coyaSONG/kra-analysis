@@ -39,10 +39,11 @@ class RequestBudget:
             raise ValueError("supplement_cutoff_reached")
 
 
-def finalize(targets, bundle):
+def finalize(targets, bundle, *, supported=None):
+    supported = SUPPORTED if supported is None else set(supported)
     if not targets:
         raise ValueError("supplement_empty_population")
-    expected = {k for k in targets if int(k.split("_")[1]) in SUPPORTED}
+    expected = {k for k in targets if int(k.split("_")[1]) in supported}
     races = {r["race_id"]: r for r in bundle["races"]}
     if len(races) != len(bundle["races"]) or set(races) != expected:
         raise ValueError("supplement_bundle_population_mismatch")
@@ -78,10 +79,16 @@ def finalize(targets, bundle):
                 if eligible
                 else "blocked"
                 if item
-                else "unsupported_venue",
+                else "unsupported_venue"
+                if supported == SUPPORTED
+                else "not_requested",
                 "expected_runner_rows": len(roster),
                 "feature_row_count": len(exported),
-                "reasons": item["reasons"] if item else ["venue4_pdf_not_supported"],
+                "reasons": item["reasons"]
+                if item
+                else ["venue4_pdf_not_supported"]
+                if supported == SUPPORTED
+                else ["venue_not_requested_in_this_supplement"],
             }
         )
     total = sum(map(len, targets.values()))
@@ -103,7 +110,14 @@ def finalize(targets, bundle):
     }
 
 
-async def capture():
+async def capture(*, output_root=ROOT, supported=None, max_requests=60):
+    supported = SUPPORTED if supported is None else set(supported)
+    if not supported or not supported <= {1, 2, 3, 4}:
+        raise ValueError("supplement_invalid_supported_venues")
+    if type(max_requests) is not int or not 1 <= max_requests <= 60:
+        raise ValueError("supplement_invalid_request_limit")
+    if supported != SUPPORTED and Path(output_root).resolve() == ROOT.resolve():
+        raise ValueError("supplement_original_archive_reserved")
     public = {k: read_pin(delta.PUBLIC / k, v) for k, v in delta.PINS.items()}
     targets, _, _ = delta.load_targets(public["m0.json"])
     packets = {
@@ -119,13 +133,13 @@ async def capture():
     )
     if datetime.now(UTC) >= cutoff:
         raise ValueError("supplement_cutoff_reached")
-    root = ROOT.resolve()
+    root = Path(output_root).resolve()
     root.mkdir(parents=True, exist_ok=False)
     captures = root / "captures"
     observations = {
         k: {"race_id": k, "manifest_path": None, "sha256": None}
         for k in targets
-        if int(k.split("_")[1]) in SUPPORTED
+        if int(k.split("_")[1]) in supported
     }
     units = sorted({(k[:8], int(k.split("_")[1])) for k in observations})
     plan_sha = save(
@@ -136,7 +150,8 @@ async def capture():
             "public_commitments": delta.PINS,
             "targets": targets,
             "units": units,
-            "max_requests": 60,
+            "max_requests": max_requests,
+            "requested_venues": sorted(supported),
             "retries": 0,
             "consecutive_pdf_failure_breaker": 3,
             "purpose": "supplementary_inputs_only_not_replacement_reservations",
@@ -144,7 +159,7 @@ async def capture():
             "orchestration_sha256": digest(Path(__file__).read_bytes()),
         },
     )
-    budget, attempts, consecutive = RequestBudget(cutoff), [], 0
+    budget, attempts, consecutive = RequestBudget(cutoff, limit=max_requests), [], 0
     key = Path.home().joinpath(".codex/secrets/kra_api_key").read_text().strip()
     async with httpx.AsyncClient(
         timeout=30, follow_redirects=False, event_hooks={"request": [budget]}
@@ -258,7 +273,7 @@ async def capture():
         "new_evaluation_arm_registered": False,
         "counts_as_70_percent_evidence": False,
         "accuracy": None,
-        **finalize(targets, bundle),
+        **finalize(targets, bundle, supported=supported),
     }
     for k, v in delta.PINS.items():
         read_pin(delta.PUBLIC / k, v)

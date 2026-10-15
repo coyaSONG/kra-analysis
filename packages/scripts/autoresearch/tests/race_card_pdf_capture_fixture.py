@@ -34,16 +34,18 @@ def entry(number: int, *, race_no: int = 1, count: int = 2) -> dict[str, Any]:
 async def capture_chain(
     directory: Path,
     *,
+    meet: int = 1,
     rows: list[dict[str, Any]] | None = None,
     captured_at: datetime = datetime(2026, 6, 27, 1, 0, tzinfo=UTC),
 ) -> dict[str, Any]:
-    rows = rows if rows is not None else [entry(1), entry(2)]
+    identity = {**IDENTITY, "meet": meet}
+    rows = rows if rows is not None else [{**entry(i), "meet": meet} for i in (1, 2)]
 
     def response(request: httpx.Request) -> httpx.Response:
         if request.url.host == "race.kra.co.kr":
             return httpx.Response(
                 200,
-                content=make_card_pdf(),
+                content=make_card_pdf(meet=meet),
                 headers={"content-type": "application/pdf"},
             )
         number = int(request.url.params["pageNo"])
@@ -66,21 +68,21 @@ async def capture_chain(
     async with httpx.AsyncClient(transport=httpx.MockTransport(response)) as client:
         credentials = {"api_key": "fixture-credential-not-a-secret"}
         entries = await collect_entry_sheet_snapshot(
-            **IDENTITY,
+            **identity,
             **credentials,
             output_dir=directory,
             client=client,
             clock=lambda: datetime(2026, 6, 27, 0, 30, tzinfo=UTC),
         )
         pdf = await collect_race_card_pdf(
-            **IDENTITY,
+            **identity,
             output_dir=directory,
             entries=entries["entry_snapshot"],
             scheduled_start_time="1035",
             client=client,
             clock=lambda: captured_at,
         )
-    return {"pdf": pdf, "entries": entries}
+    return {"pdf": pdf, "entries": entries, "identity": identity}
 
 
 async def capture_reused_entry_chain(directory: Path) -> dict[str, Any]:

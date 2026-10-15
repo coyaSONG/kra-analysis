@@ -143,3 +143,28 @@ def test_late_capture_makes_no_request():
     with pytest.raises(ValueError, match="cutoff_reached"):
         asyncio.run(budget(None))
     assert budget.count == 0
+
+
+def test_venue_extension_does_not_drop_previously_captured_population():
+    targets, bundle = inputs()
+    bundle["races"][0]["race_id"] = "20261018_4_1"
+    for row in bundle["feature_rows"]:
+        row["race_id"] = "20261018_4_1"
+    report = supplement.finalize(targets, bundle, supported={4})
+    assert report["race_count"] == 2 and report["expected_runner_rows"] == 6
+    assert report["status_counts"] == {"not_requested": 1, "eligible": 1}
+
+
+@pytest.mark.parametrize(
+    "kwargs,reason",
+    [
+        ({"supported": set()}, "invalid_supported_venues"),
+        ({"supported": {5}}, "invalid_supported_venues"),
+        ({"max_requests": 61}, "invalid_request_limit"),
+        ({"max_requests": True}, "invalid_request_limit"),
+        ({"supported": {4}}, "original_archive_reserved"),
+    ],
+)
+def test_invalid_capture_options_fail_before_io(kwargs, reason):
+    with pytest.raises(ValueError, match=reason):
+        asyncio.run(supplement.capture(**kwargs))
