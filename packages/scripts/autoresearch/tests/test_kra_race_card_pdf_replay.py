@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch import kra_race_card_pdf_replay as replay
+from autoresearch import yeongcheon_pdf_replay
 from autoresearch.tests.race_card_pdf_capture_fixture import (
     IDENTITY,
     capture_chain,
@@ -21,10 +22,10 @@ from autoresearch.tests.race_card_pdf_capture_fixture import (
 )
 
 
-@pytest.fixture
-def chain(tmp_path):
+@pytest.fixture(params=[1, 4])
+def chain(tmp_path, request):
     pytest.importorskip("pdfplumber")
-    return asyncio.run(capture_chain(tmp_path))
+    return asyncio.run(capture_chain(tmp_path, meet=request.param))
 
 
 def run_replay(chain, root, **overrides):
@@ -32,11 +33,16 @@ def run_replay(chain, root, **overrides):
     arguments = {
         "archive_root": root,
         "expected_sha256": replay.sha256(path.read_bytes()),
-        "expected_identity": IDENTITY,
+        "expected_identity": chain.get("identity", IDENTITY),
         "expected_pdf_sha256": chain["pdf"]["sha256"],
     }
     arguments.update(overrides)
-    return replay.replay_race_card_snapshot(path, **arguments)
+    replayer = (
+        yeongcheon_pdf_replay.replay_race_card_snapshot
+        if arguments["expected_identity"]["meet"] == 4
+        else replay.replay_race_card_snapshot
+    )
+    return replayer(path, **arguments)
 
 
 def assert_blocked(result, code=None):
@@ -243,7 +249,8 @@ def test_unexpected_parser_exception_is_a_blocker_not_a_partial_export(
     def broken_parser(*args, **kwargs):
         raise PDFLibraryError("must-not-appear-in-output")
 
-    monkeypatch.setattr(replay, "parse_race_card_pdf", broken_parser)
+    module = yeongcheon_pdf_replay if chain["identity"]["meet"] == 4 else replay
+    monkeypatch.setattr(module, "parse_race_card_pdf", broken_parser)
     result = run_replay(chain, tmp_path)
     assert_blocked(result, "pdf_reparse_failed")
     assert "must-not-appear-in-output" not in json.dumps(result)
@@ -288,11 +295,12 @@ async def test_whole_race_with_name_mismatch_remains_blocked(tmp_path):
 
 
 def test_relative_paths_are_resolved_from_explicit_archive_root(chain, tmp_path):
-    result = replay.replay_race_card_snapshot(
+    module = yeongcheon_pdf_replay if chain["identity"]["meet"] == 4 else replay
+    result = module.replay_race_card_snapshot(
         Path(chain["pdf"]["manifest_path"]).relative_to(tmp_path),
         archive_root=tmp_path,
         expected_sha256=replay.sha256(Path(chain["pdf"]["manifest_path"]).read_bytes()),
-        expected_identity=IDENTITY,
+        expected_identity=chain["identity"],
     )
     assert result["eligible_for_prerace_features"]
 

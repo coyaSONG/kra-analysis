@@ -82,7 +82,7 @@ async def capture_chain(
             client=client,
             clock=lambda: captured_at,
         )
-    return {"pdf": pdf, "entries": entries}
+    return {"pdf": pdf, "entries": entries, "identity": identity}
 
 
 async def capture_reused_entry_chain(directory: Path) -> dict[str, Any]:

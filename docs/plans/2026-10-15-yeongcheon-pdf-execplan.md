@@ -15,9 +15,10 @@ admit venue 4 inputs. This improves source coverage, not measured accuracy.
 
 - [x] (2026-10-15 11:58Z) Verified six official schedule links with physical meet 4; one schema probe has explicit Yeongcheon footers.
 - [x] (2026-10-15 12:03Z) Added a distinct venue-4 parser profile and bounded supplement options; original defaults remain restricted to venues 1/2/3.
-- [ ] Run regression tests and inspect the actual PDF layout.
-- [ ] Capture only six venue-4 sources and one complete API date, capped at ten calls, before first block cutoff.
-- [ ] Verify all original files unchanged; publish additive source receipt after tests and required CI, then normal merge.
+- [x] (2026-10-15 12:12Z) Inspected actual PDF layout; final 360 regression tests passed after isolating the replay extension.
+- [x] (2026-10-15 12:03Z) Captured six venue-4 sources / 66 runners with seven calls, zero retries, before first block cutoff.
+- [x] (2026-10-15 12:14Z) Verified all 50 original source chains, full 534-row historical join and unchanged public predictions; real M0 model admission still passes.
+- [ ] Publish additive source receipt after tests and required CI, then normal merge.
 
 ## Surprises & Discoveries
 
@@ -27,6 +28,13 @@ using the old venue-3 collector correctly produced no eligible features,
 because every page says Yeongcheon. That diagnostic is immutable and never
 promoted by relabeling its manifest. The authorized ChatGPT browser is logged
 out; no Pro consultation occurred.
+
+The first broader test run failed 14 cases because the legacy PDF replay file
+is hash-pinned by M0 admission and the result evaluator. Restored that file
+byte-for-byte (SHA256 `2db618a34a77fe7ff03b8ea30e38e00a5d79ca94dbba75ffdb9a616a41ab45e0`),
+instead of changing any frozen pins. An independent venue-4 replay module now
+mirrors the validation body and shares the unchanged raw/API helpers. The same
+negative replay tests run against both venues 1 and 4. Final suite: 360 passed.
 
 ## Decision Log
 
@@ -42,11 +50,25 @@ require their exact original implementation at PR99 commit
 make a newer implementation pass. Individually reparse old raw captures to
 check feature compatibility, and preserve the original bundle files.
 
+After discovering the frozen replay dependency, retain all original capture
+artifacts from commit `2ac5bc5`. Derive a new `input-plan-v2.json` and
+`feature-bundle-v2.json` from exactly the same six manifests under the isolated
+implementation, with a new fingerprint and timestamp. Never edit the original
+plan, bundle, source bytes, capture clocks or original report. Require the v2
+bundle to equal v1 except for the implementation fingerprint. This is a new
+offline verification, not a second acquisition or retroactive reservation.
+
 ## Outcomes & Retrospective
 
-Pending acquisition and verification. No labels, model fit, predictions,
+Six additional races are captured and identity-validated. No labels, model fit, predictions,
 evaluation arm or training approval is part of this increment. The 70% goal
 remains unachieved.
+
+The union registry hash is `10074357d3582c5aa94b6c8d0c7b9dbcbfa84e4cff9844457c020bc82369a104`.
+All 534 appearances have training count/minutes, including all 79 without
+observed recent history and all 225 condition-fallback rows. Four of the new
+66 trainer summaries are missing; all 66 training-window durations are unknown.
+These are data-quality results, not predictive performance.
 
 ## Context and Orientation
 
@@ -68,6 +90,12 @@ CLI venue choices. Parameterize supplement output root, supported set and
 request budget without changing defaults. Add PDF round-trip, shared-path
 wrong-venue rejection, capture/replay, version and population tests.
 No new dependencies or API endpoints are needed.
+
+`packages/scripts/autoresearch/yeongcheon_pdf_replay.py` isolates the new
+profile from the frozen legacy replay. The bundle dispatcher selects it only
+for physical venue 4 and fingerprints it. Deliberate validation-body duplication
+preserves the old model/evaluation implementation; shared helper code remains
+in the original module. Never merge with changes to the frozen legacy file.
 
 ## Concrete Steps
 
@@ -114,3 +142,5 @@ the original scope; an extension labels other venues `not_requested` and keeps
 their denominator. Existing httpx, pdfplumber and hashlib are sufficient.
 
 Initial plan records source evidence and immutable compatibility strategy.
+Revision: isolated venue-4 replay after the broad test exposed frozen model
+dependencies; retained original capture artifacts and added v2 offline review.

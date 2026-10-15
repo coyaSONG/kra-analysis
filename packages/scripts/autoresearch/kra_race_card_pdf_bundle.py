@@ -27,6 +27,9 @@ from autoresearch.kra_race_card_pdf_replay import (
     replay_race_card_snapshot,
     sha256,
 )
+from autoresearch.yeongcheon_pdf_replay import (
+    replay_race_card_snapshot as replay_yeongcheon_snapshot,
+)
 
 PLAN_VERSION = "kra-race-card-pdf-bundle-plan-v1"
 BUNDLE_VERSION = "kra-race-card-pdf-feature-bundle-v1"
@@ -43,6 +46,7 @@ IMPLEMENTATION_FILES = (
     "autoresearch/kra_race_card_pdf_snapshot.py",
     "autoresearch/kra_race_card_pdf_replay.py",
     "autoresearch/kra_race_card_pdf_bundle.py",
+    "autoresearch/yeongcheon_pdf_replay.py",
 )
 RACE_KEYS = {
     "meet",
@@ -279,7 +283,12 @@ def build_bundle(plan: dict[str, Any], *, archive_root: Path) -> dict[str, Any]:
                 "evidence": {},
             }
         else:
-            replay = replay_race_card_snapshot(
+            replayer = (
+                replay_yeongcheon_snapshot
+                if identity["meet"] == 4
+                else replay_race_card_snapshot
+            )
+            replay = replayer(
                 record["manifest_path"],
                 archive_root=archive_root,
                 expected_sha256=record["manifest_sha256"],

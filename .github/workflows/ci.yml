@@ -276,9 +276,9 @@ jobs:
       - name: Prospective PDF supplement regressions
         working-directory: ./packages/scripts
         run: |
-          uv run --frozen --extra race-card-pdf ruff check autoresearch/prospective_pdf_supplement.py autoresearch/tests/test_prospective_pdf_supplement.py
-          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prospective_pdf_supplement.py autoresearch/tests/test_prospective_pdf_supplement.py
-          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prospective_pdf_supplement.py -o addopts=''
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/prospective_pdf_supplement.py autoresearch/yeongcheon_pdf_replay.py shared/kra_race_card_pdf.py autoresearch/tests/test_prospective_pdf_supplement.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/prospective_pdf_supplement.py autoresearch/yeongcheon_pdf_replay.py shared/kra_race_card_pdf.py autoresearch/tests/test_prospective_pdf_supplement.py
+          uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_prospective_pdf_supplement.py autoresearch/tests/test_kra_race_card_pdf.py autoresearch/tests/test_kra_race_card_pdf_snapshot.py -o addopts=''
       - name: Versioned result observation regressions
         working-directory: ./packages/scripts
         run: |
