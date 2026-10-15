@@ -17,7 +17,7 @@ fit a model, choose a new three-horse combination or measure accuracy.
 - [x] (2026-10-15) Read prior protocols, expansion evidence and source modules.
 - [x] (2026-10-15) Tried the authorized Pro conversation; it is logged out.
 - [x] (2026-10-15) Implemented isolated projector and 26 targeted tests; 245 combined regressions pass.
-- [ ] Freeze and run the recipe once; independently check arithmetic and pins.
+- [x] (2026-10-15) Froze recipe in `0da120d`; projected 534 rows and independently checked 1,016 deletion cases and all public pins.
 - [ ] Record results, run checks, push and use normal PR merge after required checks.
 
 ## Surprises & Discoveries
@@ -126,9 +126,14 @@ the primary research artifacts, following the repository's established workflow.
 
 ## Outcomes & Retrospective
 
-Pending execution. This work cannot establish accuracy improvement while the
-registered target outcomes are pending. If these rows later inform training,
-evaluate the resulting model on a different prospectively frozen population.
+The snapshot retains 50 races / 534 appearances. Older memory exists for 378
+rows, 31 without recent history; added May changes 209 older descriptors.
+Of 114 nonzero recent contrasts, 104 can become zero and 13 can reverse sign
+on one-observation deletion (overlapping counts). The original recent ledger
+and public manifests are unchanged. Independent arithmetic confirms all rows
+and 1,016 cases. This cannot establish accuracy improvement while the registered
+target outcomes are pending. If these rows later inform training, evaluate the
+resulting model on a different prospectively frozen population.
 
 Initial plan recorded before running the candidate projection.
 
@@ -136,3 +141,8 @@ Implementation milestone: synthetic sign-reversal example required four priors
 because the two-pseudo-observation shrinkage can prevent reversal with the
 initial three-prior example. Corrected the fixture, not the scoring rule. All
 245 tests pass before the real-data projection.
+
+Execution milestone: recorded snapshot and independent-check hashes in
+`docs/research/2026-10-15-condition-memory-research.md`; findings favor keeping
+support and missingness explicit, not selecting a new scoring rule. Publication
+and required CI checks remain pending.
