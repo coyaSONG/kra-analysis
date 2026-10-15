@@ -18,7 +18,7 @@ fit a model, choose a new three-horse combination or measure accuracy.
 - [x] (2026-10-15) Tried the authorized Pro conversation; it is logged out.
 - [x] (2026-10-15) Implemented isolated projector and 26 targeted tests; 245 combined regressions pass.
 - [x] (2026-10-15) Froze recipe in `0da120d`; projected 534 rows and independently checked 1,016 deletion cases and all public pins.
-- [ ] Record results, run checks, push and use normal PR merge after required checks.
+- [x] (2026-10-15) Recorded findings, passed 350 local tests and pushed PR98. Required Python Checks, Scripts Checks, Docker and Gitleaks passed at `8964745`; final-head checks and normal merge receipt are tracked on PR98.
 
 ## Surprises & Discoveries
 
@@ -131,7 +131,11 @@ rows, 31 without recent history; added May changes 209 older descriptors.
 Of 114 nonzero recent contrasts, 104 can become zero and 13 can reverse sign
 on one-observation deletion (overlapping counts). The original recent ledger
 and public manifests are unchanged. Independent arithmetic confirms all rows
-and 1,016 cases. This cannot establish accuracy improvement while the registered
+and 1,016 cases. PR98 publishes this increment; its final checks and normal
+merge receipt are the publication closure record. Security dependency audit
+still reports the same 17 advisory rows as PR97; Node audit and hygiene were
+skipped. No dependency changes or required-check bypass are authorized here.
+This cannot establish accuracy improvement while the registered
 target outcomes are pending. If these rows later inform training, evaluate the
 resulting model on a different prospectively frozen population.
 
@@ -144,5 +148,8 @@ initial three-prior example. Corrected the fixture, not the scoring rule. All
 
 Execution milestone: recorded snapshot and independent-check hashes in
 `docs/research/2026-10-15-condition-memory-research.md`; findings favor keeping
-support and missingness explicit, not selecting a new scoring rule. Publication
-and required CI checks remain pending.
+support and missingness explicit, not selecting a new scoring rule.
+
+Publication milestone: added the disjoint 105-test source/reservation suite
+and remote evidence. The final documentation commit must pass required checks
+again before normal merge; see PR98 for its final-head status and receipt.

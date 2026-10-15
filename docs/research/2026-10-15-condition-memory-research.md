@@ -120,10 +120,16 @@ production window/scoring helpers, and reproduced all 534 feature rows and
 counts, older-band before/after values and the complete target identity set.
 All three original public manifest hashes were rechecked unchanged.
 
-Local validation: **245 tests passed**, including 26 new tests plus recent
+Local validation: **350 tests passed** in two disjoint runs (245 + 105), including 26 new tests plus recent
 condition projection, historical expansion, fixed form, pre-race conditions
-and M0/API27 forward regressions. Ruff lint/format pass. The new tests run in
-Scripts Checks; remote results and merge evidence belong to the PR.
+and M0/API27 forward regressions, original source replay and prospective training
+reservations. Ruff lint/format pass. At head `8964745`, required Python Checks,
+Scripts Checks (including all 26 new tests), Docker Build and Gitleaks passed.
+Security Checks failed at dependency audit: its 17 advisory rows in h2,
+multidict and pyjwt exactly match PR97 job 115912660044. No dependency manifest
+or lockfile changed. Node audit and hygiene were skipped, not passed. Final
+head checks and normal merge receipt are tracked in
+[PR98](https://github.com/coyaSONG/kra-analysis/pull/98); no admin bypass.
 
 ## Limits and Next Experiment
 
