@@ -97,3 +97,38 @@ observed zero/half, unknown or label-like feature fields, duplicate/missing
 members, timing boundaries and invalid numeric/support values. They are included
 in Scripts Checks. Real execution results and publication receipts are recorded
 below only after validation.
+
+The rules and implementation were committed as `d7ed029` before execution.
+The real matrix was created at `2026-10-15T12:52:19.454815Z`: **50 races,
+534 appearances, 34 columns**. Its null counts preserve the original 32 missing
+ratings and 79 missing values in each of four recency fields. Older career form
+is missing for 144 appearances; all remain present with explicit missing flags.
+
+Artifacts under `.cache/autoresearch/condition-candidate-inputs-20261015/run-1`:
+
+| Artifact | SHA256 |
+| --- | --- |
+| matrix.json | `7277897731011c64706f427cd7733444a5450767d312dabe8293a67c35a788a1` |
+| independent-check.json | `e7a33a0d8b3aa176facf0e2c1f433449fe2280ebe3edb9a6356d3fc849ad583f` |
+
+The separate public manifest is
+`docs/research/supplements/2026-10-16-18/condition-candidate-inputs.json`, SHA256
+`c8af98eae757a104528644d52c87ca06744effcfc5c57528ad2b516434ff8cea`.
+It identifies the matrix, implementation, parent public pins, condition-memory
+source, exact schema, all 50 race identities, row counts and fixed cutoffs.
+Raw feature values remain local; no secrets or source data were copied into it.
+
+An independent read-only traversal loaded every original packet by hash, indexed
+the exact memory source by race/gate/canonical horse ID, and checked all **12,816
+original values and types** plus all **5,340 added values and types**. It used
+direct Fraction conversion rather than the candidate transformation functions.
+Full identity sets, per-column null counts and creation-before-cutoff checks
+matched. No fitted preprocessing or outcome labels were read.
+
+**165 local tests passed**, including all 38 new cases and existing condition
+memory, history expansion, original prospective-input, M0-forward and API27-forward
+regressions. Ruff lint/format and whitespace checks pass. Remote check results
+and normal merge time are recorded in the PR receipt; local success is not a
+claim that every remote check has passed. The original commitment hashes remain
+unchanged, and the candidate still requires separate publication/source review
+and versioned outcomes before any reviewed training authorization.
