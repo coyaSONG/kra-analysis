@@ -12,12 +12,14 @@ from typing import Any
 from shared.kra_race_identity import validate_race_identity
 
 PARSER_VERSION = "kra-race-card-pdf-v1"
+YEONGCHEON_PARSER_VERSION = "kra-race-card-pdf-yeongcheon-v1"
 SOURCE_ID = "kra_official_race_card_pdf"
 MAX_PDF_BYTES = 20 * 1024 * 1024
 MEETINGS = {
     1: ("seoul", "s", "\uc11c\uc6b8"),
     2: ("jeju", "j", "\uc81c\uc8fc"),
     3: ("busan", "b", "\ubd80\uacbd"),
+    4: ("busan", "b", "\uc601\ucc9c"),
 }
 NUMERIC_FIELDS = (
     "training_count",
@@ -48,15 +50,21 @@ JEJU_TRAINER = re.compile(r"^\uc870\uad50\uc0ac\s*:\s*(.+?)\((\d+)\uc870\)$")
 TREATMENT = re.compile(r"^(\d{6})([^\d].*?)(?:(\d+)\ud68c)?$")
 HISTORY = re.compile(r"[\u2460-\u2473]|^\d{6}(?:[- ]\d+R|[\uc11c\ubd80]\d+R)")
 FOOTER = re.compile(
-    r"(\uc11c\uc6b8|\uc81c\uc8fc|\ubd80\uacbd)\s*(\d+)\uacbd\uc8fc"
+    r"(\uc11c\uc6b8|\uc81c\uc8fc|\ubd80\uacbd|\uc601\ucc9c)\s*(\d+)\uacbd\uc8fc"
     r"\s*[\[\u3014(](\d{4})\.(\d{2})\.(\d{2})[\]\u3015)]"
 )
 
 
 def validate_identity(meet: int, race_date: str, race_no: int) -> None:
     if type(meet) is not int or meet not in MEETINGS:
-        raise ValueError("meet must be 1 (Seoul), 2 (Jeju), or 3 (Busan)")
+        raise ValueError(
+            "meet must be 1 (Seoul), 2 (Jeju), 3 (Busan), or 4 (Yeongcheon)"
+        )
     validate_race_identity(meet, race_date, race_no)
+
+
+def parser_version_for_meet(meet: int) -> str:
+    return YEONGCHEON_PARSER_VERSION if meet == 4 else PARSER_VERSION
 
 
 def race_card_url(meet: int, race_date: str, race_no: int) -> str:
@@ -323,7 +331,7 @@ def parse_race_card_pdf(
     if any(row["issues"] for row in rows):
         issues.append("horse_panel_issues")
     return {
-        "parser_version": PARSER_VERSION,
+        "parser_version": parser_version_for_meet(meet),
         "source_id": SOURCE_ID,
         "meet": meet,
         "race_date": race_date,

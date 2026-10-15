@@ -194,7 +194,7 @@ async def collect_race_card_pdf(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--meet", type=int, required=True, choices=(1, 2, 3))
+    parser.add_argument("--meet", type=int, required=True, choices=(1, 2, 3, 4))
     parser.add_argument("--race-date", required=True)
     parser.add_argument("--race-no", type=int, required=True)
     parser.add_argument(

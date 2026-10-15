@@ -57,6 +57,26 @@ def test_complete_replay_preserves_ids_and_raw_evidence(chain, tmp_path):
     assert not result["model_promoted"]
 
 
+def test_yeongcheon_complete_capture_and_replay(tmp_path):
+    chain = asyncio.run(capture_chain(tmp_path, meet=4))
+    result = run_replay(chain, tmp_path, expected_identity={**IDENTITY, "meet": 4})
+    assert result["eligible_for_prerace_features"], result["reasons"]
+    assert result["race_id"] == "20260627_4_1"
+    assert len(result["feature_rows"]) == 2
+    wrong = run_replay(chain, tmp_path, expected_identity={**IDENTITY, "meet": 3})
+    assert_blocked(wrong, "pdf_manifest_path_contract_mismatch")
+
+
+def test_yeongcheon_rejects_legacy_parser_version(tmp_path):
+    chain = asyncio.run(capture_chain(tmp_path, meet=4))
+    chain["pdf"]["parsed"]["parser_version"] = "kra-race-card-pdf-v1"
+    save_json(chain["pdf"]["manifest_path"], chain["pdf"])
+    assert_blocked(
+        run_replay(chain, tmp_path, expected_identity={**IDENTITY, "meet": 4}),
+        "parser_version_mismatch",
+    )
+
+
 def test_pinned_pdf_manifest_cannot_be_edited(chain, tmp_path):
     path = Path(chain["pdf"]["manifest_path"])
     pin = replay.sha256(path.read_bytes())

@@ -25,7 +25,8 @@ from autoresearch.tests.race_card_pdf_fixture import (
 
 
 @pytest.mark.parametrize(
-    "meet,directory,prefix", [(1, "seoul", "s"), (2, "jeju", "j"), (3, "busan", "b")]
+    "meet,directory,prefix",
+    [(1, "seoul", "s"), (2, "jeju", "j"), (3, "busan", "b"), (4, "busan", "b")],
 )
 def test_urls_have_the_official_meeting_prefix(meet, directory, prefix):
     assert (
@@ -130,7 +131,7 @@ def test_name_normalization_only_changes_unicode_form_and_spacing():
     assert normalize_horse_name("A-B") == "A-B"
 
 
-@pytest.mark.parametrize("meet", [1, 2, 3])
+@pytest.mark.parametrize("meet", [1, 2, 3, 4])
 def test_real_pdf_round_trip_excludes_history(meet):
     pytest.importorskip("pdfplumber")
     result = parse_race_card_pdf(
@@ -157,7 +158,7 @@ def test_stale_or_wrong_race_pdf_has_no_usable_rows():
     assert "document_identity_mismatch_or_missing" in result["issues"]
 
 
-@pytest.mark.parametrize("meet", [1, 2, 3])
+@pytest.mark.parametrize("meet", [1, 2, 3, 4])
 def test_two_digit_runner_numbers_joined_to_names_are_not_missed(meet):
     pytest.importorskip("pdfplumber")
     result = parse_race_card_pdf(
@@ -184,3 +185,20 @@ def test_html_masquerading_as_pdf_is_rejected():
         parse_race_card_pdf(
             b"<html>error</html>", meet=1, race_date="20260627", race_no=1
         )
+
+
+@pytest.mark.parametrize("printed,requested", [(3, 4), (4, 3)])
+def test_shared_url_does_not_alias_physical_venue(printed, requested):
+    result = parse_race_card_pdf(
+        make_card_pdf(meet=printed), meet=requested, race_date="20260627", race_no=1
+    )
+    assert result["parser_status"] == "blocked"
+    assert result["rows"] == []
+
+
+def test_yeongcheon_has_separate_parser_profile():
+    result = parse_race_card_pdf(
+        make_card_pdf(meet=4), meet=4, race_date="20260627", race_no=1
+    )
+    assert result["parser_version"] == "kra-race-card-pdf-yeongcheon-v1"
+    assert result["race_id"] == "20260627_4_1"

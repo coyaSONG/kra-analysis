@@ -15,9 +15,9 @@ from shared.kra_entry_sheet import (
 from shared.kra_entry_sheet import build_entry_snapshot, parse_entry_sheet_page
 from shared.kra_race_card_pdf import (
     MAX_PDF_BYTES,
-    PARSER_VERSION,
     SOURCE_ID,
     parse_race_card_pdf,
+    parser_version_for_meet,
     race_card_url,
     validate_identity,
 )
@@ -349,10 +349,9 @@ def replay_race_card_snapshot(
         ):
             raise ReplayError("planned_pdf_sha256_mismatch")
         saved_parsed = manifest.get("parsed")
-        if (
-            not isinstance(saved_parsed, dict)
-            or saved_parsed.get("parser_version") != PARSER_VERSION
-        ):
+        if not isinstance(saved_parsed, dict) or saved_parsed.get(
+            "parser_version"
+        ) != parser_version_for_meet(expected_identity["meet"]):
             raise ReplayError("parser_version_mismatch")
         try:
             parsed = parse_race_card_pdf(raw, **expected_identity)
