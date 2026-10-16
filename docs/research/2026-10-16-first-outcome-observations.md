@@ -143,6 +143,29 @@ prediction cutoff or an assertion that results will be published by then.
 
 A separate intraday adapter, if ever introduced, requires explicit review
 and tests. It must not silently become the canonical evaluator or alter its
-frozen contract. Methodology consultation has been requested from the user's
-authorized Pro session; completion and any adopted advice will be recorded
-only after the response actually finishes.
+frozen contract. No such adapter is implemented or approved here.
+
+## Completed Pro Consultation
+
+The authorized ChatGPT browser session's model menu showed Pro. Its response
+finished with an explicit completion state and a displayed processing duration
+of 10 minutes 31 seconds. Generation was not stopped, skipped, or subject to a
+short answer timeout. Consultation:
+https://chatgpt.com/c/6ad0d05d-5b08-83e8-b4b5-5252f401bb4d
+
+The advisor recommended the separate observational report now, keeping both
+the successful no-outcome verification and unsuccessful canonical outcome
+evaluation intact. This advice agrees with the implemented boundary. It
+reviewed public PR95 code and the supplied execution summary, not the local
+raw archive, and did not certify either the observed results or an adapter.
+
+Its main caution was that calling `classify` and `paired_metrics` alone does
+not preserve the evaluator's preceding source, identity, full-roster,
+lower-rank conflict, population-extra and individual-clock checks. Any later
+adapter must preserve those checks, fail on real evidence corruption, and
+distinguish narrow proven non-result skips from upstream failures. Its
+projection must have a new identity and reference immutable original records.
+Differential tests against accepted original-evaluator cases and explicit
+mixed future/observed cases are prerequisites, not tests completed here.
+This review did not authorize bypassing the original evaluator or changing
+the scoring policy. No private raw files or credentials were submitted.
