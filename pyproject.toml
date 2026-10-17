@@ -34,6 +34,10 @@ dev = [
 
 [tool.uv]
 package = false  # 이것은 라이브러리가 아닌 애플리케이션입니다
+constraint-dependencies = [
+    "h2>=4.4.1",
+    "multidict>=6.9.1",
+]
 
 [tool.uv.workspace]
 members = ["apps/api", "packages/scripts"]
