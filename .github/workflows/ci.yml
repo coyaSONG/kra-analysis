@@ -65,6 +65,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/restricted_ablation.py ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_restricted_ablation.py -o addopts=''
+      - name: Condition training admission and single-use regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_training*.py ../../packages/scripts/autoresearch/tests/test_condition_training.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_training*.py ../../packages/scripts/autoresearch/tests/test_condition_training.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_training.py -o addopts=''
       - name: Local M0 evaluation regressions
         working-directory: ./apps/api
         run: |
