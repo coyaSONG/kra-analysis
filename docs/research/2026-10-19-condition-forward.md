@@ -202,3 +202,10 @@ Local read-only replay of the original 534 consumed rows reproduced both arms'
 contains only its original reservation, A24 attempt, B34 attempt and completion.
 The real empty registry rejects an unregistered run before reservation or
 network calls. Real future inference attempts and new real fits remain zero.
+
+[PR114](https://github.com/coyaSONG/kra-analysis/pull/114) normally merged at
+2026-10-19T13:55:10Z as `b12e6385c4464f79065d34e62b51e9bc128de0e9`.
+Final-head Python Checks, Scripts Checks and API Docker Build passed. Security
+Checks retained the same 17 dependency-advisory rows as the previous baseline;
+no dependency files changed and no required-check bypass was used. CodeRabbit
+skipped review, so its green context is not independent review evidence.

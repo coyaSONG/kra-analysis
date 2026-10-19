@@ -19,7 +19,7 @@ not choose future dates or promote either model.
 - [x] (2026-10-19) Add 68 synthetic/end-to-end and rejection tests with fit-call traps, plus CI; 253 related regressions pass.
 - [x] (2026-10-19) Verify 58 original input hashes, both consumed files and unchanged training ledger; document commands and source-review limits.
 - [x] (2026-10-19) Commit and push implementation as `ae59d33`; create PR #114 with normal required-check enforcement.
-- [ ] Normal merge after final required CI; PR #114 is the authoritative merge/check record.
+- [x] (2026-10-19 13:55:10Z) PR #114 normally merged as `b12e6385c4464f79065d34e62b51e9bc128de0e9` after required Python Checks passed; Scripts/Docker passed and unchanged non-required security findings were disclosed.
 
 ## Context and Orientation
 
@@ -157,17 +157,23 @@ admission returns `forward_exact_registered_study_required` before reservation
 or network. CPU fingerprint inspection requires the host's read permission;
 environment-probe errors are reported as blocked, not success.
 
-Actual future runs, publications and new real fits are zero. Normal PR merge
-and required CI remain pending. Statistical horizon and uncertainty method
+Actual future runs, publications and new real fits are zero. PR #114 normally
+merged after required CI passed. Statistical horizon and uncertainty method
 still require explicit future registration. The 70% goal is unchanged and unmet.
 
 PR #114's first security job (118096855598) has exactly the same 17 advisory
 rows as the preserved PR109 baseline; no dependency files changed. Local
 comparison `.cache/autoresearch/condition-forward-20261019/pr114-security-initial/comparison.json`
 has SHA256 `f09ccd9cc176dc8ec1431c52e8a56f25d9667ab82c0e7b7997f436e4fd22cff5`.
+The final head `0dfa91f2c5a46f8a1e7f70e132092925da65db8a` also passed Python,
+Scripts and Docker checks. Its security job `118097987568` retained those same
+17 advisory rows; the corresponding final comparison SHA256 is
+`371a6d8eb0f7506bedf2c03ad9a9c35d8aa7e5a8b6eb62faa7711d3f7686d734`.
 This is not an all-green CI claim. Final checks and normal merge are recorded
-on https://github.com/coyaSONG/kra-analysis/pull/114; no bypass is permitted.
+on https://github.com/coyaSONG/kra-analysis/pull/114; no bypass was used.
 
 Plan created October 19, 2026 for the owner's PR113 inference/publication request.
 Updated October 19 after full synthetic and original-byte replay verification;
 added runner-count, canonical registry, append-only review and late-witness cases.
+Updated after the October 19 13:55:10Z normal merge to close the execution plan
+with actual final-head CI and merge evidence rather than leave a stale pending item.
