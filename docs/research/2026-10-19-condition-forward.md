@@ -193,6 +193,8 @@ runs, symlinks, deadline crossings and late/invalid external evidence. Python
 Checks runs this suite with Ruff lint/format. Locally, all 68 new tests and
 253 combined inference/training-admission/candidate/schedule/witness regressions
 pass (4.62 seconds for the combined run).
+Adding the unchanged M0/API27 forward suites gives 315 passing tests in 8.51
+seconds. Their October commitment hashes also still match PR95 exactly.
 
 Local read-only replay of the original 534 consumed rows reproduced both arms'
 50 canonical predictions and every saved score exactly (maximum difference

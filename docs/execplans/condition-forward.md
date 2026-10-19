@@ -18,7 +18,8 @@ not choose future dates or promote either model.
 - [x] (2026-10-19) Implement single-use scoring, append-only staging and live publication verification.
 - [x] (2026-10-19) Add 68 synthetic/end-to-end and rejection tests with fit-call traps, plus CI; 253 related regressions pass.
 - [x] (2026-10-19) Verify 58 original input hashes, both consumed files and unchanged training ledger; document commands and source-review limits.
-- [ ] Commit, push and normally merge after required checks.
+- [x] (2026-10-19) Commit and push implementation as `ae59d33`; create PR #114 with normal required-check enforcement.
+- [ ] Normal merge after final required CI; PR #114 is the authoritative merge/check record.
 
 ## Context and Orientation
 
@@ -147,7 +148,8 @@ authorized repository review, not a claim that hashes authenticate official data
 ## Outcomes & Retrospective
 
 The inference and publication implementation is complete locally, with 68 new
-tests and 253 passing related regressions (4.62 seconds). A read-only replay
+tests and 253 passing related regressions (4.62 seconds). Including the existing
+M0/API27 forward paths, 315 regressions pass (8.51 seconds). A read-only replay
 reproduced all 534 saved scores and 50 canonical sets per arm with maximum
 score difference 0.0. All 58 original input hashes match; the training ledger
 still has exactly reservation, two attempts and completion. Real empty-registry
@@ -158,6 +160,13 @@ environment-probe errors are reported as blocked, not success.
 Actual future runs, publications and new real fits are zero. Normal PR merge
 and required CI remain pending. Statistical horizon and uncertainty method
 still require explicit future registration. The 70% goal is unchanged and unmet.
+
+PR #114's first security job (118096855598) has exactly the same 17 advisory
+rows as the preserved PR109 baseline; no dependency files changed. Local
+comparison `.cache/autoresearch/condition-forward-20261019/pr114-security-initial/comparison.json`
+has SHA256 `f09ccd9cc176dc8ec1431c52e8a56f25d9667ab82c0e7b7997f436e4fd22cff5`.
+This is not an all-green CI claim. Final checks and normal merge are recorded
+on https://github.com/coyaSONG/kra-analysis/pull/114; no bypass is permitted.
 
 Plan created October 19, 2026 for the owner's PR113 inference/publication request.
 Updated October 19 after full synthetic and original-byte replay verification;
