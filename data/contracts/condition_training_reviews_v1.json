@@ -1,4 +1,23 @@
 {
   "format_version": "condition-training-reviews-v1",
-  "approved_recipes": []
+  "approved_recipes": [
+    {
+      "review_id": "condition-a24-b34-20261019-execution-v1",
+      "reviewer": "Codex, acting on the repository owner's explicit conditional execution request",
+      "reviewed_at": "2026-10-19T13:05:12Z",
+      "purpose": "research_fit_only",
+      "requirement_sha256": "2c6c2251bd718d4316148aaecd0c53270e37dfd64e0ef1d82d9cbb0fcaf1f87b",
+      "requirement_path": "docs/research/approvals/2026-10-19-condition-training/requirement.json",
+      "review_path": "docs/research/2026-10-19-condition-execution-approval.md",
+      "implementation_review_commit": "15eed4775742c9190244b646752c0ba255b7f813",
+      "source_review_complete": true,
+      "label_version_review_complete": true,
+      "implementation_review_complete": true,
+      "fit_budget": {"A24": 1, "B34": 1},
+      "retry_allowed": false,
+      "production_approved": false,
+      "independent_validation_eligible": false,
+      "counts_as_70_percent_evidence": false
+    }
+  ]
 }

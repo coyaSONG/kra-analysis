@@ -17,8 +17,12 @@ observed outcomes, never independent evidence for the 70% prediction goal.
 - [x] Implement repository-only approval, immutable evidence and shared fit budget.
 - [x] Add synthetic positive/negative tests and CI coverage; inspect real inputs without fitting.
 - [x] Commit and push validated implementation; open PR111.
-- [ ] Pass final remote checks and normally merge PR111.
+- [x] Pass required remote checks and normally merge PR111 (2026-10-19T11:26:12Z).
 - [x] Evaluate actual-fit conditions: exact repository approval is absent; no real fits permitted.
+- [x] Review exact inputs/code/environment for the owner's subsequent explicit execution request.
+- [ ] Publish and test separate exact approval; normally merge after required CI.
+- [ ] Recheck merged admission and execute the lifetime A24/B34 pair once, if admitted.
+- [ ] Verify saved outputs without refitting; publish development-only comparison and future protocol plan.
 
 ## Context and Orientation
 
@@ -140,3 +144,35 @@ shared preprocessing statistics. PR111 is open; normal merge awaits final CI.
 
 Initial plan written October 19, 2026: additive implementation only, with actual
 fitting conditional on a separately bound and reviewed repository approval.
+
+## Separate Execution Approval Phase
+
+October 19, 13:05 UTC: the owner explicitly requested a separate exact approval
+and conditional execution after tests and normal merge. PR111 is already merged
+at `15eed4775742c9190244b646752c0ba255b7f813`; its Python, Scripts and Docker
+checks passed. Security Checks retain 17 pre-existing Python advisory rows;
+Gitleaks passed. No dependency changes or protection bypass were made.
+The historical zero-fit status above describes implementation publication.
+
+Current read-only review revalidates all 58 input hashes, 163 implementation
+hashes against HEAD/origin/main, all identity/feature/label checks and the exact
+prior requirement digest. Both real destinations are absent. A synthetic-only
+fit confirms before/after environment equality. Persist the exact requirement
+under `docs/research/approvals/2026-10-19-condition-training/requirement.json`,
+the review in `docs/research/2026-10-19-condition-execution-approval.md`, and
+one matching research registry record. Add portable manifest tests without
+requiring local raw caches or macOS on CI. Runtime/recipe remain unchanged.
+
+After approval merge, fetch origin/main, run `admission.load()`,
+`admission.approval(requirement)`, `admission.unchanged(...)`, and verify both
+`condition_training.locations()` are absent. Execute exactly once using:
+
+    PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=packages/scripts .venv/bin/python -B -m autoresearch.condition_training run
+
+Do not rerun on any error. Read the fixed output receipt and shared Git ledger;
+verify stored hashes, actual attempts, common statistics and inference replay.
+Derive full-50 hit/miss and paired counts from saved predictions and the pinned
+targets without estimator calls. Publish a second small documentation change
+with generated evidence, development-only caveats and a future-validation draft.
+No dates are silently chosen and no recipe is promoted. If reserved execution
+fails, preserve the failure ledger and report the consumed budget instead.
