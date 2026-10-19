@@ -74,6 +74,119 @@ def test_published_execution_manifest_preserves_full_population():
         assert requirement[flag] is False
 
 
+RESULTS = "docs/research/experiments/2026-10-19-condition-training-v1"
+
+
+def test_published_fit_receipt_and_models_are_exact_nonpromoted_snapshots():
+    path = admission.ROOT / RESULTS
+    raw = (path / "receipt.json").read_bytes()
+    assert sha256(raw) == (
+        "3587c948913c82cc9c0b8c5e64161ef29794ed22a80d08425300e924834aa96e"
+    )
+    receipt = parse_json(raw)
+    assert receipt["actual_fit_count"] == 2
+    assert receipt["attempted_arms"] == receipt["completed_arms"] == ["A24", "B34"]
+    assert receipt["fit_budget"] == {"A24": 1, "B34": 1}
+    assert receipt["development_only"] is True
+    assert receipt["retry_allowed"] is False
+    assert receipt["independent_validation_eligible"] is False
+    assert receipt["counts_as_70_percent_evidence"] is False
+    assert receipt["model_promoted"] is False
+    assert receipt["registry_sha256"] == (
+        "127d1c5d727831815f86077850c2d3202b2e449b36daa138c1331c2d4796f04b"
+    )
+    registry = parse_json((admission.ROOT / admission.REGISTRY).read_bytes())
+    assert receipt["review"] in registry["approved_recipes"]
+    models = {}
+    for arm in model.ARMS:
+        raw = (path / f"{arm}-model.json").read_bytes()
+        assert sha256(raw) == receipt["evidence"][arm]["model_sha256"]
+        models[arm] = parse_json(raw)
+        assert models[arm]["iterations"] == 11
+        assert models[arm]["warnings"] == []
+        assert np.isfinite(
+            model.score(models[arm], np.zeros((1, len(model.ARMS[arm]))))
+        ).all()
+    for field in ("imputer_statistics", "scaler_mean", "scaler_var", "scaler_scale"):
+        assert models["A24"][field] == models["B34"][field][:24]
+
+
+def test_published_development_comparison_recomputes_all_50_exact_sets():
+    raw = (admission.ROOT / RESULTS / "comparison.json").read_bytes()
+    assert sha256(raw) == (
+        "34816e00bf57715f9cac56bc42478ace4d288e8e2d7d9b8620d4ba3be2845bbf"
+    )
+    report = parse_json(raw)
+    rows = report["races"]
+    assert len(rows) == len({r["race_id"] for r in rows}) == report["race_count"] == 50
+    requirement = parse_json(
+        (
+            admission.ROOT
+            / ("docs/research/approvals/2026-10-19-condition-training/requirement.json")
+        ).read_bytes()
+    )
+    assert sorted(r["race_id"] for r in rows) == requirement["selected_race_ids"]
+    paired = dict.fromkeys(("both_hit", "A24_only", "B34_only", "both_miss"), 0)
+    for row in rows:
+        assert len(set(row["target"])) == 3
+        for arm in model.ARMS:
+            prediction = row[arm]["horse_ids"]
+            assert prediction == sorted(set(prediction), key=int)
+            assert len(prediction) == 3
+            assert row[arm]["hit"] == (set(prediction) == set(row["target"]))
+        flags = row["A24"]["hit"], row["B34"]["hit"]
+        paired[
+            {
+                (True, True): "both_hit",
+                (True, False): "A24_only",
+                (False, True): "B34_only",
+                (False, False): "both_miss",
+            }[flags]
+        ] += 1
+    assert (
+        paired
+        == report["paired"]
+        == {
+            "both_hit": 3,
+            "A24_only": 1,
+            "B34_only": 2,
+            "both_miss": 44,
+        }
+    )
+    for arm, expected in (("A24", 4), ("B34", 5)):
+        hits = sum(r[arm]["hit"] for r in rows)
+        assert hits == expected == report["arms"][arm]["hits"]
+        assert report["arms"][arm]["misses"] == 50 - hits
+        assert report["arms"][arm]["exact_accuracy"] == hits / 50
+        assert report["arms"][arm]["pending"] == report["arms"][arm]["undefined"] == 0
+    assert report["B34_minus_A24_percentage_points"] == 2
+    assert report["purpose"] == "in_sample_development_only"
+    assert report["independent_validation_eligible"] is False
+
+
+def test_development_diagnostic_groups_do_not_change_the_population():
+    path = admission.ROOT / RESULTS
+    raw = (path / "diagnostic.json").read_bytes()
+    assert sha256(raw) == (
+        "5b34bc2c6660d9a52e507ad1b83034742ba1c599935872e94efa10ffb505bf29"
+    )
+    report = parse_json(raw)
+    comparison = parse_json((path / "comparison.json").read_bytes())
+    assert report["diagnostic_only"] is True
+    assert report["subset_accuracy_used"] is False
+    assert report["fit_count"] == 0
+    assert [
+        {k: r[k] for k in ("race_id", "target", "A24", "B34")} for r in report["races"]
+    ] == comparison["races"]
+    for field, strata in report["groups"].items():
+        assert sum(g["races"] for g in strata.values()) == 50
+        for key, group in strata.items():
+            rows = [r for r in report["races"] if str(r[field]) == key]
+            assert len(rows) == group["races"]
+            for arm in model.ARMS:
+                assert sum(r[arm]["hit"] for r in rows) == group[f"{arm}_hits"]
+
+
 @pytest.fixture
 def corpus():
     packets, memory_rows, rosters = [], [], {}

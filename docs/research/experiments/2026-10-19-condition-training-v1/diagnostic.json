@@ -1,0 +1,1573 @@
+{
+  "comparison_sha256": "34816e00bf57715f9cac56bc42478ace4d288e8e2d7d9b8620d4ba3be2845bbf",
+  "created_at": "2026-10-19T13:15:05.864954+00:00",
+  "diagnostic_only": true,
+  "fit_count": 0,
+  "format_version": "condition-development-diagnostic-v1",
+  "groups": {
+    "distance": {
+      "1000": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 8
+      },
+      "1110": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 3
+      },
+      "1200": {
+        "A24_hits": 1,
+        "B34_hits": 2,
+        "races": 15
+      },
+      "1300": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 4
+      },
+      "1400": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 10
+      },
+      "1700": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 3
+      },
+      "1800": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 5
+      },
+      "900": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 2
+      }
+    },
+    "grade": {
+      "1\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 1
+      },
+      "2\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 2
+      },
+      "\uad6d3\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 1
+      },
+      "\uad6d4\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 2
+      },
+      "\uad6d5\ub4f1\uae09": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 9
+      },
+      "\uad6d6\ub4f1\uae09": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 11
+      },
+      "\uad6dOPEN": {
+        "A24_hits": 0,
+        "B34_hits": 1,
+        "races": 2
+      },
+      "\uc81c2\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 1
+      },
+      "\uc81c3\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 2
+      },
+      "\uc81c4\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 4
+      },
+      "\uc81c5\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 5
+      },
+      "\uc81c6\ub4f1\uae09": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 2
+      },
+      "\ud63c3\ub4f1\uae09": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 3
+      },
+      "\ud63c4\ub4f1\uae09": {
+        "A24_hits": 0,
+        "B34_hits": 0,
+        "races": 5
+      }
+    },
+    "meet": {
+      "1": {
+        "A24_hits": 2,
+        "B34_hits": 2,
+        "races": 21
+      },
+      "2": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 14
+      },
+      "3": {
+        "A24_hits": 1,
+        "B34_hits": 1,
+        "races": 9
+      },
+      "4": {
+        "A24_hits": 0,
+        "B34_hits": 1,
+        "races": 6
+      }
+    },
+    "top3_fallback_count": {
+      "0": {
+        "A24_hits": 2,
+        "B34_hits": 2,
+        "races": 15
+      },
+      "1": {
+        "A24_hits": 0,
+        "B34_hits": 1,
+        "races": 17
+      },
+      "2": {
+        "A24_hits": 2,
+        "B34_hits": 1,
+        "races": 11
+      },
+      "3": {
+        "A24_hits": 0,
+        "B34_hits": 1,
+        "races": 7
+      }
+    }
+  },
+  "model_promoted": false,
+  "races": [
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3107326",
+          "3109099",
+          "3109179"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3107326",
+          "3109099",
+          "3109179"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uc81c6\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_1",
+      "target": [
+        "3107352",
+        "3107414",
+        "3109099"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3107435",
+          "3107913",
+          "3108216"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3107435",
+          "3107913",
+          "3108216"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uc81c5\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_2",
+      "target": [
+        "3104317",
+        "3107435",
+        "3107507"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3107371",
+          "3109182",
+          "3109235"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3107334",
+          "3109182",
+          "3109235"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uc81c5\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_3",
+      "target": [
+        "3107319",
+        "3109182",
+        "3109235"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3104105",
+          "3107862",
+          "3107923"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3104105",
+          "3104139",
+          "3107923"
+        ]
+      },
+      "distance": 1110,
+      "grade": "\uc81c5\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_4",
+      "target": [
+        "3103729",
+        "3103899",
+        "3107923"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3104321",
+          "3104732",
+          "3107391"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3104672",
+          "3104732",
+          "3107391"
+        ]
+      },
+      "distance": 1110,
+      "grade": "\uc81c4\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_5",
+      "target": [
+        "3103423",
+        "3103557",
+        "3104321"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3103323",
+          "3103781",
+          "3105279"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3018884",
+          "3103323",
+          "3105279"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uc81c4\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_6",
+      "target": [
+        "3103323",
+        "3104752",
+        "3105279"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3103654",
+          "3104649",
+          "3108047"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3102615",
+          "3104649",
+          "3108047"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uc81c3\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261016_2_7",
+      "target": [
+        "3101509",
+        "3102615",
+        "3108047"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55826",
+          "56130",
+          "56195"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55826",
+          "56130",
+          "56195"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_1",
+      "target": [
+        "56007",
+        "56195",
+        "56446"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "56368",
+          "56684",
+          "56781"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "56368",
+          "56684",
+          "56781"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_2",
+      "target": [
+        "56684",
+        "56781",
+        "57005"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": true,
+        "horse_ids": [
+          "52932",
+          "53028",
+          "55470"
+        ]
+      },
+      "B34": {
+        "hit": true,
+        "horse_ids": [
+          "52932",
+          "53028",
+          "55470"
+        ]
+      },
+      "distance": 1300,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_3",
+      "target": [
+        "52932",
+        "53028",
+        "55470"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "54361",
+          "55212",
+          "55339"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "54361",
+          "55212",
+          "55339"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_4",
+      "target": [
+        "54361",
+        "55212",
+        "55500"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53829",
+          "54360",
+          "56634"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "50835",
+          "54208",
+          "54360"
+        ]
+      },
+      "distance": 1800,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_5",
+      "target": [
+        "47077",
+        "47409",
+        "53829"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55124",
+          "55526",
+          "56823"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55124",
+          "55469",
+          "55526"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6dOPEN",
+      "meet": 3,
+      "race_id": "20261016_3_6",
+      "target": [
+        "55473",
+        "55870",
+        "56823"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53826",
+          "60821",
+          "61860"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53826",
+          "54800",
+          "60821"
+        ]
+      },
+      "distance": 1800,
+      "grade": "\ud63c4\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_7",
+      "target": [
+        "54088",
+        "60821",
+        "61860"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "50884",
+          "53053",
+          "53895"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "50884",
+          "51115",
+          "53053"
+        ]
+      },
+      "distance": 1800,
+      "grade": "\uad6d3\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_8",
+      "target": [
+        "50884",
+        "50975",
+        "53895"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51877",
+          "52903",
+          "57334"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "51488",
+          "51877",
+          "52903"
+        ]
+      },
+      "distance": 1200,
+      "grade": "2\ub4f1\uae09",
+      "meet": 3,
+      "race_id": "20261016_3_9",
+      "target": [
+        "51138",
+        "52903",
+        "57334"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53509",
+          "53865",
+          "55189"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53509",
+          "53865",
+          "55472"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_1",
+      "target": [
+        "53865",
+        "55189",
+        "55472"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "52091",
+          "53663",
+          "55106"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "52091",
+          "53663",
+          "55106"
+        ]
+      },
+      "distance": 1400,
+      "grade": "2\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_10",
+      "target": [
+        "51421",
+        "52091",
+        "55106"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53091",
+          "55196",
+          "56964"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53091",
+          "55196",
+          "56964"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_2",
+      "target": [
+        "53091",
+        "53407",
+        "55196"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55745",
+          "56141",
+          "56341"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55745",
+          "56141",
+          "56341"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_3",
+      "target": [
+        "55989",
+        "56141",
+        "56341"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53002",
+          "54869",
+          "57180"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53048",
+          "54869",
+          "57180"
+        ]
+      },
+      "distance": 1700,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_4",
+      "target": [
+        "50760",
+        "50795",
+        "53896"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": true,
+        "horse_ids": [
+          "50684",
+          "55205",
+          "56227"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55205",
+          "56227",
+          "60707"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_5",
+      "target": [
+        "50684",
+        "55205",
+        "56227"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53283",
+          "53978",
+          "55597"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53283",
+          "53978",
+          "55597"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_6",
+      "target": [
+        "53283",
+        "54197",
+        "55597"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51606",
+          "52893",
+          "53196"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "51862",
+          "52893",
+          "53196"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\ud63c4\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_7",
+      "target": [
+        "53196",
+        "54104",
+        "61530"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "52999",
+          "53559",
+          "53798"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53486",
+          "53559",
+          "53798"
+        ]
+      },
+      "distance": 1800,
+      "grade": "\uad6d4\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_8",
+      "target": [
+        "50959",
+        "53559",
+        "53798"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "60361",
+          "60840",
+          "1412208"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "60361",
+          "60840",
+          "1412208"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\ud63c3\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261017_1_9",
+      "target": [
+        "51161",
+        "54608",
+        "60840"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": true,
+        "horse_ids": [
+          "3107568",
+          "3109163",
+          "3109217"
+        ]
+      },
+      "B34": {
+        "hit": true,
+        "horse_ids": [
+          "3107568",
+          "3109163",
+          "3109217"
+        ]
+      },
+      "distance": 900,
+      "grade": "\uc81c6\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_1",
+      "target": [
+        "3107568",
+        "3109163",
+        "3109217"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3103693",
+          "3104743",
+          "3105286"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3103693",
+          "3104084",
+          "3104743"
+        ]
+      },
+      "distance": 900,
+      "grade": "\uc81c5\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_2",
+      "target": [
+        "3103693",
+        "3104279",
+        "3107867"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3104177",
+          "3107410",
+          "3109227"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3104741",
+          "3107410",
+          "3109227"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uc81c5\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_3",
+      "target": [
+        "3103949",
+        "3104177",
+        "3109227"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3103530",
+          "3107927",
+          "3109231"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3104632",
+          "3107927",
+          "3109231"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uc81c4\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_4",
+      "target": [
+        "3105275",
+        "3107927",
+        "3109231"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3105497",
+          "3107838",
+          "3109237"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3107428",
+          "3107505",
+          "3109237"
+        ]
+      },
+      "distance": 1110,
+      "grade": "\uc81c4\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_5",
+      "target": [
+        "3105497",
+        "3107505",
+        "3109237"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3104223",
+          "3104747",
+          "3107434"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3103457",
+          "3104747",
+          "3107434"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uc81c3\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_6",
+      "target": [
+        "3018073",
+        "3103457",
+        "3104747"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "3104183",
+          "3107597",
+          "3108143"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "3104094",
+          "3107597",
+          "3108143"
+        ]
+      },
+      "distance": 1300,
+      "grade": "\uc81c2\ub4f1\uae09",
+      "meet": 2,
+      "race_id": "20261017_2_7",
+      "target": [
+        "3102943",
+        "3104094",
+        "3108143"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55193",
+          "56385",
+          "56626"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55193",
+          "56385",
+          "56626"
+        ]
+      },
+      "distance": 1000,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_1",
+      "target": [
+        "55193",
+        "55953",
+        "56050"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": true,
+        "horse_ids": [
+          "51353",
+          "56591",
+          "60344"
+        ]
+      },
+      "B34": {
+        "hit": true,
+        "horse_ids": [
+          "51353",
+          "56591",
+          "60344"
+        ]
+      },
+      "distance": 1800,
+      "grade": "\ud63c3\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_10",
+      "target": [
+        "51353",
+        "56591",
+        "60344"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "45783",
+          "51931",
+          "60721"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "51931",
+          "52105",
+          "60721"
+        ]
+      },
+      "distance": 1400,
+      "grade": "1\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_11",
+      "target": [
+        "47231",
+        "51931",
+        "52105"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55267",
+          "55383",
+          "55698"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "55267",
+          "55383",
+          "55698"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_2",
+      "target": [
+        "55267",
+        "55510",
+        "56731"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53412",
+          "53580",
+          "53825"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53412",
+          "53580",
+          "55186"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d6\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_3",
+      "target": [
+        "53412",
+        "55186",
+        "55740"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53572",
+          "53949",
+          "55351"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53572",
+          "53900",
+          "55351"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_4",
+      "target": [
+        "53337",
+        "53572",
+        "55351"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53641",
+          "55304",
+          "56214"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53084",
+          "55304",
+          "56214"
+        ]
+      },
+      "distance": 1300,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_5",
+      "target": [
+        "53084",
+        "53872",
+        "55304"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53277",
+          "54040",
+          "54867"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53277",
+          "54040",
+          "54867"
+        ]
+      },
+      "distance": 1700,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_6",
+      "target": [
+        "51036",
+        "51875",
+        "54867"
+      ],
+      "top3_fallback_count": 0
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53151",
+          "53227",
+          "53281"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53151",
+          "53227",
+          "53281"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\ud63c4\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_7",
+      "target": [
+        "46888",
+        "50837",
+        "54782"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "55716",
+          "55781",
+          "56576"
+        ]
+      },
+      "B34": {
+        "hit": true,
+        "horse_ids": [
+          "55466",
+          "55716",
+          "55781"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6dOPEN",
+      "meet": 1,
+      "race_id": "20261018_1_8",
+      "target": [
+        "55466",
+        "55716",
+        "55781"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "53074",
+          "53211",
+          "53822"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53074",
+          "53211",
+          "53822"
+        ]
+      },
+      "distance": 1700,
+      "grade": "\ud63c4\ub4f1\uae09",
+      "meet": 1,
+      "race_id": "20261018_1_9",
+      "target": [
+        "51350",
+        "53211",
+        "60830"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51867",
+          "54045",
+          "56045"
+        ]
+      },
+      "B34": {
+        "hit": true,
+        "horse_ids": [
+          "54045",
+          "55125",
+          "56045"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_1",
+      "target": [
+        "54045",
+        "55125",
+        "56045"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51911",
+          "53876",
+          "55370"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "51911",
+          "53876",
+          "55370"
+        ]
+      },
+      "distance": 1300,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_2",
+      "target": [
+        "51564",
+        "54240",
+        "55370"
+      ],
+      "top3_fallback_count": 3
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51516",
+          "53025",
+          "54174"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "53025",
+          "53800",
+          "54174"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\uad6d5\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_3",
+      "target": [
+        "53025",
+        "53274",
+        "54174"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51821",
+          "54051",
+          "56662"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "51821",
+          "54051",
+          "56662"
+        ]
+      },
+      "distance": 1400,
+      "grade": "\ud63c4\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_4",
+      "target": [
+        "50996",
+        "51054",
+        "54051"
+      ],
+      "top3_fallback_count": 2
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "51088",
+          "52937",
+          "57584"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "47495",
+          "52937",
+          "57584"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\uad6d4\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_5",
+      "target": [
+        "47091",
+        "51822",
+        "57584"
+      ],
+      "top3_fallback_count": 1
+    },
+    {
+      "A24": {
+        "hit": false,
+        "horse_ids": [
+          "50817",
+          "54603",
+          "56573"
+        ]
+      },
+      "B34": {
+        "hit": false,
+        "horse_ids": [
+          "52067",
+          "54603",
+          "56573"
+        ]
+      },
+      "distance": 1200,
+      "grade": "\ud63c3\ub4f1\uae09",
+      "meet": 4,
+      "race_id": "20261018_4_6",
+      "target": [
+        "50750",
+        "50930",
+        "51824"
+      ],
+      "top3_fallback_count": 3
+    }
+  ],
+  "script_sha256": "23c5b14a135143b1552af7c739be0b1336670c10424d65f49634afde2da262b9",
+  "source_diagnostic_sha256": "74a4959370c68070afdd1cefc8c9fd34f71f5b539839402f522fef2e3e918390",
+  "subset_accuracy_used": false
+}
