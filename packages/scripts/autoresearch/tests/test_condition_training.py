@@ -16,6 +16,64 @@ from autoresearch import condition_training_model as model
 from autoresearch.restricted_cohort import encoded, parse_json, sha256
 
 
+def test_published_execution_review_binds_exact_requirement():
+    registry = parse_json((admission.ROOT / admission.REGISTRY).read_bytes())
+    review = next(
+        r
+        for r in registry["approved_recipes"]
+        if r["review_id"] == "condition-a24-b34-20261019-execution-v1"
+    )
+    raw = (admission.ROOT / review["requirement_path"]).read_bytes()
+    requirement = parse_json(raw)
+    assert raw == encoded(requirement)
+    assert (
+        sha256(raw)
+        == review["requirement_sha256"]
+        == ("2c6c2251bd718d4316148aaecd0c53270e37dfd64e0ef1d82d9cbb0fcaf1f87b")
+    )
+    assert review["fit_budget"] == {"A24": 1, "B34": 1}
+    assert review["purpose"] == requirement["purpose"] == "research_fit_only"
+    for flag in (
+        "source_review_complete",
+        "label_version_review_complete",
+        "implementation_review_complete",
+    ):
+        assert review[flag] is True
+    for flag in (
+        "retry_allowed",
+        "production_approved",
+        "independent_validation_eligible",
+        "counts_as_70_percent_evidence",
+    ):
+        assert review[flag] is False
+    assert datetime.fromisoformat(review["reviewed_at"]).utcoffset() is not None
+    assert (admission.ROOT / review["review_path"]).is_file()
+
+
+def test_published_execution_manifest_preserves_full_population():
+    path = admission.ROOT / (
+        "docs/research/approvals/2026-10-19-condition-training/requirement.json"
+    )
+    requirement = parse_json(path.read_bytes())
+    summary = requirement["summary"]
+    assert (summary["race_count"], summary["row_count"]) == (50, 534)
+    assert (summary["positive"], summary["negative"]) == (150, 384)
+    assert summary["weight_sum"] == 50
+    assert len(set(requirement["selected_race_ids"])) == 50
+    assert len(requirement["inputs"]) == 58
+    assert len(requirement["implementation"]) == 163
+    assert sorted(r["race_id"] for r in summary["exceptions"]) == (
+        admission.EXCEPTION_RACES
+    )
+    assert requirement["recipe"] == parse_json(encoded(model.RECIPE))
+    for flag in (
+        "model_promoted",
+        "independent_validation_eligible",
+        "counts_as_70_percent_evidence",
+    ):
+        assert requirement[flag] is False
+
+
 @pytest.fixture
 def corpus():
     packets, memory_rows, rosters = [], [], {}
