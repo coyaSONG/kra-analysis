@@ -16,7 +16,8 @@ observed outcomes, never independent evidence for the 70% prediction goal.
 - [x] Implement pure full-population validation and fixed numerical learner.
 - [x] Implement repository-only approval, immutable evidence and shared fit budget.
 - [x] Add synthetic positive/negative tests and CI coverage; inspect real inputs without fitting.
-- [ ] Commit, push and normally merge validated implementation.
+- [x] Commit and push validated implementation; open PR111.
+- [ ] Pass final remote checks and normally merge PR111.
 - [x] Evaluate actual-fit conditions: exact repository approval is absent; no real fits permitted.
 
 ## Context and Orientation
@@ -122,8 +123,8 @@ the whole pair before preprocessing to fail conservatively on interruption.
 
 ## Outcomes & Retrospective
 
-The new 61-test synthetic suite and 111 existing admission/ablation/input tests
-pass together (172 total; 15 existing joblib/NumPy deprecation warnings).
+The new 62-test synthetic suite and 111 existing admission/ablation/input tests
+pass together (173 total; 15 existing joblib/NumPy deprecation warnings).
 Read-only real-input validation confirms all 50/534 identities, 150/384 labels,
 four retained exceptions and weight total 50. Exact approval is absent, and
 neither the real reservation nor model output directory exists. Implementation
@@ -134,6 +135,8 @@ October 19 update: split admission and execution into separate small modules;
 require the approval registry to match both HEAD and origin/main. Record NumPy
 and SciPy build configuration because Accelerate is not listed by threadpoolctl.
 Added concurrent-claim, revocation and exception/null tests before publication.
+A variable-extra-column/missing-value synthetic test additionally verifies exact
+shared preprocessing statistics. PR111 is open; normal merge awaits final CI.
 
 Initial plan written October 19, 2026: additive implementation only, with actual
 fitting conditional on a separately bound and reviewed repository approval.

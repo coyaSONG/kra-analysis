@@ -531,3 +531,26 @@ def test_numeric_id_breaks_equal_gate_score_ties():
         {"race_id": "r", "chul_no": 1, "horse_id": h} for h in ("100", "10", "2", "1")
     ]
     assert model.select(rows, [0, 0, 0, 0])[0]["horse_ids"] == ["1", "2", "10"]
+
+
+def test_variable_extra_columns_do_not_change_shared_preprocessing():
+    rng = np.random.default_rng(110)
+    x = rng.normal(size=(35, 34))
+    x[rng.random(x.shape) < 0.2] = np.nan
+    x[:, 2] = np.nan
+    identities = [
+        {"race_id": f"synthetic-{n // 7}", "chul_no": n % 7 + 1, "horse_id": str(n + 1)}
+        for n in range(35)
+    ]
+    y = np.asarray([int(n % 7 < 3) for n in range(35)])
+    weights = np.full(35, 1 / 7)
+    attempts, models = [], {}
+    for arm, columns in model.ARMS.items():
+        models[arm], consumed = model.fit_once(
+            x[:, : len(columns)].copy(), y, weights, identities, arm, attempts.append
+        )
+        assert consumed["score_and_exact_set_replay_verified"]
+        assert len(consumed["predictions"]) == 5
+    assert attempts == ["A24", "B34"]
+    for name in ("imputer_statistics", "scaler_mean", "scaler_var", "scaler_scale"):
+        assert models["A24"][name] == models["B34"][name][:24]

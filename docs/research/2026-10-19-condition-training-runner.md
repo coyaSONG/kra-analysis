@@ -73,12 +73,12 @@ completion marker without its matching final receipt is not a successful pair.
 
 ## Verification And Actual Status
 
-The new suite has 61 synthetic tests, including full-population rejection,
+The new suite has 62 synthetic tests, including full-population rejection,
 feature type/null/order checks, all six target permutations, all-equal/near-tied
 scores, numeric/large/duplicate IDs, empty columns, replay, constructor values,
 approval absence/change, concurrent reservations, durable attempt ordering,
 convergence failures and fresh-directory retry refusal. Together with the
-existing evidence, restricted learner and candidate input suites, **172 tests
+existing evidence, restricted learner and candidate input suites, **173 tests
 pass**, with 15 existing joblib/NumPy deprecation warnings. Ruff lint/format are
 required in the new Python CI step. No local-cache source data is needed by CI.
 
