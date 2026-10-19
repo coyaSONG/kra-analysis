@@ -1,0 +1,1196 @@
+{
+  "actual_fit_count": 2,
+  "attempted_arms": [
+    "A24",
+    "B34"
+  ],
+  "common24_statistics_equal": true,
+  "completed_arms": [
+    "A24",
+    "B34"
+  ],
+  "completed_at": "2026-10-19T13:12:57.857303+00:00",
+  "counts_as_70_percent_evidence": false,
+  "development_only": true,
+  "evidence": {
+    "A24": {
+      "consumed_sha256": "677e84526815066d2ef72bc63aa1daacf148c66f6e99831526e9cbc0d23893a5",
+      "model_sha256": "69f655fd005b59313d0a23dbf44759510c937ef403e8ac4fd844ea67494d635e"
+    },
+    "B34": {
+      "consumed_sha256": "e74fddb7c4b31ec3ef05e8cfad4b1b8cc31c60164672bcd9ffd458d72f421e9e",
+      "model_sha256": "c03972a447c2a36603717a7107b751f23d0fff08cb204565b68215f955ef16e0"
+    }
+  },
+  "fit_budget": {
+    "A24": 1,
+    "B34": 1
+  },
+  "format_version": "condition-training-receipt-v1",
+  "git_head": "6dd8e49f216017fa031ca30b34613d8642467eaf",
+  "independent_validation_eligible": false,
+  "model_promoted": false,
+  "original_hashes_unchanged": true,
+  "output": "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/condition-training-v1/c25db29f0ba78cd3e7ab49c04950fcde3f3a12686ce4aad1ba69b33fb2616e03",
+  "registry_sha256": "127d1c5d727831815f86077850c2d3202b2e449b36daa138c1331c2d4796f04b",
+  "requirement": {
+    "counts_as_70_percent_evidence": false,
+    "environment": {
+      "cpu": "Apple M1 Max",
+      "cpu_count": 10,
+      "implementation": "CPython",
+      "libraries": [
+        {
+          "filename": "libomp.dylib",
+          "internal_api": "openmp",
+          "num_threads": 10,
+          "prefix": "libomp",
+          "sha256": "7fe04d06d824817d39e4c99ec44e837fd6b5f0f75f2cc3e77a384c298f3f1709",
+          "user_api": "openmp",
+          "version": null
+        }
+      ],
+      "machine": "arm64",
+      "numpy_build": {
+        "Build Dependencies": {
+          "blas": {
+            "detection method": "system",
+            "found": true,
+            "include directory": "unknown",
+            "lib directory": "unknown",
+            "name": "accelerate",
+            "openblas configuration": "unknown",
+            "pc file directory": "unknown",
+            "version": "unknown"
+          },
+          "lapack": {
+            "detection method": "system",
+            "found": true,
+            "include directory": "unknown",
+            "lib directory": "unknown",
+            "name": "accelerate",
+            "openblas configuration": "unknown",
+            "pc file directory": "unknown",
+            "version": "unknown"
+          }
+        },
+        "Compilers": {
+          "c": {
+            "commands": "cc",
+            "linker": "ld64",
+            "name": "clang",
+            "version": "15.0.0"
+          },
+          "c++": {
+            "commands": "c++",
+            "linker": "ld64",
+            "name": "clang",
+            "version": "15.0.0"
+          },
+          "cython": {
+            "commands": "cython",
+            "linker": "cython",
+            "name": "cython",
+            "version": "3.2.8"
+          }
+        },
+        "Machine Information": {
+          "build": {
+            "cpu": "aarch64",
+            "endian": "little",
+            "family": "aarch64",
+            "system": "darwin"
+          },
+          "host": {
+            "cpu": "aarch64",
+            "endian": "little",
+            "family": "aarch64",
+            "system": "darwin"
+          }
+        },
+        "Python Information": {
+          "path": "/private/var/folders/g3/pffjr_y96bq06blnkf72x_hw0000gn/T/build-env-3avvqm00/bin/python",
+          "version": "3.13"
+        },
+        "SIMD Extensions": {
+          "baseline": [
+            "NEON",
+            "NEON_FP16",
+            "NEON_VFPV4",
+            "ASIMD"
+          ],
+          "found": [
+            "ASIMDHP",
+            "ASIMDDP"
+          ],
+          "not found": [
+            "ASIMDFHM"
+          ]
+        }
+      },
+      "packages": [
+        [
+          "Jinja2",
+          "3.1.6"
+        ],
+        [
+          "MarkupSafe",
+          "3.0.3"
+        ],
+        [
+          "PyJWT",
+          "2.13.0"
+        ],
+        [
+          "PyYAML",
+          "6.0.3"
+        ],
+        [
+          "Pygments",
+          "2.20.0"
+        ],
+        [
+          "SQLAlchemy",
+          "2.0.51"
+        ],
+        [
+          "StrEnum",
+          "0.4.15"
+        ],
+        [
+          "aiofiles",
+          "25.1.0"
+        ],
+        [
+          "aiosqlite",
+          "0.22.1"
+        ],
+        [
+          "annotated-doc",
+          "0.0.4"
+        ],
+        [
+          "annotated-types",
+          "0.7.0"
+        ],
+        [
+          "anyio",
+          "4.14.2"
+        ],
+        [
+          "ast_serialize",
+          "0.6.0"
+        ],
+        [
+          "asyncpg",
+          "0.31.0"
+        ],
+        [
+          "bcrypt",
+          "5.0.0"
+        ],
+        [
+          "certifi",
+          "2026.6.17"
+        ],
+        [
+          "cffi",
+          "2.1.0"
+        ],
+        [
+          "cfgv",
+          "3.5.0"
+        ],
+        [
+          "charset-normalizer",
+          "3.4.9"
+        ],
+        [
+          "click",
+          "8.4.2"
+        ],
+        [
+          "coverage",
+          "7.15.0"
+        ],
+        [
+          "cryptography",
+          "50.0.2"
+        ],
+        [
+          "deprecation",
+          "2.1.0"
+        ],
+        [
+          "detect-installer",
+          "0.1.0"
+        ],
+        [
+          "distlib",
+          "0.4.3"
+        ],
+        [
+          "dnspython",
+          "2.8.0"
+        ],
+        [
+          "email-validator",
+          "2.3.0"
+        ],
+        [
+          "fastapi",
+          "0.139.0"
+        ],
+        [
+          "fastapi-cli",
+          "0.0.29"
+        ],
+        [
+          "fastapi-cloud-cli",
+          "0.22.1"
+        ],
+        [
+          "fastar",
+          "0.11.0"
+        ],
+        [
+          "filelock",
+          "3.29.7"
+        ],
+        [
+          "greenlet",
+          "3.5.3"
+        ],
+        [
+          "h11",
+          "0.16.0"
+        ],
+        [
+          "h2",
+          "4.3.0"
+        ],
+        [
+          "hpack",
+          "4.2.0"
+        ],
+        [
+          "httpcore",
+          "1.0.9"
+        ],
+        [
+          "httptools",
+          "0.8.0"
+        ],
+        [
+          "httpx",
+          "0.28.1"
+        ],
+        [
+          "hyperframe",
+          "6.1.0"
+        ],
+        [
+          "identify",
+          "2.6.19"
+        ],
+        [
+          "idna",
+          "3.18"
+        ],
+        [
+          "iniconfig",
+          "2.3.0"
+        ],
+        [
+          "joblib",
+          "1.5.3"
+        ],
+        [
+          "kra-race-prediction-api",
+          "1.0.0"
+        ],
+        [
+          "librt",
+          "0.13.0"
+        ],
+        [
+          "markdown-it-py",
+          "4.2.0"
+        ],
+        [
+          "mdurl",
+          "0.1.2"
+        ],
+        [
+          "multidict",
+          "6.7.1"
+        ],
+        [
+          "mypy",
+          "2.2.0"
+        ],
+        [
+          "mypy_extensions",
+          "1.1.0"
+        ],
+        [
+          "narwhals",
+          "2.23.0"
+        ],
+        [
+          "nodeenv",
+          "1.10.0"
+        ],
+        [
+          "numpy",
+          "2.5.1"
+        ],
+        [
+          "orjson",
+          "3.11.9"
+        ],
+        [
+          "packaging",
+          "26.2"
+        ],
+        [
+          "pandas",
+          "2.3.3"
+        ],
+        [
+          "passlib",
+          "1.7.4"
+        ],
+        [
+          "pathspec",
+          "1.1.1"
+        ],
+        [
+          "pdfminer.six",
+          "20260107"
+        ],
+        [
+          "pdfplumber",
+          "0.11.10"
+        ],
+        [
+          "pendulum",
+          "3.2.0"
+        ],
+        [
+          "pillow",
+          "12.3.0"
+        ],
+        [
+          "platformdirs",
+          "4.10.0"
+        ],
+        [
+          "pluggy",
+          "1.6.0"
+        ],
+        [
+          "postgrest",
+          "2.31.0"
+        ],
+        [
+          "pre_commit",
+          "4.6.0"
+        ],
+        [
+          "prometheus_client",
+          "0.25.0"
+        ],
+        [
+          "propcache",
+          "0.5.2"
+        ],
+        [
+          "psycopg2-binary",
+          "2.9.12"
+        ],
+        [
+          "pycparser",
+          "3.0"
+        ],
+        [
+          "pydantic",
+          "2.13.4"
+        ],
+        [
+          "pydantic-extra-types",
+          "2.11.1"
+        ],
+        [
+          "pydantic-settings",
+          "2.14.2"
+        ],
+        [
+          "pydantic_core",
+          "2.46.4"
+        ],
+        [
+          "pypdfium2",
+          "5.14.0"
+        ],
+        [
+          "pytest",
+          "9.1.1"
+        ],
+        [
+          "pytest-asyncio",
+          "1.4.0"
+        ],
+        [
+          "pytest-cov",
+          "7.1.0"
+        ],
+        [
+          "pytest-timeout",
+          "2.4.0"
+        ],
+        [
+          "python-dateutil",
+          "2.9.0.post0"
+        ],
+        [
+          "python-discovery",
+          "1.4.4"
+        ],
+        [
+          "python-dotenv",
+          "1.2.2"
+        ],
+        [
+          "python-multipart",
+          "0.0.32"
+        ],
+        [
+          "pytz",
+          "2026.2"
+        ],
+        [
+          "realtime",
+          "2.31.0"
+        ],
+        [
+          "redis",
+          "8.0.1"
+        ],
+        [
+          "requests",
+          "2.34.2"
+        ],
+        [
+          "rich",
+          "15.0.0"
+        ],
+        [
+          "rich-toolkit",
+          "0.20.1"
+        ],
+        [
+          "rignore",
+          "0.7.6"
+        ],
+        [
+          "ruff",
+          "0.15.21"
+        ],
+        [
+          "scikit-learn",
+          "1.9.0"
+        ],
+        [
+          "scipy",
+          "1.18.0"
+        ],
+        [
+          "sentry-sdk",
+          "2.64.0"
+        ],
+        [
+          "shellingham",
+          "1.5.4"
+        ],
+        [
+          "six",
+          "1.17.0"
+        ],
+        [
+          "starlette",
+          "1.3.1"
+        ],
+        [
+          "storage3",
+          "2.31.0"
+        ],
+        [
+          "structlog",
+          "26.1.0"
+        ],
+        [
+          "supabase",
+          "2.31.0"
+        ],
+        [
+          "supabase-auth",
+          "2.31.0"
+        ],
+        [
+          "supabase-functions",
+          "2.31.0"
+        ],
+        [
+          "tenacity",
+          "9.1.4"
+        ],
+        [
+          "threadpoolctl",
+          "3.6.0"
+        ],
+        [
+          "typer",
+          "0.26.8"
+        ],
+        [
+          "types-python-dateutil",
+          "2.9.0.20260518"
+        ],
+        [
+          "typing-inspection",
+          "0.4.2"
+        ],
+        [
+          "typing_extensions",
+          "4.16.0"
+        ],
+        [
+          "tzdata",
+          "2026.3"
+        ],
+        [
+          "urllib3",
+          "2.8.0"
+        ],
+        [
+          "uvicorn",
+          "0.51.0"
+        ],
+        [
+          "uvloop",
+          "0.22.1"
+        ],
+        [
+          "virtualenv",
+          "21.6.1"
+        ],
+        [
+          "watchfiles",
+          "1.2.0"
+        ],
+        [
+          "websockets",
+          "15.0.1"
+        ],
+        [
+          "yarl",
+          "1.24.2"
+        ]
+      ],
+      "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+      "python": "3.13.13",
+      "scipy_build": {
+        "Build Dependencies": {
+          "blas": {
+            "cython blas ilp64": false,
+            "detection method": "extraframeworks",
+            "found": true,
+            "has ilp64": false,
+            "include directory": "unknown",
+            "lib directory": "unknown",
+            "name": "Accelerate",
+            "openblas configuration": "unknown",
+            "pc file directory": "unknown",
+            "version": "unknown"
+          },
+          "lapack": {
+            "detection method": "extraframeworks",
+            "found": true,
+            "has ilp64": false,
+            "include directory": "unknown",
+            "lib directory": "unknown",
+            "name": "Accelerate",
+            "openblas configuration": "unknown",
+            "pc file directory": "unknown",
+            "version": "unknown"
+          },
+          "pybind11": {
+            "detection method": "config-tool",
+            "include directory": "unknown",
+            "name": "pybind11",
+            "version": "3.0.4"
+          }
+        },
+        "Compilers": {
+          "c": {
+            "commands": "cc",
+            "linker": "ld64",
+            "name": "clang",
+            "version": "15.0.0"
+          },
+          "c++": {
+            "commands": "c++",
+            "linker": "ld64",
+            "name": "clang",
+            "version": "15.0.0"
+          },
+          "cython": {
+            "commands": "cython",
+            "linker": "cython",
+            "name": "cython",
+            "version": "3.2.5"
+          },
+          "fortran": {
+            "commands": "gfortran",
+            "linker": "ld64",
+            "name": "gcc",
+            "version": "13.4.0"
+          },
+          "pythran": {
+            "include directory": "../../../../../../../private/var/folders/dq/2t71w9pd3jx50vh3kp15_dt40000gn/T/build-env-o545vwkx/lib/python3.13/site-packages/pythran",
+            "version": "0.18.1"
+          }
+        },
+        "Machine Information": {
+          "build": {
+            "cpu": "aarch64",
+            "endian": "little",
+            "family": "aarch64",
+            "system": "darwin"
+          },
+          "cross-compiled": false,
+          "host": {
+            "cpu": "aarch64",
+            "endian": "little",
+            "family": "aarch64",
+            "system": "darwin"
+          }
+        },
+        "Python Information": {
+          "path": "/private/var/folders/dq/2t71w9pd3jx50vh3kp15_dt40000gn/T/build-env-o545vwkx/bin/python",
+          "version": "3.13"
+        }
+      },
+      "thread_settings": {
+        "BLIS_NUM_THREADS": null,
+        "MKL_NUM_THREADS": null,
+        "NUMEXPR_NUM_THREADS": null,
+        "OMP_NUM_THREADS": null,
+        "OPENBLAS_NUM_THREADS": null,
+        "VECLIB_MAXIMUM_THREADS": null
+      }
+    },
+    "format_version": "condition-training-admission-v1",
+    "implementation": {
+      "packages/scripts/autoresearch/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/scripts/autoresearch/api27_evaluation.py": "cc7c5e6c9408945256114651aad477059082f06d7b0a10877b6e385aa4e8594b",
+      "packages/scripts/autoresearch/api27_forward.py": "2c9de5f9a4d8388c6d9d4b6323a0a83cca3243d173881622dbd57a5297ef6c2e",
+      "packages/scripts/autoresearch/api27_refit.py": "86c4f56bc507222f7c4a064eb3c9a27d2a0f18b130412eff2c5eae7de9e080bb",
+      "packages/scripts/autoresearch/api_training_opportunity.py": "1583a99c0553f9844a33f9fce59f80ef66bbfeee6cda3dbaeb89a8263b64ff5c",
+      "packages/scripts/autoresearch/clean_release_current_best_all_allowed_source_pool_overlap2_aggregate_selector_diagnostic.py": "e4245e76aacf7c53413b8b70ea2c6654e8957e2702e156bbce390a5bfd084372",
+      "packages/scripts/autoresearch/clean_release_current_best_all_allowed_source_pool_ranker_feature_extension_prior_date_selector_diagnostic.py": "d7f36f480f713ced69c9fe9ee5d0dd044d5721dfb5e929de1f759a4dce648b57",
+      "packages/scripts/autoresearch/condition_candidate_inputs.py": "071ec832019359a8801fad3e81d37ca47c254f5f39fd5b830d5cbb85c933c9fb",
+      "packages/scripts/autoresearch/condition_delta_diagnostic.py": "d07f5305619a9123bb14c65773afaccc41259541204fe034479eb2f8d287650a",
+      "packages/scripts/autoresearch/condition_form_research.py": "0fe2193ec67829335c56365ae7aabf63821d008decfeafeba00a54d7a9547118",
+      "packages/scripts/autoresearch/condition_memory_research.py": "80aa5252f304a505673b1fc91be565fd8b1aa00cec63493bc41bee71a5a86954",
+      "packages/scripts/autoresearch/condition_training.py": "99f22b29f3258674745b2df2db212ff15a4de449e571df7d5ac13f77863dc545",
+      "packages/scripts/autoresearch/condition_training_admission.py": "7b6e717e017efeca48ac68a14cf7d94e67ec8e4ec0b73584f2974a0b54fa631c",
+      "packages/scripts/autoresearch/condition_training_data.py": "2b8d4720a11950543b443e854bd153dc256017f6c63b3077f1279ba7e23d4b04",
+      "packages/scripts/autoresearch/condition_training_model.py": "9e3609da88b7b9790e8a9accb314965c7cbfa3a493e125e69a7b36f45507757e",
+      "packages/scripts/autoresearch/dataset_artifacts.py": "63099f0a732ff2ce0eceaa04c21449aadaec6d0e673ce427cd41336ea22879ae",
+      "packages/scripts/autoresearch/evaluation_orchestrator.py": "07f9a03897f7abbd56c013bf32775116e17d0d355730eda9363e09f1eeb7f601",
+      "packages/scripts/autoresearch/extract_rrx_metric.py": "b3e4eeee52a33cdc84e63fc1a4a964853f2a4118ca8b7321bca8c38e5605b2fe",
+      "packages/scripts/autoresearch/frozen_history_view.py": "80a0ea0cc66c5c374894b310ccac8d47d1fd330f1de1c67211c7007bb6f95158",
+      "packages/scripts/autoresearch/history_api_probe.py": "43be970e48ab4fd2331a1f7fc56a74de98e528902bc3cac065988f778a1b1764",
+      "packages/scripts/autoresearch/history_coverage_study.py": "1c7e10024d82443f2f66b0aa4b7d3698555b709d1d428288c031ea6c88b5eacf",
+      "packages/scripts/autoresearch/history_form_research.py": "832f36c3a22ccfd033735c76ad88dbba874ddc41ea080b924323839504275a22",
+      "packages/scripts/autoresearch/history_gap_expansion.py": "ac5bcae19a26295a8661ec82bc4b4392fedc91040e7bf3ef6f0a269388668395",
+      "packages/scripts/autoresearch/history_identity_audit.py": "cb74e554b5921449ef9080adf3a2d359692544e36308092d086e2f2e6d22f2e9",
+      "packages/scripts/autoresearch/holdout_dataset.py": "861119a97e38233355780ce4000859955543d9537176996475cc37acfe5b1806",
+      "packages/scripts/autoresearch/holdout_split.py": "499f215e1f72e560ff229430ebb4cf2554c2dca137fde9ddb68e79845054cbcd",
+      "packages/scripts/autoresearch/horse_entry_interval_audit.py": "e00f6fa95f838aa256f6b82d9f42014f0b40eb3213f5df3664f8ba5c77387208",
+      "packages/scripts/autoresearch/kra_entry_sheet_snapshot.py": "0e0ff51f19f5ddfd0517e53b912547bcb09cf5a5d22706e95e0b22573e72e0cf",
+      "packages/scripts/autoresearch/kra_race_card_pdf_bundle.py": "2f238745abdad2868bace0e390e2a38bb0cc97e346753587f281c6173e0dc543",
+      "packages/scripts/autoresearch/kra_race_card_pdf_replay.py": "2db618a34a77fe7ff03b8ea30e38e00a5d79ca94dbba75ffdb9a616a41ab45e0",
+      "packages/scripts/autoresearch/kra_race_card_pdf_snapshot.py": "821cbe20a1c76e9768c37ba6003eeb95e7100a498b02ce54ec4cb8e648986990",
+      "packages/scripts/autoresearch/kra_result_population_audit.py": "1452e2e70dd437feb07a04beb5c630ba542c71c015df73c0a5e67d57093672bc",
+      "packages/scripts/autoresearch/kra_result_snapshot.py": "6497066c152a61dd2a3f25ae09905ef859220f1e2ebfca070e9d009dcecc2a15",
+      "packages/scripts/autoresearch/kra_schedule_snapshot.py": "c30b53ea50a6a9982273668ed040e0dc6844e633ba26b7d20fde4af1f4cc6d9f",
+      "packages/scripts/autoresearch/local_m0_evaluation.py": "abc06b963a2ecc62cd247d67bc902e40aae78b9a4c8760b4cdc18ded8a443139",
+      "packages/scripts/autoresearch/local_m0_forward.py": "d15effab38c82ec8f9e1151f5960fd1ff99368a7cdbfdfd222dcb7d6264dae4e",
+      "packages/scripts/autoresearch/local_m0_inference.py": "597b993daa6b76daaedb22afa59ebf635520c71861a2c93a154c41976e330351",
+      "packages/scripts/autoresearch/materialize_clean_dataset.py": "9c0c84305e3700065c85810cd6dd36343a4e0d5fead8379fadb068ae95f58b71",
+      "packages/scripts/autoresearch/observed_history_seed.py": "c13960243a967e69e2e50d88b5e9463da42a4d1f3053ee7bf1b3339036463f6a",
+      "packages/scripts/autoresearch/observed_partial_projection.py": "62beb8bd1a758a9c7ed4ce59131d3b924003ffb22ab4a7979d52d17c933607d5",
+      "packages/scripts/autoresearch/october_paired_error_audit.py": "108838bb5869b9671883f2a9dc70bff6fbcc0e7e901a607c4af0e53b438bd127",
+      "packages/scripts/autoresearch/official_history_catalog.py": "8dd03ae16cedef8b29d3788678fb1db2b0102e00109eb1d4b9fa96c9771e6ec6",
+      "packages/scripts/autoresearch/official_history_recency.py": "bad1e4af4078858b90f84a6bd96c92e2efff34497b801bae7174afd195fe1f48",
+      "packages/scripts/autoresearch/official_history_support.py": "4355ac7f1da3512c7e91eb44846c3c744a9038c5d8dc3c82f702d3f3cf80005a",
+      "packages/scripts/autoresearch/offline_evaluation_dataset_job.py": "c6f04c9670e5d2d412b32e21a5b618bacb1c39c3ba77bbf3c200f41ea221f9a7",
+      "packages/scripts/autoresearch/parameter_context.py": "1ecfa2a0950550d6d75d85594bc8e1fb81a6fbec1b7ff7dea3336e219067e282",
+      "packages/scripts/autoresearch/prepare.py": "02c1216551c5ce841005230cc832d2d5c9982d547af6c398731be9c828fd6840",
+      "packages/scripts/autoresearch/prerace_conditions.py": "6b8805e881a0da49fc7a3e77d3aef518175ba9f965715f85a57e8b14cef085a6",
+      "packages/scripts/autoresearch/prerace_hash_witness.py": "349a7028444ff349ddef4d28fffb6159ff71e2bb42243a589f40366efb85b16d",
+      "packages/scripts/autoresearch/prospective_pdf_supplement.py": "d02eceab46fbb4a347eb5ffea0bf561837272e5952f625a77ca7ffa556559225",
+      "packages/scripts/autoresearch/prospective_training_inputs.py": "ee86f1c18cc6b49fce59adf6b4014468ae433f02acd4ce7fc56df260938996cd",
+      "packages/scripts/autoresearch/race_conditions.py": "89a16001c680a4126e554481e88b583af7e8fb34898c9e3e1187c79ba2a24499",
+      "packages/scripts/autoresearch/random_split_result_collector.py": "2d53e6aaa6d0daa8c6c457073a0f64b6052103056fb0f9912742204383e241d4",
+      "packages/scripts/autoresearch/reproducibility.py": "75c30774049b2ec7ecfe4a266c4ab1bc2106ab9f926f8730c9d52a54baeb9d40",
+      "packages/scripts/autoresearch/research_clean.py": "b65776558355ba7be808a23170e286eff2fad79ca2a560b197a12326faa2ca4a",
+      "packages/scripts/autoresearch/research_hgb.py": "cdaafdfe3b5ebe908da51b64126a8cf568e48b9655f5df5299ec545c9b57dc95",
+      "packages/scripts/autoresearch/restricted_ablation.py": "2dc1f11bef99df0e7ddc16ede039cffa0e1a16ee82bb63736fe16d037529d48a",
+      "packages/scripts/autoresearch/restricted_cohort.py": "a2ec2dbe30a97624d508a9aa5b40f70010b615e01b4449574a6fff35fd29cf1c",
+      "packages/scripts/autoresearch/rrx_propose.py": "199a2d2e326bd6b224f7ae0c75273d8508734bab0e8fd0851e7b467e2bc32c4d",
+      "packages/scripts/autoresearch/rrx_propose_llm.py": "3776e435275cf2f9d3592ffc4f524e78d386dfbff71b2709162d86f0a8cb53d1",
+      "packages/scripts/autoresearch/seed_matrix_runner.py": "851b2bf38ded732d94f37f97926757907944479bc80305883e52fad554ce0841",
+      "packages/scripts/autoresearch/seed_summary_report.py": "7de7c710209deab497ca81a46a44cd6ea0bc4057e4fa4498aca0012584bfd4a7",
+      "packages/scripts/autoresearch/single_combo_live_all_allowed_source_pool_ranker_feature_extension_materializer.py": "f8c7643dda9badae50e7beb960915d4c58e6f0a94fcff3e7793f123f0bc35b76",
+      "packages/scripts/autoresearch/single_combo_live_all_allowed_source_pool_ranker_prior_date_materializer.py": "81ca129004e232ae6d0f68471950fd5057ca8173a4586834607bbbc86f5972bd",
+      "packages/scripts/autoresearch/single_combo_live_broad_component_first_exact_rank_prior_date_materializer.py": "396c3df9fb20a5d960af6e05a387d6bbfd77f1285bf146ee8335df52d5df354d",
+      "packages/scripts/autoresearch/single_combo_live_cross_surface_union_race_context_prior_date_materializer.py": "f08f971d570919da9b6f4e45b794225a35619d6b9b18f2f8ed33ec4d07aebb45",
+      "packages/scripts/autoresearch/single_combo_live_entity_history_overlay_prior_date_materializer.py": "165bfb1a13350bdd97d7a5ab550120aff707771260531e04b588ae158698f433",
+      "packages/scripts/autoresearch/single_combo_live_entity_history_pair_overlay_prior_date_materializer.py": "eb07189493fc219bf6774cd06787f2eb8fe7a5537e7cfd2d4aba98ddea97cf97",
+      "packages/scripts/autoresearch/single_combo_live_frontier_artifact_combo_prior_date_materializer.py": "847c1ea4ac7256371bcac1d4614d9829ca2f35418072f2265c42f7150ede420a",
+      "packages/scripts/autoresearch/single_combo_live_row_cache_rank_pattern_after_source_pool_materializer.py": "7891ab8a14b06e5f92ea6a7422669bce1fcb4dbf23525816e0caba5bfc86971b",
+      "packages/scripts/autoresearch/single_combo_live_row_cache_rank_pattern_prior_date_materializer.py": "24129c3a39106e9027fcb91adbdc7ac655e0c0a54b2b45ca1ef4154f35a31e13",
+      "packages/scripts/autoresearch/single_combo_live_source_pool_overlap2_aggregate_materializer.py": "199ea707988e94515e87cc4104902200f90510949908b9b506a5fd62495fb0ae",
+      "packages/scripts/autoresearch/single_combo_live_source_pool_ranker_overlap2_materializer.py": "159460f27c0fe8c94ac6e6f33de88c974911653185b25652aafacd87043b832f",
+      "packages/scripts/autoresearch/single_combo_locked_best_live_port_chain_manifest.py": "1e1c503532f400c560fd385a8c13aa15fe244482ad246bdfa42a4dea5c31c89e",
+      "packages/scripts/autoresearch/single_combo_source_pool_overlap2_aggregate_train_surface.py": "99abc1b13b67175098adb01f2131643111ecca30f397e801a19184f331010815",
+      "packages/scripts/autoresearch/single_combo_source_pool_ranker_prior_date_train_surface.py": "c3ec079d51f22523023ad2368c84b55892bea4585d4811f77abb7018493db200",
+      "packages/scripts/autoresearch/split_plan.py": "135021d57f9230e76ec3e0fa72cd1da0bdd7378218d0f8b092c32234a8854d7c",
+      "packages/scripts/autoresearch/t30_release_evaluation.py": "8e1ff81a7c9210e0cb5664377d63ab15b6e6a6503e25ecdf52b31a4773ab50fd",
+      "packages/scripts/autoresearch/train.py": "70b3c017d8bad2a0de77ba9800045ceb9548f2130dcecadd7f3d798979f8901d",
+      "packages/scripts/autoresearch/training_evidence.py": "899f597900614874f4da3b13fd694def4a8cb68863c9a3969ee48c3545d5d722",
+      "packages/scripts/autoresearch/versioned_result_observations.py": "93b4a40c6788f3441dacc342bfc23d902104af6c80c096d811f98ad8a84a8b02",
+      "packages/scripts/autoresearch/yeongcheon_pdf_replay.py": "d8305cb2900a42ed3560259e3e3be85489b019369cbfc8c2572a209c653bd688",
+      "packages/scripts/evaluation/calibration.py": "b107ab9f47c1c9d13c07ae2df5c0ed91cf887518012060ee744023e370ab0eb2",
+      "packages/scripts/evaluation/data_loading.py": "0d310b85caab1d01f03515dabdc83db1937157b5a2587687554d7ea88e851a35",
+      "packages/scripts/evaluation/data_splitter.py": "0d02b94e57f9fae0d94efb5f8a3e3f66087999b890cdc9fc5683c44feb0c42b1",
+      "packages/scripts/evaluation/ensemble.py": "10b2d2c9e40c940676f261e265734b70f06ebd7decb242e50fac56f3509d93e2",
+      "packages/scripts/evaluation/evaluate_prompt_v3.py": "4e70f3a97707b3aa3a90c875c8e7a0e57467e003bf649552b77fbb48ba207862",
+      "packages/scripts/evaluation/jury_ensemble.py": "68bed7a6a42ccd5cebdf749d3e5f4d7d339e9269032c810116b0bafd88ab5ac6",
+      "packages/scripts/evaluation/leakage_checks.py": "33ba5711bcb009b5dd0b6509bb6236a1183567feb10dfe89b30712c5e2c8bb5b",
+      "packages/scripts/evaluation/metrics.py": "9d2320388c772750f92b8fdb060932e5decd3a677f389042fac9ab7a77b670aa",
+      "packages/scripts/evaluation/mlflow_tracker.py": "05de0c600f233c6ccde97bed582ad1258705040cd36a8e60fa21dc40fad1fb07",
+      "packages/scripts/evaluation/predict_only_test.py": "d03306e55a9eb525aae4a38fb09ac101790b8e10f9f08d45e07aaeb5696a2eab",
+      "packages/scripts/evaluation/prediction_service.py": "c91a1cad2dad6ca29b311e3327d62c16fce01b5ccccaf5c7614e73658bbeeff1",
+      "packages/scripts/evaluation/report_schema.py": "1d1ad808089e7d2efcc137521a245b80c6a7b27c4fb19282613f99161890be45",
+      "packages/scripts/evaluation/statistical_tests.py": "9396d5fe69a858975f6b17024215478bdc912f107a00ec05e98ba159fcd073a4",
+      "packages/scripts/feature_engineering.py": "3112b4ca8cc532d7289ffbc8e0e3a9ca4d968c9c790d83326a840dcd39767160",
+      "packages/scripts/ml/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/scripts/ml/predict_clean.py": "ec8c6c9129eb3749565561fd570a7e298443d4f4af3a97a9ffa6332800bef7c2",
+      "packages/scripts/ml/train_clean.py": "4d77ae61678a36b50028f8c64b8f206b92a61e85802246975a05397a8c0ed649",
+      "packages/scripts/prompt_improvement/analyze_enriched_patterns.py": "c6b03fee5bd135eefb4edb93fc3a792f00534e09ab1c21057936681f5f3ba12c",
+      "packages/scripts/prompt_improvement/jury_prompt_improver.py": "99b16875766f92455297ad8e3ddb68522517fef23858a1cdc442d48af8af5e22",
+      "packages/scripts/prompt_improvement/recursive_prompt_improvement_v5.py": "c6bd1c3aba2916dbd42bde987df865a17361218c1b44609147e37e27371b11dc",
+      "packages/scripts/prompt_improvement/test_v5_advanced_techniques.py": "77e48fa42a682b76f467a95061189e7261492782db691b12a86c086e75e858d5",
+      "packages/scripts/prompt_improvement/v5_modules/__init__.py": "3a699ecc901607d75d01c2a49ae4e18521947791fc77effa84b2b564da1859c0",
+      "packages/scripts/prompt_improvement/v5_modules/common_types.py": "930da4ba9b0b02d7d125b6dec8e6acbae6b30b4a6619a169b746e50e87c3147b",
+      "packages/scripts/prompt_improvement/v5_modules/dynamic_reconstructor.py": "0306178ab2a3e73791d9da7828888c283487f6c7f46510aff41682e45d0d2d03",
+      "packages/scripts/prompt_improvement/v5_modules/examples_manager.py": "42de49fade8746d7e6b709b13f9b942b8e97319def7389fc647196edaf3aa2b6",
+      "packages/scripts/prompt_improvement/v5_modules/extended_thinking.py": "5b344c43f9cd543787f8c893a776683f74d35019c4abb435f418043ef2cbeca7",
+      "packages/scripts/prompt_improvement/v5_modules/failure_taxonomy.py": "3993268ad6c50b73eac939a4125850716fbe16b72204217fd8807017b82c51a0",
+      "packages/scripts/prompt_improvement/v5_modules/guide_loader.py": "605fcbb67d5c6ba79ad8f1af0a443f1187f28a93d36763c1b8af893c95897265",
+      "packages/scripts/prompt_improvement/v5_modules/insight_analyzer.py": "b4429289bac092adb48f77e612a58843a93641cb7ba2ec096269e3a9be6aebe4",
+      "packages/scripts/prompt_improvement/v5_modules/prompt_parser.py": "0ddebd9f04c8d7f78f42d21383c972b25c6e400458eff2add4ef983b171096e3",
+      "packages/scripts/prompt_improvement/v5_modules/self_verification.py": "eccf6b39632d46f213f3764ed55ce9b798feeea3a8ae05a4526a64e7d873ccb5",
+      "packages/scripts/prompt_improvement/v5_modules/token_optimizer.py": "068ebe70ec7242c0e02e8dfa2442691f54bce47ea02267f2047d3f9c347c7957",
+      "packages/scripts/prompt_improvement/v5_modules/utils.py": "6cda334e430e328db017aaff50f003cf6effe8b32d7528650242e86b803e3676",
+      "packages/scripts/shared/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packages/scripts/shared/alternative_ranking.py": "16320703cb1173fa15d09dc57d1aa285043e4cb00194b0f3046022edcf1dd6bd",
+      "packages/scripts/shared/autoresearch_config_schema.py": "949a6e6031927918b626ee8245d0a13b6dde155563f9054b188c926cb513ea23",
+      "packages/scripts/shared/batch_race_selection_policy.py": "ba9e02a1c8cb1af327dbeb6ec43ca5788e240edc49b71166464d23cc41d20221",
+      "packages/scripts/shared/claude_client.py": "d57eecae94dcc4aeae9172e02c430fc8302d3ade1c7a58a06a0d1cd2e8ecb17c",
+      "packages/scripts/shared/data_adapter.py": "ee90cefebf08b452670b07b700d6e5316dffb564b6cd9c583a0625d9b612dd5e",
+      "packages/scripts/shared/db_client.py": "82f21094f74c67ba079e6b0148d4c8b6f47b6bff4ed6dd08b1903ae2d6da5787",
+      "packages/scripts/shared/entry_change_snapshot_manifest.py": "b696b4777aae33da87c47995b75f29483a92b7649fd3657587b9cac277d57fe3",
+      "packages/scripts/shared/entry_snapshot_metadata.py": "f5b2def9b0b144242cf5e8c3721f48d345241cbd2fb2d82a734d71d352c9981b",
+      "packages/scripts/shared/execution_matrix.py": "6139932a52c626014c55a78bd85777420ffc3f199773baffcd1d093379dee9a2",
+      "packages/scripts/shared/feature_source_timing_contract.py": "1d4d023540c40974cad91b7be7cd86258519308c4851608f80bdee1353808d16",
+      "packages/scripts/shared/final_race_inference_schema.py": "ebf821b8fca7cdf3a4a7ecf72ce1f15a737554a3d5ef272892568246f0f5d20d",
+      "packages/scripts/shared/holdout_split_manifest_schema.py": "3f384c208402ba7dcd90e3fc9e36bf9f6806b6e373fe0471f22690b43f40f21b",
+      "packages/scripts/shared/kra_entry_sheet.py": "9fbc330976d58f7453e3a8b73721771db768e717e38a7010f6bd18e58f654cc6",
+      "packages/scripts/shared/kra_race_card_pdf.py": "53028388000b7f033e400ee2c9388110e387d9cbc04fdec12c12703ff40d37b6",
+      "packages/scripts/shared/kra_race_card_pdf_audit.py": "dd88c836605284cc5c14ae2a89131011bee4c6f0a845a59675a231bb437b814a",
+      "packages/scripts/shared/kra_race_identity.py": "ed31af384a25e7474fca052e8fa5fe7adee23edc6081af232f215f609b43a945",
+      "packages/scripts/shared/kra_result_history.py": "55e3005677f0bf18de5a0235d60423a705ab2e77e76a3dca86cb775b81e53050",
+      "packages/scripts/shared/kra_schedule.py": "8041d2d8f60980993b960b8e2475f3f8f401e32d27d2ea0d7196b7c7d6f9e251",
+      "packages/scripts/shared/llm_client.py": "5307ba06fc0ada07751945258fbd0f11346ba8f3f553e83e26abbd8632090579",
+      "packages/scripts/shared/llm_jury.py": "d3fe4027782b5cc56f0c4efff4489a76e0d95f616c8c2816eb78b56fc38a775e",
+      "packages/scripts/shared/model_score_status_schema.py": "36f40ab6d51e57c156357d46b7c0ad0a55ff85844fbc8a179cffcbb9c2f70364",
+      "packages/scripts/shared/observed_partial_history.py": "1b2766b23387e92f048b034387a3731a7d792fcaca6b69ae68b6aa7707ef8460",
+      "packages/scripts/shared/observed_result_history.py": "c93ec715d449d70c4e47479e88ae750c1030887334891a93cf21a06b4ee3ecf5",
+      "packages/scripts/shared/official_result_support.py": "c77dede7df09a83d53b48efdb5c295bae930f49507b44755c6557929f3a10d5b",
+      "packages/scripts/shared/operational_cutoff.py": "024ddf61c06ccc696f563bc8f8d2aaf60ed6a4f17ed0b2b1ef0a1acb2958e2cd",
+      "packages/scripts/shared/prediction_input_schema.py": "574cbd778688437631e33318016ec98f3ca19e22c0e35a293f4e5058e722273a",
+      "packages/scripts/shared/prediction_output_guard.py": "c36716284e2a7bbee69628fbc9bbd54fee9ea708de680ecdff51cae4c4087025",
+      "packages/scripts/shared/prediction_postprocessing.py": "636f79fe5b149b36171a8d9c84c73aaa49816f710bc5878847c77cdd804ba1a7",
+      "packages/scripts/shared/prerace_entry_preprocessing_schema.py": "7e7f21e86aa1015c7a68207f6b52449c296438c99ed6a933fd58e41f74024be2",
+      "packages/scripts/shared/prerace_field_metadata_schema.py": "e8894946dcabfb1c3aecdb8171165ea2fb12788b9975e8750a2e2232e30287df",
+      "packages/scripts/shared/prerace_field_policy.py": "0f7e027b8b315c3b6ea2ef890f2f1a9acf67355d6e079dfeb8e7d7e2cce4b1d0",
+      "packages/scripts/shared/prerace_field_validation_metaschema.py": "d60eabc37b26012e32c125298c83b53cdd22c3f76856708c8f269abd730edd89",
+      "packages/scripts/shared/prerace_input_schema_decision.py": "418c63f9045d600bb1064714e6cbd73bd40db95c24f1e667a7436860d1df8104",
+      "packages/scripts/shared/prerace_prediction_payload.py": "c406c6aec770dded69ccb520c989b04dd032bedbe01587fbb24b832e12d960b5",
+      "packages/scripts/shared/prerace_source_schema.py": "45b624fed2caa8b95b5d553ec7ba46fafafa403e63ae14f56b6917f8defc11bd",
+      "packages/scripts/shared/prerace_standard_loader.py": "37f4bd02bf84c1d55aefe60ac83878e695fed177c854a26f4b6745f48166ab0a",
+      "packages/scripts/shared/read_contract.py": "2e627a987354f863b792687f5277d724b14a5e6a41c6d49afefb3be0b4d0b39b",
+      "packages/scripts/shared/reproducibility_manifest_schema.py": "b7458eaa1548f1b55effcb747bc277d3512a9dd49346002de54630e1c303a364",
+      "packages/scripts/shared/runner_status.py": "5d5a577535a9a4a05314488cf9e73517dc131fa68e45fdc97cec9413a5e52def",
+      "packages/scripts/shared/seed_metric_normalization.py": "bdb7f34cbd919f392b3eac2c64c6551d12b965ff72aef430e2e58d4f37dc01e7",
+      "packages/scripts/shared/seed_performance_aggregation.py": "e11dbf0d550d221f9fd75b6239bcef3ace4ca62df7f82436bc708e66f02936fe",
+      "packages/scripts/shared/seed_result_recording.py": "de7867cb978c50f2c3f6718d4dd37cf621304a18354e8ee705dc2ec64dfa3677",
+      "packages/scripts/shared/snapshot_query_schema.py": "198efbbee271e0cf22d2fc76bc4fadc650ce5227745f0c1bac2fe641f4abc695",
+      "packages/scripts/shared/t30_release_contract.py": "3a6c90f25c096f5428eaf2cb41946ec4e19c2f2f96be82308935e2260bf7014e",
+      "packages/scripts/shared/t30_release_gate.py": "19e3a57ec2a67d96f318146ced8809c2d5be6a7c30a861c52249c4a77f0c7749",
+      "pyproject.toml": "ee4d6b6c29b3f9eefc6296dd0aabf91c7e4a8081cfecf6da4000fdfe4c802703",
+      "uv.lock": "ca794caccd1cf97615c3b04ae8181aedf89fcde4c00a8f7d91daa81aa26853ae"
+    },
+    "independent_validation_eligible": false,
+    "inputs": {
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/baseline-lineage-audit-20261018/run-1/audit.json": "8dfaf0063472a8f811e25cdaad14c43be97d269abef59921a502fced3d5fba4f",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/condition-candidate-inputs-20261015/run-1/matrix.json": "7277897731011c64706f427cd7733444a5450767d312dabe8293a67c35a788a1",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/development-source-audit-20261018/run-1/audit.json": "56255f1cca70ba40aabad36f852da5bb831d3e4aeb9a28fc2671c100cd844d37",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/development-source-audit-20261018/run-1/development-cohort.json": "c25db29f0ba78cd3e7ab49c04950fcde3f3a12686ce4aad1ba69b33fb2616e03",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/forward-outcomes/20261018T094903.670114Z/outcomes.json": "0cf7be483e1089ba55db78f70c51c9a6dbcaf8738847460f469ee11901ac0cbb",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_1.json": "69f5f485b9f41940c9240acf80216fe2880efa4b8ca54d43dffd82de7b68af3c",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_2.json": "092a9880c9bc932f29c9f3e41e5b54b76416b2b472061a015d55ff02145a0ee9",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_3.json": "968c5b02edc256a77f5992d7ab9f5927b9ed735947e7671063f125e91f7f6072",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_4.json": "9d8549028dc662af48551f400e515f3021d29d7c529a39683849ec3de854e6c2",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_5.json": "3b8e3831413e922d5f19c39472be089d9056fb9b36b494e8d21bbff6c466404c",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_6.json": "35200da2cba8946a6c0c16e73cfc0a478ba4cf449d900ea15e1379d42d9e4a4e",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_2_7.json": "4a56f039b0499cbdd9ec00965a067fd5653b29c283b3c589bc61e05b0345f7ec",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_1.json": "839e6b8920a789a9c33842a76a4cedd43db17b6bc0de3d5b41e85ffb3416a195",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_2.json": "64d282b4da00b2ee37487edf31daea015ed4e5852b8398bccd9118eb076b1f5d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_3.json": "afbfff4f7176323044a391bc239178544200af1c56c666e2ebc1f100d7f9cbc6",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_4.json": "84a04eae4f718cd561f90fa3b66d40241af5ef041f02073e9285439039b2f48f",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_5.json": "1eef62d3dd87d717a868bfaf2c37654cb8ed22e31835e9b5ab62997a65b16763",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_6.json": "cec516d502ecc9a6850a06b9fece1125b2f2f69e0b78f0d98433529257126838",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_7.json": "854a601e7369e366e3c7203f1acf11f7678f229fa6799e1dae1a25e0c9602e2e",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_8.json": "311794c7899d427e3be45900174e061d7bd86e2c777955ea21be914cd262129d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261016_3_9.json": "372f262c3b2d88eeb8e3f1808dc85f7772d43df4080e789c1ce6c11944e393ff",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_1.json": "15f5a660ad5f5db8a02a81870c9d2cb0d3c023d830df84addeb38cffca278291",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_10.json": "a91f65482b5c341fe6d1a77d85c8a8bfd973e60b7bc41809e805f7381fce70b0",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_2.json": "2854e82d26ce711b6ebb10f9aa43a8a02c2b2864d74a3520b0ebbb5f46eccbff",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_3.json": "8f4f6dfb1240f8a91e4024dbd6ce8d2eda618358080fbd880db01c3db5fd9876",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_4.json": "b2fdcb20d38deddf9aa534b130e14cf577b0d71629189617761e3f07c305e1db",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_5.json": "b8b8f2dafafe7ec7bbf4da6bfd6c7ee9794ef0ed5518f714c92f458d42f5f312",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_6.json": "c7ebdc60d57f7805a39852df666497d8b4a5e4336ea771395def9761bb334f2c",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_7.json": "2adce64492710c8f10b461a292dcdbda7450b4539075fba8652bed340f1c29ab",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_8.json": "46d0987a5b7a41ba2340b4cc352bf1af80c818efd10a486b5b99d9038d6f3ec9",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_1_9.json": "1ed87d997cceeae9a86eb122a3853dda001edb1e2308b6d1856871848c0fe3c0",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_1.json": "c9d888a654aa1e4e7cf2c894b75601f0f9d8a4894e2755ceac5647688579414d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_2.json": "43d9d6a7e540c92cbca42c0d91caf98a87e2aad002ccce28f2a6132445fe4b2d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_3.json": "318115e5610b01355499d7efdf1a77f2023a21d01d54cccd64bb8f6331467be5",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_4.json": "977f160fbc9816eb0bd210d97a1329c5525da9b8ac36b0de9ab3bebd5169e713",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_5.json": "4915cc7d31c15097812e363c7caba42f7f89d07c87075f0404736232a537fee1",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_6.json": "cd81cc127799d201ec8359d19a3f2859e2715226db52060b5421f199548a585d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261017_2_7.json": "cc563b7f9315ca8334851855b9a97c027e82736f0393b0b96cdc1bad3c977011",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_1.json": "5a9d278c2a8cfed457ec904f2a7daac147470b217ffd5ed6a256c665f2de1f4d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_10.json": "0eafb7e610f5c1885022c1ed6dd63cff11fdb1e267747e6a1ef603392ec33b1c",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_11.json": "7c58f5d876309b3d176b2d27261cd6b2b8479f2d75d2e38aebd52fdb7845cf78",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_2.json": "8aea148240d0cf6c2f9ec4247fbf33611cff5a4f3d78978b1251b3965f5db7a6",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_3.json": "9a98e6bc74bb88a206d9a4a993c2c2f6f4d5a079adffffdabb922060de5c344d",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_4.json": "b9ba6794ab5597604ff3449a56dcd74bc62bc50f548a7a21a91ffd33af5ed778",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_5.json": "4281d2854e8cc4768e4ee5841533b204f71926147c442ffb9108d1969e77cdc4",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_6.json": "790bc23294346e1598b6fce02de6ce8fa850c0fd62eac95bc2e513924db4fe15",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_7.json": "ebf410f25ae749c423b6662570cf9793cb577b702a2b3d9f1d1a4c4e8fa4d2b7",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_8.json": "d129dbb70d96d1c2e50535b2a95350f6d7fbbf74e1c521bc6ad9e7a40a328c05",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_1_9.json": "f619f2571641912a8089522ddff4c379d165616ee1a798710d8ccaecc661210e",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_1.json": "b763789c5f576168724821b8b47efb2ac1869fce1deb2d4e2d9ff2f0de608c61",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_2.json": "28a2a3a151a3023dd23ea621dd9eb444fbedf114f67f76ee0abe419e76882fee",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_3.json": "0c3984b4bccc591cb02e61933b55b751b9475e289b1f8cb7d52369edcb59526e",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_4.json": "baebff6f490dbc2a8510c6e90876d754697cc0081f19799da30c747c764720f9",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_5.json": "9d666578ab33ed5980a32d7f00882c3620f95105f72363fa02085fdcdf81378b",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/.cache/autoresearch/prospective-training-inputs-v2/local_m0_20261016_18_v1/input_20261018_4_6.json": "9650320ecbd93d24d621e7364424d9b37ae89b1427da6016fd1a3f5b69dad2c1",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/docs/research/commitments/2026-10-16-18/api27.json": "a51f7b8ca425251fa6bc7602788031a6675b3b9de195c55db76789d5847f6646",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/docs/research/commitments/2026-10-16-18/m0.json": "de82b4d1dc1d69b7982af04b7d83557d008381ea23202f0dff661721388f7a2c",
+      "/Users/coyasong/Developer/coyasong/kra-analysis-race-card-pdf/docs/research/commitments/2026-10-16-18/training-inputs.json": "b4ab302c93bb01a947bd149622770d3413690f5fa95bbec8c13a00ed2808fa32"
+    },
+    "model_promoted": false,
+    "purpose": "research_fit_only",
+    "recipe": {
+      "arms": {
+        "A24": [
+          "age",
+          "wgBudam",
+          "rating",
+          "rcCntT",
+          "ord1CntT",
+          "ord2CntT",
+          "ord3CntT",
+          "age_missing",
+          "wgBudam_missing",
+          "rating_missing",
+          "rcCntT_missing",
+          "ord1CntT_missing",
+          "ord2CntT_missing",
+          "ord3CntT_missing",
+          "observed_supported_ranked_finish_count_30d",
+          "days_since_last_observed_supported_ranked_date_90d",
+          "last_observed_supported_rank_90d",
+          "mean_last_three_observed_supported_ranks_90d",
+          "has_linked_api_unresolved_after_last_supported_ranked_date",
+          "observed_supported_ranked_finish_count_30d_missing",
+          "days_since_last_observed_supported_ranked_date_90d_missing",
+          "last_observed_supported_rank_90d_missing",
+          "mean_last_three_observed_supported_ranks_90d_missing",
+          "has_linked_api_unresolved_after_last_supported_ranked_date_missing"
+        ],
+        "B34": [
+          "age",
+          "wgBudam",
+          "rating",
+          "rcCntT",
+          "ord1CntT",
+          "ord2CntT",
+          "ord3CntT",
+          "age_missing",
+          "wgBudam_missing",
+          "rating_missing",
+          "rcCntT_missing",
+          "ord1CntT_missing",
+          "ord2CntT_missing",
+          "ord3CntT_missing",
+          "observed_supported_ranked_finish_count_30d",
+          "days_since_last_observed_supported_ranked_date_90d",
+          "last_observed_supported_rank_90d",
+          "mean_last_three_observed_supported_ranks_90d",
+          "has_linked_api_unresolved_after_last_supported_ranked_date",
+          "observed_supported_ranked_finish_count_30d_missing",
+          "days_since_last_observed_supported_ranked_date_90d_missing",
+          "last_observed_supported_rank_90d_missing",
+          "mean_last_three_observed_supported_ranks_90d_missing",
+          "has_linked_api_unresolved_after_last_supported_ranked_date_missing",
+          "memory_condition_delta90",
+          "memory_fallback90",
+          "memory_prior90_count",
+          "memory_similar90_count",
+          "memory_older_count",
+          "memory_older_same_venue_similar_count",
+          "memory_older_other_venue_count",
+          "memory_older_missing_condition_count",
+          "memory_older_career_form",
+          "memory_older_career_form_missing"
+        ]
+      },
+      "deterministic_refits": 0,
+      "estimator": {
+        "C": 0.02,
+        "class_weight": null,
+        "fit_intercept": true,
+        "l1_ratio": 0,
+        "max_iter": 2000,
+        "random_state": 42,
+        "solver": "lbfgs",
+        "tol": 1e-08
+      },
+      "fit_budget": {
+        "A24": 1,
+        "B34": 1
+      },
+      "imputer": {
+        "keep_empty_features": true,
+        "strategy": "median"
+      },
+      "label_policy": "frozen_roster_observed_unique_top3_membership_v1",
+      "order": "race_id_asc_numeric_gate_asc",
+      "scaler": "unweighted_StandardScaler",
+      "selection": "score_desc_numeric_gate_asc_numeric_horse_id_asc",
+      "serialization": "three_distinct_canonical_ids_numeric_asc",
+      "weights": "1/frozen_roster_size"
+    },
+    "selected_race_ids": [
+      "20261016_2_1",
+      "20261016_2_2",
+      "20261016_2_3",
+      "20261016_2_4",
+      "20261016_2_5",
+      "20261016_2_6",
+      "20261016_2_7",
+      "20261016_3_1",
+      "20261016_3_2",
+      "20261016_3_3",
+      "20261016_3_4",
+      "20261016_3_5",
+      "20261016_3_6",
+      "20261016_3_7",
+      "20261016_3_8",
+      "20261016_3_9",
+      "20261017_1_1",
+      "20261017_1_10",
+      "20261017_1_2",
+      "20261017_1_3",
+      "20261017_1_4",
+      "20261017_1_5",
+      "20261017_1_6",
+      "20261017_1_7",
+      "20261017_1_8",
+      "20261017_1_9",
+      "20261017_2_1",
+      "20261017_2_2",
+      "20261017_2_3",
+      "20261017_2_4",
+      "20261017_2_5",
+      "20261017_2_6",
+      "20261017_2_7",
+      "20261018_1_1",
+      "20261018_1_10",
+      "20261018_1_11",
+      "20261018_1_2",
+      "20261018_1_3",
+      "20261018_1_4",
+      "20261018_1_5",
+      "20261018_1_6",
+      "20261018_1_7",
+      "20261018_1_8",
+      "20261018_1_9",
+      "20261018_4_1",
+      "20261018_4_2",
+      "20261018_4_3",
+      "20261018_4_4",
+      "20261018_4_5",
+      "20261018_4_6"
+    ],
+    "summary": {
+      "exceptions": [
+        {
+          "chul_no": 9,
+          "evidence": "unresolved",
+          "horse_id": "1412318",
+          "race_id": "20261016_3_8",
+          "raw_horse_id": 1412318,
+          "raw_meet": "\ubd80\uacbd",
+          "raw_ord": 94,
+          "raw_ord_bigo": "\uacbd\uc8fc\uc81c\uc678",
+          "raw_rc_time": 0,
+          "source_available_at": "2026-10-16T09:51:50.249041+00:00",
+          "source_capture_sha256": "da9a4a5d22596221f9010a06ec94cb6cabc47c3378d6fd7aa227834c1739c42d",
+          "venue_identity_basis": "api214_row"
+        },
+        {
+          "chul_no": 2,
+          "evidence": "unresolved",
+          "horse_id": "55745",
+          "race_id": "20261017_1_3",
+          "raw_horse_id": "0055745",
+          "raw_meet": "\uc11c\uc6b8",
+          "raw_ord": 92,
+          "raw_ord_bigo": "\uc8fc\ud589\uc911\uc9c0",
+          "raw_rc_time": 0,
+          "source_available_at": "2026-10-17T09:16:09.566635+00:00",
+          "source_capture_sha256": "1a48a5cf72ab63fb2ab130f0bf9c82adaeacd20ad2739f5c7bd0819382c7bf25",
+          "venue_identity_basis": "api214_row"
+        },
+        {
+          "chul_no": 9,
+          "evidence": "unresolved",
+          "horse_id": "57180",
+          "race_id": "20261017_1_4",
+          "raw_horse_id": "0057180",
+          "raw_meet": "\uc11c\uc6b8",
+          "raw_ord": 94,
+          "raw_ord_bigo": "\uacbd\uc8fc\uc81c\uc678",
+          "raw_rc_time": 0,
+          "source_available_at": "2026-10-17T09:16:09.566635+00:00",
+          "source_capture_sha256": "1a48a5cf72ab63fb2ab130f0bf9c82adaeacd20ad2739f5c7bd0819382c7bf25",
+          "venue_identity_basis": "api214_row"
+        },
+        {
+          "chul_no": 11,
+          "evidence": "unresolved",
+          "horse_id": "53875",
+          "race_id": "20261018_1_6",
+          "raw_horse_id": "0053875",
+          "raw_meet": "\uc11c\uc6b8",
+          "raw_ord": 95,
+          "raw_ord_bigo": "\ucd9c\uc804\ucde8\uc18c",
+          "raw_rc_time": 0,
+          "source_available_at": "2026-10-18T09:49:04.706156+00:00",
+          "source_capture_sha256": "5b6cdbbc8e896de7f4670824b9a25a35b68bfb929735d9f1264c5708ecaf3a0a",
+          "venue_identity_basis": "api214_row"
+        }
+      ],
+      "identities_sha256": "6ab04eef3b0b813f937c49eff99a38fa979a577e8001ab7f7f3593d28faaff94",
+      "labels_sha256": "b42b47b2bb452f86a13e38d33ef0357d945e33667d1d8a683db9fec37ccacc72",
+      "negative": 384,
+      "null_counts": {
+        "age": 0,
+        "age_missing": 0,
+        "days_since_last_observed_supported_ranked_date_90d": 79,
+        "days_since_last_observed_supported_ranked_date_90d_missing": 0,
+        "has_linked_api_unresolved_after_last_supported_ranked_date": 79,
+        "has_linked_api_unresolved_after_last_supported_ranked_date_missing": 0,
+        "last_observed_supported_rank_90d": 79,
+        "last_observed_supported_rank_90d_missing": 0,
+        "mean_last_three_observed_supported_ranks_90d": 79,
+        "mean_last_three_observed_supported_ranks_90d_missing": 0,
+        "memory_condition_delta90": 0,
+        "memory_fallback90": 0,
+        "memory_older_career_form": 144,
+        "memory_older_career_form_missing": 0,
+        "memory_older_count": 0,
+        "memory_older_missing_condition_count": 0,
+        "memory_older_other_venue_count": 0,
+        "memory_older_same_venue_similar_count": 0,
+        "memory_prior90_count": 0,
+        "memory_similar90_count": 0,
+        "observed_supported_ranked_finish_count_30d": 0,
+        "observed_supported_ranked_finish_count_30d_missing": 0,
+        "ord1CntT": 0,
+        "ord1CntT_missing": 0,
+        "ord2CntT": 0,
+        "ord2CntT_missing": 0,
+        "ord3CntT": 0,
+        "ord3CntT_missing": 0,
+        "rating": 32,
+        "rating_missing": 0,
+        "rcCntT": 0,
+        "rcCntT_missing": 0,
+        "wgBudam": 0,
+        "wgBudam_missing": 0
+      },
+      "positive": 150,
+      "race_count": 50,
+      "raw_features_sha256": "aab9b56556602b0c3f5abcb445a946c73db85f5041ccdbb09534ec1322e2cf39",
+      "row_count": 534,
+      "weight_sum": 50.0,
+      "weights_sha256": "3f0c478bd73e3ee3873ae2b46a63888626221e239543557b4aae866ec1270f5c"
+    }
+  },
+  "retry_allowed": false,
+  "review": {
+    "counts_as_70_percent_evidence": false,
+    "fit_budget": {
+      "A24": 1,
+      "B34": 1
+    },
+    "implementation_review_commit": "15eed4775742c9190244b646752c0ba255b7f813",
+    "implementation_review_complete": true,
+    "independent_validation_eligible": false,
+    "label_version_review_complete": true,
+    "production_approved": false,
+    "purpose": "research_fit_only",
+    "requirement_path": "docs/research/approvals/2026-10-19-condition-training/requirement.json",
+    "requirement_sha256": "2c6c2251bd718d4316148aaecd0c53270e37dfd64e0ef1d82d9cbb0fcaf1f87b",
+    "retry_allowed": false,
+    "review_id": "condition-a24-b34-20261019-execution-v1",
+    "review_path": "docs/research/2026-10-19-condition-execution-approval.md",
+    "reviewed_at": "2026-10-19T13:05:12Z",
+    "reviewer": "Codex, acting on the repository owner's explicit conditional execution request",
+    "source_review_complete": true
+  },
+  "score_and_exact_set_replay_verified": true,
+  "started_at": "2026-10-19T13:12:57.427785+00:00"
+}

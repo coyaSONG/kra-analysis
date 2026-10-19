@@ -20,9 +20,9 @@ observed outcomes, never independent evidence for the 70% prediction goal.
 - [x] Pass required remote checks and normally merge PR111 (2026-10-19T11:26:12Z).
 - [x] Evaluate actual-fit conditions: exact repository approval is absent; no real fits permitted.
 - [x] Review exact inputs/code/environment for the owner's subsequent explicit execution request.
-- [ ] Publish and test separate exact approval; normally merge after required CI.
-- [ ] Recheck merged admission and execute the lifetime A24/B34 pair once, if admitted.
-- [ ] Verify saved outputs without refitting; publish development-only comparison and future protocol plan.
+- [x] Publish and test separate exact approval; PR112 normally merged at 2026-10-19T13:12:08Z.
+- [x] Recheck merged admission and execute the lifetime A24/B34 pair once; both completed at 13:12:57Z.
+- [x] Verify saved outputs without refitting; prepare tested development-only comparison and future protocol plan.
 
 ## Context and Orientation
 
@@ -102,6 +102,10 @@ Preserve partial output and attempt ledgers. Diagnose failures without fitting;
 any future experiment requires a separately reviewed protocol, not deletion of
 evidence. Original source and prediction bytes must be checked again at exit.
 
+The real cohort reservation is now consumed by a successful pair. Never rerun
+the actual command in this plan. Inference and evidence verification are the
+only permitted follow-up operations on these stored models.
+
 ## Interfaces and Dependencies
 
 Use existing NumPy, SciPy, sklearn, threadpoolctl and repository JSON/hash
@@ -176,3 +180,22 @@ targets without estimator calls. Publish a second small documentation change
 with generated evidence, development-only caveats and a future-validation draft.
 No dates are silently chosen and no recipe is promoted. If reserved execution
 fails, preserve the failure ledger and report the consumed budget instead.
+
+October 19, 13:13 UTC: PR112 required CI passed and normal merge produced
+`6dd8e49f216017fa031ca30b34613d8642467eaf`. All preflight gates passed again.
+The one actual invocation completed A24=1/B34=1, 11 iterations each, no warnings,
+exact shared preprocessing and replay, unchanged originals. Offline independent
+row-label/set arithmetic verifies 4/50 (8%) versus 5/50 (10%), paired 3/1/2/44,
+all development-only. Public copies are under
+`docs/research/experiments/2026-10-19-condition-training-v1`; consumed matrices
+and durable ledgers remain local. Add manifest/result arithmetic tests, publish
+the result and future-validation draft, then normally merge after required CI.
+
+October 19 publication preparation: 178 tests pass (15 existing deprecation
+warnings), Ruff lint/format and whitespace checks pass. Three portable tests
+bind the saved models/receipt, independently recompute all 50 exact-set and
+paired outcomes, and reconcile all diagnostic groups. The public report keeps
+the original 0/50 prospective results separate and leaves future dates, horizon
+and uncertainty rules explicitly unregistered. Actual fitting is complete;
+only normal CI-gated publication remains. The two analysis companions perform
+no collection or fitting and preserve their hashes with the generated evidence.
