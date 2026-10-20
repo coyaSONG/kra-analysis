@@ -7,6 +7,10 @@ this implementation. The registry at
 approved studies. New official schedules and a separately reviewed prospective
 protocol are required before a real attempt can start.
 
+The [preregistration draft](2026-10-20-condition-preregistration-draft.md)
+proposes population, duration, stopping and failure-accounting rules. It does
+not register dates or authorize execution; merging it leaves the registry empty.
+
 This implements the inference readiness gate in
 [the PR113 future validation plan](2026-10-19-condition-development-results.md#future-validation-draft),
 not an independent validation result. The target remains one exact unordered
