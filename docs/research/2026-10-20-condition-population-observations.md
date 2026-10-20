@@ -99,3 +99,47 @@ weeks and originals, corrupt originals/public documents, unverified semantic
 claims, outside-scope observations, changed-date identity ambiguity, chain
 reordering/truncation/correction forks, scope/clock failures and unchanged
 input bytes. These are software checks, not future performance evidence.
+The final local related regression run passed 408 tests in 41.00 seconds,
+including 51 new chain/observation tests; Ruff check and format-check passed.
+
+## Completed design consultation
+
+The authorized Chrome ChatGPT Pro consultation in
+[the existing research conversation](https://chatgpt.com/c/6ad0d05d-5b08-83e8-b4b5-5252f401bb4d)
+finished after 23 minutes on 2026-10-20, and its full response was read.
+It reviewed the supplied design and public PR120/121 code, not local official
+notices or execution of our tests. It is not independent implementation review
+of this PR and not authorization to activate an experiment.
+
+The implemented first stage follows its distinction between source-replayed
+membership and completeness. A snapshot is a sequentially collected source
+bundle, not proof that every page had one atomic effective instant. Runner
+counts do not establish individual horse roster identity. Audit output identifies
+the verifier/parser bytes and never promotes a public reviewer name or boolean
+to accepted interpretation.
+
+The next semantic-admission milestone needs a separately fixed authority
+registry and policy, exact decision/source hashes, source locators and context,
+reviewer identity and authority at the time, and publication evidence binding
+the actual reviewed version. Capture, review, decision publication, ledger
+acceptance and checkpoint clocks must be distinct; source effective time may
+be earlier or later. Contradictions need explicit same-subject/scope correction,
+not latest-wins. This stage is deliberately not implemented by the observation
+reader.
+
+Scope closure requires either a source-backed exhaustive scope listing or a
+baseline with a demonstrably complete change history to a declared evidence
+version, plus reconciliation of earlier observations. Repeated matching tables
+or a search returning no more notices cannot substitute for that boundary.
+No originally enrollable races, cancellation of all enrolled races and absent
+results are three different claims; cancellation never erases existing records.
+
+Later official identity corrections may join or separate components in a new
+projection while retaining both original enrollments, aliases, protocols,
+predictions, cutoffs and every consumed attempt. Record counts are not even a
+guaranteed lower bound on physical N when duplicates are unresolved. A
+component representative is not the owner of prediction authority. Attribution
+requires a pre-fixed rule; no later successful prediction can rescue an earlier
+miss or absent submission. Cross-week ownership and out-of-period postponement
+must preserve original obligations. Preventing duplicate future attempts also
+requires a separate execution gate, not just this read-only audit.

@@ -1,14 +1,16 @@
 """Read-only public journal/source replay; does not activate or score a study."""
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+from shared import kra_schedule
 
 from autoresearch import condition_population_chain as chain
 from autoresearch import condition_population_sources as sources
-from autoresearch.condition_historical_publication import archive, pin
+from autoresearch.condition_historical_publication import archive, pin, read
 from autoresearch.prerace_hash_witness import timestamp
-from autoresearch.restricted_cohort import encoded, parse_json
+from autoresearch.restricted_cohort import encoded, parse_json, sha256
 
 VERSION = "condition-population-replay-v1"
 SCOPE_VERSION = "condition-population-scope-draft-v1"
@@ -76,6 +78,11 @@ def audit(manifest_path, expected_sha):
         "status": "pending_publication",
         "scope": "selected_public_journal_and_snapshot_membership_only",
         "manifest_sha256": expected_sha,
+        "audited_at": datetime.now(UTC).isoformat(),
+        "verifier_sha256": sha256(read(Path(__file__))),
+        "chain_verifier_sha256": sha256(read(Path(chain.__file__))),
+        "source_verifier_sha256": sha256(read(Path(sources.__file__))),
+        "schedule_parser_sha256": sha256(read(Path(kra_schedule.__file__))),
         "publications": {"umbrella": scope_fact, "journal": journal_fact},
         "full_population_verified": False,
         "denominator": None,

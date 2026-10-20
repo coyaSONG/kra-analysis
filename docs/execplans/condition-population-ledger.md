@@ -26,7 +26,7 @@ unknown, not become zero races or a smaller favorable subset.
   closure or affirmative no-race evidence.
 - [x] (2026-10-20) Sent targeted schema/closure/identity questions to the
   authorized Chrome ChatGPT Pro conversation. Pro selected in UI.
-- [ ] Read the completed consultation without stopping generation; resolve
+- [x] (2026-10-20) Read the completed 23-minute Pro consultation without stopping generation; resolve
   machine-derived facts versus source-backed reviewer decisions.
 - [x] (2026-10-20) Implement the public-journal-to-original-HTML observation
   path, retaining missing scopes and unverified semantic events. No closure or
@@ -34,7 +34,10 @@ unknown, not become zero races or a smaller favorable subset.
 - [x] (2026-10-20) Initial combined regression run: 403 passed in 41.20 seconds;
   expanded focused suite: 49 passed in 2.15 seconds. Original six model,
   receipt, registry and M0/API27 prediction hashes remain unchanged.
-- [ ] Reconcile the implemented observation-only boundary with the completed
+- [x] (2026-10-20) Final combined regression after completed consultation:
+  408 passed in 41.00 seconds, including 51 new observation/chain tests.
+  Ruff check and format-check passed.
+- [x] (2026-10-20) Reconcile the implemented observation-only boundary with the completed
   consultation; record the remaining semantic admission work precisely.
 - [ ] Run regressions/required CI and normally commit, push and merge.
 - [ ] Keep actual registration, training and scoring disabled until the
@@ -70,8 +73,8 @@ or restore consumed attempts. Date/Author: 2026-10-20 / Codex.
 ## Outcomes & Retrospective
 
 
-The observation-only evidence path is implemented and tested; consultation
-completion and publication remain pending. It connects actual archive/source
+The observation-only evidence path is implemented and tested; the Pro design
+consultation is complete and PR122 is in draft CI. It connects actual archive/source
 validation to preserved scope observations, rather than accepting supplied
 race lists. It does not implement complete population admission. The full
 70% objective remains unmet. Hash-chain validity is never source completeness.
@@ -172,7 +175,12 @@ repair identity or evidence errors.
 
 Consultation: `https://chatgpt.com/c/6ad0d05d-5b08-83e8-b4b5-5252f401bb4d`.
 Questions were submitted around 2026-10-20 15:43 UTC. No completed answer or
-activation approval is claimed yet.
+activation approval was claimed before completion. The UI subsequently reported
+23m 1s processing and a completed response; its full DOM-rendered answer,
+including sections B-3 through E and final recommendation, was read. The
+completed consultation is summarized in the population observation document.
+It did not verify actual notice semantics or execute the new implementation.
+No activation approval is claimed.
 
 ## Interfaces and Dependencies
 
@@ -190,3 +198,11 @@ Revision note: added the implemented observation-only milestone and reproducible
 tests while the consultation continues. This milestone establishes the raw
 evidence path but explicitly leaves semantic admission and actual registration
 disabled. No existing frozen artifacts were edited.
+
+Revision note: completed Pro advice separates source facts, authorized human
+interpretation and derived closure. A future narrow semantic-admission module
+must validate actual review authority, exact reviewed bytes, scope, separate
+clocks and corrections; the current observation module intentionally accepts
+none of these judgments. Identity components may change in a new projection
+without deleting enrollment or attempt history. Source-wide closure and
+prediction attribution remain separate unfinished milestones.

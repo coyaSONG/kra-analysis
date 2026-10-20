@@ -76,5 +76,7 @@ def snapshot(root, reference, recorded_at):
         "source_failures": failures,
         "dates": [reconcile_schedule_cards(cards, race_date=day) for day in dates],
         "scope": "snapshot_membership_only",
+        "evidence_kind": "source_replayed_fact",
+        "roster_identity_verified": False,
         "full_population_verified": False,
     }

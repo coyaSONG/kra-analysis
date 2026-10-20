@@ -108,6 +108,37 @@ def test_raw_snapshot_and_public_journal_keep_missing_week_unknown(tmp_path):
     assert before == {p: p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
 
 
+def test_audit_never_uses_network_subprocess_or_live_inference(tmp_path, monkeypatch):
+    import socket
+    import subprocess
+
+    from autoresearch import condition_forward
+
+    path, digest, _ = bundle(tmp_path)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("population replay attempted a side effect")
+
+    monkeypatch.setattr(socket, "socket", forbidden)
+    monkeypatch.setattr(subprocess, "Popen", forbidden)
+    monkeypatch.setattr(condition_forward, "run", forbidden)
+    result = ledger.audit(path, digest)
+    assert result["actual_fit_count"] == 0
+    assert result["inventories"][0]["evidence_kind"] == "source_replayed_fact"
+    assert not result["inventories"][0]["roster_identity_verified"]
+    assert len(result["schedule_parser_sha256"]) == 64
+
+
+def test_conflicting_source_rows_remain_conflict_not_accepted_population(tmp_path):
+    path, digest, _ = bundle(
+        tmp_path, pages={"region_1": page("region_1", times={1: "12:30"})}
+    )
+    result = ledger.audit(path, digest)
+    assert result["inventories"][0]["dates"][0]["status"] == "conflict"
+    assert result["observed_identifier_count_not_physical_n"] == 4
+    assert result["denominator"] is None
+
+
 @pytest.mark.parametrize(
     "kind,slot",
     [
