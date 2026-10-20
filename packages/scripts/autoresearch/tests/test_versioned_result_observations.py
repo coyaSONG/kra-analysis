@@ -103,6 +103,8 @@ def test_api_void_notes_and_blank_official_ranks_are_not_automatic_settlement():
     assert result["html_all_rank_time_blank"]
     assert result["exception_notes"] == {"\uacbd\uc8fc\ubd88\uc131\ub9bd": 3}
     assert result["comparison"]["roster_support"] == "exact"
+    assert result["official_finality_verified"] is False
+    assert result["settlement_policy_verified"] is False
 
 
 def test_unresolved_api_top_rank_is_not_ignored_behind_blank_official_row():
