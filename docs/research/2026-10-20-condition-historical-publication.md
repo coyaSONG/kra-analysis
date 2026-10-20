@@ -92,6 +92,9 @@ The original contract permits review before protocol merge, so no retrospective
 restriction is added for that ordering. Every selected merge must be strictly
 before the earliest block cutoff to receive a timely publication flag.
 Retrieval after cutoff is allowed when it verifies an earlier server merge.
+Output timing fields explicitly say `declared`: they compare against the
+published protocol's cutoff, not an independently replayed official schedule
+or a verified real-world pre-race availability boundary.
 
 An arbitrary selected late PR is only a late-publication fact: it does not
 establish that all accepted submissions failed. That requires the separately

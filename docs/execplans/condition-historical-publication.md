@@ -172,3 +172,6 @@ Implementation update: added the byte-only archive verifier, bounded manifest
 CLI, original publication bindings and 74 tests. Reported arm checks are
 explicitly selection shape/membership, not numerical inference. No real
 study was registered or evaluated.
+Review clarification: timing result fields explicitly refer to the declared
+protocol cutoff, because replay of official schedule-derived cutoffs belongs
+to the remaining raw-input evidence stage.

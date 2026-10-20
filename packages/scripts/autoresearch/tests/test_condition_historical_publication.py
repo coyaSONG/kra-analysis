@@ -183,7 +183,7 @@ def test_public_chain_readonly_and_never_scoring(bundle):
     before = snapshot(bundle.root)
     result = historical.audit(bundle.path, bundle.digest)
     assert result["status"] == "public_chain_replayed"
-    assert result["all_selected_publications_before_cutoff"]
+    assert result["all_selected_publications_before_declared_cutoff"]
     assert result["declared_race_count"] == 2
     assert all(
         item["status"] == "public_bytes_verified"
@@ -260,11 +260,14 @@ def test_whole_block_cutoff_and_late_retrieval(bundle, minutes, timely):
     bundle.merges["prediction"] = minutes
     bundle.write()
     result = historical.audit(bundle.path, bundle.digest)
-    assert result["all_selected_publications_before_cutoff"] is timely
-    assert result["publications"]["prediction"]["before_whole_block_cutoff"] is timely
+    assert result["all_selected_publications_before_declared_cutoff"] is timely
+    assert (
+        result["publications"]["prediction"]["before_declared_whole_block_cutoff"]
+        is timely
+    )
     assert (
         result["publications"]["prediction"]["witness"]["retrieved_at"]
-        > result["whole_block_cutoff_at"]
+        > result["declared_whole_block_cutoff_at"]
     )
     assert "proven_late" not in encoded(result).decode()
 

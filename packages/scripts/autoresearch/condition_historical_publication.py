@@ -283,11 +283,11 @@ def audit(manifest_path, expected_sha):
         if not created <= github.timestamp(review["reviewed_at"]) <= merges["approval"]:
             raise ValueError("historical_publication_clock_conflict")
     for kind in merges:
-        facts[kind]["before_whole_block_cutoff"] = merges[kind] < cutoff
+        facts[kind]["before_declared_whole_block_cutoff"] = merges[kind] < cutoff
     result.update(
         declared_race_ids=ids,
         declared_race_count=len(ids),
-        whole_block_cutoff_at=cutoff.isoformat(),
+        declared_whole_block_cutoff_at=cutoff.isoformat(),
     )
     if packet is not None:
         computed = github.timestamp(packet["computed_at"])
@@ -307,7 +307,7 @@ def audit(manifest_path, expected_sha):
     if all(document is not None for document in documents.values()):
         result.update(
             status="public_chain_replayed",
-            all_selected_publications_before_cutoff=all(
+            all_selected_publications_before_declared_cutoff=all(
                 merged < cutoff for merged in merges.values()
             ),
         )
