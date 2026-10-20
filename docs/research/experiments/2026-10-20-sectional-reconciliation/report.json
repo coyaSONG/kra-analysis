@@ -1,0 +1,2889 @@
+{
+  "accuracy": null,
+  "by_venue_distance": {
+    "1:1200": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        },
+        "seoul:se_1cAccTime": {
+          "zero_blank": 107
+        },
+        "seoul:se_2cAccTime": {
+          "zero_blank": 107
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 102,
+          "zero_blank": 5
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1200M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 10,
+      "rows": 107
+    },
+    "1:1300": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 66
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 66
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 66
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 66
+        },
+        "seoul:se_1cAccTime": {
+          "zero_blank": 66
+        },
+        "seoul:se_2cAccTime": {
+          "zero_blank": 66
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 66
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 66
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1300M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 6,
+      "rows": 66
+    },
+    "1:1400": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        },
+        "seoul:se_1cAccTime": {
+          "zero_blank": 129
+        },
+        "seoul:se_2cAccTime": {
+          "zero_blank": 129
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 126,
+          "zero_blank": 3
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1400M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 12,
+      "rows": 129
+    },
+    "1:1600": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 20
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 20
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 20
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 20
+        },
+        "seoul:se_1cAccTime": {
+          "zero_blank": 20
+        },
+        "seoul:se_2cAccTime": {
+          "positive_equal": 20
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 20
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 20
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1600M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 2,
+      "rows": 20
+    },
+    "1:1700": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:se_1cAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:se_2cAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 41,
+          "zero_blank": 1
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1700M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 4,
+      "rows": 42
+    },
+    "1:1800": {
+      "fields": {
+        "seoul:rcTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:seG1fAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:seG3fAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:seS1fAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:se_1cAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:se_2cAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:se_3cAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        },
+        "seoul:se_4cAccTime": {
+          "positive_equal": 62,
+          "zero_blank": 5
+        }
+      },
+      "layouts": {
+        "seoul": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1800M)",
+              "\ud384\ub871\ud0c0\uc784",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "S1F-1C-2C-3C-G3F-4C-G1F",
+              "S1F \uc9c0\uc810",
+              "1\ucf54\ub108 \uc9c0\uc810",
+              "2\ucf54\ub108 \uc9c0\uc810",
+              "3\ucf54\ub108 \uc9c0\uc810",
+              "G3F \uc9c0\uc810",
+              "4\ucf54\ub108 \uc9c0\uc810",
+              "G1F \uc9c0\uc810",
+              "3F-G",
+              "1F-G"
+            ]
+          ],
+          "time_columns": [
+            "seS1fAccTime",
+            "se_1cAccTime",
+            "se_2cAccTime",
+            "se_3cAccTime",
+            "seG3fAccTime",
+            "se_4cAccTime",
+            "seG1fAccTime",
+            null,
+            null,
+            "rcTime"
+          ]
+        }
+      },
+      "races": 6,
+      "rows": 67
+    },
+    "2:1000": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 94
+        },
+        "jeju:je_2cTime": {
+          "zero_blank": 94
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        },
+        "jeju:rcTime": {
+          "positive_equal": 92,
+          "zero_blank": 2
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 10,
+      "rows": 94
+    },
+    "2:1110": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 72
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 72
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 72
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 72
+        },
+        "jeju:je_2cTime": {
+          "zero_blank": 72
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 72
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 72
+        },
+        "jeju:rcTime": {
+          "positive_equal": 72
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 8,
+      "rows": 72
+    },
+    "2:1200": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 55
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 55
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 55
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 55
+        },
+        "jeju:je_2cTime": {
+          "zero_blank": 55
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 55
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 55
+        },
+        "jeju:rcTime": {
+          "positive_equal": 55
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 6,
+      "rows": 55
+    },
+    "2:1300": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 19
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 19
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 19
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 19
+        },
+        "jeju:je_2cTime": {
+          "positive_equal": 19
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 19
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 19
+        },
+        "jeju:rcTime": {
+          "positive_equal": 19
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 2,
+      "rows": 19
+    },
+    "2:1400": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 8
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 8
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 8
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 8
+        },
+        "jeju:je_2cTime": {
+          "positive_equal": 8
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 8
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 8
+        },
+        "jeju:rcTime": {
+          "positive_equal": 8
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 1,
+      "rows": 8
+    },
+    "2:900": {
+      "fields": {
+        "jeju:jeG1fTime": {
+          "positive_equal": 50
+        },
+        "jeju:jeG3fTime": {
+          "positive_equal": 50
+        },
+        "jeju:jeS1fTime": {
+          "positive_equal": 50
+        },
+        "jeju:je_1cTime": {
+          "zero_blank": 50
+        },
+        "jeju:je_2cTime": {
+          "zero_blank": 50
+        },
+        "jeju:je_3cTime": {
+          "positive_equal": 50
+        },
+        "jeju:je_4cTime": {
+          "positive_equal": 50
+        },
+        "jeju:rcTime": {
+          "positive_equal": 50
+        }
+      },
+      "layouts": {
+        "jeju": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "S1F-1C-2C-3C-4C-G1F",
+              "S-1F",
+              "1\ucf54\ub108",
+              "2\ucf54\ub108",
+              "3\ucf54\ub108",
+              "4\ucf54\ub108",
+              "G-3F",
+              "G-1F",
+              "\uacbd\uc8fc\uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "jeS1fTime",
+            "je_1cTime",
+            "je_2cTime",
+            "je_3cTime",
+            "je_4cTime",
+            "jeG3fTime",
+            "jeG1fTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 5,
+      "rows": 50
+    },
+    "3:1200": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "zero_blank": 68
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "zero_blank": 68
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_10_8fTime": {
+          "zero_blank": 68
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_8_6fTime": {
+          "zero_blank": 68
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 67,
+          "zero_blank": 1
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1200M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "-",
+              "-",
+              "200M",
+              "400M",
+              "600M",
+              "800M",
+              "1000M"
+            ]
+          ],
+          "time_columns": [
+            "buG8fAccTime",
+            "buG6fAccTime",
+            "buS1fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 7,
+      "rows": 68
+    },
+    "3:1300": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "zero_blank": 44
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 44
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_10_8fTime": {
+          "zero_blank": 44
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:bu_8_6fTime": {
+          "positive_equal": 44
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 44
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1300M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "-",
+              "100M",
+              "200M",
+              "500M",
+              "700M",
+              "900M",
+              "1100M"
+            ]
+          ],
+          "time_columns": [
+            "buG8fAccTime",
+            "buG6fAccTime",
+            "buS1fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 4,
+      "rows": 44
+    },
+    "3:1400": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "zero_blank": 60
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "zero_blank": 60
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_10_8fTime": {
+          "zero_blank": 60
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        },
+        "busan_segment:bu_8_6fTime": {
+          "zero_blank": 60
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 59,
+          "zero_blank": 1
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1400M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "-",
+              "-",
+              "200M",
+              "600M",
+              "800M",
+              "1000M",
+              "1200M"
+            ]
+          ],
+          "time_columns": [
+            "buG8fAccTime",
+            "buG6fAccTime",
+            "buS1fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 6,
+      "rows": 60
+    },
+    "3:1600": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "zero_blank": 47
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 47
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_10_8fTime": {
+          "zero_blank": 47
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:bu_8_6fTime": {
+          "positive_equal": 47
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 47
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1600M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "-",
+              "200M",
+              "400M",
+              "800M",
+              "1000M",
+              "1200M",
+              "1400M"
+            ]
+          ],
+          "time_columns": [
+            "buG8fAccTime",
+            "buS1fAccTime",
+            "buG6fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 5,
+      "rows": 47
+    },
+    "3:1800": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "zero_blank": 70
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 70
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_10_8fTime": {
+          "zero_blank": 70
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:bu_8_6fTime": {
+          "positive_equal": 70
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 70
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 1800M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "-",
+              "200M",
+              "600M",
+              "1000M",
+              "1200M",
+              "1400M",
+              "1600M"
+            ]
+          ],
+          "time_columns": [
+            "buG8fAccTime",
+            "buS1fAccTime",
+            "buG6fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 7,
+      "rows": 70
+    },
+    "3:2200": {
+      "fields": {
+        "busan_cumulative:buG1fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buG2fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buG3fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buG4fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buG6fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buG8fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:buS1fAccTime": {
+          "positive_equal": 11
+        },
+        "busan_cumulative:rcTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:buS1fTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_10_8fTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_1fGTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_2fGTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_3fGTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_4_2fTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_6_4fTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:bu_8_6fTime": {
+          "positive_equal": 11
+        },
+        "busan_segment:rcTime": {
+          "positive_equal": 11
+        }
+      },
+      "layouts": {
+        "busan_cumulative": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704 S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "\ud1b5\uacfc \ub204\uc801\uae30\ub85d(\uacbd\uc8fc\uac70\ub9ac : 2200M)",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ],
+            [
+              "200M",
+              "600M",
+              "1000M",
+              "1400M",
+              "1600M",
+              "1800M",
+              "2000M"
+            ]
+          ],
+          "time_columns": [
+            "buS1fAccTime",
+            "buG8fAccTime",
+            "buG6fAccTime",
+            "buG4fAccTime",
+            "buG3fAccTime",
+            "buG2fAccTime",
+            "buG1fAccTime",
+            "rcTime"
+          ]
+        },
+        "busan_segment": {
+          "headers": [
+            [
+              "\uc21c\uc704",
+              "\ub9c8\ubc88",
+              "\uad6c\uac04\ubcc4 \ud1b5\uacfc\uc21c\uc704(\uad6c\uac04\uae30\ub85d\uc758 \uc774\ud574/\ud65c\uc6a9) S1F-G8F-G6F-G4F-G3F-G2F-G1F",
+              "S-1F",
+              "10-8F",
+              "8-6F",
+              "6-4F",
+              "4-2F",
+              "2F-G",
+              "3F-G",
+              "1F-G",
+              "\uacbd\uc8fc \uae30\ub85d"
+            ]
+          ],
+          "time_columns": [
+            "buS1fTime",
+            "bu_10_8fTime",
+            "bu_8_6fTime",
+            "bu_6_4fTime",
+            "bu_4_2fTime",
+            "bu_2fGTime",
+            "bu_3fGTime",
+            "bu_1fGTime",
+            "rcTime"
+          ]
+        }
+      },
+      "races": 1,
+      "rows": 11
+    }
+  },
+  "counts": {
+    "positive_equal": 8771,
+    "zero_blank": 2161
+  },
+  "counts_as_70_percent_evidence": false,
+  "created_at": "2026-10-20T17:07:13.524016+00:00",
+  "exceptions": [],
+  "existing_exclusions_changed": false,
+  "fits": 0,
+  "format_version": "sectional-source-reconciliation-v1",
+  "historical_prerace_verified": false,
+  "implementation_sha256": "cbab4b6a41c4cbd8d0bfa017f10405e3c2a6403daa985d90fcbd28ab0822cdaa",
+  "interpretation": "empirical_labelled_cell_agreement_not_feature_approval",
+  "network_requests": 0,
+  "official_archive_sha256": "8ca56ba232156beb824e9baab1f4c8c5b301e8d619f81e17d1213e8f6512e1bd",
+  "official_sources": [
+    {
+      "available_at": "2026-10-15T12:31:23.531054+00:00",
+      "race_id": "20260501_2_1",
+      "raw": {
+        "path": "20260501_2_1_56dc62154bf2101aec41083e5366bc04bce5da6e93fffa1ed7e7b74411a341cf.html",
+        "sha256": "56dc62154bf2101aec41083e5366bc04bce5da6e93fffa1ed7e7b74411a341cf"
+      },
+      "receipt": {
+        "path": "20260501_2_1.json",
+        "sha256": "cc50aacbaaa75838dfae6e739ad6491952f11059a33796c75bfdd5e8a30e1736"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:23.894556+00:00",
+      "race_id": "20260501_2_2",
+      "raw": {
+        "path": "20260501_2_2_886a349686445c439a11fb8f5fa76f1b53b9713bbcf78cbe02ab15825fc420a3.html",
+        "sha256": "886a349686445c439a11fb8f5fa76f1b53b9713bbcf78cbe02ab15825fc420a3"
+      },
+      "receipt": {
+        "path": "20260501_2_2.json",
+        "sha256": "4aabc549d99b0089f73b97321467f57af7c7787c27178e2a0011e3552b58592a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:24.270425+00:00",
+      "race_id": "20260501_2_3",
+      "raw": {
+        "path": "20260501_2_3_aff2003c44cf6a59a93b908284f138e22ce7e13589d6127fe652cf16536d656e.html",
+        "sha256": "aff2003c44cf6a59a93b908284f138e22ce7e13589d6127fe652cf16536d656e"
+      },
+      "receipt": {
+        "path": "20260501_2_3.json",
+        "sha256": "9f2ffb5f7832f07b9420e324349541180d3e787e86e62cb864ed1838c556d045"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:24.619285+00:00",
+      "race_id": "20260501_2_4",
+      "raw": {
+        "path": "20260501_2_4_dc108d782c4dd983a3a0e0e893197d5e22ed9c5567ae14cdc72ad1a0717975e7.html",
+        "sha256": "dc108d782c4dd983a3a0e0e893197d5e22ed9c5567ae14cdc72ad1a0717975e7"
+      },
+      "receipt": {
+        "path": "20260501_2_4.json",
+        "sha256": "8495ba35bf0393782c91f12af93f25771d4c6a310a72950c7d0f43a495f49a0f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:25.074323+00:00",
+      "race_id": "20260501_2_5",
+      "raw": {
+        "path": "20260501_2_5_2655eaa1c8b148483fb4efdf1885c1d521ecb5be654c2671ef16651fbb3b0d33.html",
+        "sha256": "2655eaa1c8b148483fb4efdf1885c1d521ecb5be654c2671ef16651fbb3b0d33"
+      },
+      "receipt": {
+        "path": "20260501_2_5.json",
+        "sha256": "369d5e33cdcb0d95f14df8cf22862a821c6d7701c2149b81fbe834945bfb5d0a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:25.435608+00:00",
+      "race_id": "20260501_2_6",
+      "raw": {
+        "path": "20260501_2_6_57e08d40b09a264dd0059b199c2cf8c350a9154930e7d82e2dc5247db2fd5b87.html",
+        "sha256": "57e08d40b09a264dd0059b199c2cf8c350a9154930e7d82e2dc5247db2fd5b87"
+      },
+      "receipt": {
+        "path": "20260501_2_6.json",
+        "sha256": "fa85c846f8b17de2394afff755b7157b125b2ee31c963dc519bf657c7b200cf9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:25.778536+00:00",
+      "race_id": "20260501_2_7",
+      "raw": {
+        "path": "20260501_2_7_f041a7d048c6ed8f0b62b3af3947dc59d0fc15e06939562820e198096508a528.html",
+        "sha256": "f041a7d048c6ed8f0b62b3af3947dc59d0fc15e06939562820e198096508a528"
+      },
+      "receipt": {
+        "path": "20260501_2_7.json",
+        "sha256": "ff001dea58a70f73dc838d8c59479c5f1311f515c3d8ce88ee2fb1ac6e4a1ba0"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:26.223018+00:00",
+      "race_id": "20260501_2_8",
+      "raw": {
+        "path": "20260501_2_8_14b1d430ce1fab9e1f562656cbe20115fb1d938756b001e5aad7d2ff36341294.html",
+        "sha256": "14b1d430ce1fab9e1f562656cbe20115fb1d938756b001e5aad7d2ff36341294"
+      },
+      "receipt": {
+        "path": "20260501_2_8.json",
+        "sha256": "c3c87fa40e74164946c16b6a1a5b2c5043915b99253494c0eff781158724f6a0"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:26.648977+00:00",
+      "race_id": "20260501_2_9",
+      "raw": {
+        "path": "20260501_2_9_07918d0c619310902da2129e459541cdef30dfbcb511f0732df70d155eaf8893.html",
+        "sha256": "07918d0c619310902da2129e459541cdef30dfbcb511f0732df70d155eaf8893"
+      },
+      "receipt": {
+        "path": "20260501_2_9.json",
+        "sha256": "fa050f64b3820e47fdc5345d722dc5dc968eb1845a0cdd62722686c05f0e9bd9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260501&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:31:27.050036+00:00",
+      "race_id": "20260501_3_1",
+      "raw": {
+        "path": "20260501_3_1_0e09f360ad8c2b419dc187b0efc79beb86eefe243bdb5e4f3bf78f82e416b47c.html",
+        "sha256": "0e09f360ad8c2b419dc187b0efc79beb86eefe243bdb5e4f3bf78f82e416b47c"
+      },
+      "receipt": {
+        "path": "20260501_3_1.json",
+        "sha256": "7e5d065e7862f010fb057cdc98621068abe405bb04eeeb061a32e8f3c3113694"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:27.435266+00:00",
+      "race_id": "20260501_3_2",
+      "raw": {
+        "path": "20260501_3_2_1feb8cb352b0901e7fd458b03ad6ce29e03a60ab31d12326c052c5cdbb4fb9a9.html",
+        "sha256": "1feb8cb352b0901e7fd458b03ad6ce29e03a60ab31d12326c052c5cdbb4fb9a9"
+      },
+      "receipt": {
+        "path": "20260501_3_2.json",
+        "sha256": "25ca8f95b84b7cabff96d0bfdbb986077a29ae3a17b8f2a5afadb1553375afb0"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:27.795181+00:00",
+      "race_id": "20260501_3_3",
+      "raw": {
+        "path": "20260501_3_3_f31718eb48f0abc3137ff105a58486a48dfc2063851cf7f1c60bf238fb27ad44.html",
+        "sha256": "f31718eb48f0abc3137ff105a58486a48dfc2063851cf7f1c60bf238fb27ad44"
+      },
+      "receipt": {
+        "path": "20260501_3_3.json",
+        "sha256": "c7da76ba0c300b1ea4fea9ef40bd42795a7b439a491c8a1bd43104d1b1e05ce9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:28.225903+00:00",
+      "race_id": "20260501_3_4",
+      "raw": {
+        "path": "20260501_3_4_c8bd6288f64c6bfd720df273cb309b09d3edeb6faa32ee6e94a691aef23d1729.html",
+        "sha256": "c8bd6288f64c6bfd720df273cb309b09d3edeb6faa32ee6e94a691aef23d1729"
+      },
+      "receipt": {
+        "path": "20260501_3_4.json",
+        "sha256": "63e4a4ba4f63dce47a777d505e84d0f714fb934e0f4342ae08f793caec6e5b4b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:28.604204+00:00",
+      "race_id": "20260501_3_5",
+      "raw": {
+        "path": "20260501_3_5_3217e12775e9a25fe2413b7754d5764aea4a3f34e31a2f93c8c76c2cc7ec1437.html",
+        "sha256": "3217e12775e9a25fe2413b7754d5764aea4a3f34e31a2f93c8c76c2cc7ec1437"
+      },
+      "receipt": {
+        "path": "20260501_3_5.json",
+        "sha256": "9323bec91be837be7c1a2609be3319a9e1d2f334c8a253a1ac7e4c9f82757c60"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:28.998129+00:00",
+      "race_id": "20260501_3_6",
+      "raw": {
+        "path": "20260501_3_6_632e6e021ab53d7fa97e133913a4383f3adbe25d1d766168c5c3583c9d4954fd.html",
+        "sha256": "632e6e021ab53d7fa97e133913a4383f3adbe25d1d766168c5c3583c9d4954fd"
+      },
+      "receipt": {
+        "path": "20260501_3_6.json",
+        "sha256": "5cfe0989eaab459fce6ffa64cb2e720210d7acafe95f0b049d9a075862cb4e92"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:29.394065+00:00",
+      "race_id": "20260501_3_7",
+      "raw": {
+        "path": "20260501_3_7_c5f1ca486b9f0888f52875d2934e32847153c6bf8a9ddef719dbd86ee58fb2e2.html",
+        "sha256": "c5f1ca486b9f0888f52875d2934e32847153c6bf8a9ddef719dbd86ee58fb2e2"
+      },
+      "receipt": {
+        "path": "20260501_3_7.json",
+        "sha256": "4d959b76c4006d5dfbcc5ad0351d4767f362acbb4acfb05e027971f2b018bd33"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:29.794120+00:00",
+      "race_id": "20260501_3_8",
+      "raw": {
+        "path": "20260501_3_8_d9c931278a43fb2c260c1ccae21e94378f9b70088c5a1870468921df0b41d338.html",
+        "sha256": "d9c931278a43fb2c260c1ccae21e94378f9b70088c5a1870468921df0b41d338"
+      },
+      "receipt": {
+        "path": "20260501_3_8.json",
+        "sha256": "8ec73a9b3367de7e137cc69e8cdabdfebf8d294b9346edcbc13a424ddc92ae30"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260501&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:30.151232+00:00",
+      "race_id": "20260502_1_1",
+      "raw": {
+        "path": "20260502_1_1_43b3ff362c352b48b2d896f50602ca24832c7ae9b3dcf7c2b496f90cdbd2e145.html",
+        "sha256": "43b3ff362c352b48b2d896f50602ca24832c7ae9b3dcf7c2b496f90cdbd2e145"
+      },
+      "receipt": {
+        "path": "20260502_1_1.json",
+        "sha256": "180f741ce106e643f01a3d771ed68e744ff1f15ff861307ed1e9f91403de904f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:30.517497+00:00",
+      "race_id": "20260502_1_10",
+      "raw": {
+        "path": "20260502_1_10_52a9d2726527fdf8a09f2b00cacc02e5bd3d2e61b9a8584c824541b9e8dc84d6.html",
+        "sha256": "52a9d2726527fdf8a09f2b00cacc02e5bd3d2e61b9a8584c824541b9e8dc84d6"
+      },
+      "receipt": {
+        "path": "20260502_1_10.json",
+        "sha256": "c4760a438ae44cb3795d0680be6e4abf0c9ddbbb6e0b89cb2b03415648f712df"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=10"
+    },
+    {
+      "available_at": "2026-10-15T12:31:30.909131+00:00",
+      "race_id": "20260502_1_2",
+      "raw": {
+        "path": "20260502_1_2_9919a2a4cf7672ef20dcded470a90875a22d865aa28915fd9d93a22b0aac9554.html",
+        "sha256": "9919a2a4cf7672ef20dcded470a90875a22d865aa28915fd9d93a22b0aac9554"
+      },
+      "receipt": {
+        "path": "20260502_1_2.json",
+        "sha256": "4475b26573dc453f214f3ec3b8c99a28a48cf64b1a0ea07489474098cf46f15f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:31.258245+00:00",
+      "race_id": "20260502_1_3",
+      "raw": {
+        "path": "20260502_1_3_8d075fcf70c323b403faa65e3dcbb5a961e60b5cf77b4deaf6515faf92318c75.html",
+        "sha256": "8d075fcf70c323b403faa65e3dcbb5a961e60b5cf77b4deaf6515faf92318c75"
+      },
+      "receipt": {
+        "path": "20260502_1_3.json",
+        "sha256": "c3ac5f06a634926dbf8223d03a8f76e0c0406ddf48e7c7185cde0978dbea48c8"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:31.622010+00:00",
+      "race_id": "20260502_1_4",
+      "raw": {
+        "path": "20260502_1_4_22855d9499f015cd61b4aadaecca3e0d7ceeb38ef4efcc8e42a7b39028885208.html",
+        "sha256": "22855d9499f015cd61b4aadaecca3e0d7ceeb38ef4efcc8e42a7b39028885208"
+      },
+      "receipt": {
+        "path": "20260502_1_4.json",
+        "sha256": "1400c2603dc63da78a1fc8045aa98d1b17ff7e781d6856c7c3418e3933c61dff"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:31.980437+00:00",
+      "race_id": "20260502_1_5",
+      "raw": {
+        "path": "20260502_1_5_1d5b9f8675260a6eba862ba64c05ea6977713a883ee00fb44d66c1ec60508741.html",
+        "sha256": "1d5b9f8675260a6eba862ba64c05ea6977713a883ee00fb44d66c1ec60508741"
+      },
+      "receipt": {
+        "path": "20260502_1_5.json",
+        "sha256": "ed2705ac5641aeb58a59aad93802d475dc4201835428e4c5aa95763c4bb5dc6a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:32.416820+00:00",
+      "race_id": "20260502_1_6",
+      "raw": {
+        "path": "20260502_1_6_18cb10332a631aa2a15293ce2654f44bf1cc6387e914e74713374b1050d147a6.html",
+        "sha256": "18cb10332a631aa2a15293ce2654f44bf1cc6387e914e74713374b1050d147a6"
+      },
+      "receipt": {
+        "path": "20260502_1_6.json",
+        "sha256": "c6002f86ce62d61d422d8599d115e421bfbf5e7e3695ed97eb6d60ad827e9de3"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:32.793372+00:00",
+      "race_id": "20260502_1_7",
+      "raw": {
+        "path": "20260502_1_7_21b7de62755c5769b369a585525ef396e7dc692f8a21da58fce09bc639df6c20.html",
+        "sha256": "21b7de62755c5769b369a585525ef396e7dc692f8a21da58fce09bc639df6c20"
+      },
+      "receipt": {
+        "path": "20260502_1_7.json",
+        "sha256": "a3a4038d2b030a62a3106af2db7cbd4089ab196d3b1389d9a4e8b9466d670090"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:33.173643+00:00",
+      "race_id": "20260502_1_8",
+      "raw": {
+        "path": "20260502_1_8_a0aa0cb2edac187f9e3d44d10e1ff36be1c7f3000d06221ee9a3aeb0fac3ca7d.html",
+        "sha256": "a0aa0cb2edac187f9e3d44d10e1ff36be1c7f3000d06221ee9a3aeb0fac3ca7d"
+      },
+      "receipt": {
+        "path": "20260502_1_8.json",
+        "sha256": "237d0b55fed2468569c90c9388a829a5e65f2cda82e74b444da2d61f4f543f0b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:33.551684+00:00",
+      "race_id": "20260502_1_9",
+      "raw": {
+        "path": "20260502_1_9_7afc2484a15094bc20e1f046ac8ddec47781b12c4d3e4511fd76ba754455b06b.html",
+        "sha256": "7afc2484a15094bc20e1f046ac8ddec47781b12c4d3e4511fd76ba754455b06b"
+      },
+      "receipt": {
+        "path": "20260502_1_9.json",
+        "sha256": "2e5ad2def6c0c745b27ec1f219784b5e40520cbb5dd4f3db2819b42da2b26ba5"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260502&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:31:33.988665+00:00",
+      "race_id": "20260502_2_1",
+      "raw": {
+        "path": "20260502_2_1_57648a1b1f040916929b30e9322480af199ed1ccc7e52097ff49bbb80d08b23e.html",
+        "sha256": "57648a1b1f040916929b30e9322480af199ed1ccc7e52097ff49bbb80d08b23e"
+      },
+      "receipt": {
+        "path": "20260502_2_1.json",
+        "sha256": "df7d92886989882d70dad34b8e0eb34ae7b7fc7850a6d867ced9a0f6eeef3aec"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:34.326446+00:00",
+      "race_id": "20260502_2_2",
+      "raw": {
+        "path": "20260502_2_2_91010055b917d261c4ed7b698077f6bbd3dae6c3c82c8f4b31e32d6223ffde83.html",
+        "sha256": "91010055b917d261c4ed7b698077f6bbd3dae6c3c82c8f4b31e32d6223ffde83"
+      },
+      "receipt": {
+        "path": "20260502_2_2.json",
+        "sha256": "eeb91ff0e24040e9301418837157aeff5c7aacd8e3eb1f310b957958ae5361c0"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:34.688111+00:00",
+      "race_id": "20260502_2_3",
+      "raw": {
+        "path": "20260502_2_3_d0cfdb47af91a8d2e293c58a19913005a2525041a3844565a70e17d36474db9d.html",
+        "sha256": "d0cfdb47af91a8d2e293c58a19913005a2525041a3844565a70e17d36474db9d"
+      },
+      "receipt": {
+        "path": "20260502_2_3.json",
+        "sha256": "a2af88590ef993f966d6a0e5f44ae8b16389d0fb8ad4e2095e5df6ee3053f862"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:35.109095+00:00",
+      "race_id": "20260502_2_4",
+      "raw": {
+        "path": "20260502_2_4_95164cc9427bf4a8ee62473cc190843d6108fe8a4bcaf4a657092ba7c5f9f2e3.html",
+        "sha256": "95164cc9427bf4a8ee62473cc190843d6108fe8a4bcaf4a657092ba7c5f9f2e3"
+      },
+      "receipt": {
+        "path": "20260502_2_4.json",
+        "sha256": "c12cc376993222b56b355492510c90be8450ad815515d5f4875b458b1e5a1b7b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:35.462474+00:00",
+      "race_id": "20260502_2_5",
+      "raw": {
+        "path": "20260502_2_5_426ae54d0911afbbed3da28622e7869bcb046e787348ec05401be83aace4f263.html",
+        "sha256": "426ae54d0911afbbed3da28622e7869bcb046e787348ec05401be83aace4f263"
+      },
+      "receipt": {
+        "path": "20260502_2_5.json",
+        "sha256": "9fcc403ea6e941f38b2602ea82d421495b283875fa895cdcea531763b329346b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:35.819293+00:00",
+      "race_id": "20260502_2_6",
+      "raw": {
+        "path": "20260502_2_6_66eb131cb8d2edb8e187c521e98ef8caaa86c4ea2c0bc110095b21ce638f1f1c.html",
+        "sha256": "66eb131cb8d2edb8e187c521e98ef8caaa86c4ea2c0bc110095b21ce638f1f1c"
+      },
+      "receipt": {
+        "path": "20260502_2_6.json",
+        "sha256": "f3aea726648ef502df8af4cca5dda6ada6283fb56c92ac076152bfed4116217e"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:36.186692+00:00",
+      "race_id": "20260502_2_7",
+      "raw": {
+        "path": "20260502_2_7_f62660468519e6980d4fc4376befe704a3b175a0c8825d9fd979060fefdcbd0a.html",
+        "sha256": "f62660468519e6980d4fc4376befe704a3b175a0c8825d9fd979060fefdcbd0a"
+      },
+      "receipt": {
+        "path": "20260502_2_7.json",
+        "sha256": "f04cd2ed171e9d6690a4cd262ddd90ccde5cf8bad4e1df9e09f797a0efc24142"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260502&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:36.608680+00:00",
+      "race_id": "20260503_1_1",
+      "raw": {
+        "path": "20260503_1_1_a38813ee093106682bdcda7f4dbeef2f0fe11031dc27acb0d2ee193432e0d9ab.html",
+        "sha256": "a38813ee093106682bdcda7f4dbeef2f0fe11031dc27acb0d2ee193432e0d9ab"
+      },
+      "receipt": {
+        "path": "20260503_1_1.json",
+        "sha256": "1e683b9d3c4f5c3ebff9ff26cdc06212199b135264fa1c8c94e823137eb80152"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:36.962071+00:00",
+      "race_id": "20260503_1_10",
+      "raw": {
+        "path": "20260503_1_10_5608c15ea6fcff9e5b33ab9b17299962da4dba1d54d4c0a1e8a454c1c81c7ca1.html",
+        "sha256": "5608c15ea6fcff9e5b33ab9b17299962da4dba1d54d4c0a1e8a454c1c81c7ca1"
+      },
+      "receipt": {
+        "path": "20260503_1_10.json",
+        "sha256": "e1184caad9003aac1c29eb58fc2b95a21094a2f94c444e60a960000bc129f0d2"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=10"
+    },
+    {
+      "available_at": "2026-10-15T12:31:37.316199+00:00",
+      "race_id": "20260503_1_2",
+      "raw": {
+        "path": "20260503_1_2_7e79282b86617d93eeb3edef8c515471cd69867559dc519dbcd4d47fc7db9dd8.html",
+        "sha256": "7e79282b86617d93eeb3edef8c515471cd69867559dc519dbcd4d47fc7db9dd8"
+      },
+      "receipt": {
+        "path": "20260503_1_2.json",
+        "sha256": "d1b6ba5546b2eafbc2a8831e2a5f9ef98712280d2b3eedd841500e1e29b062d9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:37.720917+00:00",
+      "race_id": "20260503_1_3",
+      "raw": {
+        "path": "20260503_1_3_5701696b81f535f2775c52be43e1ff3b164a60cc29f64d62fd1d5ba060be8c71.html",
+        "sha256": "5701696b81f535f2775c52be43e1ff3b164a60cc29f64d62fd1d5ba060be8c71"
+      },
+      "receipt": {
+        "path": "20260503_1_3.json",
+        "sha256": "ea8bb84500c4f845b41f08cd21516e511e4a7c53d09a9449c136469c4215de1f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:38.075214+00:00",
+      "race_id": "20260503_1_4",
+      "raw": {
+        "path": "20260503_1_4_6fc41c9a0b99059da7e19758d264fa2654f3911a156f01eb2a2e2541a78549e4.html",
+        "sha256": "6fc41c9a0b99059da7e19758d264fa2654f3911a156f01eb2a2e2541a78549e4"
+      },
+      "receipt": {
+        "path": "20260503_1_4.json",
+        "sha256": "3037b846453ad4f8fa900545f5c96879b9bdde3639c2d7bbb11cfba8c1e98060"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:38.418387+00:00",
+      "race_id": "20260503_1_5",
+      "raw": {
+        "path": "20260503_1_5_058c84568324765eebecba9211fca5e1b8561e43b0332f41e5afb54bae81d3b5.html",
+        "sha256": "058c84568324765eebecba9211fca5e1b8561e43b0332f41e5afb54bae81d3b5"
+      },
+      "receipt": {
+        "path": "20260503_1_5.json",
+        "sha256": "2fe9156e7d4470683b4acd56fbf5b5fffcd50fde34d44426ff6e420eb6931c90"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:38.768494+00:00",
+      "race_id": "20260503_1_6",
+      "raw": {
+        "path": "20260503_1_6_fa0b5e1d89965786f8ae0bbb54e1714e3c3851fbe12c92ee0aaa4f9367747384.html",
+        "sha256": "fa0b5e1d89965786f8ae0bbb54e1714e3c3851fbe12c92ee0aaa4f9367747384"
+      },
+      "receipt": {
+        "path": "20260503_1_6.json",
+        "sha256": "c238ad086a1b3d33616aa4110322ec89fce95647926f0162184e424541970e80"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:39.118085+00:00",
+      "race_id": "20260503_1_7",
+      "raw": {
+        "path": "20260503_1_7_36744ecce88046de93023cc893595fdcc263cc248f10b692767b5d400fb1dc2f.html",
+        "sha256": "36744ecce88046de93023cc893595fdcc263cc248f10b692767b5d400fb1dc2f"
+      },
+      "receipt": {
+        "path": "20260503_1_7.json",
+        "sha256": "bace231df4fc462779fd1ecf628fb26bb4af9295f6360b021d64878b8511488c"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:39.484223+00:00",
+      "race_id": "20260503_1_8",
+      "raw": {
+        "path": "20260503_1_8_136824d853d920ce9d5b7c479ccd9a6c326d646e4499d587e398499d465a10df.html",
+        "sha256": "136824d853d920ce9d5b7c479ccd9a6c326d646e4499d587e398499d465a10df"
+      },
+      "receipt": {
+        "path": "20260503_1_8.json",
+        "sha256": "48f40e983c861cd65f12b3ce149afee6b495101dc53b31b644ced0bd233f18a7"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:39.843015+00:00",
+      "race_id": "20260503_1_9",
+      "raw": {
+        "path": "20260503_1_9_6dc95da7c387617aeccfe5ef8530522af007f1f154d8aa7dc877709b0a5cc46f.html",
+        "sha256": "6dc95da7c387617aeccfe5ef8530522af007f1f154d8aa7dc877709b0a5cc46f"
+      },
+      "receipt": {
+        "path": "20260503_1_9.json",
+        "sha256": "2188eb9a27355b8fdc53c7470a95c9f11057266340a1e0dc358624215a88ee74"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260503&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:31:40.281211+00:00",
+      "race_id": "20260503_3_1",
+      "raw": {
+        "path": "20260503_3_1_f18cc3f3b805e7809c6e9acd1db16267ced534a7a917c872ad5323fb9797e408.html",
+        "sha256": "f18cc3f3b805e7809c6e9acd1db16267ced534a7a917c872ad5323fb9797e408"
+      },
+      "receipt": {
+        "path": "20260503_3_1.json",
+        "sha256": "82e86694028dd743a23bb59c1866dd5f79730bb6ed331c65e8a1c3ca9219d92c"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:40.645758+00:00",
+      "race_id": "20260503_3_2",
+      "raw": {
+        "path": "20260503_3_2_4e3857f140733e38179b8c0724bcaf07d77e8d527cdbfd206ba0f8835a4984bc.html",
+        "sha256": "4e3857f140733e38179b8c0724bcaf07d77e8d527cdbfd206ba0f8835a4984bc"
+      },
+      "receipt": {
+        "path": "20260503_3_2.json",
+        "sha256": "af2f0b66a637621df97f4fe7485e775bbfe009d688b17415d387d8f1c0039a02"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:41.011345+00:00",
+      "race_id": "20260503_3_3",
+      "raw": {
+        "path": "20260503_3_3_bcf5baf628c14b7c2b43901a4ebda7ba1279db11c93f00d379c6da25479ba73f.html",
+        "sha256": "bcf5baf628c14b7c2b43901a4ebda7ba1279db11c93f00d379c6da25479ba73f"
+      },
+      "receipt": {
+        "path": "20260503_3_3.json",
+        "sha256": "e4b4c6677b918f560217cf7b846e94151b41d89e342f4625af80dc16c8bfef48"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:41.407866+00:00",
+      "race_id": "20260503_3_4",
+      "raw": {
+        "path": "20260503_3_4_61642ed8e68075716e2684b27a730f9de697bf5db118198d8b5ee09b52635341.html",
+        "sha256": "61642ed8e68075716e2684b27a730f9de697bf5db118198d8b5ee09b52635341"
+      },
+      "receipt": {
+        "path": "20260503_3_4.json",
+        "sha256": "7cb342d3623005e39d794939b3db4ef6546b2fc5b6910470a37957defe509174"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:41.852715+00:00",
+      "race_id": "20260503_3_5",
+      "raw": {
+        "path": "20260503_3_5_52c6716bea5080f366bd464648d1672147cf8dae878fc0af0255644f21c72092.html",
+        "sha256": "52c6716bea5080f366bd464648d1672147cf8dae878fc0af0255644f21c72092"
+      },
+      "receipt": {
+        "path": "20260503_3_5.json",
+        "sha256": "6e2e7d635c824dd7c915978fa37072bea09f4b6671ec20b2113b2170fe192b95"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:42.219498+00:00",
+      "race_id": "20260503_3_6",
+      "raw": {
+        "path": "20260503_3_6_bfc936f9356f99a6d8d2c4000aab9ec404b771a3f186847a3918258716034e1f.html",
+        "sha256": "bfc936f9356f99a6d8d2c4000aab9ec404b771a3f186847a3918258716034e1f"
+      },
+      "receipt": {
+        "path": "20260503_3_6.json",
+        "sha256": "8838bdec17af4c97173a1e4be59deca6cdb18159d017cc236c0ea9a12881e8fe"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:42.596444+00:00",
+      "race_id": "20260503_3_7",
+      "raw": {
+        "path": "20260503_3_7_aa1682eb6206acb43915a9a94438a1aa5a915fcd800528f3cfa41a6d1d1d40c7.html",
+        "sha256": "aa1682eb6206acb43915a9a94438a1aa5a915fcd800528f3cfa41a6d1d1d40c7"
+      },
+      "receipt": {
+        "path": "20260503_3_7.json",
+        "sha256": "0ca1e998269171455b65690f4ed0588b2f7d1c85f906a1711cc69bdc682860aa"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260503&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:43.019924+00:00",
+      "race_id": "20260508_2_1",
+      "raw": {
+        "path": "20260508_2_1_66bda6171c1605b4badcc554b1adbd6a9765c34d5ee5ca238d73e21159627603.html",
+        "sha256": "66bda6171c1605b4badcc554b1adbd6a9765c34d5ee5ca238d73e21159627603"
+      },
+      "receipt": {
+        "path": "20260508_2_1.json",
+        "sha256": "d8ddaddc1ac1aab4859f0331e0201dad1910763362fe04f21e96ecb2705d9f73"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:43.427775+00:00",
+      "race_id": "20260508_2_2",
+      "raw": {
+        "path": "20260508_2_2_72182c8abdbbdcb06b008afce34835c361576e756c750b1b6984acf131deebd8.html",
+        "sha256": "72182c8abdbbdcb06b008afce34835c361576e756c750b1b6984acf131deebd8"
+      },
+      "receipt": {
+        "path": "20260508_2_2.json",
+        "sha256": "a9d1c9c25f16ac6f04a92ac236981e8989a8fafe31b459710d37347dab40dd83"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:43.772356+00:00",
+      "race_id": "20260508_2_3",
+      "raw": {
+        "path": "20260508_2_3_231898c82953c7b8b2843b3d442f43e79ef78b015e34597be08ec930912339c6.html",
+        "sha256": "231898c82953c7b8b2843b3d442f43e79ef78b015e34597be08ec930912339c6"
+      },
+      "receipt": {
+        "path": "20260508_2_3.json",
+        "sha256": "4ab3787bd73ae68f08a8cbe2c69a6273248d330cf630ed79d1a943d28865f04a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:44.106716+00:00",
+      "race_id": "20260508_2_4",
+      "raw": {
+        "path": "20260508_2_4_c60594ad8c10bc09c8ac65a95f74f801e69df7363a334c5c3e6ebddbfe8139f9.html",
+        "sha256": "c60594ad8c10bc09c8ac65a95f74f801e69df7363a334c5c3e6ebddbfe8139f9"
+      },
+      "receipt": {
+        "path": "20260508_2_4.json",
+        "sha256": "a86786363abf35111b301df891249d9efe13371ed9e5236285b396e6c162b95d"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:44.570632+00:00",
+      "race_id": "20260508_2_5",
+      "raw": {
+        "path": "20260508_2_5_c2207bda4ed116ad4aca32ac28710a619916a7f46ad1b0a9261e62dd6fa7962d.html",
+        "sha256": "c2207bda4ed116ad4aca32ac28710a619916a7f46ad1b0a9261e62dd6fa7962d"
+      },
+      "receipt": {
+        "path": "20260508_2_5.json",
+        "sha256": "d0142d3be2829d249237edcaa244fdabaa16f1fa7d2dab557c0d36050fee877e"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:44.998706+00:00",
+      "race_id": "20260508_2_6",
+      "raw": {
+        "path": "20260508_2_6_735a98727bd579b9e912715c3a2a178b7abf2beffdbb6ce2f1ab7420b643c6e6.html",
+        "sha256": "735a98727bd579b9e912715c3a2a178b7abf2beffdbb6ce2f1ab7420b643c6e6"
+      },
+      "receipt": {
+        "path": "20260508_2_6.json",
+        "sha256": "a6b743d9bc272959ece4bdd33c1b48df8cefdc07a72e1177aff51e6aed8f3304"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:45.353956+00:00",
+      "race_id": "20260508_2_7",
+      "raw": {
+        "path": "20260508_2_7_300c93e26bb3cfaebd8f1ebcc85861f4181518c38141a5dd2be5fbeb0b7bcdb2.html",
+        "sha256": "300c93e26bb3cfaebd8f1ebcc85861f4181518c38141a5dd2be5fbeb0b7bcdb2"
+      },
+      "receipt": {
+        "path": "20260508_2_7.json",
+        "sha256": "d309488fe16f7d6be0637c6047d96ffaa0e814fdfba9feb9f926cfa4b929e757"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:45.706082+00:00",
+      "race_id": "20260508_2_8",
+      "raw": {
+        "path": "20260508_2_8_8517080ec3bd6d35cf2b18a862293f629b224e863f6e91a1b7848972778e96dc.html",
+        "sha256": "8517080ec3bd6d35cf2b18a862293f629b224e863f6e91a1b7848972778e96dc"
+      },
+      "receipt": {
+        "path": "20260508_2_8.json",
+        "sha256": "e1db70ba7abb611f000522ddfccd2cc284a87b1861c8de96f8ae421b35edb12b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:46.125878+00:00",
+      "race_id": "20260508_2_9",
+      "raw": {
+        "path": "20260508_2_9_4fa0f48e364c6d59eb8d259bed0699199d44784fd8307f21a32f409858d812d9.html",
+        "sha256": "4fa0f48e364c6d59eb8d259bed0699199d44784fd8307f21a32f409858d812d9"
+      },
+      "receipt": {
+        "path": "20260508_2_9.json",
+        "sha256": "1b2dcb76ae8628e50838b99cb19cc6e91674050c8c0dfff50c7c42493f129359"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260508&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:31:46.573352+00:00",
+      "race_id": "20260508_3_1",
+      "raw": {
+        "path": "20260508_3_1_10eed29343ff9040dbfe42493f178190e03f93268d8e3e9fc7c408a1e7949ed8.html",
+        "sha256": "10eed29343ff9040dbfe42493f178190e03f93268d8e3e9fc7c408a1e7949ed8"
+      },
+      "receipt": {
+        "path": "20260508_3_1.json",
+        "sha256": "f333209ba201f4275f435e354e8cf2fa80f106f892fa2c53c394d174e1812ad3"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:47.155732+00:00",
+      "race_id": "20260508_3_2",
+      "raw": {
+        "path": "20260508_3_2_83d5ede8b4c39c6ba7501876fed2ada17e535bc9e88581578071068bd191f126.html",
+        "sha256": "83d5ede8b4c39c6ba7501876fed2ada17e535bc9e88581578071068bd191f126"
+      },
+      "receipt": {
+        "path": "20260508_3_2.json",
+        "sha256": "fc9b6007741affc965f9cd70cd87d6e4d06a44d09336ffd2aa28372a91293ab1"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:47.650168+00:00",
+      "race_id": "20260508_3_3",
+      "raw": {
+        "path": "20260508_3_3_a79c892b7170fea8cb5d8c35988159754d7f5302fbcef59752baa1e55f8ab457.html",
+        "sha256": "a79c892b7170fea8cb5d8c35988159754d7f5302fbcef59752baa1e55f8ab457"
+      },
+      "receipt": {
+        "path": "20260508_3_3.json",
+        "sha256": "48f8962db23c9c2cea27fdb3bbf8cad68c7701e9a576c8e0d996651dd7d5e2f9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:48.149518+00:00",
+      "race_id": "20260508_3_4",
+      "raw": {
+        "path": "20260508_3_4_66ad4fa500e9384adcfc71546db3b4903ea4338595d492e3c51aa5dda8efb61a.html",
+        "sha256": "66ad4fa500e9384adcfc71546db3b4903ea4338595d492e3c51aa5dda8efb61a"
+      },
+      "receipt": {
+        "path": "20260508_3_4.json",
+        "sha256": "2ec8a8e31730fc67a2a2b551d2a9092517c2155d457e421d78aaf060e9aff35d"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:48.562934+00:00",
+      "race_id": "20260508_3_5",
+      "raw": {
+        "path": "20260508_3_5_d4752ebc6bf44510a9cc13d8d72b66f004cce7ba3f767ad6be757826e9fed8dc.html",
+        "sha256": "d4752ebc6bf44510a9cc13d8d72b66f004cce7ba3f767ad6be757826e9fed8dc"
+      },
+      "receipt": {
+        "path": "20260508_3_5.json",
+        "sha256": "9ecc56dbf35c4c9653dee87dcedfed9b66be122b3f70730ff5c188ab62c1083f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:48.962611+00:00",
+      "race_id": "20260508_3_6",
+      "raw": {
+        "path": "20260508_3_6_70b3eeaaf5402ef6821aebbd3ab3ecc35c0d4fb573c151b4ff1ad9f15602e1cc.html",
+        "sha256": "70b3eeaaf5402ef6821aebbd3ab3ecc35c0d4fb573c151b4ff1ad9f15602e1cc"
+      },
+      "receipt": {
+        "path": "20260508_3_6.json",
+        "sha256": "c7e17a1acbf9432e30cb51a6c225d8b744e842c462b475fbc68388730990adb5"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:49.373894+00:00",
+      "race_id": "20260508_3_7",
+      "raw": {
+        "path": "20260508_3_7_e81352feea69188bf888473e520183627b7a7027e1c2448799a92bab39aad568.html",
+        "sha256": "e81352feea69188bf888473e520183627b7a7027e1c2448799a92bab39aad568"
+      },
+      "receipt": {
+        "path": "20260508_3_7.json",
+        "sha256": "b54f875e0273568334047e2dbd442fb5c9e801d6e5c42ce11dcb89dfb674561e"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:49.836737+00:00",
+      "race_id": "20260508_3_8",
+      "raw": {
+        "path": "20260508_3_8_8ad4bee173b26c9d24d872257d743636702b1b15054c68079679ccaaf2d7fe8a.html",
+        "sha256": "8ad4bee173b26c9d24d872257d743636702b1b15054c68079679ccaaf2d7fe8a"
+      },
+      "receipt": {
+        "path": "20260508_3_8.json",
+        "sha256": "eb535cd6324ed379a324332def6d3ca5d43f416e501359c2ffde7898449184cb"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260508&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:50.266960+00:00",
+      "race_id": "20260509_1_1",
+      "raw": {
+        "path": "20260509_1_1_015c9dbfe667fce670becd18bde95f9c78fbe14ecc7cf99e5fd29a03e43d6962.html",
+        "sha256": "015c9dbfe667fce670becd18bde95f9c78fbe14ecc7cf99e5fd29a03e43d6962"
+      },
+      "receipt": {
+        "path": "20260509_1_1.json",
+        "sha256": "987ab7226646cba03e124677642956eb229e0f31e5da4dfe45301a521b4583d0"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:50.657975+00:00",
+      "race_id": "20260509_1_10",
+      "raw": {
+        "path": "20260509_1_10_415e6ec0d9a77de170b653fb42374bc45b810c72169b9649fb04e1b939e308bb.html",
+        "sha256": "415e6ec0d9a77de170b653fb42374bc45b810c72169b9649fb04e1b939e308bb"
+      },
+      "receipt": {
+        "path": "20260509_1_10.json",
+        "sha256": "713276ed7cdb7a86acfac431c56ff920715f16da95271a0df822a9778ebcecd2"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=10"
+    },
+    {
+      "available_at": "2026-10-15T12:31:51.050766+00:00",
+      "race_id": "20260509_1_2",
+      "raw": {
+        "path": "20260509_1_2_c1030cdd94f1d6e0dfa3d9f8914f166750eb6d4ce0dbfac6a4ce3ace17f00f16.html",
+        "sha256": "c1030cdd94f1d6e0dfa3d9f8914f166750eb6d4ce0dbfac6a4ce3ace17f00f16"
+      },
+      "receipt": {
+        "path": "20260509_1_2.json",
+        "sha256": "9f5344df6e2a6b0e2de91b98706095cd9138e9adcbb918b2aa930c23755f0844"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:51.436472+00:00",
+      "race_id": "20260509_1_3",
+      "raw": {
+        "path": "20260509_1_3_ac377818453068a448a738a8147f493abaebd32014dc3ed71da27ab3ca6bd6be.html",
+        "sha256": "ac377818453068a448a738a8147f493abaebd32014dc3ed71da27ab3ca6bd6be"
+      },
+      "receipt": {
+        "path": "20260509_1_3.json",
+        "sha256": "fdb3e1c1d74f3ee1e12eb6afb4212699a23a5d36a7616b52432680f39aae8b64"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:51.840222+00:00",
+      "race_id": "20260509_1_4",
+      "raw": {
+        "path": "20260509_1_4_80295bf1bdbaef44ed6a20c73300e955f18a23c9aae5eec258f8c47f92aa7ef2.html",
+        "sha256": "80295bf1bdbaef44ed6a20c73300e955f18a23c9aae5eec258f8c47f92aa7ef2"
+      },
+      "receipt": {
+        "path": "20260509_1_4.json",
+        "sha256": "44c11409a8ce915c04229e94454a186a137c16be3a7ba34a25a6434e5f5ae8ee"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:52.226084+00:00",
+      "race_id": "20260509_1_5",
+      "raw": {
+        "path": "20260509_1_5_f598e88904d08e6f34ee5d57216459a8748e1c952fe6dbe9d879aaf9ae27f643.html",
+        "sha256": "f598e88904d08e6f34ee5d57216459a8748e1c952fe6dbe9d879aaf9ae27f643"
+      },
+      "receipt": {
+        "path": "20260509_1_5.json",
+        "sha256": "9fca2dcc08283c413dddd123a376088c347ab2c3fe0e33a02e574659d578f09a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:52.616750+00:00",
+      "race_id": "20260509_1_6",
+      "raw": {
+        "path": "20260509_1_6_315f8537cc5d08267a2d83ffe1b0bf55a2c0dbd51535ba26462f56563347d1e0.html",
+        "sha256": "315f8537cc5d08267a2d83ffe1b0bf55a2c0dbd51535ba26462f56563347d1e0"
+      },
+      "receipt": {
+        "path": "20260509_1_6.json",
+        "sha256": "d0c7d9b9f62a980680965b4e19c3bc79957adce800bc912af60816319dc3140a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:53.011871+00:00",
+      "race_id": "20260509_1_7",
+      "raw": {
+        "path": "20260509_1_7_a243641bfdfdf56d4ad3085af83e7ae5e825312d392e1aedb793d2a4cd36714a.html",
+        "sha256": "a243641bfdfdf56d4ad3085af83e7ae5e825312d392e1aedb793d2a4cd36714a"
+      },
+      "receipt": {
+        "path": "20260509_1_7.json",
+        "sha256": "607da5f0fb31aff17ef17d33cc889f49d11ca5bdf450340ca73fbae1cda2d492"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:53.477415+00:00",
+      "race_id": "20260509_1_8",
+      "raw": {
+        "path": "20260509_1_8_e6539a2aa36fe6d5b7817d426e6581adc5f52deaaf7e0413e3cfab24a3f75ac0.html",
+        "sha256": "e6539a2aa36fe6d5b7817d426e6581adc5f52deaaf7e0413e3cfab24a3f75ac0"
+      },
+      "receipt": {
+        "path": "20260509_1_8.json",
+        "sha256": "3b9268dcf09bc5f0feb7b49291ace94ce209884bdd5a3deed4fbe240f5047fe6"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:31:53.941020+00:00",
+      "race_id": "20260509_1_9",
+      "raw": {
+        "path": "20260509_1_9_92e14b67ad21babb34a18ef12a49dd20b5a97a289fd90c6a5596fad0ee7bed6d.html",
+        "sha256": "92e14b67ad21babb34a18ef12a49dd20b5a97a289fd90c6a5596fad0ee7bed6d"
+      },
+      "receipt": {
+        "path": "20260509_1_9.json",
+        "sha256": "0230bacf6083fff31899af086955e182a715e0b385729594d9075b1d03be2d6f"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260509&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:31:54.335118+00:00",
+      "race_id": "20260509_2_1",
+      "raw": {
+        "path": "20260509_2_1_1b0e9b83a5142d89e307189d2d93967bf24350d3c7d7d984bae4cf8de5af5f28.html",
+        "sha256": "1b0e9b83a5142d89e307189d2d93967bf24350d3c7d7d984bae4cf8de5af5f28"
+      },
+      "receipt": {
+        "path": "20260509_2_1.json",
+        "sha256": "d5d72db4f1e0f52837949db98df09636d0b2b3b82a30b7057adc257af746f660"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:54.724630+00:00",
+      "race_id": "20260509_2_2",
+      "raw": {
+        "path": "20260509_2_2_13803478919a51abd94309f75f02085b9a3eccc5d2e7b39af49740d148b5878a.html",
+        "sha256": "13803478919a51abd94309f75f02085b9a3eccc5d2e7b39af49740d148b5878a"
+      },
+      "receipt": {
+        "path": "20260509_2_2.json",
+        "sha256": "e38de6205540c9c5f144f81410df9e6062a1e87a25b58de7c94c5f2a28bcb11e"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:55.169452+00:00",
+      "race_id": "20260509_2_3",
+      "raw": {
+        "path": "20260509_2_3_5520157014eed6d168381c1ce06639d1f574b94ab04b3313cd9691777cc044b8.html",
+        "sha256": "5520157014eed6d168381c1ce06639d1f574b94ab04b3313cd9691777cc044b8"
+      },
+      "receipt": {
+        "path": "20260509_2_3.json",
+        "sha256": "25bddc127f60872da182d4dc5ca05972436eb6cc04a989aea37a8b62c151c3cb"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:55.577292+00:00",
+      "race_id": "20260509_2_4",
+      "raw": {
+        "path": "20260509_2_4_3ae1d769088b875cf5a2b3076b34acd5cafc7742811f55442e2fb8797747d204.html",
+        "sha256": "3ae1d769088b875cf5a2b3076b34acd5cafc7742811f55442e2fb8797747d204"
+      },
+      "receipt": {
+        "path": "20260509_2_4.json",
+        "sha256": "3ae6ccf2498f0336cf7abc1ceaaef4aa55514c748731d2149bbb05a94a94ba06"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:56.040963+00:00",
+      "race_id": "20260509_2_5",
+      "raw": {
+        "path": "20260509_2_5_0ff916c4c90917c746f0946ec0aeca59d9eadf5bfba53857f97ed8160045338a.html",
+        "sha256": "0ff916c4c90917c746f0946ec0aeca59d9eadf5bfba53857f97ed8160045338a"
+      },
+      "receipt": {
+        "path": "20260509_2_5.json",
+        "sha256": "2bb30489e2dc2096c1fdf516b5f6b8b503f69e9764fec39bcf04c085715542e7"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:56.526040+00:00",
+      "race_id": "20260509_2_6",
+      "raw": {
+        "path": "20260509_2_6_f77a962d96168b081267c68d53c9a59cccdd50223467320b4f07541edba572aa.html",
+        "sha256": "f77a962d96168b081267c68d53c9a59cccdd50223467320b4f07541edba572aa"
+      },
+      "receipt": {
+        "path": "20260509_2_6.json",
+        "sha256": "fe64eeffa0e72fe5043e2828c0f34a14a79278d6c03c01b5f6857f4f91be44e9"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:31:56.948886+00:00",
+      "race_id": "20260509_2_7",
+      "raw": {
+        "path": "20260509_2_7_a33d91e513482de5842639915bab503d54dc759ef9f50cde2969b97c146c86a5.html",
+        "sha256": "a33d91e513482de5842639915bab503d54dc759ef9f50cde2969b97c146c86a5"
+      },
+      "receipt": {
+        "path": "20260509_2_7.json",
+        "sha256": "42d98e97b54266ed3338bb37da87b90e485b297b380e6090de915622df90e357"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=2&realRcDate=20260509&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:31:57.373625+00:00",
+      "race_id": "20260510_1_1",
+      "raw": {
+        "path": "20260510_1_1_5cbb267f210a8a8b4a6488d06be5561e22b425eab3810f9113c288436d3ef237.html",
+        "sha256": "5cbb267f210a8a8b4a6488d06be5561e22b425eab3810f9113c288436d3ef237"
+      },
+      "receipt": {
+        "path": "20260510_1_1.json",
+        "sha256": "82f9efd485f7abc72becce431b7bacd349c6553c6a4b1ab5597b00e831e586a1"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:31:57.784250+00:00",
+      "race_id": "20260510_1_10",
+      "raw": {
+        "path": "20260510_1_10_567936bff02fa6b3bc46da567f05e45a02a601a15169ac4cd80ead700c032102.html",
+        "sha256": "567936bff02fa6b3bc46da567f05e45a02a601a15169ac4cd80ead700c032102"
+      },
+      "receipt": {
+        "path": "20260510_1_10.json",
+        "sha256": "a18e26297d3a08d91c41b2cbd0777694b5d5afe543d0cb3b618f55ac27e3b50d"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=10"
+    },
+    {
+      "available_at": "2026-10-15T12:31:58.220274+00:00",
+      "race_id": "20260510_1_2",
+      "raw": {
+        "path": "20260510_1_2_aed4718ff95d42ce7714be29fc60099e8196014baad13d20841a623b71415155.html",
+        "sha256": "aed4718ff95d42ce7714be29fc60099e8196014baad13d20841a623b71415155"
+      },
+      "receipt": {
+        "path": "20260510_1_2.json",
+        "sha256": "89472e8a9f2fed76805a791e61b8415b87b69fab3da37383a3283e968c717b5b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:31:58.668240+00:00",
+      "race_id": "20260510_1_3",
+      "raw": {
+        "path": "20260510_1_3_b192dedd7c9556458eecc1eb1556157881db907f3b9b4497083af2e4def86b09.html",
+        "sha256": "b192dedd7c9556458eecc1eb1556157881db907f3b9b4497083af2e4def86b09"
+      },
+      "receipt": {
+        "path": "20260510_1_3.json",
+        "sha256": "ac72a053d9676d6fee1914a2e2c7d1121871e77ba7d66ce9d031ede443593d0a"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:31:59.155651+00:00",
+      "race_id": "20260510_1_4",
+      "raw": {
+        "path": "20260510_1_4_63e465dee2c409e075f405c1b39d965dc41ae7ebc9a1f82559c89479fc17711b.html",
+        "sha256": "63e465dee2c409e075f405c1b39d965dc41ae7ebc9a1f82559c89479fc17711b"
+      },
+      "receipt": {
+        "path": "20260510_1_4.json",
+        "sha256": "75daf86036ccb6d2968ec6e93d1bf375f5e0353d37e9b530b94e1fa6f8984d51"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:31:59.557978+00:00",
+      "race_id": "20260510_1_5",
+      "raw": {
+        "path": "20260510_1_5_b7fd525e97d437d9f697f9c74ac3befe80a9cd97b5fc8342b2bc1daf0ecc2029.html",
+        "sha256": "b7fd525e97d437d9f697f9c74ac3befe80a9cd97b5fc8342b2bc1daf0ecc2029"
+      },
+      "receipt": {
+        "path": "20260510_1_5.json",
+        "sha256": "bdb9fa91d9b92515db9c97dbb274fd9c3400e2d548e4ff914a62438da94c7dbf"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:31:59.937365+00:00",
+      "race_id": "20260510_1_6",
+      "raw": {
+        "path": "20260510_1_6_34e69c14b7cb3607ed91439c0bf012973fe802cb7601884eabcf7e4f3820c57b.html",
+        "sha256": "34e69c14b7cb3607ed91439c0bf012973fe802cb7601884eabcf7e4f3820c57b"
+      },
+      "receipt": {
+        "path": "20260510_1_6.json",
+        "sha256": "a0c23c6e9c912afd9c2e001136c011c188900916c8781d5206400b1d0721acc1"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:32:00.328227+00:00",
+      "race_id": "20260510_1_7",
+      "raw": {
+        "path": "20260510_1_7_f7489734be8be1bc6f97e510aa2f33c28196c484ee464acf2f369f6355f5998a.html",
+        "sha256": "f7489734be8be1bc6f97e510aa2f33c28196c484ee464acf2f369f6355f5998a"
+      },
+      "receipt": {
+        "path": "20260510_1_7.json",
+        "sha256": "b880502322d3a52715ae6f38a4fda1c335b2879cc935a6d06e69918b629a0f75"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=7"
+    },
+    {
+      "available_at": "2026-10-15T12:32:00.754154+00:00",
+      "race_id": "20260510_1_8",
+      "raw": {
+        "path": "20260510_1_8_039ac9f603a1e1b12b279f451985f0f38f55fff2aa88e0866d39b9ce83c6bc7d.html",
+        "sha256": "039ac9f603a1e1b12b279f451985f0f38f55fff2aa88e0866d39b9ce83c6bc7d"
+      },
+      "receipt": {
+        "path": "20260510_1_8.json",
+        "sha256": "db3eaccba8cd91b8c272e24a972df5df9b5a0e9413195f3522b9e27d331f129d"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=8"
+    },
+    {
+      "available_at": "2026-10-15T12:32:01.140105+00:00",
+      "race_id": "20260510_1_9",
+      "raw": {
+        "path": "20260510_1_9_5a5d9e42d5b179ac9729098325f80fce49eab0a5b757b69039e9d268f70a9fd2.html",
+        "sha256": "5a5d9e42d5b179ac9729098325f80fce49eab0a5b757b69039e9d268f70a9fd2"
+      },
+      "receipt": {
+        "path": "20260510_1_9.json",
+        "sha256": "e52eeca4e08d5e73d1017cea34af9499b77e43b296274d5a9080e197dd882c8d"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=1&realRcDate=20260510&realRcNo=9"
+    },
+    {
+      "available_at": "2026-10-15T12:32:01.527730+00:00",
+      "race_id": "20260510_3_1",
+      "raw": {
+        "path": "20260510_3_1_872d3a1d57b63ed43caa23f93791c5ad61b98ce6649c2b5fb865ed44880657da.html",
+        "sha256": "872d3a1d57b63ed43caa23f93791c5ad61b98ce6649c2b5fb865ed44880657da"
+      },
+      "receipt": {
+        "path": "20260510_3_1.json",
+        "sha256": "8dc0f2586ad8587a7337c6bed573905dcace7cfae2986e6a49886f19fa2aedae"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=1"
+    },
+    {
+      "available_at": "2026-10-15T12:32:01.925957+00:00",
+      "race_id": "20260510_3_2",
+      "raw": {
+        "path": "20260510_3_2_7e7e68ebc7a4899b0ffd681a6a7abaa6b1d0d4eb96469e45eb8f965e99956738.html",
+        "sha256": "7e7e68ebc7a4899b0ffd681a6a7abaa6b1d0d4eb96469e45eb8f965e99956738"
+      },
+      "receipt": {
+        "path": "20260510_3_2.json",
+        "sha256": "5dede99e619d653aac6245dfde15be38795b195730daa015421c77c4709fd66c"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=2"
+    },
+    {
+      "available_at": "2026-10-15T12:32:02.326479+00:00",
+      "race_id": "20260510_3_3",
+      "raw": {
+        "path": "20260510_3_3_cbabfdcbe97f8f752d54a6ad00bfd5f15fa9befe0dd9b3877c44df823d0f20dc.html",
+        "sha256": "cbabfdcbe97f8f752d54a6ad00bfd5f15fa9befe0dd9b3877c44df823d0f20dc"
+      },
+      "receipt": {
+        "path": "20260510_3_3.json",
+        "sha256": "7043ca47eea8f3308b028976233c0871a6be0ca168bec2bcad49e4306449bb1b"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=3"
+    },
+    {
+      "available_at": "2026-10-15T12:32:02.816106+00:00",
+      "race_id": "20260510_3_4",
+      "raw": {
+        "path": "20260510_3_4_32ac8ff2784aa7857ca5b942d15f7e86f5872e55772a11e78b147b321f6f482d.html",
+        "sha256": "32ac8ff2784aa7857ca5b942d15f7e86f5872e55772a11e78b147b321f6f482d"
+      },
+      "receipt": {
+        "path": "20260510_3_4.json",
+        "sha256": "23421d59c55ec0fd5360910af9a4e58ace5dd5a96c9937e8363e3bee038d1730"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=4"
+    },
+    {
+      "available_at": "2026-10-15T12:32:03.391645+00:00",
+      "race_id": "20260510_3_5",
+      "raw": {
+        "path": "20260510_3_5_71cd78f0e982531c2ed9eeceb2729dc89ed4ca2fd71be0615e532b7336df9ff3.html",
+        "sha256": "71cd78f0e982531c2ed9eeceb2729dc89ed4ca2fd71be0615e532b7336df9ff3"
+      },
+      "receipt": {
+        "path": "20260510_3_5.json",
+        "sha256": "31f8088427426f63cd26340c2b7a325adbc5377ad9e1acef1232bc11fa06f1f6"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=5"
+    },
+    {
+      "available_at": "2026-10-15T12:32:03.902359+00:00",
+      "race_id": "20260510_3_6",
+      "raw": {
+        "path": "20260510_3_6_dbb25cb97c74daf2579846a4675d3cd0afe22d6a71a38d12690e8f5474995363.html",
+        "sha256": "dbb25cb97c74daf2579846a4675d3cd0afe22d6a71a38d12690e8f5474995363"
+      },
+      "receipt": {
+        "path": "20260510_3_6.json",
+        "sha256": "4648f5454e0b3b43f07ae038041c0ccbbc3f802c58185d5bc48d5a42bec3713e"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=6"
+    },
+    {
+      "available_at": "2026-10-15T12:32:04.466206+00:00",
+      "race_id": "20260510_3_7",
+      "raw": {
+        "path": "20260510_3_7_b3c32531baab14191da6c459d77e758b9e6913876d317185bef27bec60ad0065.html",
+        "sha256": "b3c32531baab14191da6c459d77e758b9e6913876d317185bef27bec60ad0065"
+      },
+      "receipt": {
+        "path": "20260510_3_7.json",
+        "sha256": "11fc8b21dd9225616f3948b2a7ddb209fb514e19daa1d42e35c9075ca9c671d3"
+      },
+      "url": "https://race.kra.co.kr/raceScore/ScoretableDetailList.do?Act=04&Sub=1&meet=3&realRcDate=20260510&realRcNo=7"
+    }
+  ],
+  "races": 102,
+  "rows": 1029,
+  "seed_sha256": "561bcfdc6fe2c4733e571b8c77034a2753e88794d5d7d3a6ee5d2ee2f25a5407",
+  "seed_status_counts": {
+    "api_reported_rows": 12,
+    "empty_unconfirmed": 44
+  },
+  "source_local_clock_bound": "2026-10-16T01:20:00Z",
+  "target_outcomes_loaded": false,
+  "training_approved": false,
+  "zero_meaning_verified": false
+}
