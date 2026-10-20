@@ -3,6 +3,7 @@
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import httpx
 import numpy as np
@@ -75,6 +76,42 @@ def test_complete_replay_stage_and_publication(block):
     assert block.calls == [900, 901]
     with pytest.raises(ValueError, match="reused_or_symlink"):
         forward.run(block.study)
+
+
+@pytest.mark.parametrize(
+    "damage",
+    ["runtime_drift", "missing_local_copy", "damaged_local_copy", "failure_marker"],
+)
+def test_current_replay_failure_does_not_erase_archived_publication(block, damage):
+    """A live admission failure is not evidence of historical invalidity."""
+    forward.run(block.study)
+    forward.stage(block.study)
+    _, raw, _ = forward.verify_local(block.study)
+    result = forward.witness(block.study, 901)
+    assert result["status"] == "published_before_cutoff"
+    archive = Path(result["report_path"]).parent
+    ledger, output = forward.locations(block.study)
+    if damage == "runtime_drift":
+        block.runtime["synthetic_environment"] = "changed_after_publication"
+    elif damage == "missing_local_copy":
+        (output / "paired.json").unlink()
+    elif damage == "damaged_local_copy":
+        (output / "paired.json").write_bytes(b"synthetic later damage")
+    else:
+        training.save(ledger / "failure.json", {"synthetic_later_marker": True})
+    with pytest.raises((ValueError, OSError)):
+        forward.verify_local(block.study)
+    published, witness = publication.replay(
+        archive, 901, forward.document_path(block.study), sha256(raw)
+    )
+    assert published == raw
+    assert witness == result["witness"]
+    assert github.timestamp(witness["merged_at"]) < min(
+        github.timestamp(r["feature_cutoff_at"]) for r in block.protocol["races"]
+    )
+    # This proves archived publication bytes/timing, not full inference validity,
+    # population completeness, or a hit. No outcome has been loaded.
+    assert not result["counts_as_70_percent_evidence"]
 
 
 @pytest.mark.parametrize(

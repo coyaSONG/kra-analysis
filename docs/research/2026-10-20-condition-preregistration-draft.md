@@ -285,3 +285,26 @@ regressions also passed locally. An actual evidence-replay adapter and
 append-only completeness ledger remain unimplemented activation blockers.
 This preparation selects no interval, registers no race, and performs no fit,
 live inference, outcome collection, or prospective performance comparison.
+
+## Evidence contract clarification
+
+The [follow-up evidence review](2026-10-20-condition-evidence-boundaries.md)
+specifies proposed activation gates, not a new evaluation interval. Historical
+publication and inference validity must be checked against original pinned
+evidence, independently of the current runtime gate. Local loss or later
+runtime drift cannot establish an originally failed submission. Proven absence
+requires a prebound, closed set of accepted submission slots and complete
+source-backed closure, not a missing file or a failure marker.
+
+The result observer remains unchanged. In the proposed A24/B34 adapter,
+`void_reported_no_top3` alone stays pending; undefined requires explicit official
+whole-race no-target evidence with verified identity and scope. A separate
+target-admission policy preserves the original observation and M0/API27 rules.
+The append-only umbrella ledger must distinguish physical race enrollment
+from changing official IDs, retain missed weeks and late additions, and expose
+unknown inventory scopes without manufacturing a denominator.
+
+Four synthetic publication-boundary cases and explicit observer finality
+assertions now protect these distinctions. They do not implement or approve
+the historical adapter, submission closure or completeness ledger. All original
+duration, stopping and no-retraining restrictions remain in force.

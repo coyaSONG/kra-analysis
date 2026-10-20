@@ -26,7 +26,16 @@ prospective evaluator, not that evaluator's activation.
 - [x] (2026-10-20) Ruff lint/format and diff whitespace checks pass; repeat test
   run passes 184 tests in 6.62s. Stored A24/B34 and M0/API27 commitment hashes
   match their published pins.
-- [ ] Publish, inspect required CI, and normally merge the accounting milestone.
+- [x] (2026-10-20 14:14Z) PR118 normally merged as
+  `51ef5733fa1b0a60eaecad54afeedb2602c86c69`; required Python checks passed.
+  The nonrequired security scan retained the same 17 dependency advisory rows
+  as the preceding baseline, not an all-green CI result.
+- [x] (2026-10-20 14:39Z) Follow-up Pro consultation completed; code inspection
+  and four synthetic cases separate current runtime/local failures from
+  archived publication. Added explicit observer finality assertions.
+  Recorded the proposed evidence and population contract in
+  `docs/research/2026-10-20-condition-evidence-boundaries.md`.
+- [ ] Publish and normally merge the evidence-boundary tests and draft clarification.
 - [ ] Later milestone: implement raw-evidence replay and append-only umbrella
   completeness ledger, then separately review before prospective registration.
 
@@ -39,6 +48,13 @@ A24/B34 classifier and must remain unchanged. The result observer's
 `void_reported_no_top3` is a report of void text, not proof of settlement
 finality. A future adapter must retain that distinction.
 
+`verify_local()` depends on current runtime/approval and local failure
+markers, while archived publication replay can still establish original
+public bytes after that gate fails. Four synthetic counterexamples reproduce
+this distinction. One local attempt also does not establish absence across
+arbitrary publication PRs or clones; the accepted submission slots need
+prior binding and complete source-backed closure.
+
 ## Decision Log
 
 
@@ -50,6 +66,13 @@ finality. A future adapter must retain that distinction.
 - Decision: absent prediction evidence defaults to pending, not proven failure.
   Rationale: inaccessible artifacts do not prove a missed prediction.
   Date/Author: 2026-10-20 / Codex.
+- Decision: preserve the current operating gate and build historical replay
+  separately; reported void alone is not the new adapter's undefined target.
+  Rationale: local loss/runtime drift does not prove original invalidity, and
+  blank HTML plus API void text does not prove a whole-race no-target decision.
+  Record original evidence and add separate admission policy rather than
+  rewriting old M0/API27 observations.
+  Date/Author: 2026-10-20 / Codex after completed Pro review.
 
 ## Outcomes & Retrospective
 
@@ -59,6 +82,11 @@ prediction evidence stays pending, proven prediction failures require a unique
 target before becoming misses, and partial-arm failures retain the other arm.
 The overall 70% objective remains unmet. These synthetic tests cannot
 demonstrate pre-race availability or population completeness.
+
+PR118 is merged. Follow-up validation passes 188 tests and documents stronger
+evidence requirements without changing runtime code or registering any race.
+Historical replay, submission closure and umbrella completeness remain
+unimplemented activation blockers; the consultation is not execution approval.
 
 ## Context and Orientation
 
@@ -91,6 +119,15 @@ execution protocols, and emit append-only reports with correction ancestry.
 It must not trust caller-supplied state labels as proof. Approval remains
 empty and actual dates remain unset until schedule evidence and all gates
 are available. Neither milestone authorizes real inference or fitting.
+
+Before that implementation, retain the counterexamples in
+`test_condition_forward.py` and the observer assertions in
+`test_versioned_result_observations.py`. Follow the evidence contract's original
+snapshot, closed publication slots, explicit no-target decisions and physical
+race identity requirements. The four publication tests intentionally do not
+call an outcome evaluator or claim a hit. Complete historical validation needs
+its own tests for current-checkout independence and evidence loss never
+creating a proven failure.
 
 ## Concrete Steps
 
@@ -146,3 +183,7 @@ Revision note: initial plan separates testable accounting from evidence replay
 so development cannot accidentally register or score an unverified study.
 Validation update: the first local run passed 184 tests; use the actual CI
 Ruff formatter rather than the unavailable Black executable.
+Evidence-boundary update (2026-10-20): recorded PR118 merge and completed Pro
+review, added four passing publication counterexamples and observer assertions,
+and made the remaining historical/closure/population gates explicit. This
+prevents a later adapter from treating an operating-gate failure as an outcome.
