@@ -267,3 +267,21 @@ read-only check verified all three artifact hashes and the empty registry,
 3.666824/4.000833 percentage points. `git diff --check` passed. These checks
 validate the draft's references and arithmetic, not future outcomes or the
 proposed adapter, which remains an activation blocker.
+
+## Accounting preparation after the draft
+
+`autoresearch/condition_outcome_accounting.py` implements only the proposed
+arithmetic on normalized synthetic evidence. It has no CLI and is not called
+by the forward runner or historical evaluators. It cannot establish source
+authenticity, publication timing, roster membership, correction ancestry,
+or completeness of an umbrella population. Caller-supplied verification
+states are preconditions, not evidence that those gates passed.
+
+The reducer retains every explicitly supplied race, rejects extra evidence
+IDs, separates proven failures from unknown publication evidence, and withholds
+full rates for unresolved targets or an unverified population. Its 65 tests
+cover state combinations and 80 nonempty paired count tables; 119 existing
+regressions also passed locally. An actual evidence-replay adapter and
+append-only completeness ledger remain unimplemented activation blockers.
+This preparation selects no interval, registers no race, and performs no fit,
+live inference, outcome collection, or prospective performance comparison.
