@@ -322,3 +322,10 @@ and matching environment, without fitting or creating another prediction.
 Agreement remains a numerical fact, not scoring-ready admission. Raw-source
 closure, complete submission evidence, the umbrella ledger and target admission
 remain required; no dates, IDs or sample size are registered by this preparation.
+
+The [population observation replay](2026-10-20-condition-population-observations.md)
+now connects selected public scope/journal bytes to pinned original schedule
+observations. It retains missing scopes and earlier observed IDs, but cannot
+certify physical identity, full calendar closure or the latest authoritative
+journal. Semantic events remain unverified assertions; N stays unknown and
+scoring remains disabled. This is not approval of the draft or a real interval.
