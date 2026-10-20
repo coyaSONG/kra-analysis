@@ -140,6 +140,45 @@ def inspect(research, original):
     }
 
 
+def check_registry(research, report):
+    registry = json.loads(
+        (research / "docs/research/source-readiness-2026-10-20.json").read_bytes()
+    )
+    assert registry["training_authorized"] is False
+    assert registry["admission_authority"] is False
+    assert registry["evaluation_population"] is None
+    records = {r["observation_id"]: r for r in registry["observations"]}
+    assert len(records) == len(registry["observations"]) == 6
+    for observed in report["selected_requests"]:
+        saved = records["api26-historical-" + observed["race_id"]]
+        for key in ("manifest_sha256", "fetch_started_at", "collected_at"):
+            assert saved[key] == observed[key]
+        assert saved["response_status"] == observed["classification"]
+        assert saved["raw_response_sha256"] == [
+            page["sha256"] for page in observed["pages"]
+        ]
+        assert saved["complete_rosters"] == 0
+        assert saved["runner_missing_rate"] is None
+    control = records["known-control-20261010_1_1"]
+    replay = report["positive_control"]
+    assert control["matched_feature_rows"] == replay["feature_rows"]
+    assert control["publication_document_sha256"] == replay["document_sha256"]
+    assert timestamp(control["publication_merged_at"]) == timestamp(replay["merged_at"])
+    schedule = records["official-schedules-20261020T194102"]
+    capture_path = research / schedule["capture_path"]
+    capture = json.loads(checked(capture_path, schedule["capture_sha256"]))
+    assert schedule["collected_at"] == capture["capture_completed_at"]
+    assert schedule["urls"] == [s["url"] for s in capture["sources"].values()]
+    for source in capture["sources"].values():
+        raw = checked(capture_path.parent / source["raw_file"], source["sha256"])
+        assert len(raw) == source["byte_count"]
+    report["registry_checks"] = {
+        "records": len(records),
+        "schedule_raw_hashes_verified": 4,
+        "board_observation": "human_browser_note_only_not_raw_replay",
+    }
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--research-root", type=Path, required=True)
@@ -147,4 +186,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if not __debug__:
         raise RuntimeError("assertions_must_be_enabled")
-    print(json.dumps(inspect(args.research_root, args.original_root), indent=2))
+    report = inspect(args.research_root, args.original_root)
+    check_registry(args.research_root, report)
+    print(json.dumps(report, indent=2))

@@ -142,6 +142,18 @@ The check passed: three request manifests, two empty response pages, one
 positive-control raw chain and 11 published feature rows. Target outcomes,
 stored-model scoring and fit functions are not called.
 
+The [source-readiness registry snapshot](source-readiness-2026-10-20.json)
+records these three failed requests, the board lead, the known control and
+the most recent existing schedule capture as six scoped observations. It is
+not an exhaustive catalog or machine admission policy. Each row separates
+collection/availability, joins, scoped coverage, missingness and leakage risk.
+Null missing rates mean no known denominator, not zero missingness. Confirmed
+control joins do not establish nonmissing feature values or future coverage.
+The offline companion checks registry facts against the selected raw evidence,
+including all four schedule raw hashes. The browser-only board note remains
+explicitly outside raw replay. Collection completion and later review clocks
+are separate. No new schedule/API request is made by registry validation.
+
 Regression validation: `test_prerace_hash_witness.py` and
 `test_kra_race_card_pdf_replay.py` passed **115 tests in 7.90 seconds** with
 `PYTHONDONTWRITEBYTECODE=1` and pytest `-p no:cacheprovider`. The companion
@@ -149,3 +161,9 @@ rejects an intentionally wrong source hash; Ruff and `git diff --check` pass.
 The M0/API27 commitments, A24/B34 stored-model hashes and empty review-registry
 hash were rechecked unchanged. These checks do not validate future performance
 or authenticate the newly inspected browser post's historical attachment bytes.
+
+Registry validation also rejected four in-memory mutations: enabling training,
+inventing an evaluation population, replacing unknown runner missingness with
+zero, and changing a selected manifest hash. No source file was changed by
+these negative checks. This is a bounded snapshot check, not full validation
+of every descriptive field or a replacement for prospective source admission.
