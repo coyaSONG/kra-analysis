@@ -72,6 +72,13 @@ jobs:
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_forward*.py ../../packages/scripts/autoresearch/tests/test_condition_forward.py ../../packages/scripts/autoresearch/tests/condition_forward_fixture.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_forward.py -o addopts=''
 
+      - name: Condition historical publication evidence regressions
+        working-directory: apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_historical_publication.py ../../packages/scripts/autoresearch/tests/test_condition_historical_publication.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_historical_publication.py ../../packages/scripts/autoresearch/tests/test_condition_historical_publication.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_historical_publication.py -o addopts=''
+
       - name: Condition normalized outcome accounting regressions
         working-directory: apps/api
         run: |
