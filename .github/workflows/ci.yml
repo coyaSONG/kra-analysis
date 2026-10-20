@@ -72,6 +72,16 @@ jobs:
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_forward*.py ../../packages/scripts/autoresearch/tests/test_condition_forward.py ../../packages/scripts/autoresearch/tests/condition_forward_fixture.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_forward.py -o addopts=''
 
+      - name: Historical time source audit regressions
+        working-directory: apps/api
+        env:
+          PYTHONPATH: ../../packages/scripts
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/history_time_audit.py ../../packages/scripts/autoresearch/tests/test_history_time_audit.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/history_time_audit.py ../../packages/scripts/autoresearch/tests/test_history_time_audit.py
+          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_history_time_audit.py -p no:cacheprovider -o addopts=''
+
       - name: Condition semantic review evidence regressions
         working-directory: apps/api
         env:
