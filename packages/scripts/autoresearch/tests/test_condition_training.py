@@ -2,7 +2,9 @@ import warnings
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import UTC, datetime
-from itertools import permutations
+from fractions import Fraction
+from itertools import combinations, permutations, product
+from math import prod
 
 import numpy as np
 import pytest
@@ -14,6 +16,81 @@ from autoresearch import condition_training_admission as admission
 from autoresearch import condition_training_data as data
 from autoresearch import condition_training_model as model
 from autoresearch.restricted_cohort import encoded, parse_json, sha256
+
+
+def test_marginal_selection_is_not_always_joint_exact_set_optimal():
+    """Synthetic proof of objective mismatch, not a proposed selector change."""
+    probability = {
+        ("1", "2", "3"): Fraction(30, 100),
+        ("1", "4", "5"): Fraction(25, 100),
+        ("2", "4", "5"): Fraction(24, 100),
+        ("3", "4", "5"): Fraction(21, 100),
+    }
+    horses = ("1", "2", "3", "4", "5")
+    triples = list(combinations(horses, 3))
+    marginal = {
+        horse: sum(p for triple, p in probability.items() if horse in triple)
+        for horse in horses
+    }
+    assert sum(probability.values()) == 1
+    assert sum(marginal.values()) == 3
+    expected_overlap = {
+        triple: sum(
+            p * len(set(triple) & set(target)) for target, p in probability.items()
+        )
+        for triple in triples
+    }
+    for triple in triples:
+        assert expected_overlap[triple] == sum(marginal[h] for h in triple)
+    joint_optimum = max(triples, key=lambda t: probability.get(t, Fraction(0)))
+    assert joint_optimum == ("1", "2", "3")
+    for order in permutations(horses):
+        identities = [
+            {"race_id": "synthetic", "horse_id": h, "chul_no": int(h)} for h in order
+        ]
+        selected = tuple(
+            model.select(identities, [float(marginal[h]) for h in order])[0][
+                "horse_ids"
+            ]
+        )
+        assert selected == ("1", "4", "5")
+        assert expected_overlap[selected] == max(expected_overlap.values())
+        assert expected_overlap[selected] == Fraction(39, 20)
+        assert expected_overlap[joint_optimum] == Fraction(8, 5)
+        assert probability[selected] == Fraction(1, 4)
+        assert probability[joint_optimum] == Fraction(3, 10)
+
+
+def test_independent_probability_repackaging_preserves_top_three():
+    identities = [
+        {"race_id": "synthetic", "horse_id": str(i), "chul_no": i} for i in range(1, 6)
+    ]
+    for probabilities in product((Fraction(1, 5), Fraction(4, 5)), repeat=5):
+        weights = {
+            triple: prod(
+                p if i in triple else 1 - p for i, p in enumerate(probabilities)
+            )
+            for triple in combinations(range(5), 3)
+        }
+        scores = np.log(np.array([float(p / (1 - p)) for p in probabilities]))
+        selected = tuple(
+            int(h) - 1 for h in model.select(identities, scores)[0]["horse_ids"]
+        )
+        assert weights[selected] == max(weights.values())
+        # Conditioning on set size divides all weights by the same positive sum.
+        assert sum(weights.values()) > 0
+
+
+@pytest.mark.parametrize("shift", [-1000, -3, 0, 7, 1000])
+def test_common_race_score_shift_cannot_change_selected_triple(shift):
+    identities = [
+        {"race_id": race, "horse_id": str(i), "chul_no": i}
+        for race in ("synthetic-a", "synthetic-b")
+        for i in range(1, 6)
+    ]
+    scores = np.array([5, -2, 3, 1, 3, -1, 4, 4, 0, 6], dtype=float)
+    shifted = scores + np.array([shift] * 5 + [-shift] * 5)
+    assert model.select(identities, shifted) == model.select(identities, scores)
 
 
 def test_published_execution_review_binds_exact_requirement():
