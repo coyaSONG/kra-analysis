@@ -96,6 +96,9 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/longitudinal_time_audit.py ../../packages/scripts/autoresearch/tests/test_longitudinal_time_audit.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/longitudinal_time_audit.py ../../packages/scripts/autoresearch/tests/test_longitudinal_time_audit.py
           uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_longitudinal_time_audit.py -p no:cacheprovider -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/time_repeatability.py ../../packages/scripts/autoresearch/tests/test_time_repeatability.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/time_repeatability.py ../../packages/scripts/autoresearch/tests/test_time_repeatability.py
+          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_time_repeatability.py -p no:cacheprovider -o addopts=''
 
       - name: Condition semantic review evidence regressions
         working-directory: apps/api
