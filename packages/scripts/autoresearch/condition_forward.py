@@ -36,7 +36,7 @@ def locations(study_id):
 
 
 def document_path(study_id):
-    return f"docs/research/commitments/condition-forward-v1/{study_id}/paired.json"
+    return contract.prediction_document(study_id)
 
 
 def deadline(protocol, observed):
@@ -262,6 +262,7 @@ def stage(study_id):
         raise
     return {
         "document": document_path(study_id),
+        "publication_slot": contract.publication_slot(protocol),
         "sha256": receipt["paired_sha256"],
         "status": "staged_not_public",
         "actual_fit_count": 0,
@@ -269,7 +270,15 @@ def stage(study_id):
 
 
 def witness(study_id, number):
+    protocol, _, _ = contract.admit(study_id)
+    if (
+        type(number) is not int
+        or number != contract.publication_slot(protocol)["pull_number"]
+    ):
+        raise ValueError("forward_prediction_slot_mismatch")
     protocol, raw, receipt = verify_local(study_id)
+    if number != contract.publication_slot(protocol)["pull_number"]:
+        raise ValueError("forward_prediction_slot_mismatch")
     _, output = locations(study_id)
     directory = (
         output
@@ -289,6 +298,7 @@ def witness(study_id, number):
             raise ValueError("forward_publication_bytes_or_clock_conflict")
         cutoff = min(timestamp(r["feature_cutoff_at"]) for r in protocol["races"])
         report = {
+            "publication_slot": contract.publication_slot(protocol),
             "status": "published_before_cutoff"
             if timestamp(evidence["merged_at"]) < cutoff
             else "published_after_cutoff",

@@ -183,6 +183,8 @@ def test_public_chain_readonly_and_never_scoring(bundle):
     before = snapshot(bundle.root)
     result = historical.audit(bundle.path, bundle.digest)
     assert result["status"] == "public_chain_replayed"
+    assert result["declared_publication_slot"] is None
+    assert result["selected_archive_matches_declared_slot"] is None
     assert result["all_selected_publications_before_declared_cutoff"]
     assert result["declared_race_count"] == 2
     assert all(
@@ -202,6 +204,72 @@ def test_public_chain_readonly_and_never_scoring(bundle):
     assert result["actual_fit_count"] == 0
     assert "accuracy" not in result and "denominator" not in result
     assert snapshot(bundle.root) == before
+
+
+def with_v2_slot(bundle):
+    bundle.protocol["format_version"] = "condition-forward-protocol-v2"
+    bundle.protocol["publication_slot"] = {
+        "repository": "coyaSONG/kra-analysis",
+        "pull_number": 802,
+        "document": bundle.paths["prediction"],
+    }
+    bundle.review["prediction_publication_pr"] = 802
+
+
+def bind_changed_protocol(bundle):
+    digest = sha256(encoded(bundle.protocol))
+    bundle.review["protocol"]["sha256"] = digest
+    bundle.packet["protocol_sha256"] = digest
+    bundle.write()
+
+
+def test_v2_original_slot_attribution_is_not_submission_closure(bundle, monkeypatch):
+    with_v2_slot(bundle)
+    bind_changed_protocol(bundle)
+    monkeypatch.setattr(contract, "PROTOCOL_VERSION", "some-later-live-version")
+    before = snapshot(bundle.root)
+    result = historical.audit(bundle.path, bundle.digest)
+    assert result["status"] == "public_chain_replayed"
+    assert result["selected_archive_matches_declared_slot"] is True
+    assert result["declared_publication_slot"] == bundle.protocol["publication_slot"]
+    assert result["submission_closure"] == "not_verified"
+    assert not result["usable_for_scoring"]
+    assert snapshot(bundle.root) == before
+
+
+@pytest.mark.parametrize(
+    "change", ["other_pr", "approval_pr", "review", "missing", "repo", "path"]
+)
+def test_v2_historical_slot_conflicts_are_not_scores(bundle, change):
+    with_v2_slot(bundle)
+    slot = bundle.protocol["publication_slot"]
+    if change == "other_pr":
+        slot["pull_number"] = 803
+    elif change == "approval_pr":
+        slot["pull_number"] = 801
+    elif change == "review":
+        bundle.review["prediction_publication_pr"] = 803
+    elif change == "missing":
+        del bundle.protocol["publication_slot"]
+    elif change == "repo":
+        slot["repository"] = "other/repository"
+    else:
+        slot["document"] = "docs/research/other.json"
+    bind_changed_protocol(bundle)
+    with pytest.raises(ValueError, match="slot"):
+        historical.audit(bundle.path, bundle.digest)
+
+
+def test_v2_missing_prediction_is_pending_not_absence(bundle):
+    with_v2_slot(bundle)
+    bind_changed_protocol(bundle)
+    (bundle.path.parent / "prediction/pull.json").unlink()
+    result = historical.audit(bundle.path, bundle.digest)
+    assert result["status"] == "pending_evidence"
+    assert result["selected_archive_matches_declared_slot"] is True
+    assert result["submission_closure"] == "not_verified"
+    assert "proven_absent" not in encoded(result).decode()
+    assert not result["usable_for_scoring"]
 
 
 def test_current_files_and_failure_markers_do_not_change_history(bundle, monkeypatch):

@@ -9,9 +9,15 @@ from pathlib import Path, PurePosixPath
 
 from shared.kra_race_identity import validate_race_identity
 
+from autoresearch import condition_forward_contract as contract
 from autoresearch import condition_forward_publication as publication
 from autoresearch import prerace_hash_witness as github
-from autoresearch.condition_forward_contract import MODEL_HASHES, RECEIPT_SHA, REGISTRY
+from autoresearch.condition_forward_contract import (
+    MODEL_HASHES,
+    RECEIPT_SHA,
+    REGISTRY,
+    publication_slot,
+)
 from autoresearch.kra_race_card_pdf_replay import checked_digest
 from autoresearch.restricted_cohort import encoded, parse_json, sha256
 
@@ -99,7 +105,8 @@ def positive_id(value):
 
 def protocol_population(protocol, study):
     if (
-        protocol["format_version"] != "condition-forward-protocol-v1"
+        protocol["format_version"]
+        not in {"condition-forward-protocol-v1", "condition-forward-protocol-v2"}
         or protocol["study_id"] != study
         or not protocol["races"]
     ):
@@ -160,6 +167,16 @@ def approval_record(registry, protocol, reference, study):
         )
     ):
         raise ValueError("historical_approval_binding")
+    if protocol["format_version"] == "condition-forward-protocol-v2":
+        numbers = [r.get("prediction_publication_pr") for r in records]
+        if (
+            any(type(n) is not int or n <= 0 for n in numbers)
+            or len(numbers) != len(set(numbers))
+            or review["prediction_publication_pr"]
+            != publication_slot(protocol)["pull_number"]
+            or review["prediction_publication_pr"] == review["protocol_publication_pr"]
+        ):
+            raise ValueError("historical_prediction_slot_review_mismatch")
     return review
 
 
@@ -256,10 +273,13 @@ def audit(manifest_path, expected_sha):
         "verifier_sha256": sha256(Path(__file__).read_bytes()),
         "publication_replay_sha256": sha256(Path(publication.__file__).read_bytes()),
         "github_validator_sha256": sha256(Path(github.__file__).read_bytes()),
+        "slot_validator_module_sha256": sha256(Path(contract.__file__).read_bytes()),
         "publications": facts,
         "inference_validity": "not_verified",
         "raw_input_provenance": "not_verified",
         "submission_closure": "not_verified",
+        "declared_publication_slot": None,
+        "selected_archive_matches_declared_slot": None,
         "umbrella_population": "not_verified",
         "outcomes_loaded": False,
         "counts_as_70_percent_evidence": False,
@@ -270,6 +290,22 @@ def audit(manifest_path, expected_sha):
     if protocol is None:
         return result
     ids, rosters, cutoff = protocol_population(protocol, study)
+    if protocol["format_version"] == "condition-forward-protocol-v2":
+        slot = publication_slot(protocol)
+        if (
+            slot["pull_number"] != manifest["prediction"]["pull_number"]
+            or slot["document"] != manifest["prediction"]["document"]
+            or slot["pull_number"]
+            in {
+                manifest["protocol"]["pull_number"],
+                manifest["approval"]["pull_number"],
+            }
+        ):
+            raise ValueError("historical_prediction_slot_mismatch")
+        result.update(
+            declared_publication_slot=slot,
+            selected_archive_matches_declared_slot=True,
+        )
     merges = {
         k: github.timestamp(facts[k]["witness"]["merged_at"])
         for k in KINDS
