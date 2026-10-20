@@ -315,3 +315,10 @@ of today's admission gate. It reports public-byte, timing and selection-shape
 facts only, never a scoring-ready prediction. Original numerical/input replay,
 closed submission evidence and the umbrella completeness ledger are still
 required before registration or prospective outcome evaluation.
+
+The [original snapshot replay component](2026-10-20-condition-snapshot-replay.md)
+compares archived matrix and prediction bytes using the pinned original code
+and matching environment, without fitting or creating another prediction.
+Agreement remains a numerical fact, not scoring-ready admission. Raw-source
+closure, complete submission evidence, the umbrella ledger and target admission
+remain required; no dates, IDs or sample size are registered by this preparation.
