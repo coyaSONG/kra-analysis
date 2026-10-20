@@ -308,3 +308,10 @@ Four synthetic publication-boundary cases and explicit observer finality
 assertions now protect these distinctions. They do not implement or approve
 the historical adapter, submission closure or completeness ledger. All original
 duration, stopping and no-retraining restrictions remain in force.
+
+The [historical publication component](2026-10-20-condition-historical-publication.md)
+now replays pinned original protocol/approval/prediction archives independently
+of today's admission gate. It reports public-byte, timing and selection-shape
+facts only, never a scoring-ready prediction. Original numerical/input replay,
+closed submission evidence and the umbrella completeness ledger are still
+required before registration or prospective outcome evaluation.

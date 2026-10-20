@@ -35,7 +35,9 @@ prospective evaluator, not that evaluator's activation.
   archived publication. Added explicit observer finality assertions.
   Recorded the proposed evidence and population contract in
   `docs/research/2026-10-20-condition-evidence-boundaries.md`.
-- [ ] Publish and normally merge the evidence-boundary tests and draft clarification.
+- [x] (2026-10-20 14:46Z) PR119 normally merged as
+  `84eddb64cc7e04bce47c5d41edd53d29c02777a2`; required Python checks passed,
+  with the unchanged nonrequired security advisory failure documented.
 - [ ] Later milestone: implement raw-evidence replay and append-only umbrella
   completeness ledger, then separately review before prospective registration.
 
@@ -187,3 +189,6 @@ Evidence-boundary update (2026-10-20): recorded PR118 merge and completed Pro
 review, added four passing publication counterexamples and observer assertions,
 and made the remaining historical/closure/population gates explicit. This
 prevents a later adapter from treating an operating-gate failure as an outcome.
+Continuation update: PR119 is merged. The first historical publication
+component is tracked separately in `condition-historical-publication.md`;
+full historical inference, closure and population verification remain pending.
