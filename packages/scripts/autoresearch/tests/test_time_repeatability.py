@@ -257,3 +257,42 @@ def test_preserved_input_has_full_membership_and_original_conflict():
     assert source["rows"] == len(source["observations"]) == 11523
     assert source["races"] == 1156
     assert source["issues"] == {"cumulative_clock_order_conflict": 1}
+
+
+def test_published_result_is_pinned_and_not_performance_evidence():
+    root = Path(__file__).resolve().parents[4]
+    raw = (
+        root / "docs/research/experiments/2026-10-20-time-repeatability/report.json"
+    ).read_bytes()
+    assert audit.digest(raw) == (
+        "c3ff4a7e71463bf753d7773192327f6746055a9a948c778e81cf9a09203b16eb"
+    )
+    result = json.loads(raw)
+    assert result["implementation_sha256"] == audit.digest(
+        Path(audit.__file__).read_bytes()
+    )
+    assert result["source_report"] == audit.SOURCE
+    assert len(result["observations"]) == result["rows"] == 11523
+    assert len(result["references"]) == result["races"] == 1156
+    assert result["pair_status"] == {
+        "no_prior": 6350,
+        "both_unavailable": 1993,
+        "current_unavailable": 8,
+        "prior_unavailable": 6,
+        "paired": 3166,
+    }
+    assert result["complete_pairs"] == 3166
+    assert result["paired_horses"] == 1584
+    assert result["paired_current_races"] == 612
+    assert len(result["by_venue_distance"]) == 30
+    assert len(result["leave_one_current_month_out"]) == 6
+    assert result["fits"] == result["network_requests"] == 0
+    assert result["future_dates_and_n"] is result["accuracy"] is None
+    for flag in (
+        "historical_prerace_verified",
+        "october_16_18_outcomes_loaded",
+        "incremental_predictive_value_verified",
+        "training_approved",
+        "counts_as_70_percent_evidence",
+    ):
+        assert result[flag] is False

@@ -13,8 +13,8 @@ study cannot establish incremental predictive value or 70% exact-triple success.
 
 - [x] Confirmed PR130 merge and clean isolated worktree; read predecessor audits.
 - [x] Fixed analysis rules before computing any correlations in this study.
-- [ ] Implement and test quantities, nearest-prior selection and diagnostics.
-- [ ] Execute once, independently verify, and interpret limitations.
+- [x] Implement and test quantities, nearest-prior selection and diagnostics.
+- [x] Execute once, independently verify, and interpret limitations.
 - [ ] Pass required checks and normally merge the bounded change.
 
 ## Decision Log
@@ -94,9 +94,11 @@ claim is permitted by this descriptive test suite.
 
 ## Surprises & Discoveries
 
-Pending execution. The stronger whole-reference rule may propagate PR130's one
-withheld row to its race's centered quantities. Preserve that propagation rather
-than quietly computing a median from only the ten unaffected rows.
+The stronger whole-reference rule withholds all11 members of PR130's conflicting
+race and six later pairs; 3,166 complete pairs remain across1,584 horses and612
+current races. This differs from the inventory's any-usable-prior count3,179.
+The fixed pace-recurrence rho is0.3012, while prior pace/current rank is only
+-0.0741. These are dependent historical associations, not prediction accuracy.
 
 ## Idempotence and Recovery
 
@@ -121,8 +123,21 @@ forward registry, date/roster/N, saved-model bytes and fit receipts unchanged.
 
 ## Outcomes & Retrospective
 
-Pending execution. Goal remains70%, unmet; future dates/roster/N remain unset.
+Executed once at2026-10-20T19:17:06.927296Z after method commitf8aa2b5.
+Independent SQLite/NumPy calculations matched all11,523 rows,1,156 references,
+30 groups, six current-month deletion summaries and1,000-draw intervals.
+Result SHA256:c3ff4a7e71463bf753d7773192327f6746055a9a948c778e81cf9a09203b16eb.
+No fitted model, saved-model scoring or new source request occurred.
+Local validation:256 tests across seven historical audit suites pass, including
+31 new-module tests; Ruff lint and format checks pass. The initial sandboxed
+pytest invocation could not create temporary files; an authorized invocation
+completed successfully without changing the tests or data.
+Goal remains70%, unmet; future dates/roster/N remain unset.
 
 Initial plan: move from measurement availability to a bounded repeatability
 diagnostic with explicitly dependent observations and no retrospective validation
 claim.
+
+Execution update: preserve the first result unchanged after independent numerical
+verification. Publish all missingness and diagnostics rather than selecting a
+favorable distance or month. Required CI and normal merge remain to be completed.
