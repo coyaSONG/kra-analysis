@@ -329,3 +329,11 @@ observations. It retains missing scopes and earlier observed IDs, but cannot
 certify physical identity, full calendar closure or the latest authoritative
 journal. Semantic events remain unverified assertions; N stays unknown and
 scoring remains disabled. This is not approval of the draft or a real interval.
+
+The [semantic review evidence component](2026-10-20-condition-semantic-review.md)
+now distinguishes actual account approval of exact decision bytes from a
+declared reviewer name. It requires owner-approved delegation, separate
+decision review and original source excerpts. Accepted output remains human
+attestation, not proof of source meaning, complete inventory or scoring
+admission. No actual registry or approval is created; corrections and
+population admission still require a separately implemented versioned policy.
