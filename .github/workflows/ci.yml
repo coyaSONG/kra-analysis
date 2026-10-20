@@ -72,6 +72,16 @@ jobs:
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_forward*.py ../../packages/scripts/autoresearch/tests/test_condition_forward.py ../../packages/scripts/autoresearch/tests/condition_forward_fixture.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_forward.py -o addopts=''
 
+      - name: Condition semantic review evidence regressions
+        working-directory: apps/api
+        env:
+          PYTHONPATH: ../../packages/scripts
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_review_evidence.py ../../packages/scripts/autoresearch/condition_semantic*.py ../../packages/scripts/autoresearch/tests/semantic_review_fixture.py ../../packages/scripts/autoresearch/tests/test_condition_semantic_review.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_review_evidence.py ../../packages/scripts/autoresearch/condition_semantic*.py ../../packages/scripts/autoresearch/tests/semantic_review_fixture.py ../../packages/scripts/autoresearch/tests/test_condition_semantic_review.py
+          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_semantic_review.py -p no:cacheprovider -o addopts=''
+
       - name: Condition population observation ledger regressions
         working-directory: apps/api
         env:
