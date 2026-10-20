@@ -1,0 +1,1259 @@
+{
+  "accuracy": null,
+  "all_seed_record_identities_joined": true,
+  "by_meet": {
+    "1": {
+      "fields": {
+        "buG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buG2fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buG4fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buG6fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buG8fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "buS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_10_8fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_1fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_2fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_3fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_4_2fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_6_4fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "bu_8_6fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "jeG1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "jeG3fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "jeS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "je_1cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "je_2cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "je_3cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "je_4cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 431
+        },
+        "rcTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        },
+        "seG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        },
+        "seG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        },
+        "seS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        },
+        "se_1cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 103,
+          "zero": 328
+        },
+        "se_2cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 123,
+          "zero": 308
+        },
+        "se_3cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        },
+        "se_4cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 417,
+          "zero": 14
+        }
+      },
+      "races": 40,
+      "rows": 431
+    },
+    "2": {
+      "fields": {
+        "buG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buG2fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buG4fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buG6fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buG8fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "buS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_10_8fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_1fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_2fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_3fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_4_2fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_6_4fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "bu_8_6fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "jeG1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "jeG3fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "jeS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "je_1cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "je_2cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 27,
+          "zero": 271
+        },
+        "je_3cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "je_4cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "rcTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 296,
+          "zero": 2
+        },
+        "seG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "seG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "seS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "se_1cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "se_2cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "se_3cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        },
+        "se_4cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 298
+        }
+      },
+      "races": 32,
+      "rows": 298
+    },
+    "3": {
+      "fields": {
+        "buG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "buG2fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "buG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "buG4fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "buG6fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 172,
+          "zero": 128
+        },
+        "buG8fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 11,
+          "zero": 289
+        },
+        "buS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "buS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_10_8fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 11,
+          "zero": 289
+        },
+        "bu_1fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_2fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_3fGTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_4_2fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_6_4fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "bu_8_6fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 172,
+          "zero": 128
+        },
+        "jeG1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "jeG3fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "jeS1fTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "je_1cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "je_2cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "je_3cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "je_4cTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "rcTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 298,
+          "zero": 2
+        },
+        "seG1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "seG3fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "seS1fAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "se_1cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "se_2cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "se_3cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        },
+        "se_4cAccTime": {
+          "absent": 0,
+          "boolean": 0,
+          "empty": 0,
+          "negative": 0,
+          "nonfinite": 0,
+          "nonnumeric": 0,
+          "null": 0,
+          "positive": 0,
+          "zero": 300
+        }
+      },
+      "races": 30,
+      "rows": 300
+    }
+  },
+  "captures": [
+    {
+      "available_at": "2026-10-15T12:29:49.756189+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "2a321ccdccab66bfe5869f17b5fb9db2323ddfa5b7503b592f2ab74249b45bfe"
+        }
+      ],
+      "result": {
+        "path": "results/20260501_2_20261015T122948.703228Z_1572c6b179c1/capture.json",
+        "sha256": "d9a0dd54e4bc9efe78358d99830c480561ceefacbbece4b945ede495c90c6797"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:29:50.798300+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "822e8c34631a5f718f17213a28d8cd4914dac5956076a50dd28d1d9eac50b578"
+        }
+      ],
+      "result": {
+        "path": "results/20260501_3_20261015T122949.761870Z_23d0d2ce70bb/capture.json",
+        "sha256": "e16f445ea8661d9a92f4a9fb443339aff28de0a0d5336b3d21e77aacce151857"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:29:53.692603+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "9bac65fd1d07fae8c45b7830b9cfe48d5efb250c3b6b518ca98b74d0adcc0aa2"
+        },
+        {
+          "page_no": 2,
+          "sha256": "023b26d9915c904ff1e3ff18af61a19dd705ab8211e6e2e6a33a2e289a6aa164"
+        }
+      ],
+      "result": {
+        "path": "results/20260502_1_20261015T122951.747896Z_bb9bd4d6a9e0/capture.json",
+        "sha256": "823cdcd4848b1e32a70a69be0b6a60ca7437fc2780b9598f507bd2556a8c92a0"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:29:54.730417+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "d98352d1ff8e72c3d31973d91f8e130f6b5e49b56a80caa5456664f1050c8ac2"
+        }
+      ],
+      "result": {
+        "path": "results/20260502_2_20261015T122953.701223Z_fad19b1254e4/capture.json",
+        "sha256": "739bcc53d1495476fba3b07aa7a2deae02dae9c833b067b5ed6204af2ca6b08d"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:29:58.720148+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "5dd4a72d27e506c05ef5d01b888176729c97eb4b48b3540e1d46f751a73fd065"
+        },
+        {
+          "page_no": 2,
+          "sha256": "ed66cec1a8befeedea53949eac1a9258e983420727e4955f575f8f8cae368b8f"
+        }
+      ],
+      "result": {
+        "path": "results/20260503_1_20261015T122956.702385Z_bca442f7647b/capture.json",
+        "sha256": "a63ed3a0549c50dfc2cdb04223edbb1cc3914c0eb05f1b94f811e002c49b4106"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:00.772435+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "fe669d25ac3e30d7b032f28f37cf1da1d60128dd4c3eee0365a65bebf8fa15f0"
+        }
+      ],
+      "result": {
+        "path": "results/20260503_3_20261015T122959.721901Z_f1040ded48d0/capture.json",
+        "sha256": "7beeac5b05ed782911a4da5d98ad4ef9971e7d717987b44d1006256a392f14ff"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:19.884184+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "69995269d762af86b1726b53001a0af8125469433967221bf36f63c91fd67c44"
+        }
+      ],
+      "result": {
+        "path": "results/20260508_2_20261015T123018.834557Z_00992ea9ec98/capture.json",
+        "sha256": "fbe22fd51ad2b4c205590162fa1539af70786910db571f65af75cb1f187cd66a"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:20.890020+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "00d3a05daaac9bd39696200e9c3ff695bd0e04e0253bfcbbc859392d27355862"
+        }
+      ],
+      "result": {
+        "path": "results/20260508_3_20261015T123019.887928Z_08920edb4170/capture.json",
+        "sha256": "a27af04c7a66aa3e8df6d023621678b97386b1e32c15f9ca30e2dcda1bcef9f2"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:23.861905+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "b5041325825fa408410d704f65085135247d64972b0c36766dded29638956c27"
+        },
+        {
+          "page_no": 2,
+          "sha256": "9111f8bcaa996474b043102042c04b198050fcb133e999439171c5122e217cfc"
+        }
+      ],
+      "result": {
+        "path": "results/20260509_1_20261015T123021.852595Z_99afa30f703a/capture.json",
+        "sha256": "1c49a4285e24516583aca2cccaa8507186a4b9a92a02020b1c0a2e551826af47"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:24.904464+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "1deccd1ccc996acb5ce56df0868c252a31288d515a3e79dd907106b7372b528b"
+        }
+      ],
+      "result": {
+        "path": "results/20260509_2_20261015T123023.866226Z_8a532d82baf3/capture.json",
+        "sha256": "cee52b70aea0fdf4e09430fb3bd9ae315de8a0c3da36d6fba4f2aad89f83023e"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:28.972928+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "7ef57f4c0b1ad936c06863730856d9ac0b0243e7de4bd62998d286c2f9e145f2"
+        },
+        {
+          "page_no": 2,
+          "sha256": "396cb98e8a6121a97a615d9478a91f05e4035b75209d6693407a16851dd029dd"
+        }
+      ],
+      "result": {
+        "path": "results/20260510_1_20261015T123026.910741Z_8d12316d14e9/capture.json",
+        "sha256": "efd40e0bfd66c889023804920abb594e2bd6aa445c426f45f4272024ba5413ad"
+      }
+    },
+    {
+      "available_at": "2026-10-15T12:30:30.944293+00:00",
+      "page_pins": [
+        {
+          "page_no": 1,
+          "sha256": "dff7b705f5c18af3c5c05b3283bf1bd2584d39d544f8117bfe3bad31029ba738"
+        }
+      ],
+      "result": {
+        "path": "results/20260510_3_20261015T123029.893871Z_ea9d998a0f27/capture.json",
+        "sha256": "9691bea74371b764a109d43a17adb7ace47bbdb117c7412a098debf374dd4550"
+      }
+    }
+  ],
+  "complete_actual_start_history_verified": false,
+  "counts_as_70_percent_evidence": false,
+  "created_at": "2026-10-20T16:46:29.102421+00:00",
+  "dates": [
+    "20260501",
+    "20260502",
+    "20260503",
+    "20260508",
+    "20260509",
+    "20260510"
+  ],
+  "field_units_verified": false,
+  "fields": [
+    "buG1fAccTime",
+    "buG2fAccTime",
+    "buG3fAccTime",
+    "buG4fAccTime",
+    "buG6fAccTime",
+    "buG8fAccTime",
+    "buS1fAccTime",
+    "buS1fTime",
+    "bu_10_8fTime",
+    "bu_1fGTime",
+    "bu_2fGTime",
+    "bu_3fGTime",
+    "bu_4_2fTime",
+    "bu_6_4fTime",
+    "bu_8_6fTime",
+    "jeG1fTime",
+    "jeG3fTime",
+    "jeS1fTime",
+    "je_1cTime",
+    "je_2cTime",
+    "je_3cTime",
+    "je_4cTime",
+    "rcTime",
+    "seG1fAccTime",
+    "seG3fAccTime",
+    "seS1fAccTime",
+    "se_1cAccTime",
+    "se_2cAccTime",
+    "se_3cAccTime",
+    "se_4cAccTime"
+  ],
+  "fits": 0,
+  "format_version": "history-time-field-audit-v1",
+  "historical_prerace_availability_verified": false,
+  "implementation_sha256": "bedc7336fb13eadbd03c3fff07fd000b7fa7132c022a1070e5bb09a4784cf1c9",
+  "interpretation": "raw_value_states_not_sectional_units_or_feature_eligibility",
+  "models_modified": false,
+  "network_requests": 0,
+  "non_row_units_retained_by_status": {
+    "empty_unconfirmed": 44
+  },
+  "races": 102,
+  "row_evidence_counts": {
+    "ranked_finish_observed": 1010,
+    "unresolved": 19
+  },
+  "rows": 1029,
+  "sectional_cross_source_agreement_verified": false,
+  "seed_sha256": "561bcfdc6fe2c4733e571b8c77034a2753e88794d5d7d3a6ee5d2ee2f25a5407",
+  "seed_status_counts": {
+    "api_reported_rows": 12,
+    "empty_unconfirmed": 44
+  },
+  "source": "https://apis.data.go.kr/B551015/API214_1/RaceDetailResult_1",
+  "source_local_clock_bound": "2026-10-16T01:20:00Z",
+  "target_outcomes_loaded": false,
+  "training_approved": false,
+  "zero_semantics_verified": false
+}
