@@ -189,9 +189,9 @@ jobs:
       - name: Official schedule regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_schedule.py
-          uv run --frozen ruff format --check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_schedule.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_schedule.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule{_snapshot,_probe}.py ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py
+          uv run --frozen ruff format --check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule{_snapshot,_probe}.py ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api
         run: |
