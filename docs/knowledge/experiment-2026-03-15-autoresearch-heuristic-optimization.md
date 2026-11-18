@@ -5,6 +5,8 @@
 **Status:** completed
 **Related files:** `packages/scripts/autoresearch/train.py`, `packages/scripts/autoresearch/prepare.py`
 
+> **2026-11-19 재검증:** 아래 `set_match`는 3두 완전 적중률이 아니라 맞힌 말 수를 3으로 나눈 평균이다. 보존된 500경주에서 0.667은 재현됐지만 완전 일치는 123/500이었다. 배당의 사전 가용성과 문서에 적힌 연간 1,842경주 전체는 확인되지 않았다. [재현과 출처 한계](../research/2026-11-19-legacy-metric-lineage.md)를 참조한다.
+
 ## Context
 
 Codex가 초기 autoresearch 실험(horse_place_rate 기반, set_match=0.700)을 수행한 후, Claude가 후속 최적화를 진행. 총 1,842경주 데이터를 활용하여 체계적 피처 탐색 및 가중치 최적화.

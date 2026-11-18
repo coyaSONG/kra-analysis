@@ -10,7 +10,7 @@
 
 ## Experiments
 - [Past Top3 Stats A/B 실험](experiment-2026-03-15-past-top3-stats-ablation.md) — 최근 90일 top3 진입률이 적중률을 높이는지 검증 (실행 대기)
-- [Autoresearch 휴리스틱 최적화](experiment-2026-03-15-autoresearch-heuristic-optimization.md) — 1,842경주 기반 최적화, 최종 set_match=0.640/0.667, LLM 하이브리드 실패 확인
+- [Autoresearch 휴리스틱 최적화](experiment-2026-03-15-autoresearch-heuristic-optimization.md) — 역사적 부분점수 `set_match=0.640/0.667` 보고. [완전 적중과 입력 시각 재검증](../research/2026-11-19-legacy-metric-lineage.md)
 
 ## Discoveries
 - [DB 데이터 저장 구조](discovery-2026-03-15-db-data-structure.md) — basic_data vs enriched_data 용도 차이, result_data는 top3 배열만 저장
