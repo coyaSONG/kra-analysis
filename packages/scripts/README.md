@@ -71,6 +71,14 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze 
 
 `audit`은 원문 해시와 네 출처를 재검증하며, 불완전·불일치·미공표 상태에서는 종료 코드 2를 반환합니다. 미공표 날짜는 경주가 없는 날로 확정하지 않습니다. `freeze`는 해당 날짜의 첫 경주 30분 전보다 이른 시점에만 허용되며 기존 출력은 덮어쓰지 않습니다. 다른 날짜의 출처 충돌도 해결되기 전에는 동결하지 않습니다.
 
+최초 공개 여부만 제한적으로 확인하려면 기존 `capture` 대신 다음 선택 명령을 사용합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_probe --race-date <YYYYMMDD> --output-dir .cache/autoresearch/forward-schedule
+```
+
+전국표의 구조를 검증한 뒤 지정한 한국시간 날짜가 나타났을 때만 같은 수집에서 지역표를 읽습니다. 날짜 미표시, 빈 응답, 표 검증 실패, 인증 요구, 접근 거부, 호출 제한은 `first_date_probe.json`에 서로 다른 상태로 남깁니다. 생략한 지역표는 `not_attempted`로 기록되며, 이 기록만으로는 동결할 수 없습니다. `national_date_seen`도 전국표의 날짜 확인일 뿐, 전체표 대사 완료나 실제 출주 확인은 아닙니다. 마감 전 변경 확인에는 이 명령 대신 기존대로 네 출처를 모두 확인합니다.
+
 동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
 
 ## 전체 경주표의 제한된 API26 수집
