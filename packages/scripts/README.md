@@ -86,16 +86,35 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_intake plan \
   --date <YYYYMMDD> --date <YYYYMMDD>
 ```
 
-실제 수집은 같은 인자로 `collect`를 실행하고 `--max-requests <한도>`,
-`--api-key-file <키-파일>`, `--output-dir .cache/autoresearch/api26-scope-intake`
-를 추가합니다. 이미 보존된 원본에는 `--reuse-entry <entry_capture.json> <sha256>`
-를 지정할 수 있습니다. 완전한 해당 범위를 재현하면 그 범위는 호출하지 않습니다.
+실제 수집은 고정한 경주표에 `collect`를 실행하고 `--first-cutoff <시각>`
+(시간대가 있는 ISO 8601), `--max-requests <한도>`, `--api-key-file <키-파일>`,
+`--output-dir .cache/autoresearch/api26-scope-intake`를 추가합니다.
+이미 보존된 원본에는 `--reuse-entry <entry_capture.json> <sha256>`를 지정할 수
+있습니다. 완전한 해당 범위를 재현하면 그 범위는 호출하지 않습니다.
 동일한 출력 폴더에서 겹치는 날짜를 다시 예약할 수 없습니다.
 
-마감은 고정한 전체표의 첫 출발 30분 전입니다. 첫 실패에서 추가 호출을 중단하며,
-인증 오류·접근 거부·호출 제한·빈 응답을 구분합니다. 빈 응답이나 미시도 범위를
+마감은 최초 고정한 전체표의 첫 출발 30분 전입니다. 제출한 표로 계산한 마감이
+이미 고정한 시각과 다르면 예약이나 호출 없이 중단합니다. 첫 수집 실패에서도
+추가 호출을 중단하고 인증 오류·접근 거부·호출 제한·빈 응답을 구분합니다.
+빈 응답이나 미시도 범위를
 경주 없음으로 집계하지 않습니다. 보존된 원본·예약·수집 기록은 로컬 자료이며
 등록, 마감 전 공개 증명 또는 예측이 아닙니다.
+
+마감 전, 완료된 `receipt.json` 및 SHA256과 처음 고정한 전체 경주표의 SHA256,
+최초 마감 시각을 별도로 넘겨 모델 입력을 확인합니다. 접수 기록에 새로 적힌
+값으로 원래 기준을 바꾸지 않습니다. 예약·전체 경주표·원본 페이지를 다시 읽고
+기존 M0 입력 변환기로 모든 경주를 확인합니다. API27도 이 데이터를 공유합니다. 날짜·경주·원본 핀과
+특성별 누락 수가 포함된 로컬 입력을 반환하며 추가 호출이나 파일 변경은 없습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_inputs \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각>
+```
+
+원본 불일치, 해석할 수 없는 특성, 또는 마감 경과 시 부분 입력을 내보내지
+않습니다. `verified_local_inputs_only`는 예측 실행, 승인, 등록이나 공개를
+의미하지 않으며 이전 구간의 입력 예약을 대체하지 않습니다.
 
 ## 말별 휴양 대용값 진단
 

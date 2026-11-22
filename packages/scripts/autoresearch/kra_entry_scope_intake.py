@@ -113,7 +113,7 @@ def _scope_evidence(root, scope, ref, *, observed, cutoff):
     }
 
 
-def plan_intake(root, schedule, dates, *, reuse=(), observed=None):
+def plan_intake(root, schedule, dates, *, first_cutoff=None, reuse=(), observed=None):
     """No HTTP, inference, or study creation during planning."""
     root = root.resolve()
     path, _ = _pinned(root, schedule)
@@ -164,6 +164,8 @@ def plan_intake(root, schedule, dates, *, reuse=(), observed=None):
     cutoff = min(
         timestamp(r["scheduled_start_at"]) for rows in groups.values() for r in rows
     ) - timedelta(minutes=FEATURE_CUTOFF_MINUTES)
+    if first_cutoff is not None and timestamp(first_cutoff) != cutoff:
+        raise ValueError("scope_intake_original_cutoff_conflict")
     if observed >= cutoff:
         raise ValueError("scope_intake_first_block_cutoff_passed")
 
@@ -389,13 +391,17 @@ async def capture_intake(
     schedule,
     dates,
     *,
+    first_cutoff,
     reuse=(),
     max_requests,
     api_key_file,
     clock: Callable[[], datetime] = now,
     transport: httpx.AsyncBaseTransport | None = None,
 ):
+    cutoff = timestamp(first_cutoff)
     current = _utc(clock())
+    if current >= cutoff:
+        raise ValueError("scope_intake_first_block_cutoff_passed")
     underlying = clock
 
     def checked_clock():
@@ -408,11 +414,12 @@ async def capture_intake(
 
     clock = checked_clock
     root = root.resolve()
-    plan = plan_intake(root, schedule, dates, reuse=reuse, observed=_utc(clock()))
+    plan = plan_intake(
+        root, schedule, dates, first_cutoff=first_cutoff, reuse=reuse, observed=clock()
+    )
     budget = plan["max_http_requests"]
     if type(max_requests) is not int or max_requests < budget:
         raise ValueError("scope_intake_budget_not_authorized")
-    cutoff = timestamp(plan["first_block_cutoff"])
     out = archive_path(output_root, archive_root=root)
     out.mkdir(parents=True, exist_ok=True)
     with exclusive(out):
@@ -480,6 +487,7 @@ def main(argv=None):
     ap.add_argument("mode", choices=("plan", "collect"))
     ap.add_argument("--schedule-capture", required=True)
     ap.add_argument("--schedule-sha256", required=True)
+    ap.add_argument("--first-cutoff", help="Previously fixed cutoff with timezone")
     ap.add_argument("--date", action="append", required=True)
     ap.add_argument("--reuse-entry", nargs=2, action="append", default=[])
     ap.add_argument("--output-dir", type=Path)
@@ -490,16 +498,24 @@ def main(argv=None):
     ref = {"path": args.schedule_capture, "sha256": args.schedule_sha256}
     reuse = [{"path": path, "sha256": sha} for path, sha in args.reuse_entry]
     if args.mode == "plan":
-        print(json.dumps(plan_intake(root, ref, args.date, reuse=reuse), indent=2))
+        plan = plan_intake(
+            root, ref, args.date, first_cutoff=args.first_cutoff, reuse=reuse
+        )
+        print(json.dumps(plan, indent=2))
         return 0
-    if args.output_dir is None or args.max_requests is None:
-        ap.error("collect requires --output-dir and --max-requests")
+    if (
+        args.output_dir is None
+        or args.max_requests is None
+        or args.first_cutoff is None
+    ):
+        ap.error("collect requires --first-cutoff, --output-dir and --max-requests")
     path, result = asyncio.run(
         capture_intake(
             root,
             args.output_dir,
             ref,
             args.date,
+            first_cutoff=args.first_cutoff,
             reuse=reuse,
             max_requests=args.max_requests,
             api_key_file=args.api_key_file,

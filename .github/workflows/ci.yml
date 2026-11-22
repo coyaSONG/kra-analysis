@@ -195,8 +195,8 @@ jobs:
       - name: Bounded API26 scope intake regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/autoresearch/kra_entry_scope_intake.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_intake.py
-          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/kra_entry_scope_intake.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_intake.py
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/kra_entry_scope_{intake,inputs}.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_intake.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/kra_entry_scope_{intake,inputs}.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_intake.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_intake.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api

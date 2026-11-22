@@ -27,7 +27,23 @@ The output is a local source receipt, not a study or forecast.
   bodies as gateway code 30 without making either request again.
 - [x] (2026-11-22 06:00Z) Pass 350 capture, replay, and evaluation
   tests, including simulated denials and ambiguous gateway bodies.
-- [ ] Record the exact remote check status before any normal merge.
+- [x] (2026-11-22 06:20Z) Trace the completed receipt to the fixed
+  models: intake does not validate the features each scorer reads.
+- [x] (2026-11-22 06:21Z) Add a no-network, whole-card input preflight
+  with source and coverage checks. The 14-race synthetic card shares
+  the exact same inputs with API27 and leaves every source unchanged.
+- [x] (2026-11-22 06:22Z) Pass 403 regressions and the lint and format
+  checks. Both original October prediction hashes are unchanged.
+- [x] (2026-11-22 06:22Z) Recheck PR 141 at
+  `7c36040618b92c5365014079ffaaaf9bdc7abb5a`: Python Checks, Scripts
+  Checks, and API Docker Build passed; Security Checks still failed.
+- [x] (2026-11-22 06:45Z) Require the original whole-card cutoff for collection,
+  and both the original schedule hash and cutoff for input readback.
+- [x] (2026-11-22 06:46Z) Pass 402 focused and related tests. Replay
+  304 races without requests; verify five revised runner counts with
+  identical cutoffs and reject substitute schedule hashes in tests.
+- [ ] Release the preflight through normal review after the required
+  checks clear. Keep the preflight changes local in the meantime.
 
 ## Surprises & Discoveries
 
@@ -78,6 +94,23 @@ clock reference for historical replay, not a backdated capture.
 Tests also reject a result at the exact first cutoff, after preserving
 the original raw response. Both published October hashes are unchanged.
 
+The preflight tests cover a 14-race synthetic card with 140
+declarations and five intake pages, including a race found only on the
+second page. API27's existing reader returns equal input rows for every
+race. Reuse makes no additional requests. Null ratings remain counted
+as missing; an absent field or impossible career counts block the
+entire preflight. A late readback or changed pin cannot admit a card.
+There was no live capture, scoring, registration, or publication.
+
+The cutoff check replays the six archived original schedules against
+their recorded cutoffs. The October 23 and November 13 blocks each
+have a later, still pre-cutoff schedule with all the same race IDs
+and the same cutoff, but changed advertised runner counts (three and
+two races respectively). A cutoff match does not prove a schedule
+match. Readback requires the original hash separately from the receipt;
+neither a reissued schedule nor a later derived cutoff reopens a block.
+Source revisions are separate evidence, not instructions to drop races.
+
 ## Context and Orientation
 
 Use the separated kra-analysis-race-card-pdf checkout, Python 3.13 and
@@ -94,6 +127,24 @@ reservation, a bounded injected HTTP client, and a complete raw replay
 for each scope. Add tests using httpx.MockTransport and the existing
 local schedule fixture. Document the two entry points and ensure the
 new tests run in the existing Python Checks job.
+
+Add `kra_entry_scope_inputs.py` after collection. This read-only
+preflight takes the path and SHA256 of a completed receipt. It replays
+the pinned reservation, official schedule, and all captured or reused
+sources. It checks availability of every source and completion of
+readback before the earliest deadline. Collection requires the
+externally fixed cutoff before any reservation or request. Readback
+requires that cutoff and the original schedule SHA256 as separate
+inputs. These are caller pins, not approvals. Run the unchanged M0 input
+projection for each race; API27 uses the same rows. Return the entire
+population with source pins and per-field missing counts, or reject
+the input. A whole-roster capture can still have invalid model input,
+such as an absent required field or impossible career counts. No
+scoring, study approval, input reservation, or publication occurs.
+
+Keep the existing October runner unchanged: it has its own hash-bound
+implementation, dated population, source reservation and publication
+rules. A new preflight cannot act as evidence of any of those events.
 
 ## Concrete Steps
 
@@ -150,4 +201,6 @@ Revision 2026-11-22 05:49Z: Record the mock tests, exact archive
 coverage and the inclusive fail-closed cutoff boundary.
 Revision 2026-11-22 05:51Z: Record the credential-argument syntax
 correction; no real credential or scanner exemption is part of this work.
+Revision 2026-11-22 06:46Z: Record the original cutoff and schedule
+checks, real schedule-revision replay and scoped regression evidence.
 ```

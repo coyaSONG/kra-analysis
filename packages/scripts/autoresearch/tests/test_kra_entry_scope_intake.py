@@ -11,6 +11,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from autoresearch import api27_forward, local_m0_inference
+from autoresearch.kra_entry_scope_inputs import preflight
 from autoresearch.kra_entry_scope_intake import (
     MAX_DENIAL_BYTES,
     _capture_scope,
@@ -84,7 +86,16 @@ def inputs(tmp_path):
     return tmp_path, pin(tmp_path, schedule)
 
 
-def run(inputs, *, provide=mock_gateway, reuse=(), limit=4, clock=lambda: NOW):
+def run(
+    inputs,
+    *,
+    provide=mock_gateway,
+    reuse=(),
+    limit=4,
+    clock=lambda: NOW,
+    output="scoped",
+    first_cutoff=DUE.isoformat(),
+):
     root, schedule = inputs
     calls = []
 
@@ -100,9 +111,10 @@ def run(inputs, *, provide=mock_gateway, reuse=(), limit=4, clock=lambda: NOW):
     result = asyncio.run(
         capture_intake(
             root,
-            root / "scoped",
+            root / output,
             schedule,
             [DATE],
+            first_cutoff=first_cutoff,
             reuse=reuse,
             max_requests=limit,
             api_key_file=secret,
@@ -111,6 +123,240 @@ def run(inputs, *, provide=mock_gateway, reuse=(), limit=4, clock=lambda: NOW):
         )
     )
     return result, calls
+
+
+def model_rows(meet, fields=1):
+    return [
+        row
+        | {
+            "age": 4,
+            "wgBudam": 52.5,
+            "rating": None if row["chulNo"] == 1 else 40,
+            "rcCntT": 10,
+            "ord1CntT": 2,
+            "ord2CntT": 2,
+            "ord3CntT": 2,
+        }
+        for row in response_rows(meet, fields)
+    ]
+
+
+def model_gateway(request):
+    return answer(
+        model_rows(int(request.url.params["meet"])),
+        int(request.url.params["pageNo"]),
+    )
+
+
+def readback(inputs, ref, *, first_cutoff=DUE.isoformat(), clock=lambda: NOW):
+    root, schedule = inputs
+    return preflight(
+        root,
+        ref,
+        schedule_sha256=schedule["sha256"],
+        first_cutoff=first_cutoff,
+        clock=clock,
+    )
+
+
+def test_preflight_returns_the_whole_card_for_both_fixed_arms(tmp_path, monkeypatch):
+    sources = ("national", "region_1", "region_2", "region_3")
+    schedule = capture(
+        tmp_path / "schedule", pages={s: page(s, fields={1: 11}) for s in sources}
+    )
+    ticks = iter(NOW + timedelta(milliseconds=n) for n in range(1000))
+
+    def gateway(request):
+        meet = int(request.url.params["meet"])
+        return answer(
+            model_rows(meet, 11 if meet == 1 else 1), int(request.url.params["pageNo"])
+        )
+
+    tested = tmp_path, pin(tmp_path, schedule)
+    (path, receipt), calls = run(
+        tested, provide=gateway, clock=lambda: next(ticks), limit=5
+    )
+    original = {p: p.read_bytes() for p in tmp_path.rglob("*.json")}
+
+    def disabled(*args, **kwargs):
+        pytest.fail("input review cannot collect or score")
+
+    monkeypatch.setattr(httpx, "AsyncClient", disabled)
+    monkeypatch.setattr(local_m0_inference, "score_capture", disabled)
+    observed = NOW + timedelta(minutes=1)
+    outcome = readback(tested, pin(tmp_path, path), clock=lambda: observed)
+    assert calls == [(1, 1), (1, 2), (2, 1), (3, 1), (4, 1)]
+    assert outcome["race_count"] == 14
+    assert outcome["declaration_count"] == 140
+    assert outcome["feature_missing_counts"] == dict.fromkeys(
+        local_m0_inference.API_FIELDS, 0
+    ) | {"rating": 14}
+    assert outcome["local_readback_at"] == observed.isoformat()
+    assert outcome["first_block_cutoff"] == DUE.isoformat()
+    assert outcome["schedule"] == tested[1]
+    assert outcome["http_requests_made"] == 0
+    assert not outcome["study_registered"]
+    assert not outcome["independent_publication_verified"]
+    assert not outcome["predictions_computed"]
+    assert {p: p.read_bytes() for p in tmp_path.rglob("*.json")} == original
+    scoped = {r["meet"]: r["capture"] for r in receipt["scopes"]}
+    day = tmp_path / DATE
+    day.mkdir()
+    for item in outcome["bindings"]:
+        race = item["race"]
+        source = item["entry_manifest"]
+        assert source == scoped[race["meet"]]
+        ref = {
+            "study_sha256": "test-only",
+            "manifest_path": source["path"],
+            "manifest_sha256": source["sha256"],
+        }
+        (day / f"input_{race['race_id']}.json").write_text(json.dumps(ref))
+        assert api27_forward.shared_source(tmp_path, race, "test-only") == (
+            ref,
+            item["shared_input"],
+        )
+    beyond_first_page = next(
+        b for b in outcome["bindings"] if b["race"]["race_id"] == f"{DATE}_1_11"
+    )
+    assert len(beyond_first_page["shared_input"]["feature_rows"]) == 10
+    assert len(beyond_first_page["shared_input"]["source"]["pages"]) == 2
+
+
+def test_preflight_reuses_only_the_reserved_sources(inputs):
+    root, _ = inputs
+    (_, first), _ = run(inputs, provide=model_gateway)
+    refs = [row["capture"] for row in first["scopes"]]
+    (path, receipt), calls = run(
+        inputs,
+        provide=lambda _: pytest.fail("reuse made another request"),
+        reuse=refs,
+        limit=0,
+        output="reuse",
+    )
+    prepared = readback(inputs, pin(root, path))
+    assert calls == []
+    assert receipt["actual_http_requests"] == 0
+    assert [b["entry_manifest"] for b in prepared["bindings"]] == refs
+
+
+@pytest.mark.parametrize("issue", ["missing_key", "impossible_counts"])
+def test_preflight_blocks_model_input_that_passed_roster_checks(inputs, issue):
+    root, _ = inputs
+
+    def gateway(request):
+        meet = int(request.url.params["meet"])
+        rows = model_rows(meet)
+        if meet == 4:
+            if issue == "missing_key":
+                del rows[-1]["rating"]
+            else:
+                rows[-1]["rcCntT"] = 5
+        return answer(rows, int(request.url.params["pageNo"]))
+
+    (path, receipt), calls = run(inputs, provide=gateway)
+    assert receipt["status"] == "captured_locally"
+    assert len(calls) == 4
+    reason = (
+        "local_m0_missing_feature_key"
+        if issue == "missing_key"
+        else "career_places_exceed_starts"
+    )
+    with pytest.raises(
+        ValueError, match=f"scope_inputs_invalid_features:{DATE}_4_1:{reason}"
+    ):
+        readback(inputs, pin(root, path))
+
+
+@pytest.mark.parametrize(
+    "change, error",
+    [
+        ("drop_scope", "reservation_does_not_replay"),
+        ("replace_scope", "unexpected_scope"),
+        ("changed_requests", "request_count_conflict"),
+        ("late_request", "request_evidence_conflict"),
+        ("late_receipt", "outside_deadline"),
+    ],
+)
+def test_preflight_rejects_changed_scope_or_clock_even_if_repinned(
+    inputs, change, error
+):
+    root, _ = inputs
+    (path, receipt), _ = run(inputs, provide=model_gateway)
+    original = pin(root, path)
+    if change == "drop_scope":
+        receipt["scopes"].pop()
+    elif change == "replace_scope":
+        receipt["scopes"][-1] = receipt["scopes"][0]
+    elif change == "changed_requests":
+        receipt["actual_http_requests"] += 1
+    elif change == "late_request":
+        receipt["scopes"][-1]["requests"][0]["completed_at"] = DUE.isoformat()
+    else:
+        receipt["completed_at"] = DUE.isoformat()
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match="source_pin_mismatch"):
+        readback(inputs, original)
+    with pytest.raises(ValueError, match=error):
+        readback(inputs, pin(root, path))
+
+
+def test_preflight_keeps_the_original_cutoff_even_if_receipt_uses_a_later_one(inputs):
+    root, _ = inputs
+    (path, _), _ = run(inputs, provide=model_gateway)
+    ref = pin(root, path)
+    original = (DUE - timedelta(minutes=15)).isoformat()
+    with pytest.raises(ValueError, match="original_cutoff_conflict"):
+        readback(inputs, ref, first_cutoff=original)
+    assert readback(inputs, ref)["first_block_cutoff"] == DUE.isoformat()
+
+
+def test_preflight_requires_the_fixed_schedule_even_at_the_same_cutoff(inputs):
+    root, _ = inputs
+    sources = ("national", "region_1", "region_2", "region_3")
+    revised = capture(
+        root / "revised",
+        pages={s: page(s, notes="Reissued card") for s in sources},
+    )
+    alternate = root, pin(root, revised)
+    (path, _), _ = run(alternate, provide=model_gateway)
+    ref = pin(root, path)
+    with pytest.raises(ValueError, match="original_schedule_conflict"):
+        readback(inputs, ref)
+    matching = readback(alternate, ref)
+    assert matching["first_block_cutoff"] == DUE.isoformat()
+    assert matching["schedule"] == alternate[1]
+
+
+def test_preflight_requires_an_unchanged_raw_page(inputs):
+    root, _ = inputs
+    (path, receipt), _ = run(inputs, provide=model_gateway)
+    ref = pin(root, path)
+    source = root / receipt["scopes"][-1]["capture"]["path"]
+    page_path = Path(json.loads(source.read_bytes())["pages"][0]["raw_path"])
+    page_path.write_bytes(page_path.read_bytes() + b" ")
+    with pytest.raises(ValueError, match="raw_.*mismatch"):
+        readback(inputs, ref)
+    assert pin(root, path) == ref
+
+
+def test_preflight_cannot_admit_an_incomplete_receipt(inputs):
+    root, _ = inputs
+    (path, receipt), calls = run(inputs, provide=lambda _: httpx.Response(429))
+    assert calls == [(1, 1)]
+    assert receipt["stop_reason"] == "rate_limited"
+    with pytest.raises(ValueError, match="requires_complete_local_receipt"):
+        readback(inputs, pin(root, path))
+
+
+def test_preflight_rejects_late_and_backwards_readback(inputs):
+    root, _ = inputs
+    (path, _), _ = run(inputs, provide=model_gateway)
+    ref = pin(root, path)
+    for timeline in ([DUE], [NOW, DUE], [NOW, NOW - timedelta(seconds=1)]):
+        clock = iter(timeline)
+        with pytest.raises(ValueError, match="outside_deadline"):
+            readback(inputs, ref, clock=clock.__next__)
 
 
 def test_whole_card_retained_and_same_window_cannot_fetch_again(inputs):
@@ -309,6 +555,27 @@ def test_late_low_budget_and_partial_schedule_do_not_make_requests(inputs, tmp_p
     plan = plan_intake(tmp_path, pin(tmp_path, path), [DATE, "20261017"], observed=NOW)
     assert plan["race_dates"] == [DATE, "20261017"]
     assert plan["race_count"] == 4
+
+
+@pytest.mark.parametrize("start, shift", [("12:15", 15), ("11:45", -15)])
+def test_a_changed_first_post_cannot_move_the_cutoff(tmp_path, start, shift):
+    sources = ("national", "region_1", "region_2", "region_3")
+    revised = capture(
+        tmp_path / "revised",
+        pages={s: page(s, times=dict.fromkeys(range(1, 5), start)) for s in sources},
+    )
+    ref = pin(tmp_path, revised)
+    preview = plan_intake(tmp_path, ref, [DATE], observed=NOW)
+    assert preview["first_block_cutoff"] == (DUE + timedelta(minutes=shift)).isoformat()
+
+    def never(_):
+        pytest.fail("new schedule must not authorize a new request")
+
+    with pytest.raises(ValueError, match="original_cutoff_conflict"):
+        run((tmp_path, ref), provide=never)
+    with pytest.raises(ValueError, match="cutoff_passed"):
+        run((tmp_path, ref), provide=never, clock=lambda: DUE)
+    assert not (tmp_path / "scoped").exists()
 
 
 @pytest.mark.parametrize(
