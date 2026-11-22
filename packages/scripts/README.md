@@ -373,6 +373,37 @@ PYTHONPATH=packages/scripts python -B docs/research/tools/kra_walk_forward_fold.
 학습 승인, 실제 모델 적합, 예측 공개 또는 70% 정확도 근거를 만들지 않습니다.
 현재 고정 M0/API27 예측의 마감이나 병합 절차를 지연시키지 마세요.
 
+### 학습 자료와 평가 입력의 분리 저장
+
+이전 전체표 결과와 별도 미래 전체표의 사전 입력을 위의 방식으로 확인한 뒤,
+최초 마감 전 보존한 공개 확인 기록으로 두 역할을 분리할 수 있습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -B docs/research/tools/kra_exact_trio_fold_inputs.py stage \
+  --plan <비공개계획.json> --plan-sha256 <sha256> \
+  --packet-sha256 <묶음-sha256> --pull <묶음-공개-PR>
+```
+
+평가 접수 기록 옆의 `exact-trio-input-views/`에 `training.json`,
+`training-targets.json`, `evaluation-inputs.json`, `readback.json`을
+한 번 저장합니다. 앞선 경주의 전체 조합 특징과 선택한 결과를 서로 다른
+파일에 둡니다. 평가 파일에는 같은 규칙으로 만든 사전 특징만 있습니다.
+정답이 달라져도 사전 특징 파일의 값과 해시는 바뀌지 않습니다.
+평가 결과 파일을 인수로 받거나 찾지 않습니다.
+공개 확인 기록이 준비 시작보다 늦거나, 마감이 이미 지났으면 저장하지 않습니다.
+파일 저장 중 마감을 지나면 `local_views_late`로 남기고 같은 위치를 재사용하지 않습니다.
+
+같은 인수에 `--receipt-sha256 <readback.json-sha256>`을 추가해 `replay`로
+원래 파일 해시와 내용을 읽기 전용으로 검증할 수 있습니다.
+기본 기준값은 모든 조합에서 0입니다. 공통 입력에는 API26 수치의 경주 내
+공동 순위와 별도 결측 표시를 쓰고, 시험안에는 가산 성분을 제거한 같은
+조교사 쌍 항만 더합니다. `kra_exact_trio_fold_design.fit_arguments`는
+검증한 두 학습 파일에서 동일 경주 가중치로 두 안의 적합 인수를 만듭니다.
+이 함수와 명령은 적합이나 예측을 실행하지 않으며, 연구용 명세 자체도
+승인된 실행 규칙이 아닙니다. 역할 파일은 비공개로 보존하세요.
+로컬 저장 시각은 독립적인 공개 증명이 아닙니다.
+자세한 경계와 검증은 [실행 계획](../../docs/execplans/kra-exact-trio-fold-inputs.md)에 있습니다.
+
 ## 전체 3두 조합 학습 리허설
 
 `docs/research/tools/kra_exact_trio_ridge_fit.py`의 `fit_exact_trios`는
