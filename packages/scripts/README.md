@@ -190,6 +190,36 @@ JSON 참으로 적습니다. 두 문서는 키 정렬, 두 칸 들여쓰기, 마
 명시적 미제출도 경주를 지우지 않으며, 아직 확인하지 않은 결과는 실패나
 적중률 0이 아닙니다. 이 명령은 재학습하거나 결과를 수집·평가하지 않습니다.
 
+## 새 고정 모델 쌍의 공식 결과 비교
+
+이 명령은 위의 별도 승인 예측 형식만 읽습니다. 기존 10월 16~18일
+공개 예측과 `api27_evaluation`은 그대로입니다.
+
+```bash
+PYTHONPATH=packages/scripts python -B -m autoresearch.fixed_pair_evaluation \
+  --study <id> --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --protocol-pull <번호> --protocol-sha256 <sha256> \
+  --approval-pull <번호> --approval-sha256 <sha256> \
+  --pair-sha256 <sha256> --m0-model-dir <dir> --api27-model-dir <dir> \
+  --outcome-plan <outcome-plan.json> --outcome-sha256 <sha256>
+```
+
+승인과 공개 원본은 원래 실행 기록에서 읽습니다. 별도로 이미 수집한
+동일 형식의 증거 폴더는 `--authority-dir`로 지정할 수 있습니다.
+결과 계획에는 사후 경주표 대신 **처음 동결한 경주표의 정확한 해시**와
+보존한 API214·공식 HTML 버전이 있어야 합니다. 결과 계획이나 예측 공개
+증거가 없으면 해당 인수는 생략하고 미확인으로 남깁니다. 정확한 시각의
+공개가 확인돼도 원래 모델·환경에서 수치 재현이 되지 않으면 적중·실패로
+처리하지 않습니다. 원본 실행 환경을 보관하고, 이후 코드를 바꿨다면
+원래 작업 환경의 `PYTHONPATH`로 이 평가 파일을 별도 경로에서 실행할 수
+있습니다.
+
+명령은 추가 요청이나 파일 쓰기 없이 JSON을 출력합니다. 공식 정정을
+비교할 때는 `--prior-outcome-plan`과 `--prior-outcome-sha256`로 이전
+원본 버전도 고정합니다. 예측과 모집단은 그대로 두고 두 결과 버전을
+대조합니다. 대기·목표 미정의 또는 모집단 충돌이 있으면 전체 정확도·우열은
+비워 두며, 거리·등급·경마장별 숫자는 진단용 건수로만 보고합니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
