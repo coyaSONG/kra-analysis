@@ -199,6 +199,42 @@ def test_exact_enumeration_of_weighted_tree_solutions_on_another_graph():
         assert lo <= totals[i] / trees <= hi
 
 
+def test_a_true_single_edge_bridge_has_fixed_probability(monkeypatch):
+    def forbidden(*_a, **_kw):
+        pytest.fail("the bridge's mass is exact even with a nonadditive tilt elsewhere")
+
+    monkeypatch.setattr(loss, "project_separate_trio_margins", forbidden)
+    tilt = {t: float(i % 3) for i, t in enumerate(TRIOS)}
+    selected = ("1", "2", "4")
+    cert = loss.certify_separate_trio_loss(
+        IDS, ZERO, tilt, CORNER, selected, unavailable_sets=({"4"}, {"3", "5"})
+    )
+    with localcontext() as ctx:
+        ctx.prec = 140
+        exact_loss = Decimal(10).ln()
+    verify_contains(cert, (exact_loss, Decimal(0)))
+    assert cert.directional_derivative == (0, 0)
+
+
+def test_additivity_in_the_target_component_does_not_require_global_convergence(
+    monkeypatch,
+):
+    def forbidden(*_a, **_kw):
+        pytest.fail("irrelevant components do not affect the target's derivative")
+
+    monkeypatch.setattr(loss, "project_separate_trio_margins", forbidden)
+    masks = ({"4", "5"}, {"4", "5"})
+    selected = ("1", "2", "4")
+    tilt = {t: float(i % 5) if "5" in t else 0.0 for i, t in enumerate(TRIOS)}
+    f = {t: float(t == selected) for t in TRIOS}
+    cert = loss.certify_separate_trio_loss(
+        IDS, ZERO, tilt, f, selected, unavailable_sets=masks
+    )
+    assert cert.reason is None
+    lo, hi = map(Fraction, cert.directional_derivative)
+    assert lo <= -Fraction(2, 3) <= hi
+
+
 def test_false_linear_proposal_does_not_get_a_narrow_enclosure(monkeypatch):
     tilt = {t: 0.25 * v for t, v in CORNER.items()}
     monkeypatch.setattr(loss, "_solve", lambda _ctx, rows: [Decimal(0)] * len(rows))

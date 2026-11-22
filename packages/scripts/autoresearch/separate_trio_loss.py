@@ -1,6 +1,5 @@
 """Bound the exact-set loss and its tilt derivative for two fixed margins."""
 
-from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal, DecimalException
@@ -17,6 +16,8 @@ from autoresearch.separate_trio_mode import (
 )
 from autoresearch.separate_trio_projection import (
     MarginalProjectionError,
+    _bridges,
+    _graph,
     project_separate_trio_margins,
 )
 
@@ -45,33 +46,54 @@ def _divide_positive(bounds, numerator, denominator):
     )
 
 
-def _component_size(forest):
-    root = list(range(forest.size))
-    for parent, child, _ in forest.order:
-        root[child] = root[parent]
-    return max(Counter(root).values())
+def _region(edges, index):
+    graph = _graph(edges)
+    fixed = _bridges(graph)
+    if index in fixed:
+        return (index,), ((0, 1),), 2
+    root = edges[index][0]
+    seen, queue, region = {root}, [root], set()
+    while queue:
+        u = queue.pop()
+        for v, i in graph[u]:
+            if i in fixed:
+                continue
+            region.add(i)
+            if v not in seen:
+                seen.add(v)
+                queue.append(v)
+    indices = tuple(sorted(region))
+    ids = {}
+    local = tuple(tuple(ids.setdefault(v, len(ids)) for v in edges[i]) for i in indices)
+    return indices, local, len(ids)
 
 
 def _potential_values(edges, potentials):
     return tuple(potentials[u] + potentials[v] for u, v in edges)
 
 
-def _feasible(bounds, roster, masks, trios, edges, base, tilt):
+def _feasible(bounds, roster, masks, trios, indices, edges, base, tilt):
     exact_base = tuple(Fraction(base[t]) for t in trios)
-    exact_tilt = tuple(Fraction(tilt[t]) for t in trios)
-    base_prob = bounds.softmax(exact_base)
-    forest = _forest(edges, exact_base)
-    n = _component_size(forest)
+    exact_tilt = tuple(Fraction(tilt[trios[i]]) for i in indices)
+    all_base_prob = bounds.softmax(exact_base)
+    base_prob = tuple(all_base_prob[i] for i in indices)
+    local_base = tuple(exact_base[i] for i in indices)
+    forest = _forest(edges, local_base)
     if _potential_values(edges, forest.potentials(exact_tilt)) == exact_tilt:
-        return base_prob, tuple(map(bounds.ln, base_prob)), _ZERO, n
+        return base_prob, tuple(map(bounds.ln, base_prob)), _ZERO
 
     candidate = project_separate_trio_margins(
         roster, base, tilt, unavailable_sets=masks
     )
     if candidate.trios != trios:
         raise _Unverified("projection_changed_the_declared_field")
-    hint = tuple(map(Fraction, candidate.log_probabilities))
-    proposed = bounds.softmax(hint)
+    all_hint = tuple(map(Fraction, candidate.log_probabilities))
+    if len(all_hint) != len(trios):
+        raise _Unverified("projection_changed_the_declared_field")
+    # Keep the global normalization, even when verifying one independent part.
+    all_proposed = bounds.softmax(all_hint)
+    proposed = tuple(all_proposed[i] for i in indices)
+    hint = tuple(all_hint[i] for i in indices)
     forest = _forest(edges, hint)
     movement = _circulation(
         edges,
@@ -85,7 +107,7 @@ def _feasible(bounds, roster, masks, trios, edges, base, tilt):
         bounds.translate(p, delta) for p, delta in zip(base_prob, movement, strict=True)
     )
     log_feasible = tuple(map(bounds.ln, feasible))
-    tilted = tuple(a + b for a, b in zip(exact_base, exact_tilt, strict=True))
+    tilted = tuple(a + b for a, b in zip(local_base, exact_tilt, strict=True))
     potential = forest.potentials(
         tuple(q - k for q, k in zip(hint, tilted, strict=True))
     )
@@ -95,9 +117,7 @@ def _feasible(bounds, roster, masks, trios, edges, base, tilt):
             log_feasible, tilted, _potential_values(edges, potential), strict=True
         )
     )
-    # A cut bound on the weighted residual map controls every log coordinate.
-    log_error = bounds.up.multiply(Decimal(n), residual)
-    return feasible, log_feasible, log_error, n
+    return feasible, log_feasible, residual
 
 
 def _paths(edges, forest):
@@ -202,6 +222,16 @@ def _derivative(bounds, edges, feasible, f, index, n, log_error):
     weight_effect = bounds.up.multiply(direction_size, log_error)
     rounding = bounds.up.multiply(Decimal(n), residual)
     stability = bounds.up.multiply(Decimal(n * (n - 1)), weight_effect)
+    below_one = bounds.down.subtract(Decimal(1), log_error)
+    if below_one > 0:
+        # Apply the additive projection to (1 - qF/q*) times the residual
+        # at qF. For 0 <= a < 1, exp(a)-1 <= a/(1-a).
+        relative = bounds.up.divide(log_error, below_one)
+        residual_size = bounds.up.add(_max_abs(quotients), rounding)
+        actual = bounds.up.multiply(
+            Decimal(n - 1), bounds.up.multiply(relative, residual_size)
+        )
+        stability = min(stability, actual)
     error = bounds.up.add(rounding, stability)
     return _negate(bounds.add(quotients[index], _Interval(error.copy_negate(), error)))
 
@@ -234,12 +264,17 @@ def certify_separate_trio_loss(
     base = {t: _finite(base_log_weights[t]) for t in trios}
     tilt = {t: _finite(log_tilts[t]) for t in trios}
     f = tuple(Fraction(_finite(direction[t])) for t in trios)
-    edges = _edges(trios, masks)
+    # All feasible mass changes vanish on true individual-edge bridges.
+    # Parallel trios are different edges and do not get removed as bridges.
+    indices, edges, n = _region(_edges(trios, masks), index)
+    index = indices.index(index)
+    f = tuple(f[i] for i in indices)
     bounds = _Bounds()
     try:
-        feasible, log_feasible, log_error, n = _feasible(
-            bounds, roster, masks, trios, edges, base, tilt
+        feasible, log_feasible, residual = _feasible(
+            bounds, roster, masks, trios, indices, edges, base, tilt
         )
+        log_error = bounds.up.multiply(Decimal(n), residual)
         loss = _negate(
             bounds.add(
                 log_feasible[index], _Interval(log_error.copy_negate(), log_error)
