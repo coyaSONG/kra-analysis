@@ -73,6 +73,49 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze 
 
 동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
 
+## 전체 경주표의 제한된 API26 수집
+
+`autoresearch.kra_entry_scope_intake`는 한 주간의 공식 전국표와 지역표 원본이
+모두 일치하는 경우에만 날짜·실제 경마장별 기존 API26 수집기를 실행합니다.
+날짜는 원본에 나온 전체 날짜를 오름차순으로 지정합니다. 먼저 호출 없는
+`plan`으로 예상 페이지 수와 최초 마감 시각을 확인합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_intake plan \
+  --schedule-capture <capture.json> --schedule-sha256 <sha256> \
+  --date <YYYYMMDD> --date <YYYYMMDD>
+```
+
+실제 수집은 고정한 경주표에 `collect`를 실행하고 `--first-cutoff <시각>`
+(시간대가 있는 ISO 8601), `--max-requests <한도>`, `--api-key-file <키-파일>`,
+`--output-dir .cache/autoresearch/api26-scope-intake`를 추가합니다.
+이미 보존된 원본에는 `--reuse-entry <entry_capture.json> <sha256>`를 지정할 수
+있습니다. 완전한 해당 범위를 재현하면 그 범위는 호출하지 않습니다.
+동일한 출력 폴더에서 겹치는 날짜를 다시 예약할 수 없습니다.
+
+마감은 최초 고정한 전체표의 첫 출발 30분 전입니다. 제출한 표로 계산한 마감이
+이미 고정한 시각과 다르면 예약이나 호출 없이 중단합니다. 첫 수집 실패에서도
+추가 호출을 중단하고 인증 오류·접근 거부·호출 제한·빈 응답을 구분합니다.
+빈 응답이나 미시도 범위를
+경주 없음으로 집계하지 않습니다. 보존된 원본·예약·수집 기록은 로컬 자료이며
+등록, 마감 전 공개 증명 또는 예측이 아닙니다.
+
+마감 전, 완료된 `receipt.json` 및 SHA256과 처음 고정한 전체 경주표의 SHA256,
+최초 마감 시각을 별도로 넘겨 모델 입력을 확인합니다. 접수 기록에 새로 적힌
+값으로 원래 기준을 바꾸지 않습니다. 예약·전체 경주표·원본 페이지를 다시 읽고
+기존 M0 입력 변환기로 모든 경주를 확인합니다. API27도 이 데이터를 공유합니다. 날짜·경주·원본 핀과
+특성별 누락 수가 포함된 로컬 입력을 반환하며 추가 호출이나 파일 변경은 없습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_inputs \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각>
+```
+
+원본 불일치, 해석할 수 없는 특성, 또는 마감 경과 시 부분 입력을 내보내지
+않습니다. `verified_local_inputs_only`는 예측 실행, 승인, 등록이나 공개를
+의미하지 않으며 이전 구간의 입력 예약을 대체하지 않습니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
