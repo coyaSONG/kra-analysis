@@ -309,6 +309,12 @@ jobs:
           uv run --frozen --extra race-card-pdf ruff check autoresearch/gate_training_source.py autoresearch/tests/test_gate_training_source.py
           uv run --frozen --extra race-card-pdf ruff format --check autoresearch/gate_training_source.py autoresearch/tests/test_gate_training_source.py
           uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_gate_training_source.py -p no:cacheprovider -o addopts=''
+      - name: Seoul entry notice source regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/seoul_entry_notice_audit.py autoresearch/tests/test_seoul_entry_notice_audit.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/seoul_entry_notice_audit.py autoresearch/tests/test_seoul_entry_notice_audit.py
+          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_seoul_entry_notice_audit.py -p no:cacheprovider -o addopts=''
       - name: Exact trio distribution regressions
         working-directory: ./packages/scripts
         run: |
