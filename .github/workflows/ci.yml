@@ -237,9 +237,9 @@ jobs:
       - name: Chronological whole-card fold evidence regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../docs/research/tools/{kra_walk_forward_fold,kra_exact_trio_ridge_fit}.py ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit}.py
-          uv run --frozen ruff format --check ../../docs/research/tools/{kra_walk_forward_fold,kra_exact_trio_ridge_fit}.py ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit}.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit}.py -o addopts=''
+          uv run --frozen ruff check ../../docs/research/tools/{kra_walk_forward_fold,kra_exact_trio_ridge_fit,kra_trainer_pair_geometry}.py ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit,kra_trainer_pair_geometry}.py
+          uv run --frozen ruff format --check ../../docs/research/tools/{kra_walk_forward_fold,kra_exact_trio_ridge_fit,kra_trainer_pair_geometry}.py ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit,kra_trainer_pair_geometry}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{kra_walk_forward_fold,kra_exact_trio_ridge_fit,kra_trainer_pair_geometry}.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api
         run: |
