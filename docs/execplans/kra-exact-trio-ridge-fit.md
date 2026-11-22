@@ -24,9 +24,10 @@ evaluation results. Its executable verification uses fictional cards.
   call with an independently re-evaluated stationarity check.
 - [x] Test known synthetic solutions, exact frozen roster joins, and
   a separated future synthetic selection without reading its labels.
-- [ ] Read completed Pro design review and reconcile any tests or
-  boundary claims it changes before releasing.
-- [ ] Verify the old runtime fingerprint and checked publication.
+- [x] (2026-11-22 22:32Z) Read completed Pro design review and
+  reconcile its test and boundary recommendations.
+- [x] Verify the old runtime fingerprint against the baseline.
+- [ ] Verify the remote required checks and ordinary merge in the PR.
 
 ## Surprises & Discoveries
 
@@ -36,7 +37,11 @@ In the partitioned version the baseline group masses are invariant;
 this is a restriction, not a cure for selective missingness. More
 general separately fixed margins are a different, nonconvex objective.
 Adding a softmax to the same sums of runner scores does not change
-which three win the numerical comparison.
+which three win the numerical comparison with an additive base and
+one full-field normalization. A duplicated additive feature can
+still change a fitted selection by effectively reducing its
+regularization, so a changed selection alone is not evidence of
+nonadditive representation.
 
 ## Decision Log
 
@@ -59,6 +64,17 @@ divided by the penalty bounds distance to the exact solution.
 Here it is a floating-point diagnostic, not a directed-rounding
 certificate of an exact optimum or its leading alternative.
 
+The completed Pro methods review (11m 35s displayed) did not use
+private data, inspect the implementation or run a fit. It supported
+one future comparison using full-field normalization in both arms:
+the same fixed log baseline and additive features, with just one
+preregistered nonadditive term in the second arm. Freeze shared
+transforms on admitted earlier cards only, including missingness and
+scaling rules. A partitioned design fixes joint missing-ID group
+masses and is a separate hypothesis, not a setting to choose after
+seeing future outcomes. This recommendation is not a registration.
+Near ties also need a separate publication rule before live use.
+
 ## Outcomes & Retrospective
 
 The broader local regression suite passed 279 tests. A 72-digit scalar calculation
@@ -67,16 +83,19 @@ member permutations and race mapping order do not change the result.
 With 48 fictional target observations on equal five-runner fields, the
 additive-only and single-pair-feature fits have different modes across
 the same full candidate set. This establishes that the implementation
-can change a selection without using a top-k shortlist. It is not a
-scored validation or a proposed real feature recipe.
+can change a selection without using a top-k shortlist. The contrast
+of `(1,4,5) + (1,2,3)` against `(1,2,4) + (1,3,5)` has balanced
+runner counts but differs on the pair indicator, so no sum of
+individual runner scores reproduces that column. It is not a scored
+validation or a proposed real feature recipe.
 
 The existing fictional chronological fixture consumed all 28 prior
 training races from two distinct full cards, then made a single choice
 for all 14 races of a third card from inputs alone. Its replay forbids
 the future outcome request. The test uses made-up operands and source
 clocks with fictional publication receipts. No real fit or selection on
-the observed October block occurred. Completed methods review and
-release verification are still pending.
+the observed October block occurred. The pull request records the
+remote checks separately from this local evidence.
 
 An independent local capacity rehearsal uses 600 fictional races with
 field sizes 7, 9, 10, 12, 14 and 16. One pass through the accepted fit
@@ -89,9 +108,9 @@ SHA256 `5f63bdb69184ae13b67c457dcc22d3cbdb412363c8ad585036983fa1bfef996e`.
 
 Compared all 210 Python source and environment paths included in the
 existing fixed runtime against the baseline Git blobs; no path or byte
-changed. Before the added near-tie case, 40 focused and chronological
-cases also ran from the API CI working directory with no special import
-setup. No KRA/API fetch or released model run occurred.
+changed. All 41 focused and chronological cases also passed from the
+API CI working directory with no special import setup. No KRA/API
+fetch or released model run occurred.
 
 ## Context and Orientation
 
@@ -147,6 +166,9 @@ new dependencies or paid services are needed.
 
 The [solver manual](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-lbfgsb.html)
 distinguishes function-reduction, gradient and evaluation-budget exits.
+The float64 fit starts at zero with `ftol=1e-15`, `gtol=1e-11`,
+300 iterations, 1200 evaluations, 10 correction vectors and at most
+20 line-search steps per iteration.
 Recompute the finite objective and full gradient after success, without
 trusting the solver-provided gradient. Require an estimated radius at
 most `1e-5` under this numerical policy. A near tie in computed scores
@@ -157,5 +179,5 @@ solver proposals at `-1e-6` and `+1e-6` both meet the numerical radius
 limit, but select different trios. Neither serves as a certificate of
 the mode at the exact mathematical solution.
 
-Revision: Added synthetic chronological integration and precision
-evidence while awaiting the separate methods review.
+Revision: Recorded the completed methods review, added an exact
+nonadditivity contrast and made the line-search settings explicit.

@@ -93,6 +93,14 @@ def test_original_race_inputs_are_not_weighted_by_number_of_triples(fit, monkeyp
     )
     assert len(calls) == 1 and calls[0]["jac"] is True
     assert calls[0]["method"] == "L-BFGS-B"
+    assert calls[0]["options"] == {
+        "ftol": 1e-15,
+        "gtol": 1e-11,
+        "maxiter": 300,
+        "maxfun": 1200,
+        "maxcor": 10,
+        "maxls": 20,
+    }
     assert result.state == "optimizer_failed" and result.coefficients is None
     assert result.race_ids == ("early", "later")
 
@@ -111,6 +119,14 @@ def test_additive_and_interaction_can_select_distinct_complete_field_modes(fit):
 
     def interaction(s):
         return (*additive(s), int("4" in s and "5" in s))
+
+    # Equal runner counts force any additive score to have a zero contrast.
+    positive = (("1", "4", "5"), ("1", "2", "3"))
+    negative = (("1", "2", "4"), ("1", "3", "5"))
+    for h in ids:
+        assert sum(h in s for s in positive) == sum(h in s for s in negative)
+    assert sum(interaction(s)[-1] for s in positive) == 1
+    assert sum(interaction(s)[-1] for s in negative) == 0
 
     base = design(ids, additive)
     alternative = design(ids, interaction)

@@ -14,7 +14,14 @@ from scipy.optimize import minimize
 
 FIT_POLICY = "complete-trio-ridge-lbfgsb-v1"
 _MAX_ESTIMATED_RADIUS = 1e-5
-_SOLVER_OPTIONS = {"ftol": 1e-15, "gtol": 1e-11, "maxiter": 300, "maxfun": 1200}
+_SOLVER_OPTIONS = {
+    "ftol": 1e-15,
+    "gtol": 1e-11,
+    "maxiter": 300,
+    "maxfun": 1200,
+    "maxcor": 10,
+    "maxls": 20,
+}
 
 
 @dataclass(frozen=True, slots=True)
