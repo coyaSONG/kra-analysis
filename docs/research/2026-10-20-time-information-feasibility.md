@@ -22,6 +22,10 @@ Any additional source mapping needs its own source/version/availability audit.
 No new fitted candidate, A24/B34 retraining, future roster or date enrollment
 is authorized by this report.
 
+The [November external-form comparison](2026-11-22-external-prior-time-semantics.md)
+found that the audited past-time column shows the winner's time, not the
+individual runner's time. It cannot supply T in the quantities below.
+
 ## Population and Coverage
 
 The grain is one horse in one historical start. All **102 races / 1,029
