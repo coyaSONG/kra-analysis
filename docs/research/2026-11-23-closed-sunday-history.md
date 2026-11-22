@@ -81,7 +81,7 @@ the separate, reviewed future whole-card requirement.
 The local `nov22-closed-history-20261123/sunday-history-evidence.json`
 retains the full scope, raw source receipts, initial input pins, row
 locations, distinct race/horse audit and explicit no-admission flags.
-SHA256: `undefined`.
+SHA256: `25d52871e77bfb41660fe21e5c6e595f8ffea217bb751b5fa7632fca400f1428`.
 Read-only replay reproduced the identical file. A separate aggregate
 check reproduced the exact previous 34 preserved race records and
 the 183 / 11 / 172 linked, overlapping and additional counts. The
