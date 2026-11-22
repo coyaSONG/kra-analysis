@@ -1,6 +1,7 @@
 """Read only fictional cards with preserved, independently dated fixture receipts."""
 
 import importlib.util
+import runpy
 import subprocess
 import sys
 from datetime import timedelta
@@ -14,6 +15,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch import kra_whole_card_learning as learning
+from autoresearch.exact_trio_distribution import (
+    partition_trios,
+    prepare_exact_trio_distribution,
+)
 from autoresearch.observed_history_seed import make_plan, pin, save
 from autoresearch.prerace_hash_witness import timestamp
 from autoresearch.restricted_cohort import API_COLUMNS, encoded, parse_json, sha256
@@ -131,6 +136,64 @@ def _publication(study, marker, merged):
         retrieved,
     )
     return sha
+
+
+def test_fit_uses_two_complete_prior_cards_and_predicts_separate_input_only_card(
+    study, monkeypatch
+):
+    replay = learning.replay
+
+    def previous_only(root, **selected):
+        assert selected["receipt"] != study.evaluation.input_spec["receipt"]
+        return replay(root, **selected)
+
+    monkeypatch.setattr(learning, "replay", previous_only)
+    fixtures._guard(monkeypatch)
+    ref = _plan(study)
+    marker = fold.stage(study.root, ref)
+    sha = _publication(study, marker, study.initial + timedelta(seconds=30))
+    proof = fold.verify(study.root, ref, packet_sha256=sha, pull=FOLD_PR)
+    assert proof["before_cutoff"] and not proof["training_approved"]
+    packet = parse_json((study.parent / fold.PACKET_NAME).read_bytes())
+    fit = runpy.run_path(
+        str(Path(fold.__file__).with_name("kra_exact_trio_ridge_fit.py"))
+    )["fit_exact_trios"]
+
+    # Fictional operands only; not a proposed preprocessing or race model.
+    def design(binding):
+        rows = binding["shared_input"]["feature_rows"]
+        order = {row["horse_id"]: i for i, row in enumerate(rows, start=1)}
+        trios, _ = partition_trios(order, ())
+        distribution = prepare_exact_trio_distribution(
+            order,
+            dict.fromkeys(trios, 0.0),
+            {s: (sum(order[h] for h in s) / len(order),) for s in trios},
+        )
+        return tuple(order), distribution
+
+    expected, distributions, y = {}, {}, {}
+    for part, card in zip(packet["training"], study.training, strict=True):
+        _, raw = fold._pinned(study.root, part["candidate"])
+        data = parse_json(raw)
+        assert (
+            sorted(b["race"]["race_id"] for b in data["input_races"])
+            == part["race_ids"]
+        )
+        for b in data["input_races"]:
+            key = b["race"]["race_id"]
+            expected[key], _ = design(card.races[key])
+            _, distributions[key] = design(b)
+        y.update({b["race_id"]: b["horse_ids"] for b in data["target_races"]})
+    result = fit(expected, distributions, y, feature_columns=("fictional",), ridge=0.2)
+    assert result.state == "fit_reached_stationarity" and len(result.race_ids) == 28
+
+    future = {}
+    for key, b in study.evaluation.races.items():
+        declared, p = design(b)
+        future[key] = p.mode(result.coefficients)
+        assert len(set(future[key])) == 3 and set(future[key]) <= set(declared)
+    assert len(future) == 14 and sorted(future) == packet["evaluation"]["race_ids"]
+    assert not set(future) & set(result.race_ids)
 
 
 def test_replay_freezes_all_races_and_only_old_labels(study, monkeypatch, capsys):
