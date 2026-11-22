@@ -216,6 +216,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/{nomination_prior_coverage,nomination_prior_scope_recheck}.py ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/{nomination_prior_coverage,nomination_prior_scope_recheck}.py ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py -o addopts=''
+      - name: Witnessed workout whole-card regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/kra_daily_workout_{card_audit,edition}.py ../../packages/scripts/autoresearch/tests/test_kra_daily_workout_card_audit.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/kra_daily_workout_{card_audit,edition}.py ../../packages/scripts/autoresearch/tests/test_kra_daily_workout_card_audit.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_daily_workout_card_audit.py -o addopts=''
       - name: Reviewed fixed-pair forward regressions
         working-directory: ./apps/api
         run: |

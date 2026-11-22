@@ -181,6 +181,28 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_nomination_card_audit \
 규칙은 이 진단에서 비교하지 않습니다. 출력은 말 ID를 포함하는 비공개
 검토용이며, 특성값을 내보내거나 학습·평가 등록을 승인하지 않습니다.
 
+### 일일조교 자료 연결 진단
+
+2026년 11월 22일자 [일일조교 원본 공개 증거](../../docs/research/2026-11-23-daily-workout-edition-witness.md)를
+원래 전체표 입력과 별도로 확인합니다. 분리 연구 체크아웃에서
+`autoresearch.kra_daily_workout_card_audit source --edition <source-edition.json>`
+은 이 원본만 재생합니다. 실제 전체표의 마감 전 입력 증명이 확보되고
+고정 M0/API27 절차를 지연시키지 않을 때만 아래 비교를 실행합니다.
+
+```bash
+PYTHONPATH=packages/scripts:apps/api python -B -m autoresearch.kra_daily_workout_card_audit card \
+  --edition .cache/autoresearch/daily-workout-fresh-witness-20261123/source-edition.json \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각> \
+  --packet-sha256 <whole-card-packet-sha256> --pull <전체표입력증명PR번호>
+```
+
+두 공개 시각 중 하나라도 처음 정한 마감에 이르거나 그 이후이면
+진행하지 않습니다. 모든 경주와 출전 기록을 유지하고, 식별자·이름 일치,
+기록 없음, 메뉴·이름·시각 충돌을 구분합니다. 경마장·거리·등급별
+연결 집계는 품질 진단입니다. 입력이나 예측을 만들거나 외부 요청을 하지
+않습니다. 실제 말 번호가 들어 있는 출력은 비공개 검토용입니다.
+
 ## 별도 사전 승인 전체표의 고정 M0/API27 예측
 
 10월 16~18일 계약은 그대로입니다. 이 명령은 그 모집단이나 이미 놓친
