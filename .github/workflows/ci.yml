@@ -204,6 +204,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/kra_entry_scope_witness.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_witness.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/kra_entry_scope_witness.py ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_witness.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_entry_scope_witness.py -o addopts=''
+      - name: Reviewed fixed-pair forward regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/fixed_pair_forward{,_contract}.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/fixed_pair_forward{,_contract}.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api
         run: |

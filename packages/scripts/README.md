@@ -146,6 +146,50 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_witness stage
 KRA 원본을 인증하거나 정확한 수집 시각을 보증한다는 뜻은 아닙니다.
 학습 승인, 전체 평가 등록 및 마감 전 예측 공개는 여전히 별도 절차입니다.
 
+## 별도 사전 승인 전체표의 고정 M0/API27 예측
+
+10월 16~18일 계약은 그대로입니다. 이 명령은 그 모집단이나 이미 놓친
+마감을 다시 열지 않습니다. 새 전체 경주표의 입력 해시가 마감 전에 공개되고
+해당 GitHub 응답까지 수집된 경우에만 준비합니다. 임의 날짜나 경주 수를 직접
+입력해 등록하지 않습니다.
+
+`autoresearch.fixed_pair_forward`의 모든 하위 명령은 `--study`,
+`--receipt`, `--receipt-sha256`를 받습니다. `prepare`에는 원래
+`--schedule-sha256`, `--first-cutoff`, 비공개 `--packet-sha256`,
+입력 해시 공개 `--input-pull`, 미리 열어 둔 소유자의 예측
+`--prediction-pull`, 소유자가 지정한 별개 GitHub 계정 `--reviewer`와
+`--analysis <file.json>`을 넘깁니다. 분석 JSON은 `horizon`, `uncertainty`,
+`sample_size_rationale`, `stopping`의 네 항목을 구체적 문장으로 고정합니다.
+`prepare`는 로컬 JSON만 출력하며 등록이나 승인, 모델 실행이 아닙니다.
+
+소유자가 그 정확한 프로토콜을 `docs/research/protocols/fixed-pair-v1/<study>.json`
+으로 일반 병합합니다. 지정 검토자는 원본·전체 모집단·분석 계획과 필수 검사
+근거를 독립적으로 확인한 뒤, 별도 PR에
+`docs/research/approvals/fixed-pair-v1/<study>.json`을 게시합니다.
+승인 문서에는 `format_version: kra-fixed-pair-prospective-approval-v1`,
+`study_id`, `protocol_sha256`, `protocol_pr`, `reviewer`, 시간대가
+있는 `reviewed_at`, 그리고 실제 확인한 경우에만 `source_closure_reviewed`,
+`population_and_statistics_reviewed`, `release_checks_reviewed`를
+JSON 참으로 적습니다. 두 문서는 키 정렬, 두 칸 들여쓰기, 마지막 개행이
+있는 기존 JSON 형식입니다. 문서가 있다는 사실만으로는 승인되지 않습니다.
+
+마감 전에 소유자 프로토콜과 독립 승인 문서가 담긴 `main`을 가져온 분리
+체크아웃에서 `run --protocol-pull <번호> --approval-pull <번호>`를
+실행합니다. `run` 및 이후 명령에는 기존 불변 산출물 경로
+`--m0-model-dir`, `--api27-model-dir`도 넘깁니다. 모델 해시와 적합 기록이
+다르면 허용하지 않습니다. 실행은 원래 날짜 전체를 공용 Git 디렉터리에서
+한 번만 예약하고, 두 공개 문서와 미리 연 예측 PR을 새로 확인합니다.
+승인이 다르거나 마감을 넘기면 재실행 없이 실패를 보존합니다.
+
+`verify`는 저장된 정확한 출력을 읽기 전용으로 재현합니다. `stage`는 마감
+전에만 같은 예측 바이트를 출력합니다. 이 바이트만
+`docs/research/commitments/fixed-pair-v1/<study>/paired.json`으로,
+처음 고정한 PR에서 일반 병합합니다. `witness`는 그 정확한 문서와 병합
+시각을 한 번 읽고, `replay-witness`는 보존된 응답으로 다시 확인합니다.
+두 명령은 마감 이후에도 실제 병합 시각을 검증할 수 있습니다. 한 모델의
+명시적 미제출도 경주를 지우지 않으며, 아직 확인하지 않은 결과는 실패나
+적중률 0이 아닙니다. 이 명령은 재학습하거나 결과를 수집·평가하지 않습니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
