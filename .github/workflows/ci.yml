@@ -318,9 +318,9 @@ jobs:
       - name: Dated workout source regressions
         working-directory: ./packages/scripts
         run: |
-          uv run --frozen --extra race-card-pdf ruff check autoresearch/{kra,seoul}_daily_workout_source.py autoresearch/tests/test_{kra,seoul}_daily_workout_source.py
-          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/{kra,seoul}_daily_workout_source.py autoresearch/tests/test_{kra,seoul}_daily_workout_source.py
-          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_{kra,seoul}_daily_workout_source.py -p no:cacheprovider -o addopts=''
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/{kra_daily_workout_navigation,kra_daily_workout_source,seoul_daily_workout_source}.py autoresearch/tests/test_{kra_daily_workout_navigation,kra_daily_workout_source,seoul_daily_workout_source}.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/{kra_daily_workout_navigation,kra_daily_workout_source,seoul_daily_workout_source}.py autoresearch/tests/test_{kra_daily_workout_navigation,kra_daily_workout_source,seoul_daily_workout_source}.py
+          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_{kra_daily_workout_navigation,kra_daily_workout_source,seoul_daily_workout_source}.py -p no:cacheprovider -o addopts=''
       - name: Exact trio distribution regressions
         working-directory: ./packages/scripts
         run: |
