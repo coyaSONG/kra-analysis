@@ -228,12 +228,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/fixed_pair_forward{,_contract}.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/fixed_pair_forward{,_contract}.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_fixed_pair_forward.py -o addopts=''
-      - name: Read-only fixed-pair outcome regressions
+      - name: Read-only fixed-pair outcome and whole-card learning regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/autoresearch/fixed_pair_evaluation.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_evaluation.py
-          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/fixed_pair_evaluation.py ../../packages/scripts/autoresearch/tests/test_fixed_pair_evaluation.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_fixed_pair_evaluation.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/{fixed_pair_evaluation,kra_whole_card_learning}.py ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/{fixed_pair_evaluation,kra_whole_card_learning}.py ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api
         run: |

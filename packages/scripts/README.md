@@ -290,6 +290,31 @@ PYTHONPATH=packages/scripts python -B -m autoresearch.fixed_pair_evaluation \
 대조합니다. 대기·목표 미정의 또는 모집단 충돌이 있으면 전체 정확도·우열은
 비워 두며, 거리·등급·경마장별 숫자는 진단용 건수로만 보고합니다.
 
+## 전체 경주표 학습 자료 후보 확인
+
+예측 공개 여부와 별도로, 마감 전 **입력 존재 증명**을 받은 전체 경주표는
+경주 종료 후 기존 공식 결과 원본과 대조할 수 있습니다. 분리 연구 폴더에서
+원래 전체표·접수 기록·컷오프·입력 증명 PR과 선택한 결과 버전을 지정합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -B -m autoresearch.kra_whole_card_learning \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <처음-동결한-전체표-sha256> --first-cutoff <원래-UTC-마감> \
+  --packet-sha256 <입력-묶음-sha256> --input-pr <입력-증명-PR-번호> \
+  --result-plan <outcome-plan.json> --result-plan-sha256 <sha256>
+```
+
+기본 명령은 원본을 재요청하거나 저장하지 않고 전체 모집단, 결측 및 연결 사유만
+출력합니다. 결과 계획이 없으면 두 결과 인수를 모두 생략합니다. 원래 출전 말과
+공식 두 결과 출처가 정확히 일치하고 모든 경주에서 유일한 상위 3두가 확인될
+때만 후보가 준비됩니다. 원래 명부에서 빠진 말, 동착, 불성립 또는 추가 경주는
+전체 후보를 보류하며, 경주를 빼서 일부만 저장하지 않습니다.
+
+`--seal`은 준비된 후보만 접수 기록 옆에 결과 계획 해시로 구분해 한 번 저장합니다.
+사전 입력과 결과 정답은 별도 목록이며, 정정본을 선택해도 기존 후보를 덮어쓰지
+않습니다. 이 후보는 별도 검토 전 학습용으로 승인되지 않습니다. 이 명령은 예측
+실패를 복구하지 않으며, 신규 예측·모델 적합·적중률 계산도 하지 않습니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
