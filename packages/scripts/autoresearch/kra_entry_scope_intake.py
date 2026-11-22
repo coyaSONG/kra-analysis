@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
+import subprocess
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import asynccontextmanager
@@ -39,6 +41,7 @@ from autoresearch.prerace_hash_witness import timestamp
 from autoresearch.restricted_cohort import horse_id, parse_json
 
 FORMAT = "kra-api26-scope-intake-v1"
+LIVE_RESERVATIONS = "kra-api26-scope-intake-reservations-v1"
 KST = ZoneInfo("Asia/Seoul")
 HTTP_FAILURES = {401: "authentication_error", 403: "access_denied", 429: "rate_limited"}
 MAX_DENIAL_BYTES = 16 * 1024
@@ -374,15 +377,71 @@ async def _capture_scope(client, scope, root, output, cutoff, clock, key):
         }
 
 
-def _reserve(parent, dates):
-    # Identical or overlapping dates cannot consume another attempt in this archive.
+def _require_unreserved(parent, dates, *, suffix=""):
     known = set(dates)
-    for previous in parent.glob("window_*"):
-        if known.intersection(previous.name.removeprefix("window_").split("_")):
+    for previous in parent.iterdir():
+        name = previous.name
+        if not (name.startswith("window_") and name.endswith(suffix)):
+            continue
+        old_dates = name.removeprefix("window_").removesuffix(suffix).split("_")
+        if known.intersection(old_dates):
             raise ValueError("scope_intake_window_already_reserved")
-    target = parent / ("window_" + "_".join(dates))
-    target.mkdir(mode=0o700, exist_ok=False)
-    return target
+
+
+def _reserve_live(root, window, plan, clock, cutoff):
+    try:
+        checkout, metadata = subprocess.check_output(
+            [
+                "git",
+                "rev-parse",
+                "--path-format=absolute",
+                "--show-toplevel",
+                "--git-common-dir",
+            ],
+            cwd=root,
+            env={
+                name: value
+                for name, value in os.environ.items()
+                if name not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}
+            },
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+        ).splitlines()
+        common = Path(metadata)
+        if Path(checkout).resolve() != root or not (
+            common.is_absolute() and common.is_dir()
+        ):
+            raise ValueError
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        raise ValueError("scope_intake_requires_git_worktree_root") from exc
+
+    base = common / LIVE_RESERVATIONS
+    if base.is_symlink() or (base / "collector.lock").is_symlink():
+        raise ValueError("scope_intake_unsafe_live_reservation_directory")
+    base.mkdir(mode=0o700, exist_ok=True)
+    with exclusive(base):
+        _require_unreserved(base, plan["race_dates"], suffix=".json")
+        reserved_at = clock()
+        if reserved_at >= cutoff:
+            raise ValueError("scope_intake_first_block_cutoff_passed")
+        # No HTTP is allowed until the claim survives loss of the output directory.
+        save(
+            base / (window + ".json"),
+            {
+                "race_dates": plan["race_dates"],
+                "schedule_sha256": plan["schedule"]["sha256"],
+                "first_block_cutoff": plan["first_block_cutoff"],
+                "max_http_requests": plan["max_http_requests"],
+                "reserved_at": reserved_at.isoformat(),
+            },
+        )
+        directory = os.open(common, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        return reserved_at
 
 
 async def capture_intake(
@@ -431,7 +490,13 @@ async def capture_intake(
         key = api_key_file.read_text().strip() if budget else None
         if budget and not key:
             raise ValueError("scope_intake_api_key_file_empty")
-        target = _reserve(out, plan["race_dates"])
+        dates = plan["race_dates"]
+        window = "window_" + "_".join(dates)
+        _require_unreserved(out, dates)
+        if budget:
+            reserved_at = _reserve_live(root, window, plan, clock, cutoff)
+        target = out / window
+        target.mkdir(mode=0o700, exist_ok=False)
         save(
             target / "reservation.json", plan | {"reserved_at": reserved_at.isoformat()}
         )
