@@ -120,6 +120,16 @@ def test_sub_precision_separation_is_rejected_instead_of_guessing():
     assert c.trio is None and c.reason == "probability_gap_not_verified"
 
 
+def test_concentrated_parallel_edges_keep_positive_tails_after_exact_translation():
+    base = dict.fromkeys(TRIOS, 0.0)
+    tilt = dict.fromkeys(TRIOS, -400.0)
+    tilt[TILT_WINNER] = 0.0
+    c = certify(base, tilt, (set(), set()))
+    # With only the total mass constrained, the exact largest tilt wins.
+    assert c.trio == TILT_WINNER and c.method == "kl_upper_bound"
+    assert c.feasible_probability_gap_lower > Decimal("0.99")
+
+
 def test_trusted_interval_arithmetic_is_independent_of_ambient_context():
     base = {t: log(5) if t == BASE_WINNER else log(3) for t in TRIOS}
     tilt = {t: 5.0 if t == TILT_WINNER else 0.0 for t in TRIOS}

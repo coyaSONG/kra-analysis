@@ -24,7 +24,9 @@ Otherwise use the existing projection only to propose a feasible point and
 arbitrary dual potentials. Solve the edge changes on a spanning forest in
 exact rational arithmetic and independently verify zero change at each
 vertex. Adding these changes to the exact baseline softmax preserves both
-margins and total mass. Demand strictly positive lower bounds for the
+margins and total mass. Translate both baseline interval endpoints as exact
+rationals before rounding. Rounding the change first can erase the positive
+mass left by cancellation. Demand strictly positive lower bounds for the
 resulting feasible vector f. Let q* be the exact optimum and q_y be the
 normalized tilted vector after adding the proposed potentials. Because
 f and q* have the same margins, KL(f || q_y) equals the primal objective
@@ -54,18 +56,26 @@ change or retry at a different precision.
 | --- | ---: | ---: | --- |
 | Modest tilt | 18 / 19 | 50 / 50 | 1 exact tie |
 | Modest tilt with an extremely small mass | 18 / 19 | 50 / 50 | 1 exact tie |
-| Concentrated tilt | 0 / 19 | 0 / 0 | 1 exact tie, 16 feasible positivity checks failed, 2 projections did not converge |
+| Concentrated tilt | 16 / 19 | 46 / 46 | 1 exact tie, 2 projections did not converge |
 
 The previous 17 accepted concentrated projections established residual
-checks, not usable modes. The 16 positivity failures here concern the
-constructed witness; they do not imply the true optimizer has zero mass or
-that all those optima are tied. The next useful numerical test is a
-strictly feasible witness by construction for sharply concentrated cells,
-rather than relaxed convergence or rank tolerances.
+checks, not modes. In the initial certificate replay, one was an exact tie
+and 16 failed the feasible positivity check. In all 16, the baseline lower
+endpoint plus the rational change was still positive before rounding;
+rounding the change separately had hidden that fact. Exact endpoint
+translation resolves all 16 without changing the inputs, precision,
+iteration limit or strict gap rule. The two nonconvergences were not retried
+with a different budget.
 
-Local receipt: `separate-trio-mode-certificate-20261123/mode-shape-replay.json`,
-SHA256 `35561349d708c83b0f13c2915bf4c7b71c33a62de38382974a7806e316540b89`.
-It pins the implementation, experiment and prior synthetic receipt.
+Local receipts under `separate-trio-mode-certificate-20261123/`:
+
+| Receipt | SHA256 |
+| --- | --- |
+| `mode-shape-replay.json` | `35561349d708c83b0f13c2915bf4c7b71c33a62de38382974a7806e316540b89` |
+| `mode-shape-replay-exact-translation.json` | `302a600980a4e71e3a8a61e6848942e0cc5006bb61cf370c83f012bd7ee0342a` |
+
+They pin both implementation versions, the experiment and the prior
+synthetic inputs. The final receipt also pins the initial one.
 The replay uses no real feature values or labels and makes no source calls.
 Multiplicities are archived shape equivalents, not independent trials,
 forecastable races or accuracy.

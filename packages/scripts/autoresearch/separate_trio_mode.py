@@ -72,6 +72,13 @@ class _Bounds:
         a, b = Decimal(value.numerator), Decimal(value.denominator)
         return _Interval(self.down.divide(a, b), self.up.divide(a, b))
 
+    def translate(self, a: _Interval, offset: Fraction) -> _Interval:
+        # Round after the exact addition so cancellation preserves tiny tails.
+        return _Interval(
+            self.rational(Fraction(a.lo) + offset).lo,
+            self.rational(Fraction(a.hi) + offset).hi,
+        )
+
     def add(self, a: _Interval, b: _Interval) -> _Interval:
         return _Interval(self.down.add(a.lo, b.lo), self.up.add(a.hi, b.hi))
 
@@ -223,7 +230,7 @@ def _bound(
             Fraction(q.lo) - Fraction(p.lo) for p, q in zip(p0, proposal, strict=True)
         ),
     )
-    feasible = tuple(b.add(p, b.rational(d)) for p, d in zip(p0, delta, strict=True))
+    feasible = tuple(b.translate(p, d) for p, d in zip(p0, delta, strict=True))
     if any(p.lo <= _ZERO for p in feasible):
         raise _Unverified("positive_feasible_point_not_verified")
 
