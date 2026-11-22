@@ -159,6 +159,28 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_witness stage
 KRA 원본을 인증하거나 정확한 수집 시각을 보증한다는 뜻은 아닙니다.
 학습 승인, 전체 평가 등록 및 마감 전 예측 공개는 여전히 별도 절차입니다.
 
+### 사전 등록자료 연결 진단
+
+PR #164의 사전 등록자료는 전체표가 아닙니다. 위 입력 증명과 PR #164의
+공개 기록을 모두 마감 전에 확인한 경우, 원래 마감 전에 아래 진단을
+실행할 수 있습니다. 기존 API26 원본과 공개 응답을 다시 읽을 뿐
+외부 호출, 파일 변경, 예측 실행은 하지 않습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_nomination_card_audit \
+  --nomination-packet <nomination-input-packet.json> \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각> \
+  --packet-sha256 <whole-card-packet-sha256> --pull <전체표입력증명PR번호>
+```
+
+확정표 전체 경주와 증명 당시 API26에 선언된 모든 말을 유지합니다.
+같은 경주의 거리·등급·말 ID·이름이 모두 맞는 경우만 연결합니다.
+관측 누락, 미표기, 실제 0, 연결 실패를 구분합니다.
+사전 목록에만 있는 경주는 취소나 제외로 단정하지 않습니다. 확정 부담중량
+규칙은 이 진단에서 비교하지 않습니다. 출력은 말 ID를 포함하는 비공개
+검토용이며, 특성값을 내보내거나 학습·평가 등록을 승인하지 않습니다.
+
 ## 별도 사전 승인 전체표의 고정 M0/API27 예측
 
 10월 16~18일 계약은 그대로입니다. 이 명령은 그 모집단이나 이미 놓친
