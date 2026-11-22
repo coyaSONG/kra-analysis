@@ -116,6 +116,36 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_inputs \
 않습니다. `verified_local_inputs_only`는 예측 실행, 승인, 등록이나 공개를
 의미하지 않으며 이전 구간의 입력 예약을 대체하지 않습니다.
 
+## 전체 경주표 입력의 마감 전 존재 증명
+
+같은 전체표와 접수 기록으로 마감 **전** `stage`를 실행하면 접수 기록 옆에
+`whole-card-input-packet.json`을 한 번만 생성합니다. 이 비공개 묶음은
+전국·지역 경주표와 API26 원본의 해시를 간접적으로 고정하고, 전체 경주의
+공통 모델 입력 해시와 특성별 누락 수를 보존합니다. 표준 출력은 공개 가능한
+두 필드의 JSON만 담습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_witness stage \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각>
+```
+
+승인된 절차로 표준 출력의 정확한 바이트만
+`docs/research/input-witnesses/<packet_sha256>.json`으로 만들어 일반 PR로
+`main`에 병합합니다. 원본·비공개 묶음·말 식별자·모델 입력은 공개하지
+않습니다. 이 명령은 PR을 열거나 제출하지 않습니다.
+
+병합 이후 같은 네 인수와 `--packet-sha256 <packet_sha256> --pull <PR번호>`를
+사용해 `capture`를 실행합니다. 원본을 재현한 뒤 GitHub에서 PR과 병합
+커밋의 정확한 공개 문서를 한 번씩 읽고 응답을 접수 기록 옆에 보존합니다.
+같은 인수의 `replay`는 추가 호출이나 파일 변경 없이 검증합니다.
+마감과 같은 시각 또는 이후에 병합되면 종료 코드 2로 남기며 소급 승인하지
+않습니다. 게이트나 요청에 문제가 생겨도 같은 증명 폴더를 덮어쓰지 않습니다.
+
+정상 검증은 해당 해시의 내용이 마감 전에 존재했다는 증거입니다. GitHub가
+KRA 원본을 인증하거나 정확한 수집 시각을 보증한다는 뜻은 아닙니다.
+학습 승인, 전체 평가 등록 및 마감 전 예측 공개는 여전히 별도 절차입니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
