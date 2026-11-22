@@ -209,6 +209,21 @@ def test_claimed_solver_success_without_actual_stationarity_yields_no_model(
     assert result.gradient_norm == pytest.approx(0.75)
 
 
+def test_a_stationarity_check_alone_cannot_resolve_a_near_tied_choice(fit, monkeypatch):
+    ids = ("1", "2", "3", "4")
+    a, b = ids[:3], ("1", "2", "4")
+    p = design(ids, lambda s: (int(s == a) - int(s == b),))
+    results = []
+    for x in (-1e-6, 1e-6):
+        proposal = SimpleNamespace(status=0, nfev=1, nit=0, success=True, x=[x])
+        monkeypatch.setitem(fit.__globals__, "minimize", lambda *_, r=proposal, **kw: r)
+        result = fit(*panels(ids, p, [a, b]), feature_columns=("contrast",), ridge=0.2)
+        assert result.state == "fit_reached_stationarity"
+        assert result.estimated_stationarity_radius == pytest.approx(3.5e-6)
+        results.append(p.mode(result.coefficients))
+    assert results == [b, a]
+
+
 def test_nonfinite_trial_fails_without_coefficients(fit, monkeypatch):
     ids = ("1", "2", "3", "4")
     ds = design(ids, lambda s: (0.0,))

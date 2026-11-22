@@ -61,7 +61,7 @@ certificate of an exact optimum or its leading alternative.
 
 ## Outcomes & Retrospective
 
-The broader local regression suite passed 278 tests. A 72-digit scalar calculation
+The broader local regression suite passed 279 tests. A 72-digit scalar calculation
 checks the coefficients, objective, and re-evaluated gradient. Unordered
 member permutations and race mapping order do not change the result.
 With 48 fictional target observations on equal five-runner fields, the
@@ -89,9 +89,9 @@ SHA256 `5f63bdb69184ae13b67c457dcc22d3cbdb412363c8ad585036983fa1bfef996e`.
 
 Compared all 210 Python source and environment paths included in the
 existing fixed runtime against the baseline Git blobs; no path or byte
-changed. The 40 focused and chronological cases also ran from the API
-CI working directory, with no special import setup. No KRA/API fetch
-or released model run occurred.
+changed. Before the added near-tie case, 40 focused and chronological
+cases also ran from the API CI working directory with no special import
+setup. No KRA/API fetch or released model run occurred.
 
 ## Context and Orientation
 
@@ -152,6 +152,10 @@ trusting the solver-provided gradient. Require an estimated radius at
 most `1e-5` under this numerical policy. A near tie in computed scores
 is not an exact mathematical certificate; the unchanged probability
 component's canonical tie order applies to equal computed scores only.
+The symmetric two-label fixture has exact optimum zero. Two invented
+solver proposals at `-1e-6` and `+1e-6` both meet the numerical radius
+limit, but select different trios. Neither serves as a certificate of
+the mode at the exact mathematical solution.
 
 Revision: Added synthetic chronological integration and precision
 evidence while awaiting the separate methods review.
