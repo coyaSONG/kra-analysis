@@ -231,11 +231,24 @@ JSON 참으로 적습니다. 두 문서는 키 정렬, 두 칸 들여쓰기, 마
 있는 기존 JSON 형식입니다. 문서가 있다는 사실만으로는 승인되지 않습니다.
 
 마감 전에 소유자 프로토콜과 독립 승인 문서가 담긴 `main`을 가져온 분리
-체크아웃에서 `run --protocol-pull <번호> --approval-pull <번호>`를
-실행합니다. `run` 및 이후 명령에는 기존 불변 산출물 경로
-`--m0-model-dir`, `--api27-model-dir`도 넘깁니다. 모델 해시와 적합 기록이
-다르면 허용하지 않습니다. 실행은 원래 날짜 전체를 공용 Git 디렉터리에서
-한 번만 예약하고, 두 공개 문서와 미리 연 예측 PR을 새로 확인합니다.
+체크아웃에서 아래처럼 원래 입력과 두 고정 모델을 먼저 점검합니다.
+
+```bash
+PYTHONPATH=packages/scripts:apps/api python -B -m autoresearch.fixed_pair_forward preflight \
+  --study <id> --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --protocol-pull <번호> --approval-pull <번호> \
+  --m0-model-dir <dir> --api27-model-dir <dir>
+```
+
+`preflight`는 출전표 증명, 로컬 승인 문서의 정확한 연결과 시각, 보존된
+모델 해시·적합 기록, 같은 날짜의 기존 예약을 읽기만 확인합니다. 외부
+호출, 예약, 점수 계산은 하지 않습니다. 성공 상태
+`local_prerequisites_verified`는 GitHub의 독립 승인, 예측 공개 PR 상태,
+동시 실행 가능 여부를 확인했다는 뜻이 아닙니다.
+
+실제 승인 절차가 끝났을 때만 같은 인수로 `run`을 실행합니다. 실행은
+원래 날짜 전체를 공용 Git 디렉터리에서 한 번만 예약하고, 두 공개
+문서와 미리 연 예측 PR을 새로 확인합니다.
 승인이 다르거나 마감을 넘기면 재실행 없이 실패를 보존합니다.
 
 `verify`는 저장된 정확한 출력을 읽기 전용으로 재현합니다. `stage`는 마감
