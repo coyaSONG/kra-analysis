@@ -1,7 +1,7 @@
 """The nomination audit counts every declaration and never collects or scores."""
 
 import sys
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 import httpx
@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch import kra_nomination_card_audit as audit
 from autoresearch import local_m0_inference, prerace_hash_witness
+from autoresearch import nomination_prior_scope_recheck as recheck
 from autoresearch.observed_history_seed import pin, save
 from autoresearch.restricted_cohort import horse_id, sha256
 from autoresearch.tests.condition_forward_fixture import archive_publication
@@ -240,6 +241,56 @@ def test_original_receipt_cannot_be_replaced(whole_card):
     path.write_bytes(b"{}")
     with pytest.raises(ValueError, match="scope_intake_source_pin_mismatch"):
         audit.audit(*args, **original)
+
+
+def test_prior_leads_use_the_full_verified_card_and_remain_read_only(
+    whole_card, monkeypatch
+):
+    (root, packet, receipt), original, _ = whole_card()
+    day = (date.fromisoformat(DATE) - timedelta(days=10)).strftime("%Y%m%d")
+    scope = f"{day}_2"
+    lead = root / "local-leads.json"
+    save(
+        lead,
+        {
+            "format": recheck.FORMAT,
+            "nomination_packet_sha256": audit.NOMINATION_PACKET_SHA,
+            "reference_published_at": NOW.isoformat(),
+            "final_card_or_cutoff_known": False,
+            "authorizes_source_request": False,
+            "units": {
+                scope: [
+                    {
+                        "target_race_id": f"{DATE}_2_1",
+                        "horse_id": horse_id(declaration(2, 0)["hrNo"]),
+                        "potential_gain": [recheck.BENEFITS[1]],
+                        "prior_race_ids": [f"{scope}_5"],
+                    }
+                ]
+            },
+        },
+    )
+
+    def disabled(*args, **kwargs):
+        pytest.fail("read-only source relevance cannot collect or infer")
+
+    monkeypatch.setattr(httpx, "Client", disabled)
+    monkeypatch.setattr(httpx, "AsyncClient", disabled)
+    monkeypatch.setattr(local_m0_inference, "score_capture", disabled)
+    monkeypatch.setattr(recheck, "now", lambda: AUDIT_TIME)
+    bound = pin(root, lead)
+    before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    output = recheck.audit(root, bound, packet, receipt, **original)
+    assert output["complete_witness_declarations"] == 40
+    assert len(output["complete_witness_race_ids"]) == 4
+    assert (
+        output["source_units"][scope]["retained_for_source_review"][recheck.BENEFITS[1]]
+        == 1
+    )
+    monkeypatch.setattr(recheck, "now", lambda: DUE)
+    with pytest.raises(ValueError, match="outside_original_window"):
+        recheck.audit(root, bound, packet, receipt, **original)
+    assert {p: p.read_bytes() for p in root.rglob("*") if p.is_file()} == before
 
 
 @pytest.mark.parametrize(

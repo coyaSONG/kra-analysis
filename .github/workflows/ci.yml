@@ -213,9 +213,9 @@ jobs:
       - name: Nomination prior coverage regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/autoresearch/nomination_prior_coverage.py ../../packages/scripts/autoresearch/tests/test_nomination_prior_coverage.py
-          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/nomination_prior_coverage.py ../../packages/scripts/autoresearch/tests/test_nomination_prior_coverage.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_nomination_prior_coverage.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/{nomination_prior_coverage,nomination_prior_scope_recheck}.py ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/{nomination_prior_coverage,nomination_prior_scope_recheck}.py ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{nomination_prior_coverage,nomination_prior_scope_recheck}.py -o addopts=''
       - name: Reviewed fixed-pair forward regressions
         working-directory: ./apps/api
         run: |
