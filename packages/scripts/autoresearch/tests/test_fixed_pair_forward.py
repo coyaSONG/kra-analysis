@@ -308,9 +308,125 @@ def refuse_score(monkeypatch):
     )
 
 
+def preflight(card, proofs=PULLS[1:3]):
+    return forward.preflight(card.root, STUDY, card.receipt, proofs, card.model_dirs)
+
+
+def test_preflight_cli_is_offline_and_does_not_claim_or_score(
+    card, monkeypatch, capsys
+):
+    refuse_score(monkeypatch)
+    monkeypatch.chdir(card.root)
+    args = [
+        "preflight",
+        "--study",
+        STUDY,
+        "--receipt",
+        card.receipt["path"],
+        "--receipt-sha256",
+        card.receipt["sha256"],
+        "--protocol-pull",
+        str(PULLS[1]),
+        "--approval-pull",
+        str(PULLS[2]),
+        "--m0-model-dir",
+        str(card.model_dirs["M0"]),
+        "--api27-model-dir",
+        str(card.model_dirs["API27"]),
+    ]
+    assert forward.main(args) == 0
+    result = parse_json(capsys.readouterr().out.encode())
+    assert (
+        result
+        == preflight(card)
+        == {
+            "status": "local_prerequisites_verified",
+            "study_id": STUDY,
+            "race_count": 14,
+            "checked_at": at(30).isoformat(),
+            "first_block_cutoff": DUE.isoformat(),
+            "live_authority_verified": False,
+            "attempt_reserved": False,
+        }
+    )
+    assert not card.calls and not card.ledger.parent.exists()
+
+
+@pytest.mark.parametrize(
+    ("proofs", "error"),
+    (
+        ((1011, PULLS[2]), "approval_does_not_bind_exact_protocol"),
+        ((PULLS[0], PULLS[2]), "reused_publication_slot"),
+    ),
+)
+def test_preflight_rejects_wrong_local_publication_numbers_without_claim(
+    card, monkeypatch, proofs, error
+):
+    refuse_score(monkeypatch)
+    with pytest.raises(ValueError, match=error):
+        preflight(card, proofs)
+    assert not card.calls and not card.ledger.parent.exists()
+
+
+def test_preflight_rejects_future_local_review_clock(card, monkeypatch):
+    refuse_score(monkeypatch)
+    card.clock[0] = at(15)
+    with pytest.raises(ValueError, match="local_review_clock_conflict"):
+        preflight(card)
+    assert not card.calls and not card.ledger.parent.exists()
+
+
+def test_preflight_reads_both_models_and_rejects_late_completion(card, monkeypatch):
+    refuse_score(monkeypatch)
+    old_load = contract.api27.load_model
+
+    def invalid(_):
+        raise ValueError("fictional_changed_model")
+
+    monkeypatch.setattr(contract.api27, "load_model", invalid)
+    with pytest.raises(ValueError, match="fictional_changed_model"):
+        preflight(card)
+
+    def late(directory):
+        card.clock[0] = DUE
+        return old_load(directory)
+
+    monkeypatch.setattr(contract.api27, "load_model", late)
+    with pytest.raises(ValueError, match="original_deadline"):
+        preflight(card)
+    assert not card.calls and not card.ledger.parent.exists()
+
+
+def test_preflight_respects_overlapping_claim_without_creating_another(
+    card, monkeypatch
+):
+    refuse_score(monkeypatch)
+    other = card.ledger.with_name("previous-attempt")
+    forward.reserve(other, {"race_dates": card.protocol["race_dates"][:1]})
+    files = set(card.ledger.parent.iterdir())
+    with pytest.raises(ValueError, match="overlapping_consumed_dates"):
+        preflight(card)
+    assert not card.calls and set(card.ledger.parent.iterdir()) == files
+
+
+@pytest.mark.parametrize("at_lock", (False, True))
+def test_preflight_rejects_unusable_attempt_storage(card, monkeypatch, at_lock):
+    refuse_score(monkeypatch)
+    base = card.ledger.parent
+    if at_lock:
+        (base / "collector.lock").mkdir(parents=True)
+    else:
+        base.write_text("not a directory")
+    with pytest.raises(ValueError, match="unsafe_attempt_directory"):
+        preflight(card)
+    assert not card.calls and not card.ledger.exists()
+
+
 def test_owner_cannot_supply_the_separate_review(card, monkeypatch):
     refuse_score(monkeypatch)
     card.routes[f"{github.API_ROOT}/pulls/{PULLS[2]}"]["user"]["login"] = contract.OWNER
+    assert preflight(card)["live_authority_verified"] is False
+    assert not card.calls and not card.ledger.parent.exists()
     with pytest.raises(ValueError, match="public_review_author_conflict"):
         run(card)
     assert len(card.calls) == 4

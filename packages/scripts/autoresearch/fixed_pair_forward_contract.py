@@ -241,9 +241,9 @@ def unused_scope(root, protocol):
         )
 
 
-def verify_documents(ledger, study, proof_ids, protocol_raw, approval_raw, *, collect):
+def local_review(study, proof_ids, protocol, protocol_raw, approval_raw):
     protocol_pr, approval_pr = proof_ids
-    protocol, approval = canonical(protocol_raw), canonical(approval_raw)
+    approval = canonical(approval_raw)
     numbers = [
         protocol_pr,
         approval_pr,
@@ -262,6 +262,15 @@ def verify_documents(ledger, study, proof_ids, protocol_raw, approval_raw, *, co
             approval_for(study, protocol_raw, protocol_pr, reviewer, reviewed_at)
         ),
         "fixed_pair_approval_does_not_bind_exact_protocol",
+    )
+    return reviewer, reviewed_at
+
+
+def verify_documents(ledger, study, proof_ids, protocol_raw, approval_raw, *, collect):
+    protocol_pr, approval_pr = proof_ids
+    protocol = canonical(protocol_raw)
+    reviewer, reviewed_at = local_review(
+        study, proof_ids, protocol, protocol_raw, approval_raw
     )
     evidence = {}
     operation = publication.capture if collect else publication.replay

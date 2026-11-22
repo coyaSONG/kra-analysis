@@ -42,25 +42,44 @@ def ledger_for(root, study):
     return common / ATTEMPTS / study
 
 
+def check_attempt_directory(base):
+    lock = base / "collector.lock"
+    if (
+        base.is_symlink()
+        or lock.is_symlink()
+        or (base.exists() and not base.is_dir())
+        or (lock.exists() and not lock.is_file())
+    ):
+        raise ValueError("fixed_pair_unsafe_attempt_directory")
+
+
+def unreserved_claim(ledger, race_dates):
+    safe_destination(ledger)
+    claim = ledger.with_suffix(".reservation.json")
+    safe_destination(claim)
+    if not ledger.parent.exists():
+        return claim
+    for previous in ledger.parent.iterdir():
+        if not previous.name.endswith(".reservation.json"):
+            continue
+        if previous.is_symlink():
+            raise ValueError("fixed_pair_unsafe_previous_reservation")
+        old = contract.canonical(read(previous))
+        contract.require(
+            not set(old["race_dates"]).intersection(race_dates),
+            "fixed_pair_overlapping_consumed_dates",
+        )
+    return claim
+
+
 def reserve(ledger, reservation):
     base = ledger.parent
     if not base.exists():
         base.mkdir(exist_ok=True)
         sync_directory(base.parent)
-    if base.is_symlink() or (base / "collector.lock").is_symlink():
-        raise ValueError("fixed_pair_unsafe_attempt_directory")
+    check_attempt_directory(base)
     with exclusive(base):
-        safe_destination(ledger)
-        claim = ledger.with_suffix(".reservation.json")
-        safe_destination(claim)
-        for previous in base.glob("*.reservation.json"):
-            if previous.is_symlink():
-                raise ValueError("fixed_pair_unsafe_previous_reservation")
-            old = contract.canonical(read(previous))
-            contract.require(
-                not set(old["race_dates"]).intersection(reservation["race_dates"]),
-                "fixed_pair_overlapping_consumed_dates",
-            )
+        claim = unreserved_claim(ledger, reservation["race_dates"])
         # Publish the complete claim atomically before opening a run directory.
         save(claim, reservation)
         ledger.mkdir(exist_ok=False)
@@ -219,7 +238,7 @@ def payload(protocol, reservation, rows, started, computed):
     }
 
 
-def run(root, study, receipt, proof_ids, model_dirs):
+def setup_run(root, study, receipt, proof_ids):
     protocol, _, protocol_raw, approval_raw = contract.documents(
         root, study, *proof_ids
     )
@@ -231,6 +250,7 @@ def run(root, study, receipt, proof_ids, model_dirs):
     contract.unused_scope(root, protocol)
     contract.git(
         root,
+        "--no-optional-locks",
         "diff",
         "--exit-code",
         "refs/remotes/origin/main",
@@ -238,6 +258,39 @@ def run(root, study, receipt, proof_ids, model_dirs):
         "packages/scripts",
         "pyproject.toml",
         "uv.lock",
+    )
+    return protocol, protocol_raw, approval_raw, verified
+
+
+def preflight(root, study, receipt, proof_ids, model_dirs):
+    """Verify local prerequisites without obtaining authority or claiming a run."""
+    protocol, protocol_raw, approval_raw, _ = setup_run(root, study, receipt, proof_ids)
+    _, reviewed_at = contract.local_review(
+        study, proof_ids, protocol, protocol_raw, approval_raw
+    )
+    checked_at = deadline(protocol, now())
+    contract.require(
+        timestamp(protocol["created_at"]) <= reviewed_at <= checked_at,
+        "fixed_pair_local_review_clock_conflict",
+    )
+    ledger = ledger_for(root, study)
+    check_attempt_directory(ledger.parent)
+    unreserved_claim(ledger, protocol["race_dates"])
+    load_models(model_dirs, checked_at)
+    return {
+        "status": "local_prerequisites_verified",
+        "study_id": study,
+        "race_count": len(protocol["race_ids"]),
+        "checked_at": deadline(protocol, now()).isoformat(),
+        "first_block_cutoff": protocol["first_block_cutoff"],
+        "live_authority_verified": False,
+        "attempt_reserved": False,
+    }
+
+
+def run(root, study, receipt, proof_ids, model_dirs):
+    protocol, protocol_raw, approval_raw, verified = setup_run(
+        root, study, receipt, proof_ids
     )
     ledger = ledger_for(root, study)
     reservation = {
@@ -411,7 +464,15 @@ def witness(root, study, receipt, model_dirs, *, collect):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     modes = parser.add_subparsers(dest="mode", required=True)
-    for name in ("prepare", "run", "verify", "stage", "witness", "replay-witness"):
+    for name in (
+        "prepare",
+        "preflight",
+        "run",
+        "verify",
+        "stage",
+        "witness",
+        "replay-witness",
+    ):
         mode = modes.add_parser(name)
         mode.add_argument("--study", required=True)
         mode.add_argument("--receipt", required=True)
@@ -427,7 +488,7 @@ def main(argv=None):
         else:
             mode.add_argument("--m0-model-dir", type=Path, required=True)
             mode.add_argument("--api27-model-dir", type=Path, required=True)
-        if name == "run":
+        if name in ("preflight", "run"):
             mode.add_argument("--protocol-pull", type=int, required=True)
             mode.add_argument("--approval-pull", type=int, required=True)
     args = parser.parse_args(argv)
@@ -453,8 +514,9 @@ def main(argv=None):
         )
     else:
         models = {"M0": args.m0_model_dir, "API27": args.api27_model_dir}
-        if args.mode == "run":
-            result = run(
+        if args.mode in ("preflight", "run"):
+            operation = preflight if args.mode == "preflight" else run
+            result = operation(
                 root,
                 args.study,
                 receipt,
