@@ -315,6 +315,64 @@ PYTHONPATH=packages/scripts python -B -m autoresearch.kra_whole_card_learning \
 않습니다. 이 후보는 별도 검토 전 학습용으로 승인되지 않습니다. 이 명령은 예측
 실패를 복구하지 않으며, 신규 예측·모델 적합·적중률 계산도 하지 않습니다.
 
+### 시간 순서가 있는 전체표 묶음 고정
+
+앞선 전체표 후보와 뒤의 전체 평가 카드를 하나의 비공개 계획에 지정합니다.
+경로는 분리 연구 폴더 기준의 상대 경로이며, 각 SHA256은 실제 파일 바이트를
+가리킵니다. 아래 예시는 자리표시자이며 실제 등록이 아닙니다. `training`에는
+선택한 전체표를 날짜가 앞선 순서대로 모두 넣습니다. `evaluation`에는 사전
+입력 증명을 받은 별도 전체표 하나만 넣으며 결과 경로나 정답을 지정하지 않습니다.
+
+```json
+{
+  "format": "kra-whole-card-walk-forward-plan-v1",
+  "training": [{
+    "input": {
+      "receipt": {"path": "<이전 접수 기록>", "sha256": "<sha256>"},
+      "schedule_sha256": "<이전 원래 전체표 sha256>",
+      "first_cutoff": "<이전 원래 UTC 마감>",
+      "packet_sha256": "<이전 사전 입력 묶음 sha256>",
+      "input_pr": 1
+    },
+    "result_plan": {"path": "<선택한 이전 결과 계획>", "sha256": "<sha256>"},
+    "candidate": {"path": "<이전 전체표 학습 후보>", "sha256": "<sha256>"}
+  }],
+  "evaluation": {
+    "receipt": {"path": "<평가 접수 기록>", "sha256": "<sha256>"},
+    "schedule_sha256": "<평가 원래 전체표 sha256>",
+    "first_cutoff": "<평가 원래 UTC 마감>",
+    "packet_sha256": "<평가 사전 입력 묶음 sha256>",
+    "input_pr": 2
+  }
+}
+```
+
+```bash
+PYTHONPATH=packages/scripts python -B docs/research/tools/kra_walk_forward_fold.py stage \
+  --plan <비공개계획.json> --plan-sha256 <계획-sha256>
+```
+
+`stage`는 평가 마감 전에만 원본을 재현하여 `walk-forward-fold-packet.json`을
+평가 접수 기록 옆에 한 번 저장합니다. 학습 카드와 평가 카드가 날짜나 경주
+단위로 겹치면 이전 결과도 읽지 않습니다. 기록된 모든 이전 결과 가용 시각이
+후보를 재현한 시각보다 늦지 않아야 합니다. 정정 후의 판본·누락·충돌을 이유로
+선택한 전체표를 조용히 제외하지 않습니다. 재출전한 말은 각각의 경주에 유지합니다.
+이전 결과 원본의 수집 계획에 평가 첫날이나 이후 날짜가 섞여 있어도
+해당 결과 묶음의 원문 재생 전에 보류합니다.
+
+표준 출력의 두 필드만 `docs/research/walk-forward-witnesses/<packet_sha256>.json`으로
+등록해 일반 PR로 병합합니다. 같은 계획 인수에 `--packet-sha256 <sha256>`과
+`--pull <이 묶음 공개 PR 번호>`를 붙여 `capture`를 실행하면 그 공개 PR과 정확한
+병합 문서만 읽습니다. `replay`는 이후에도 저장된 증거를 읽기만 합니다.
+마감과 같은 시각 또는 늦은 병합은 적시 증명이 아니며 기존 묶음을 교체하지 않습니다.
+
+병합 시각으로 증명하는 것은 그 시점까지 해당 묶음 해시가 고정됐다는 사실입니다.
+내부 원본의 과거 관측·저장 시각은 저장 기록의 일관성 검사이며 독립 인증이
+아닙니다. 여러 주에 공통으로 쓸 선택 규칙과 전체 후보 원장, 재번호·이동
+경주의 연결, 기존 평가의 후속 학습 사용 여부는 별도 사전 검토·등록 대상입니다.
+학습 승인, 실제 모델 적합, 예측 공개 또는 70% 정확도 근거를 만들지 않습니다.
+현재 고정 M0/API27 예측의 마감이나 병합 절차를 지연시키지 마세요.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.
