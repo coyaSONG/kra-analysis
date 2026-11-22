@@ -52,6 +52,26 @@ fields; most earlier lines (416/452) print the same favorable word.
 Neither the 49 nor the 25 is an accuracy, expected lift, or a
 sample of independent trials.
 
+## The event day cannot reconstruct an older edition
+
+There are 115 repeated stable horse IDs in the two immutable card
+inventories. Compare 106 at the same physical venue; keep the nine
+other-venue matches outside this date comparison. Among the 106,
+the later PDF prints a different reference dated the day of the
+October PDF collection for 21 horses. The original earlier PDF
+prints a different date for each of those 21. Another 52 later
+references are dated strictly after the earlier collection day.
+Two later panels leave the date blank despite an earlier dated
+line. These are edition differences, not verified corrections or
+assertions about within-day event order.
+
+Do not reconstruct the earlier edition by using a later document
+and a date-only filter. This exact-byte comparison reproduces the
+actual changed inputs that such a rule could introduce. It also
+rules out treating a later blank as proof of no previous practice.
+The local version-readback SHA256 is
+`734391cc3de8fc39d0c9752f2db8f4a9a2c30fc9221c11e673076bccd351adf5`.
+
 ## Bounded original-site corroboration
 
 The [Seoul official routine-practice listing](https://race.kra.co.kr/startingData/startingTrainList.do)
