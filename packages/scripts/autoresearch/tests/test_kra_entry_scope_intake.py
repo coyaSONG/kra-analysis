@@ -12,6 +12,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch.kra_entry_scope_intake import (
+    MAX_DENIAL_BYTES,
     _capture_scope,
     capture_intake,
     plan_intake,
@@ -63,6 +64,17 @@ def mock_gateway(request):
     return answer(
         response_rows(int(request.url.params["meet"])),
         int(request.url.params["pageNo"]),
+    )
+
+
+def common_error(status, code):
+    return httpx.Response(
+        status,
+        json={
+            "OpenAPI_ServiceResponse": {
+                "cmmMsgHeader": {"returnReasonCode": code, "returnAuthMsg": TEST_KEY}
+            }
+        },
     )
 
 
@@ -124,6 +136,32 @@ def test_whole_card_retained_and_same_window_cannot_fetch_again(inputs):
         (lambda _: httpx.Response(401), "authentication_error", 401, None),
         (lambda _: httpx.Response(403), "access_denied", 403, None),
         (lambda _: httpx.Response(429), "rate_limited", 429, None),
+        (lambda _: common_error(403, "30"), "authentication_error", 403, "30"),
+        (lambda _: common_error(403, "22"), "rate_limited", 403, "22"),
+        (lambda _: common_error(403, "03"), "access_denied", 403, "03"),
+        (
+            lambda _: httpx.Response(
+                403, content=b"<error><returnReasonCode>30</returnReasonCode></error>"
+            ),
+            "authentication_error",
+            403,
+            "30",
+        ),
+        (
+            lambda _: httpx.Response(
+                403, json={"response": {"header": {"resultCode": TEST_KEY}}}
+            ),
+            "access_denied",
+            403,
+            None,
+        ),
+        (lambda _: common_error(200, "22"), "rate_limited", 200, "22"),
+        (
+            lambda _: httpx.Response(403, content=b" " * (MAX_DENIAL_BYTES + 1)),
+            "access_denied",
+            403,
+            None,
+        ),
         (
             lambda _: httpx.Response(
                 200, content=b"<error><returnReasonCode>30</returnReasonCode></error>"
@@ -180,6 +218,19 @@ def test_failure_keeps_all_unattempted_scopes(
     assert [s["state"] for s in scopes[1:]] == ["not_attempted"] * 3
     assert [s["stop_reason"] for s in scopes[1:]] == [failure] * 3
     assert TEST_KEY.encode() not in out.read_bytes()
+
+
+def test_mixed_gateway_and_success_page_is_never_accepted(inputs):
+    def mixed(_):
+        body = json.loads(answer(response_rows(1), 1).content)
+        body.update(json.loads(common_error(200, "22").content))
+        return httpx.Response(200, json=body)
+
+    (_, report), calls = run(inputs, provide=mixed)
+    assert calls == [(1, 1)]
+    assert report["status"] == "incomplete"
+    assert report["scopes"][0]["state"] == "provider_error_or_invalid_body"
+    assert report["scopes"][1]["state"] == "not_attempted"
 
 
 def test_transport_error_does_not_retry_or_record_secret_message(inputs):

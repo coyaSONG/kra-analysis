@@ -23,6 +23,10 @@ The output is a local source receipt, not a study or forecast.
 - [x] (2026-11-22 05:51Z) Read only the rules and locations in the first
   remote secret-scan report; use the established keyword mapping for
   the two non-literal function arguments in a separate commit.
+- [x] (2026-11-22 06:00Z) Replay the pinned API23 and API18 denial
+  bodies as gateway code 30 without making either request again.
+- [x] (2026-11-22 06:00Z) Pass 350 capture, replay, and evaluation
+  tests, including simulated denials and ambiguous gateway bodies.
 - [ ] Record the exact remote check status before any normal merge.
 
 ## Surprises & Discoveries
@@ -32,6 +36,11 @@ even when the request names its first race. Never assume they do: an
 unexpected total, missing/extra race or inconsistent start time blocks
 the attempted scope. The common provider fault code can be inside an
 HTTP 200 JSON/XML envelope rather than a non-200 response.
+Stored HTTP 403 responses from API23 and API18 also contain
+`OpenAPI_ServiceResponse.cmmMsgHeader.returnReasonCode` in JSON.
+The two archived bodies have the same SHA256
+`c41369295887d9454b7f06970e62d5892fdc0c7c16cb3843a2eb20f80df4aade`.
+The reported code does not establish why service-key access failed.
 
 The repository's line-based env-file rule flagged two Python keyword
 argument lines on PR 140 (CI run 44991064698). Both were code variable
@@ -120,6 +129,10 @@ complete final receipt.
 Gateway public error vocabulary: code 22 is a request limit and codes
 21, 30, 31 are API-key problems. Codes 20 and 32 denote denied access.
 Code 03 and an empty success do not establish that a race is absent.
+On HTTP 403 inspect only one small, time-bounded error body. A known
+authentication or request-limit code refines the diagnosis; code 03
+does not override the HTTP denial. Never accept a mixed gateway and
+success envelope as a roster.
 The program retains known status and code only, never provider text
 or authentication-bearing request URLs.
 

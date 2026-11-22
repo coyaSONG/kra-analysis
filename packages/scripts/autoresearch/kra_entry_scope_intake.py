@@ -41,6 +41,7 @@ from autoresearch.restricted_cohort import horse_id, parse_json
 FORMAT = "kra-api26-scope-intake-v1"
 KST = ZoneInfo("Asia/Seoul")
 HTTP_FAILURES = {401: "authentication_error", 403: "access_denied", 429: "rate_limited"}
+MAX_DENIAL_BYTES = 16 * 1024
 GATEWAY_FAILURES = {
     "03": "no_data_unconfirmed",
     "20": "access_denied",
@@ -211,6 +212,8 @@ def _payload_state(body, page_no, expected):
         return "empty_unconfirmed", None
     try:
         payload = parse_json(body)
+        if "OpenAPI_ServiceResponse" in payload:
+            raise ValueError("entry_gateway_error_envelope")
         _, total = parse_entry_sheet_page(payload, page_no=page_no, page_size=PAGE_SIZE)
     except (ValueError, TypeError, RecursionError):
         code = classify(body).get("result_code")
@@ -225,6 +228,24 @@ def _payload_state(body, page_no, expected):
     if total != expected:
         return "schedule_runner_count_conflict", "00"
     return None, "00"
+
+
+async def _denial_code(response):
+    """Read one small error body without recording the body or message."""
+    body = bytearray()
+    try:
+        async with asyncio.timeout(1):
+            async for chunk in response.aiter_bytes(chunk_size=4096):
+                if len(body) + len(chunk) > MAX_DENIAL_BYTES:
+                    return None
+                body.extend(chunk)
+    except (TimeoutError, httpx.HTTPError):
+        return None
+    info = classify(bytes(body))
+    code = info.get("result_code")
+    if info["category"] in {"api_error", "xml_response"} and code in GATEWAY_FAILURES:
+        return code
+    return None
 
 
 class _ScopeClient:
@@ -279,6 +300,12 @@ class _ScopeClient:
                 receipt["http_status"] = response.status_code
                 if response.status_code != 200:
                     self.stop = HTTP_FAILURES.get(response.status_code, "http_error")
+                    if response.status_code == 403:
+                        value = await _denial_code(response)
+                        if value is not None:
+                            receipt["gateway_result_code"] = value
+                            if value != "03":
+                                self.stop = GATEWAY_FAILURES[value]
                     raise ValueError("scope_intake_http_failure")
                 body = bytearray()
                 async for chunk in response.aiter_bytes():

@@ -61,6 +61,35 @@ def test_incomplete_and_wrong_pagination_rejected():
     assert p.classify(json.dumps(data).encode())["category"] == "json_schema_mismatch"
 
 
+@pytest.mark.parametrize("reason", ["03", "22", "30"])
+def test_gateway_json_common_header_decodes_only_public_error_code(reason):
+    payload = {
+        "OpenAPI_ServiceResponse": {
+            "cmmMsgHeader": {"returnReasonCode": reason, "errMsg": "private message"}
+        }
+    }
+    result = p.classify(json.dumps(payload).encode())
+    assert result["category"] == "api_error"
+    assert result["result_code"] == reason
+    assert "private message" not in json.dumps(result)
+    assert "total_count" not in result
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b'{"OpenAPI_ServiceResponse":{"cmmMsgHeader":{"returnReasonCode":"00"}}}',
+        b'{"OpenAPI_ServiceResponse":{"cmmMsgHeader":{"returnReasonCode":"30","returnReasonCode":"22"}}}',
+        b'{"OpenAPI_ServiceResponse":{"cmmMsgHeader":{"returnReasonCode":[]}}}',
+    ],
+)
+def test_invalid_gateway_error_envelope_never_confirms_coverage(raw):
+    result = p.classify(raw)
+    assert result["category"] == "json_schema_mismatch"
+    assert result["result_code"] == "other_or_absent"
+    assert "total_count" not in result
+
+
 def test_xml_dtd_malformed_and_secret_text():
     assert p.classify(
         b"<root><returnReasonCode>30</returnReasonCode><msg>secret</msg></root>"
