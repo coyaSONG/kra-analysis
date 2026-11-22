@@ -32,6 +32,8 @@ NO_AUTHORITY = {
     "study_registered": False,
     "training_approved": False,
     "prediction_publication_verified": False,
+    "cross_fold_selection_rule_verified": False,
+    "local_receipt_timestamps_independently_verified": False,
     "counts_as_70_percent_evidence": False,
 }
 
@@ -322,6 +324,7 @@ def verify(root, plan_ref, *, packet_sha256, pull, capture=False):
     return {
         "state": "fold_bound_before_cutoff" if timely else "fold_published_late",
         "before_cutoff": timely,
+        "time_evidence": "exact_fold_marker_in_merging_commit",
         "first_block_cutoff": packet["evaluation"]["first_block_cutoff"],
         "packet_sha256": packet_sha256,
         "plan_sha256": plan_ref["sha256"],

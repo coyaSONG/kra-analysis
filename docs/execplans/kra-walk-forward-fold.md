@@ -23,8 +23,12 @@ M0/API27 commitments. Print only a digest for independent publication.
   substitution failures. The related suite passed 182 tests; the
   focused suite also passed all 17 cases from the API CI working
   directory. Ruff passed.
-- [ ] Reconcile the completed independent methodology advice with
-  the implementation; release the tested change normally.
+- [x] Read the completed Pro methodology review in the authorized
+  browser and identify the claims its clock advice supports.
+- [x] Verify the additional clock and merge-tree tests: 185 related
+  tests passed, including the final 20 focused cases. Ruff and diff
+  checks passed.
+- [ ] Release the tested change through the normal required checks.
 
 ## Surprises & Discoveries
 
@@ -66,6 +70,16 @@ publication proves the existence of the exact packet by the merge; it
 does not establish the sources' initial release, reviewer approval,
 fit, predictions, or a general rule for selecting future weeks.
 
+The completed Pro method review (displayed processing time 10m 58s)
+reviewed only the supplied design. It did not access this checkout,
+approve training, or run tests. We keep a separate flag for the local
+clock claim and do not certify a common selection rule. Such a rule
+must later fix an as-of candidate census, expected selected set and
+exclusion reasons, permitted result versions and held-out roles before
+the relevant evaluation. Known reschedulings also need the preexisting
+population lineage rules; nominal race-key separation alone is not
+evidence that an alias of the same physical race has been discovered.
+
 ## Outcomes & Retrospective
 
 The fictional multi-card trial binds 28 earlier races and all 14
@@ -76,6 +90,9 @@ binding, time-conflicting seed export, replaced target, later copy
 of a prior outcome, cutoff-equal publication, and changed original
 plan cannot establish an earlier fold. The 210 existing fixed-runtime
 files still match the original Git blobs and paths.
+An identical cutoff represented in Korean time passed; a shifted
+cutoff did not. An earlier merge carrying different digest bytes
+did not verify the original packet.
 
 The local archive has no real complete card in this particular
 input-witness/candidate format. Historical artifacts in different

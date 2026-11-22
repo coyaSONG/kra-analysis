@@ -6,6 +6,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -174,6 +175,8 @@ def test_replay_freezes_all_races_and_only_old_labels(study, monkeypatch, capsys
     saved = fixtures._snapshot(study.root)
     proof = fold.verify(study.root, ref, packet_sha256=sha, pull=FOLD_PR)
     assert proof["before_cutoff"] and not proof["training_approved"]
+    assert not proof["cross_fold_selection_rule_verified"]
+    assert not proof["local_receipt_timestamps_independently_verified"]
     assert proof["evaluation_race_count"] == 14
     assert proof["training_card_count"] == 2
     assert fixtures._snapshot(study.root) == saved
@@ -268,6 +271,43 @@ def test_cannot_substitute_plan_after_staging(study):
     replacement = _plan(study, study.plan, name="different-selection.json")
     with pytest.raises(ValueError, match="fold_packet_does_not_replay"):
         fold.verify(study.root, replacement, packet_sha256=sha, pull=FOLD_PR)
+
+
+@pytest.mark.parametrize("delay", [0, 30])
+def test_korean_clock_representation_does_not_move_original_cutoff(study, delay):
+    alternate = (study.evaluation.cutoff + timedelta(minutes=delay)).astimezone(
+        ZoneInfo("Asia/Seoul")
+    )
+    spec = study.plan["evaluation"] | {"first_cutoff": alternate.isoformat()}
+    ref = _plan(study, study.plan | {"evaluation": spec})
+    if delay:
+        with pytest.raises(ValueError, match="original_cutoff_conflict"):
+            fold.stage(study.root, ref)
+        assert not (study.parent / fold.PACKET_NAME).exists()
+    else:
+        fold.stage(study.root, ref)
+        payload = parse_json((study.parent / fold.PACKET_NAME).read_bytes())
+        assert (
+            payload["evaluation"]["first_block_cutoff"]
+            == study.evaluation.cutoff.isoformat()
+        )
+
+
+def test_earlier_pr_does_not_witness_replaced_marker_bytes(study):
+    ref = _plan(study)
+    original = parse_json(fold.stage(study.root, ref))["packet_sha256"]
+    merged = study.initial + timedelta(seconds=4)
+    study.clock[0] = merged + timedelta(seconds=2)
+    source.archive_publication(
+        study.parent / fold.ARCHIVE_NAME,
+        fold.marker("8" * 64),
+        FOLD_PR,
+        fold.publication_document(original),
+        merged,
+        study.clock[0],
+    )
+    with pytest.raises(ValueError, match="forward_publication_evidence_conflict"):
+        fold.verify(study.root, ref, packet_sha256=original, pull=FOLD_PR)
 
 
 def test_stage_loads_no_outcome_reference_in_evaluation_spec(study):
