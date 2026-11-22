@@ -30,7 +30,7 @@ DATE = "20261016"
 VENUES = {1: "\uc11c\uc6b8", 2: "\uc81c\uc8fc", 3: "\ubd80\uacbd", 4: "\uc601\ucc9c"}
 
 
-def page(source, *, dates=None, times=None, numbers=None, notes=""):
+def page(source, *, dates=None, times=None, numbers=None, notes="", fields=None):
     national = source == "national"
     venues = (
         [1, 2, 3, 4]
@@ -113,7 +113,10 @@ def page(source, *, dates=None, times=None, numbers=None, notes=""):
                 notes,
                 "",
             ]
-        rows.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+        for no in range(number, number + (fields or {}).get(venue, 1)):
+            cells[0] = len(rows) + 1
+            cells[3 if national else 2] = no
+            rows.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
     return (
         "<html><table><caption>Official dated race card</caption><thead>"
         + header

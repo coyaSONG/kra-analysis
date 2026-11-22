@@ -81,6 +81,158 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_probe --race-dat
 
 동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
 
+## 전체 경주표의 제한된 API26 수집
+
+`autoresearch.kra_entry_scope_intake`는 한 주간의 공식 전국표와 지역표 원본이
+모두 일치하는 경우에만 날짜·실제 경마장별 기존 API26 수집기를 실행합니다.
+날짜는 원본에 나온 전체 날짜를 오름차순으로 지정합니다. 먼저 호출 없는
+`plan`으로 예상 페이지 수와 최초 마감 시각을 확인합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_intake plan \
+  --schedule-capture <capture.json> --schedule-sha256 <sha256> \
+  --date <YYYYMMDD> --date <YYYYMMDD>
+```
+
+실제 수집은 고정한 경주표에 `collect`를 실행하고 `--first-cutoff <시각>`
+(시간대가 있는 ISO 8601), `--max-requests <한도>`, `--api-key-file <키-파일>`,
+`--output-dir .cache/autoresearch/api26-scope-intake`를 추가합니다.
+이미 보존된 원본에는 `--reuse-entry <entry_capture.json> <sha256>`를 지정할 수
+있습니다. 완전한 해당 범위를 재현하면 그 범위는 호출하지 않습니다.
+실제 호출이 필요한 수집은 Git 작업 폴더의 최상위에서 실행합니다. 같은
+저장소에 연결된 다른 작업 폴더나 출력 폴더를 사용해도, 겹치는 날짜의
+실제 수집을 다시 시작할 수 없습니다. 호출 실패나 중단 후에도 공유 예약은
+유지합니다. 모두 기존 원본을 재사용하는 경우 공유 예약을 소비하지 않습니다.
+공유 예약 도입 전의 수집 기록은 자동으로 옮겨지지 않으므로 먼저 기존
+출력 폴더의 기록을 확인하고, 보존된 원본은 재사용합니다.
+
+마감은 최초 고정한 전체표의 첫 출발 30분 전입니다. 제출한 표로 계산한 마감이
+이미 고정한 시각과 다르면 예약이나 호출 없이 중단합니다. 첫 수집 실패에서도
+추가 호출을 중단하고 인증 오류·접근 거부·호출 제한·빈 응답을 구분합니다.
+빈 응답이나 미시도 범위를
+경주 없음으로 집계하지 않습니다. 보존된 원본·예약·수집 기록은 로컬 자료이며
+등록, 마감 전 공개 증명 또는 예측이 아닙니다.
+
+마감 전, 완료된 `receipt.json` 및 SHA256과 처음 고정한 전체 경주표의 SHA256,
+최초 마감 시각을 별도로 넘겨 모델 입력을 확인합니다. 접수 기록에 새로 적힌
+값으로 원래 기준을 바꾸지 않습니다. 예약·전체 경주표·원본 페이지를 다시 읽고
+기존 M0 입력 변환기로 모든 경주를 확인합니다. API27도 이 데이터를 공유합니다. 날짜·경주·원본 핀과
+특성별 누락 수가 포함된 로컬 입력을 반환하며 추가 호출이나 파일 변경은 없습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_inputs \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각>
+```
+
+원본 불일치, 해석할 수 없는 특성, 또는 마감 경과 시 부분 입력을 내보내지
+않습니다. `verified_local_inputs_only`는 예측 실행, 승인, 등록이나 공개를
+의미하지 않으며 이전 구간의 입력 예약을 대체하지 않습니다.
+
+## 전체 경주표 입력의 마감 전 존재 증명
+
+같은 전체표와 접수 기록으로 마감 **전** `stage`를 실행하면 접수 기록 옆에
+`whole-card-input-packet.json`을 한 번만 생성합니다. 이 비공개 묶음은
+전국·지역 경주표와 API26 원본의 해시를 간접적으로 고정하고, 전체 경주의
+공통 모델 입력 해시와 특성별 누락 수를 보존합니다. 표준 출력은 공개 가능한
+두 필드의 JSON만 담습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_witness stage \
+  --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --schedule-sha256 <frozen-schedule-sha256> --first-cutoff <시각>
+```
+
+승인된 절차로 표준 출력의 정확한 바이트만
+`docs/research/input-witnesses/<packet_sha256>.json`으로 만들어 일반 PR로
+`main`에 병합합니다. 원본·비공개 묶음·말 식별자·모델 입력은 공개하지
+않습니다. 이 명령은 PR을 열거나 제출하지 않습니다.
+
+병합 이후 같은 네 인수와 `--packet-sha256 <packet_sha256> --pull <PR번호>`를
+사용해 `capture`를 실행합니다. 원본을 재현한 뒤 GitHub에서 PR과 병합
+커밋의 정확한 공개 문서를 한 번씩 읽고 응답을 접수 기록 옆에 보존합니다.
+같은 인수의 `replay`는 추가 호출이나 파일 변경 없이 검증합니다.
+마감과 같은 시각 또는 이후에 병합되면 종료 코드 2로 남기며 소급 승인하지
+않습니다. 게이트나 요청에 문제가 생겨도 같은 증명 폴더를 덮어쓰지 않습니다.
+
+정상 검증은 해당 해시의 내용이 마감 전에 존재했다는 증거입니다. GitHub가
+KRA 원본을 인증하거나 정확한 수집 시각을 보증한다는 뜻은 아닙니다.
+학습 승인, 전체 평가 등록 및 마감 전 예측 공개는 여전히 별도 절차입니다.
+
+## 별도 사전 승인 전체표의 고정 M0/API27 예측
+
+10월 16~18일 계약은 그대로입니다. 이 명령은 그 모집단이나 이미 놓친
+마감을 다시 열지 않습니다. 새 전체 경주표의 입력 해시가 마감 전에 공개되고
+해당 GitHub 응답까지 수집된 경우에만 준비합니다. 임의 날짜나 경주 수를 직접
+입력해 등록하지 않습니다.
+
+`autoresearch.fixed_pair_forward`의 모든 하위 명령은 `--study`,
+`--receipt`, `--receipt-sha256`를 받습니다. `prepare`에는 원래
+`--schedule-sha256`, `--first-cutoff`, 비공개 `--packet-sha256`,
+입력 해시 공개 `--input-pull`, 미리 열어 둔 소유자의 예측
+`--prediction-pull`, 소유자가 지정한 별개 GitHub 계정 `--reviewer`와
+`--analysis <file.json>`을 넘깁니다. 분석 JSON은 `horizon`, `uncertainty`,
+`sample_size_rationale`, `stopping`의 네 항목을 구체적 문장으로 고정합니다.
+`prepare`는 로컬 JSON만 출력하며 등록이나 승인, 모델 실행이 아닙니다.
+
+소유자가 그 정확한 프로토콜을 `docs/research/protocols/fixed-pair-v1/<study>.json`
+으로 일반 병합합니다. 지정 검토자는 원본·전체 모집단·분석 계획과 필수 검사
+근거를 독립적으로 확인한 뒤, 별도 PR에
+`docs/research/approvals/fixed-pair-v1/<study>.json`을 게시합니다.
+승인 문서에는 `format_version: kra-fixed-pair-prospective-approval-v1`,
+`study_id`, `protocol_sha256`, `protocol_pr`, `reviewer`, 시간대가
+있는 `reviewed_at`, 그리고 실제 확인한 경우에만 `source_closure_reviewed`,
+`population_and_statistics_reviewed`, `release_checks_reviewed`를
+JSON 참으로 적습니다. 두 문서는 키 정렬, 두 칸 들여쓰기, 마지막 개행이
+있는 기존 JSON 형식입니다. 문서가 있다는 사실만으로는 승인되지 않습니다.
+
+마감 전에 소유자 프로토콜과 독립 승인 문서가 담긴 `main`을 가져온 분리
+체크아웃에서 `run --protocol-pull <번호> --approval-pull <번호>`를
+실행합니다. `run` 및 이후 명령에는 기존 불변 산출물 경로
+`--m0-model-dir`, `--api27-model-dir`도 넘깁니다. 모델 해시와 적합 기록이
+다르면 허용하지 않습니다. 실행은 원래 날짜 전체를 공용 Git 디렉터리에서
+한 번만 예약하고, 두 공개 문서와 미리 연 예측 PR을 새로 확인합니다.
+승인이 다르거나 마감을 넘기면 재실행 없이 실패를 보존합니다.
+
+`verify`는 저장된 정확한 출력을 읽기 전용으로 재현합니다. `stage`는 마감
+전에만 같은 예측 바이트를 출력합니다. 이 바이트만
+`docs/research/commitments/fixed-pair-v1/<study>/paired.json`으로,
+처음 고정한 PR에서 일반 병합합니다. `witness`는 그 정확한 문서와 병합
+시각을 한 번 읽고, `replay-witness`는 보존된 응답으로 다시 확인합니다.
+두 명령은 마감 이후에도 실제 병합 시각을 검증할 수 있습니다. 한 모델의
+명시적 미제출도 경주를 지우지 않으며, 아직 확인하지 않은 결과는 실패나
+적중률 0이 아닙니다. 이 명령은 재학습하거나 결과를 수집·평가하지 않습니다.
+
+## 새 고정 모델 쌍의 공식 결과 비교
+
+이 명령은 위의 별도 승인 예측 형식만 읽습니다. 기존 10월 16~18일
+공개 예측과 `api27_evaluation`은 그대로입니다.
+
+```bash
+PYTHONPATH=packages/scripts python -B -m autoresearch.fixed_pair_evaluation \
+  --study <id> --receipt <receipt.json> --receipt-sha256 <sha256> \
+  --protocol-pull <번호> --protocol-sha256 <sha256> \
+  --approval-pull <번호> --approval-sha256 <sha256> \
+  --pair-sha256 <sha256> --m0-model-dir <dir> --api27-model-dir <dir> \
+  --outcome-plan <outcome-plan.json> --outcome-sha256 <sha256>
+```
+
+승인과 공개 원본은 원래 실행 기록에서 읽습니다. 별도로 이미 수집한
+동일 형식의 증거 폴더는 `--authority-dir`로 지정할 수 있습니다.
+결과 계획에는 사후 경주표 대신 **처음 동결한 경주표의 정확한 해시**와
+보존한 API214·공식 HTML 버전이 있어야 합니다. 결과 계획이나 예측 공개
+증거가 없으면 해당 인수는 생략하고 미확인으로 남깁니다. 정확한 시각의
+공개가 확인돼도 원래 모델·환경에서 수치 재현이 되지 않으면 적중·실패로
+처리하지 않습니다. 원본 실행 환경을 보관하고, 이후 코드를 바꿨다면
+원래 작업 환경의 `PYTHONPATH`로 이 평가 파일을 별도 경로에서 실행할 수
+있습니다.
+
+명령은 추가 요청이나 파일 쓰기 없이 JSON을 출력합니다. 공식 정정을
+비교할 때는 `--prior-outcome-plan`과 `--prior-outcome-sha256`로 이전
+원본 버전도 고정합니다. 예측과 모집단은 그대로 두고 두 결과 버전을
+대조합니다. 대기·목표 미정의 또는 모집단 충돌이 있으면 전체 정확도·우열은
+비워 두며, 거리·등급·경마장별 숫자는 진단용 건수로만 보고합니다.
+
 ## 말별 휴양 대용값 진단
 
 `autoresearch.horse_entry_interval_audit`는 저장된 10월 검증 출전마 전체를 안정적인 말 ID로 과거 출전표와 연결합니다. `--dataset`, `--validation`, `--output`을 지정하며 기존 출력은 덮어쓰지 않습니다. 같은 날·미래 기록은 제외하고 이력이 없으면 null을 유지합니다.

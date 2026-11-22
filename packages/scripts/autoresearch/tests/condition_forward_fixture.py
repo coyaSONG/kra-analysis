@@ -162,8 +162,13 @@ def make_block(tmp_path, monkeypatch):
     }
     monkeypatch.setattr(contract, "runtime", lambda: deepcopy(runtime))
     protocol = {
-        "format_version": "condition-forward-protocol-v1",
+        "format_version": contract.PROTOCOL_VERSION,
         "study_id": "synthetic-only",
+        "publication_slot": {
+            "repository": github.REPOSITORY,
+            "pull_number": 901,
+            "document": forward.document_path("synthetic-only"),
+        },
         "race_dates": [date],
         "created_at": protocol_at.isoformat(),
         "policies": deepcopy(contract.POLICIES),
@@ -191,6 +196,7 @@ def make_block(tmp_path, monkeypatch):
         "reviewer": "synthetic fixture",
         "reviewed_at": (protocol_at + timedelta(seconds=10)).isoformat(),
         "protocol_publication_pr": 900,
+        "prediction_publication_pr": 901,
         "raw_source_closure_reviewed": True,
         "label_free_inputs_reviewed": True,
         "protocol_reviewed": True,

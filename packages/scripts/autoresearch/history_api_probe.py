@@ -16,6 +16,7 @@ from shared.kra_entry_sheet import parse_entry_sheet_page
 from shared.kra_race_identity import validate_race_identity
 
 from autoresearch.kra_entry_sheet_snapshot import ENTRY_URL
+from autoresearch.kra_race_card_pdf_replay import parse_json
 from autoresearch.kra_result_snapshot import RESULT_URL
 from autoresearch.observed_history_seed import save
 
@@ -46,6 +47,32 @@ def code(value):
     return value if isinstance(value, str) and value in CODES else "other_or_absent"
 
 
+def _gateway_json(raw):
+    result = {
+        "category": "json_schema_mismatch",
+        "envelope": "gateway",
+        "result_code": "other_or_absent",
+        "has_body": False,
+        "has_error": True,
+    }
+    try:
+        payload = parse_json(raw)
+    except (ValueError, RecursionError):
+        return result
+    gateway = payload.get("OpenAPI_ServiceResponse")
+    if (
+        set(payload) != {"OpenAPI_ServiceResponse"}
+        or not isinstance(gateway, dict)
+        or set(gateway) != {"cmmMsgHeader"}
+        or not isinstance(gateway["cmmMsgHeader"], dict)
+    ):
+        return result
+    value = code(gateway["cmmMsgHeader"].get("returnReasonCode"))
+    if value not in {"00", "other_or_absent"}:
+        result.update(category="api_error", result_code=value)
+    return result
+
+
 def classify(raw: bytes) -> dict:
     """Emit only fixed vocabulary and counts, not any free-form server text."""
     if len(raw) > MAX_BYTES:
@@ -65,6 +92,8 @@ def classify(raw: bytes) -> dict:
         return {"category": "xml_response", "result_code": code(value)}
     if not isinstance(payload, dict):
         return {"category": "json_non_object"}
+    if "OpenAPI_ServiceResponse" in payload:
+        return _gateway_json(raw)
     response = payload.get("response")
     envelope = "response"
     if not isinstance(response, dict):
