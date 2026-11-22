@@ -118,7 +118,7 @@ jobs:
         run: |
           uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_population*.py ../../packages/scripts/autoresearch/tests/test_condition_population*.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_population*.py ../../packages/scripts/autoresearch/tests/test_condition_population*.py
-          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_population_chain.py ../../packages/scripts/autoresearch/tests/test_condition_population_ledger.py -p no:cacheprovider -o addopts=''
+          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_population_{chain,ledger,checkpoint}.py -p no:cacheprovider -o addopts=''
 
       - name: Condition original snapshot replay regressions
         working-directory: apps/api
