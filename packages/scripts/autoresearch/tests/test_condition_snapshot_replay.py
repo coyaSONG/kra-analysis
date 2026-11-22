@@ -67,6 +67,9 @@ def bundle(tmp_path, monkeypatch):
         "policies": contract.POLICIES,
         "fit_count": 0,
     }
+    # This archive uses separate PRs 900 (protocol), 901 (approval), 902 (pair).
+    block.protocol["publication_slot"]["pull_number"] = 902
+    block.review["prediction_publication_pr"] = 902
     block.persist()
     (root / "packages/scripts/mock-reviewed-code.py").unlink()
     created = timestamp(block.protocol["created_at"])

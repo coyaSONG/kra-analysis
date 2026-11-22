@@ -78,6 +78,76 @@ def test_complete_replay_stage_and_publication(block):
         forward.run(block.study)
 
 
+def test_wrong_publication_slot_rejected_before_replay(block, monkeypatch):
+    def forbidden(*args):
+        raise AssertionError("wrong slot reached numerical replay")
+
+    monkeypatch.setattr(forward, "verify_local", forbidden)
+    with pytest.raises(ValueError, match="forward_prediction_slot_mismatch"):
+        forward.witness(block.study, 902)
+    assert block.calls == []
+    ledger, output = forward.locations(block.study)
+    assert not ledger.exists() and not output.exists()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "legacy",
+        "missing",
+        "extra",
+        "bool",
+        "zero",
+        "string",
+        "repo",
+        "path",
+        "review",
+        "protocol_pr",
+        "reused",
+    ],
+)
+def test_publication_slot_admission_precedes_attempt(block, change):
+    slot = block.protocol["publication_slot"]
+    if change == "legacy":
+        block.protocol["format_version"] = "condition-forward-protocol-v1"
+    elif change == "missing":
+        del block.protocol["publication_slot"]
+    elif change == "extra":
+        slot["fallback_pull"] = 902
+    elif change in {"bool", "zero", "string"}:
+        slot["pull_number"] = {"bool": True, "zero": 0, "string": "901"}[change]
+    elif change == "repo":
+        slot["repository"] = "other/repository"
+    elif change == "path":
+        slot["document"] = "docs/research/other.json"
+    elif change == "review":
+        block.review["prediction_publication_pr"] = 902
+    elif change == "protocol_pr":
+        block.review["prediction_publication_pr"] = slot["pull_number"] = 900
+    else:
+        block.records.append(
+            {
+                "study_id": "other",
+                "race_dates": ["20991231"],
+                "prediction_publication_pr": 901,
+            }
+        )
+    block.persist()
+    with pytest.raises(ValueError, match="forward_"):
+        forward.run(block.study)
+    ledger, output = forward.locations(block.study)
+    assert not ledger.exists() and not output.exists()
+    assert not block.calls
+
+
+def test_staging_identifies_the_only_accepted_slot(block):
+    forward.run(block.study)
+    staged = forward.stage(block.study)
+    assert staged["publication_slot"] == block.protocol["publication_slot"]
+    report = forward.witness(block.study, 901)
+    assert report["publication_slot"] == staged["publication_slot"]
+
+
 @pytest.mark.parametrize(
     "damage",
     ["runtime_drift", "missing_local_copy", "damaged_local_copy", "failure_marker"],
@@ -332,7 +402,13 @@ def test_late_stage_is_recorded_and_not_published(block, monkeypatch):
 
 def test_new_registration_does_not_break_old_receipt(block):
     forward.run(block.study)
-    block.records.append({"study_id": "later", "race_dates": ["20991231"]})
+    block.records.append(
+        {
+            "study_id": "later",
+            "race_dates": ["20991231"],
+            "prediction_publication_pr": 902,
+        }
+    )
     block.persist()
     forward.verify_local(block.study)
 
