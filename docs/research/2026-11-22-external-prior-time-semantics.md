@@ -10,9 +10,8 @@ decision, not a comparison of forecasts or a new fit.
 The exact November 8, 13, 14 and 15 form generations have 710, 353, 459
 and 698 recognized dated past-start rows. The original two panels retain
 all 102 races and 1,009 declarations. The forms cover 54 fields and
-match 538 declarations. The other 48 races remain visible without
-external observations. One missing printed declaration in a covered
-race stays missing; it was not removed from the original.
+match all 539 declarations in those fields. The other 48 races remain
+visible without external observations.
 
 Compare only with the [original October 16-18 result
 version](2026-10-18-full-block-paired-results.md), whose digest was
@@ -26,22 +25,34 @@ exact decimal values, without a rounding tolerance.
 
 | Printed whole-race time compared with official values | Past lines |
 | --- | ---: |
-| Winner only | 113 |
+| Winner only | 114 |
 | Both winner and runner | 14 |
 | Runner only | 0 |
 | Neither | 0 |
-| In scope, horse identity unlinked | 1 |
 | Outside the fixed reference dates | 2,092 |
 
-The 127 comparisons cover 34 earlier races, not 127 independent
-experiments. The 14 matches to both are all for the winner. The one
-unlinked line is retained without a time match. Nine linked lines
+The 128 comparisons cover 34 earlier races, not 128 independent
+experiments. The 14 matches to both are all for the winner. Nine linked lines
 report a field size different from the original declaration count.
 Do not infer starters or scratch status from that difference. The
-number in parentheses was not mapped to a sectional endpoint.
+adjacent column labelled Sectional was not mapped to a distance endpoint.
 None of these checks generalizes to another provider or an untested
 layout. Generation time establishes when exact bytes existed in
 storage, not when the public could use them.
+
+## Parser correction
+
+The original November 13 read incorrectly reported Busan race 8 gate
+11 absent. PDF page 23 has the row, but its compact age descriptor
+lacks a coat token. Two text readers independently counted the printed
+gate headings and associated all 2,220 dated lines to their fields
+and declarations. The corrected gate-11 line matches the original
+API declaration on name, age, sex and assigned weight. Five earlier
+lines once attached to gate 10 belong to gate 11. Four remain outside
+the comparison dates; one now links to the official reference and
+matches only the winning time. The initial 538 matches and 127 time
+comparisons become 539 and 128, without changing the interpretation.
+Neither an official result nor any frozen roster was corrected.
 
 ## Distance and grade support
 
@@ -49,9 +60,9 @@ storage, not when the public could use them.
 | --- | ---: | ---: | ---: |
 | Seoul | 42 | 19 / 41 | 8 / 11 |
 | Jeju | 28 | no form coverage | no form coverage |
-| Busan | 20 | 5 / 13 | 5 / 9 |
+| Busan | 20 | 5 / 14 | 5 / 10 |
 | Yeongcheon | 12 | 6 / 20 | 5 / 12 |
-| Total | 102 | 30 / 74 | 18 / 32 |
+| Total | 102 | 30 / 75 | 18 / 33 |
 
 Count each current declaration once per condition if it has a linked
 earlier start in the preceding 90 calendar days at the same physical
@@ -65,13 +76,13 @@ broaden a distance rule.
 
 ## Verification and decision
 
-Two PDF text readers reproduced all 2,220 comparison signatures;
-decimal and integer-centisecond checks agreed. The local
-`external-prior-time-20261122/external-prior-time.json` retains all
-original positions, underlying source pins, line locations and states.
-Its SHA256 is `aea79c8cbfe78873c7e30955f890a3205de8ba3ffa3f355782e834dd54a1688e`.
-See the adjacent local ExecPlan for the read-only reproduction command.
-181 related tests passed. No new request, future outcome, forecast,
+Decimal and integer-centisecond checks agreed. The local record
+`external-prior-time-20261122/external-prior-time-v2.json` retains
+all original positions, source pins, line locations and version differences.
+Its SHA256 is `fd57f48f186ece36bab3b68f9c4b6f80a70455ed1d692e73e846f13107d76d37`. The first seal
+(`aea79c8cbfe78873c7e30955f890a3205de8ba3ffa3f355782e834dd54a1688e`)
+is retained alongside it. See the local ExecPlan for read-only replay.
+186 related tests passed. No new request, future outcome, forecast,
 training admission or change to the October commitments occurred.
 
 Use reconciled official individual times for any later time-feature
