@@ -210,6 +210,17 @@ denominators or degenerate bootstrap distributions, report the limitation and
 do not claim reliable generalization from an interval. No iid binomial or
 unpaired comparison substitutes for the registered primary method.
 
+The draft calculations are available internally as
+`autoresearch.condition_weekly_uncertainty.summarize_window`. Its first
+Monday is supplied by a separately frozen protocol. It retains all twelve
+positions and distinguishes an omitted week, a pending population, and an
+affirmatively verified no-race week. It reports both fixed methods when
+eligible and withholds individual degenerate intervals. The callable only
+accepts already normalized evidence; it does not verify a schedule,
+publication, result, approved start date, or authority to score. The
+source-backed adapter and semantic population closure remain activation
+requirements. No real window was supplied.
+
 No confirmatory significance claim or automatic goal completion is proposed.
 A point estimate at least 70% is a descriptive threshold crossing only;
 it is not evidence that a long-run rate is at least 70%. Report both arms,
