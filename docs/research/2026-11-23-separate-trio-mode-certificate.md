@@ -32,7 +32,9 @@ normalized tilted vector after adding the proposed potentials. Because
 f and q* have the same margins, KL(f || q_y) equals the primal objective
 gap plus KL(q* || q_y); the primal objective gap is KL(f || q*) by the
 first-order conditions of the positive optimum. The gap is therefore at
-most any verified upper bound U on KL(f || q_y). See
+most any verified upper bound U on KL(f || q_y). Compute this KL over
+the individual trios: aggregating parallel edges into a cell can hide
+an incorrect allocation within the cell and give a false certificate. See
 [Csiszar's I-divergence geometry](https://projecteuclid.org/euclid.aop/1176996454).
 
 A lower bound g on the leading probability gap at f proves the same

@@ -120,6 +120,17 @@ def test_sub_precision_separation_is_rejected_instead_of_guessing():
     assert c.trio is None and c.reason == "probability_gap_not_verified"
 
 
+def test_tiny_nonzero_interaction_does_not_take_the_exact_additive_path():
+    base = dict.fromkeys(TRIOS, -2.0)
+    base[BASE_WINNER] = 1e-200
+    base[TILT_WINNER] = 0.0
+    tilt = dict.fromkeys(TRIOS, 0.0)
+    tilt[TILT_WINNER] = 2e-200
+    # The top changes mathematically, but the interval gap cannot resolve it.
+    c = certify(base, tilt, (set(), set()))
+    assert c.trio is None and c.reason == "probability_gap_not_verified"
+
+
 def test_concentrated_parallel_edges_keep_positive_tails_after_exact_translation():
     base = dict.fromkeys(TRIOS, 0.0)
     tilt = dict.fromkeys(TRIOS, -400.0)
@@ -176,8 +187,9 @@ def test_circulation_preserves_both_margins_parallel_edges_and_a_bridge():
     assert delta[-1] == 0
 
 
+@pytest.mark.parametrize("masks", [MASKS, (set(), set())], ids=["table", "parallel"])
 def test_arbitrary_incorrect_numerical_proposal_does_not_certify_a_wrong_mode(
-    monkeypatch,
+    monkeypatch, masks
 ):
     base = {t: log(5) if t == BASE_WINNER else log(3) for t in TRIOS}
     tilt = {t: 5.0 if t == TILT_WINNER else 0.0 for t in TRIOS}
@@ -190,7 +202,14 @@ def test_arbitrary_incorrect_numerical_proposal_does_not_certify_a_wrong_mode(
             TRIOS, guess, 1, 0, 0.0, 0.0, 0.0
         ),
     )
-    assert certify(base, tilt).trio is None
+    c = certify(base, tilt, masks)
+    assert c.trio is None
+    if not any(masks):
+        # Both distributions have the same single cell mass; only full-trio
+        # KL can reject the confidently wrong allocation inside that cell.
+        assert c.reason == "probability_gap_not_verified"
+        assert c.feasible_probability_gap_lower > Decimal("0.99")
+        assert c.kl_upper > Decimal(1)
 
 
 def test_nonconvergence_and_out_of_range_never_return_a_fallback(monkeypatch):
