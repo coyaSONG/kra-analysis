@@ -76,6 +76,34 @@ pre-deadline evidence. They do not repair the expired November input
 or publication gates. Keep the unchanged M0/API27 comparison and
 the separate, reviewed future whole-card requirement.
 
+## Independent existence bound for later history use
+
+The initial [PR #155 document](https://github.com/coyaSONG/kra-analysis/blob/6f9f1b52a2a2beb8af04895181ed2e77c71ee01d/docs/research/2026-11-23-closed-sunday-history.md)
+did not contain a valid labelled hash of the whole evidence file. Use
+the corrected [PR #156 merge-tree version](https://github.com/coyaSONG/kra-analysis/blob/09c2cf38652bcbf6cd54044deb89a27fd0701dd7/docs/research/2026-11-23-closed-sunday-history.md)
+instead. A bounded read of that PR and only its exact merge-tree document
+verified the corrected hash by **2026-11-22T15:11:40Z** (November 23,
+00:11:40 KST). The two provider receipts reproduce this result offline.
+The last linked official result file was collected at 15:00:20.565562 UTC,
+before that merge. Neither time is KRA's first publication time.
+
+Replay links the digest to six daily reports covering the full original
+51 races and 540 declarations, plus one earlier Yeongcheon detail HTML.
+All seven raw hashes agree on a separate check. Two marker holds remain;
+the other 49 still have official-report matches, not newly reconciled
+outcomes. The 51 race IDs do not overlap the 135 races in the separate
+[PR #146 prior-source witness](https://github.com/coyaSONG/kra-analysis/pull/146).
+That gives two exact, separately timed source inventories covering 186
+distinct historical race IDs and 1,906 declarations. This is not a count of
+admitted data rows or a merged evaluation population.
+
+The corrected bound is after the original block's first cutoff. It cannot
+rescue an old prediction or make these results inputs for their own races.
+For a later study, compare the bound to that study's separately frozen
+cutoff. Keep the result-source policy, identity and eligibility review,
+and prospective publication requirements distinct. No such study, row
+admission, model fit or prediction followed from this check.
+
 ## Verification
 
 The local `nov22-closed-history-20261123/sunday-history-evidence.json`
@@ -88,3 +116,10 @@ the 183 / 11 / 172 linked, overlapping and additional counts. The
 related local suite passed 157 tests. The [external time review](2026-11-22-external-prior-time-semantics.md)
 remains valid: an external race's winning time is not an individual
 horse's elapsed time.
+
+The separate clock replay is retained as
+`november-history-clock-20261123/whole-card-history-clock.json`,
+SHA256 `d68bec37e74d2c4b2950627d1dfb240ff2704726d8e105447981e9fc737fb9ce`.
+It records the exact public receipts, result body pins, observation
+times, and kept holds. Read-only replay and 254 local regression tests
+passed. No KRA or public-data API requests were made in the clock check.
