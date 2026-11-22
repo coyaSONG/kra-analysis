@@ -294,9 +294,9 @@ jobs:
       - name: Exact trio distribution regressions
         working-directory: ./packages/scripts
         run: |
-          uv run --frozen --extra race-card-pdf ruff check autoresearch/{exact_trio_distribution,separate_trio_projection}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py
-          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/{exact_trio_distribution,separate_trio_projection}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py
-          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py -p no:cacheprovider -o addopts=''
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/{exact_trio_distribution,separate_trio_projection,separate_trio_mode}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection,separate_trio_mode}.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/{exact_trio_distribution,separate_trio_projection,separate_trio_mode}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection,separate_trio_mode}.py
+          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection,separate_trio_mode}.py -p no:cacheprovider -o addopts=''
       - name: Pre-race public hash witness regressions
         working-directory: ./packages/scripts
         run: |
