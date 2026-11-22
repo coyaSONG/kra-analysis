@@ -207,9 +207,9 @@ jobs:
       - name: Witnessed nomination coverage regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/autoresearch/kra_nomination_card_audit.py ../../packages/scripts/autoresearch/tests/test_kra_nomination_card_audit.py
-          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/kra_nomination_card_audit.py ../../packages/scripts/autoresearch/tests/test_kra_nomination_card_audit.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_nomination_card_audit.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/{kra_nomination_card_audit,jeju_nomination_roster_link}.py ../../packages/scripts/autoresearch/tests/test_{kra_nomination_card_audit,jeju_nomination_roster_link}.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/{kra_nomination_card_audit,jeju_nomination_roster_link}.py ../../packages/scripts/autoresearch/tests/test_{kra_nomination_card_audit,jeju_nomination_roster_link}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{kra_nomination_card_audit,jeju_nomination_roster_link}.py -o addopts=''
       - name: Reviewed fixed-pair forward regressions
         working-directory: ./apps/api
         run: |
