@@ -56,6 +56,51 @@ attempt bindings. Independently required are closed submission evidence,
 raw pre-race source admission and target admission. The immutable weekly
 contracts and original M0/API27 rules are unchanged.
 
+## Observed limits of the published cards
+
+An offline readback on November 22 compared the first archived complete card
+for each of six fixed October-November windows to its immediate successor,
+using the saved national and all three regional HTML sources. The original
+snapshots contain 304 distinct scheduled identifiers (50, 50, 51, 51, 51,
+51). In all five adjacent comparisons the later valid card shows none of the
+earlier date labels or race identifiers: **253 previously observed IDs** are
+not reproduced. The last 51 have no selected successor in this comparison.
+This is observed display rollover, not cancellation, proof of no racing in
+an earlier scope, or a count of physical races for any future protocol.
+Positive observations must survive the rollover.
+
+One additional [KRA Seoul result catalog](https://www.data.go.kr/data/15063950/openapi.do)
+was preserved at `2026-11-22T13:21:32.716552Z`, HTML SHA256
+`05d1334abf8fa1df9f369c40931a9a673bb511da7a1965e32ce9f79f8c5acac3`.
+Its scope is Seoul only. The schema lists a cancellation field
+(`noracefl`), division field (`divide`) and race code (`rcCode`), alongside
+dated race and runner fields. The documentation does not establish that
+cancelled races appear in actual results, that the code survives
+renumbering, or that a page total measures physical races. No data
+operation was called and entitlement was not tested.
+
+All 31 preserved Seoul entry captures for those 128 races and 1,325
+declarations agree with their original roster hashes. Every declaration
+contains a dated race key and horse/gate identifiers. None has an
+`rcCode`, `divide` or `noracefl` key. These keys are absent, not present
+with empty values. Consequently the documented result-only race code
+cannot, by itself, bind those original declarations to a rescheduled
+or renumbered race. A dated join, whole-race cancellation or physical
+identity change requires its own exact evidence. None has been admitted
+from this catalog.
+
+The exclusive local evidence files in
+`.cache/autoresearch/schedule-rollover-closure-20261122/` are
+`schedule-rollover-evidence.json` (SHA256 `f9cae6127864f70c57fbd442e0eb66711946de4c599cb812ef7d520c9261726f`),
+`seoul-cancellation-source-registry.json` (SHA256 `2965d9913ec1f03eee42ceae67098b315f3edb6fbe683f29c0ed88d1015fce97`)
+and `seoul-entry-result-join-readiness.json` (SHA256
+`b872031161084e5b891480d8e30fa6e5dab9321708179f2c37bad69b8805f3f1`).
+The original sources and fields were replayed without scoring or altering
+any race. Synthetic two-sided reconciliation checks retain previously
+observed IDs missing from a proposed list and newly listed IDs not yet
+in the ledger. Even agreeing lists cannot certify their own completeness.
+The focused and related local suite passed 185 tests.
+
 ## Reproducible interface
 
 Run from the isolated research checkout with the existing environment:
