@@ -149,3 +149,45 @@ the original 24-column training reservation and published predictions intact.
 Attempted to open the authorized Pro research conversation on October 15.
 It showed a logged-out screen. No prompt was sent and no new consultation
 occurred. Proceeded only with this bounded, outcome-free local research.
+
+## Later Archive Age-Band Readback
+
+On November 22, a replay traced the B34 fit receipt to its frozen feature
+matrix and the matrix to the exact early-May memory report. It matched the
+race, gate and stable horse keys of all 534 declarations and reproduced all
+ten memory columns. It did not load the 50 target combinations, predictions,
+or losses. Count one link per target-runner appearance and historical start:
+
+| Original B34 source links | API and official HTML | Official HTML only |
+| --- | ---: | ---: |
+| Recent, ages 1-90 KST days | 1,016 | 0 |
+| Older, ages 91-180 KST days | 563 | 384 |
+
+The [PR #146 digest marker](https://github.com/coyaSONG/kra-analysis/pull/146)
+independently bounds its 135-race packet at 2026-11-22T12:35:18Z. It does
+not approve its rows or provide the missing result API leg. Of those races,
+103 have a native HTML result candidate, 31 have only a daily text report,
+and one still has a roster conflict. Two formats from the same publisher
+are not interchangeable with the verified API+HTML source tier.
+
+All 103 native HTML candidates are 12-36 days before the November 27-29
+program dates, so none fits the older band on those dates. The first could
+enter by age alone on January 23, 2027, and the newest would first enter
+on February 14. These are calendar calculations, not evaluation dates,
+release deadlines, or authority to use a single record. The original
+June-July HTML-only pool still has 2,339 older records across 237 historical
+races by age on those program dates, before any actual roster join or
+approval. These are history counts, not future-race coverage.
+
+The existing memory extension keeps the recent ledger unchanged. Putting
+PR146's newly witnessed HTML rows into the recent band is a separate source
+change, not a reconstruction of the frozen input provenance. Preserve the
+reviewed recent-source role and older cutoff, and prioritize timely
+whole-card entries and a separately reviewed outcome channel. No KRA
+result operation, model run or new evaluation occurred in this readback.
+
+The exclusive local `pr146-age-band-readback-20261122/age-band-evidence.json`
+has SHA256 `2784f4e01dd8055349629d9614742a6ffd29459b514b79688c767bcf461404b2`.
+The related local suite passed 257 tests, including 14 age-band and
+source-link checks. The original M0/API27 commitments still match byte
+for byte. The 70% goal remains unmet.

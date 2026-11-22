@@ -119,6 +119,31 @@ finality. Later corrections create linked versions without replacing originals.
 Prediction failure plus an unknown result remains pending; an established
 undefined target remains undefined rather than becoming a miss.
 
+The read-only `condition_target_observations` audit now implements the
+positive path for a single reviewed v2 block. It verifies archived publication
+and approval before the original first cutoff, replays each original official
+schedule and selects at most one separately pinned result plan per schedule
+digest. It requires the exact original gate/horse roster in both result
+sources and emits the original protocol spelling for a verified top three.
+Unverified roster changes, reported voids, missing versions and clock
+conflicts remain pending. The report retains disjoint source versions,
+individual observation IDs, reasons and extra result IDs. It does not verify
+whole-race cancellation, admit predictions, close the umbrella population or
+produce an accuracy denominator.
+
+Run from the isolated checkout with
+`PYTHONPATH=packages/scripts .venv/bin/python -B -m autoresearch.condition_target_observations --manifest <file> --sha256 <digest>`.
+The manifest uses `format_version: condition-target-observations-v1`,
+`study_id`, `observation_cutoff_at`, `protocol`, `approval`,
+`schedule_sources` and `result_plans`. The first two publication records
+follow the historical archive reference schema (PR number, document, digest
+and each archived response pin). Both source mappings are keyed by the
+original schedule capture SHA256, with relative path and SHA256 as values.
+The schedule source map covers every original capture; leave an unselected
+result-plan group out of the result map rather than inventing a result.
+The report is deterministic for the selected versions and verifier. No
+actual evaluation protocol or score is produced by the synthetic tests.
+
 ## Umbrella completeness ledger
 
 Keep each weekly execution protocol immutable. A separate append-only ledger

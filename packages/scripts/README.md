@@ -71,6 +71,14 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_snapshot freeze 
 
 `audit`은 원문 해시와 네 출처를 재검증하며, 불완전·불일치·미공표 상태에서는 종료 코드 2를 반환합니다. 미공표 날짜는 경주가 없는 날로 확정하지 않습니다. `freeze`는 해당 날짜의 첫 경주 30분 전보다 이른 시점에만 허용되며 기존 출력은 덮어쓰지 않습니다. 다른 날짜의 출처 충돌도 해결되기 전에는 동결하지 않습니다.
 
+최초 공개 여부만 제한적으로 확인하려면 기존 `capture` 대신 다음 선택 명령을 사용합니다.
+
+```bash
+PYTHONPATH=packages/scripts python -m autoresearch.kra_schedule_probe --race-date <YYYYMMDD> --output-dir .cache/autoresearch/forward-schedule
+```
+
+전국표의 구조를 검증한 뒤 지정한 한국시간 날짜가 나타났을 때만 같은 수집에서 지역표를 읽습니다. 날짜 미표시, 빈 응답, 표 검증 실패, 인증 요구, 접근 거부, 호출 제한은 `first_date_probe.json`에 서로 다른 상태로 남깁니다. 생략한 지역표는 `not_attempted`로 기록되며, 이 기록만으로는 동결할 수 없습니다. `national_date_seen`도 전국표의 날짜 확인일 뿐, 전체표 대사 완료나 실제 출주 확인은 아닙니다. 마감 전 변경 확인에는 이 명령 대신 기존대로 네 출처를 모두 확인합니다.
+
 동결 출력은 `pending_independent_server_receipt`인 **로컬 후보**입니다. 로컬 시각과 HTTP Date는 독립적인 등록 증명이나 예측 성공률 근거가 아닙니다. 실제 미래 출전마 수집, 단일 예측 실행, 서버 시각 등록 및 결과 대조는 후속 단계입니다. [실제 원문 검증 기록](../../docs/research/2026-10-11-forward-race-universe.md)을 참고하세요.
 
 ## 전체 경주표의 제한된 API26 수집
@@ -91,7 +99,12 @@ PYTHONPATH=packages/scripts python -m autoresearch.kra_entry_scope_intake plan \
 `--output-dir .cache/autoresearch/api26-scope-intake`를 추가합니다.
 이미 보존된 원본에는 `--reuse-entry <entry_capture.json> <sha256>`를 지정할 수
 있습니다. 완전한 해당 범위를 재현하면 그 범위는 호출하지 않습니다.
-동일한 출력 폴더에서 겹치는 날짜를 다시 예약할 수 없습니다.
+실제 호출이 필요한 수집은 Git 작업 폴더의 최상위에서 실행합니다. 같은
+저장소에 연결된 다른 작업 폴더나 출력 폴더를 사용해도, 겹치는 날짜의
+실제 수집을 다시 시작할 수 없습니다. 호출 실패나 중단 후에도 공유 예약은
+유지합니다. 모두 기존 원본을 재사용하는 경우 공유 예약을 소비하지 않습니다.
+공유 예약 도입 전의 수집 기록은 자동으로 옮겨지지 않으므로 먼저 기존
+출력 폴더의 기록을 확인하고, 보존된 원본은 재사용합니다.
 
 마감은 최초 고정한 전체표의 첫 출발 30분 전입니다. 제출한 표로 계산한 마감이
 이미 고정한 시각과 다르면 예약이나 호출 없이 중단합니다. 첫 수집 실패에서도

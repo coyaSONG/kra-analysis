@@ -125,6 +125,11 @@ def dummy_model(arm):
 def card(tmp_path, monkeypatch):
     clock = [at(30)]
 
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=tmp_path, check=True, capture_output=True, timeout=15
+        ).stdout
+
     class ProviderClock(datetime):
         @classmethod
         def now(cls, tz=None):
@@ -138,6 +143,7 @@ def card(tmp_path, monkeypatch):
     monkeypatch.setattr(forward.publication, "datetime", ProviderClock)
     monkeypatch.setattr(github, "datetime", ProviderClock)
     monkeypatch.setattr(contract, "runtime_sha", lambda: "b" * 64)
+    git("init", "-q", "--template=")
     receipt, schedule, digest = mock_source(tmp_path)
     verified, binding = contract.source(
         tmp_path,
@@ -189,12 +195,6 @@ def card(tmp_path, monkeypatch):
     }
     routes[f"{github.API_ROOT}/pulls/{PULLS[3]}"] = open_document
 
-    def git(*args):
-        return subprocess.run(
-            ["git", *args], cwd=tmp_path, check=True, capture_output=True, timeout=15
-        ).stdout
-
-    git("init", "-q")
     git("add", "--", "docs")
     git(
         "-c",

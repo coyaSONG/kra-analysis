@@ -118,7 +118,7 @@ jobs:
         run: |
           uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_population*.py ../../packages/scripts/autoresearch/tests/test_condition_population*.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_population*.py ../../packages/scripts/autoresearch/tests/test_condition_population*.py
-          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_population_chain.py ../../packages/scripts/autoresearch/tests/test_condition_population_ledger.py -p no:cacheprovider -o addopts=''
+          uv run --frozen python -B -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_population_{chain,ledger,checkpoint}.py -p no:cacheprovider -o addopts=''
 
       - name: Condition original snapshot replay regressions
         working-directory: apps/api
@@ -137,12 +137,12 @@ jobs:
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_historical_publication.py ../../packages/scripts/autoresearch/tests/test_condition_historical_publication.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_historical_publication.py -o addopts=''
 
-      - name: Condition normalized outcome accounting regressions
+      - name: Condition outcome evidence and accounting regressions
         working-directory: apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_outcome_accounting.py ../../packages/scripts/autoresearch/tests/test_condition_outcome_accounting.py
-          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_outcome_accounting.py ../../packages/scripts/autoresearch/tests/test_condition_outcome_accounting.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_outcome_accounting.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/autoresearch/condition_{outcome_accounting,weekly_uncertainty,target_observations}.py ../../packages/scripts/autoresearch/tests/test_condition_{outcome_accounting,weekly_uncertainty,target_observations}.py
+          uv run --frozen ruff format --check ../../packages/scripts/autoresearch/condition_{outcome_accounting,weekly_uncertainty,target_observations}.py ../../packages/scripts/autoresearch/tests/test_condition_{outcome_accounting,weekly_uncertainty,target_observations}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_condition_{outcome_accounting,weekly_uncertainty,target_observations}.py -o addopts=''
 
       - name: Condition training admission and single-use regressions
         working-directory: ./apps/api
@@ -189,9 +189,9 @@ jobs:
       - name: Official schedule regressions
         working-directory: ./apps/api
         run: |
-          uv run --frozen ruff check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_schedule.py
-          uv run --frozen ruff format --check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule_snapshot.py ../../packages/scripts/autoresearch/tests/test_kra_schedule.py
-          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_schedule.py -o addopts=''
+          uv run --frozen ruff check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule{_snapshot,_probe}.py ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py
+          uv run --frozen ruff format --check ../../packages/scripts/shared/kra_schedule.py ../../packages/scripts/autoresearch/kra_schedule{_snapshot,_probe}.py ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_schedule{,_probe}.py -o addopts=''
       - name: Bounded API26 scope intake regressions
         working-directory: ./apps/api
         run: |
@@ -291,6 +291,12 @@ jobs:
       - name: PDF entry replay regressions
         working-directory: ./packages/scripts
         run: uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_kra_race_card_pdf_replay.py autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
+      - name: Exact trio distribution regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/{exact_trio_distribution,separate_trio_projection}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/{exact_trio_distribution,separate_trio_projection}.py autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py
+          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_{exact_trio_distribution,separate_trio_projection}.py -p no:cacheprovider -o addopts=''
       - name: Pre-race public hash witness regressions
         working-directory: ./packages/scripts
         run: |
