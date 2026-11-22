@@ -234,6 +234,12 @@ jobs:
           uv run --frozen ruff check ../../packages/scripts/autoresearch/{fixed_pair_evaluation,kra_whole_card_learning}.py ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py
           uv run --frozen ruff format --check ../../packages/scripts/autoresearch/{fixed_pair_evaluation,kra_whole_card_learning}.py ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py
           uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_{fixed_pair_evaluation,kra_whole_card_learning}.py -o addopts=''
+      - name: Chronological whole-card fold evidence regressions
+        working-directory: ./apps/api
+        run: |
+          uv run --frozen ruff check ../../docs/research/tools/kra_walk_forward_fold.py ../../packages/scripts/autoresearch/tests/test_kra_walk_forward_fold.py
+          uv run --frozen ruff format --check ../../docs/research/tools/kra_walk_forward_fold.py ../../packages/scripts/autoresearch/tests/test_kra_walk_forward_fold.py
+          uv run --frozen python -m pytest -q ../../packages/scripts/autoresearch/tests/test_kra_walk_forward_fold.py -o addopts=''
       - name: Stored prediction diagnostic regressions
         working-directory: ./apps/api
         run: |
