@@ -303,6 +303,12 @@ jobs:
       - name: PDF entry replay regressions
         working-directory: ./packages/scripts
         run: uv run --frozen --extra race-card-pdf python -m pytest -q autoresearch/tests/test_kra_race_card_pdf_replay.py autoresearch/tests/test_kra_race_card_pdf_bundle.py -o addopts=''
+      - name: Routine gate practice source regressions
+        working-directory: ./packages/scripts
+        run: |
+          uv run --frozen --extra race-card-pdf ruff check autoresearch/gate_training_source.py autoresearch/tests/test_gate_training_source.py
+          uv run --frozen --extra race-card-pdf ruff format --check autoresearch/gate_training_source.py autoresearch/tests/test_gate_training_source.py
+          uv run --frozen --extra race-card-pdf python -B -m pytest -q autoresearch/tests/test_gate_training_source.py -p no:cacheprovider -o addopts=''
       - name: Exact trio distribution regressions
         working-directory: ./packages/scripts
         run: |
