@@ -42,6 +42,11 @@ one-fit-per-arm lifetime budget remains consumed.
 
 ## Separate protocol approval
 
+The original v1 schema below is retained as historical documentation. New live
+admission uses the [v2 publication-slot addendum](2026-10-20-condition-publication-slot.md),
+which adds a prebound prediction PR/path and matching review field. Do not use
+the v1 example alone to prepare a new execution. No real protocol is migrated.
+
 After the new code is normally merged, run the read-only inspector from the
 isolated research checkout:
 

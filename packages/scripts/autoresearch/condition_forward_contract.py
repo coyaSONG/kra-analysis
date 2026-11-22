@@ -7,10 +7,11 @@ from datetime import UTC, datetime
 
 from autoresearch import condition_training_admission as training
 from autoresearch.condition_training_model import ARMS
-from autoresearch.prerace_hash_witness import timestamp
+from autoresearch.prerace_hash_witness import REPOSITORY, timestamp
 from autoresearch.restricted_cohort import ROOT, encoded, parse_json, sha256
 
 REGISTRY = "data/contracts/condition_forward_reviews_v1.json"
+PROTOCOL_VERSION = "condition-forward-protocol-v2"
 MODELS = "docs/research/experiments/2026-10-19-condition-training-v1"
 MODEL_HASHES = {
     "A24": "69f655fd005b59313d0a23dbf44759510c937ef403e8ac4fd844ea67494d635e",
@@ -87,16 +88,37 @@ def runtime():
     }
 
 
+def prediction_document(study_id):
+    return f"docs/research/commitments/condition-forward-v1/{study_id}/paired.json"
+
+
+def publication_slot(protocol):
+    """Pure identity check, not proof of PR existence or submission closure."""
+    slot = protocol.get("publication_slot")
+    if (
+        protocol.get("format_version") != "condition-forward-protocol-v2"
+        or type(slot) is not dict
+        or set(slot) != {"repository", "pull_number", "document"}
+        or slot["repository"] != REPOSITORY
+        or type(slot["pull_number"]) is not int
+        or slot["pull_number"] <= 0
+        or slot["document"] != prediction_document(protocol["study_id"])
+    ):
+        raise ValueError("forward_invalid_publication_slot")
+    return slot.copy()
+
+
 def validate_protocol(protocol, observed):
     dates = protocol["race_dates"]
     if (
-        protocol["format_version"] != "condition-forward-protocol-v1"
+        protocol["format_version"] != PROTOCOL_VERSION
         or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,79}", protocol["study_id"])
         or not dates
         or dates != sorted(set(dates))
         or any(not re.fullmatch(r"\d{8}", d) or d <= "20261018" for d in dates)
     ):
         raise ValueError("forward_invalid_protocol_identity")
+    publication_slot(protocol)
     for date in dates:
         datetime.strptime(date, "%Y%m%d")
     if encoded(protocol["policies"]) != encoded(POLICIES) or encoded(
@@ -145,6 +167,11 @@ def admit(study_id):
     dates = [d for r in records for d in r["race_dates"]]
     if len(dates) != len(set(dates)):
         raise ValueError("forward_overlapping_registered_dates")
+    slots = [r.get("prediction_publication_pr") for r in records]
+    if any(type(number) is not int or number <= 0 for number in slots) or len(
+        slots
+    ) != len(set(slots)):
+        raise ValueError("forward_invalid_or_reused_publication_slot")
     review = matches[0]
     for flag in (
         "raw_source_closure_reviewed",
@@ -170,6 +197,11 @@ def admit(study_id):
         raise ValueError("forward_protocol_not_in_repository")
     observed = datetime.now(UTC)
     cutoff = validate_protocol(protocol, observed)
+    if (
+        publication_slot(protocol)["pull_number"] != review["prediction_publication_pr"]
+        or review["prediction_publication_pr"] == review["protocol_publication_pr"]
+    ):
+        raise ValueError("forward_prediction_slot_review_mismatch")
     _, fit_receipt = load_models()
     if timestamp(protocol["created_at"]) < timestamp(fit_receipt["completed_at"]):
         raise ValueError("forward_protocol_precedes_stored_models")
