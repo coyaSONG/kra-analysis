@@ -22,10 +22,11 @@ from autoresearch.tests.test_kra_entry_scope_intake import (
     DUE,
     TEST_KEY,
     common_error,
+    make_intake_inputs,
     model_gateway,
     run,
 )
-from autoresearch.tests.test_kra_schedule import DATE, NOW, capture
+from autoresearch.tests.test_kra_schedule import DATE, NOW
 
 PULL = 906
 AFTER = DUE + timedelta(days=1)
@@ -42,7 +43,7 @@ def intake(tmp_path, monkeypatch):
     monkeypatch.setattr(witness, "now", lambda: AFTER)
     monkeypatch.setattr(witness.publication, "datetime", ProviderClock)
     monkeypatch.setattr(github, "datetime", ProviderClock)
-    scope = tmp_path, pin(tmp_path, capture(tmp_path / "schedule"))
+    scope = make_intake_inputs(tmp_path)
     (path, result), calls = run(scope, provide=model_gateway)
     assert result["status"] == "captured_locally"
     assert len(calls) == 4
@@ -207,7 +208,7 @@ def test_changed_raw_page_fails_before_network(intake):
 
 
 def test_partial_collection_has_no_marker(tmp_path):
-    scope = tmp_path, pin(tmp_path, capture(tmp_path / "schedule"))
+    scope = make_intake_inputs(tmp_path)
     (path, report), calls = run(scope, provide=lambda _: common_error(200, "22"))
     assert len(calls) == 1
     assert report["stop_reason"] == "rate_limited"

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import subprocess
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -12,8 +13,10 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from autoresearch import api27_forward, local_m0_inference
+from autoresearch import kra_entry_scope_intake as intake
 from autoresearch.kra_entry_scope_inputs import preflight
 from autoresearch.kra_entry_scope_intake import (
+    LIVE_RESERVATIONS,
     MAX_DENIAL_BYTES,
     _capture_scope,
     capture_intake,
@@ -21,7 +24,7 @@ from autoresearch.kra_entry_scope_intake import (
 )
 from autoresearch.kra_entry_sheet_snapshot import collect_entry_sheet_snapshot
 from autoresearch.observed_history_seed import pin
-from autoresearch.tests.test_kra_schedule import DATE, NOW, capture, page
+from autoresearch.tests.test_kra_schedule import DATE, NOW, SOURCE_URLS, capture, page
 
 DUE = NOW + timedelta(days=2, hours=-6, minutes=-30)
 TEST_KEY = "synthetic-local-key"
@@ -63,8 +66,12 @@ def answer(rows, page_no):
 
 
 def mock_gateway(request):
+    date = int(request.url.params["rc_date"])
     return answer(
-        response_rows(int(request.url.params["meet"])),
+        [
+            row | {"rcDate": date}
+            for row in response_rows(int(request.url.params["meet"]))
+        ],
         int(request.url.params["pageNo"]),
     )
 
@@ -80,10 +87,15 @@ def common_error(status, code):
     )
 
 
+def make_intake_inputs(root, **schedule_options):
+    subprocess.run(["git", "init", "-q", "--template=", str(root)], check=True)
+    schedule = capture(root / "schedule", **schedule_options)
+    return root, pin(root, schedule)
+
+
 @pytest.fixture
 def inputs(tmp_path):
-    schedule = capture(tmp_path / "schedule")
-    return tmp_path, pin(tmp_path, schedule)
+    return make_intake_inputs(tmp_path)
 
 
 def run(
@@ -94,6 +106,7 @@ def run(
     limit=4,
     clock=lambda: NOW,
     output="scoped",
+    race_dates=(DATE,),
     first_cutoff=DUE.isoformat(),
 ):
     root, schedule = inputs
@@ -113,7 +126,7 @@ def run(
             root,
             root / output,
             schedule,
-            [DATE],
+            race_dates,
             first_cutoff=first_cutoff,
             reuse=reuse,
             max_requests=limit,
@@ -123,6 +136,140 @@ def run(
         )
     )
     return result, calls
+
+
+def test_failed_scope_cannot_repeat_in_a_different_output_folder(inputs):
+    (path, receipt), calls = run(inputs, provide=lambda _: httpx.Response(429))
+    assert calls == [(1, 1)]
+    assert receipt["stop_reason"] == "rate_limited"
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="scope_intake_window_already_reserved"):
+        run(
+            inputs,
+            output="different-output",
+            provide=lambda _: pytest.fail("same date reached transport again"),
+        )
+    assert path.read_bytes() == original
+
+
+def test_live_collection_limit_is_shared_by_linked_worktrees(inputs):
+    root, _ = inputs
+    tree = root / "linked"
+    for args in (
+        (
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "Fixture",
+        ),
+        ("worktree", "add", "--detach", "-q", str(tree), "HEAD"),
+    ):
+        subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+    other = tree, pin(tree, capture(tree / "schedule"))
+    (_, first), calls = run(inputs)
+    assert len(calls) == 4
+    assert first["status"] == "captured_locally"
+    with pytest.raises(ValueError, match="scope_intake_window_already_reserved"):
+        run(other, provide=lambda _: pytest.fail("other worktree reached transport"))
+
+
+def test_busy_shared_claim_lock_stops_before_network_or_output_reservation(inputs):
+    root, _ = inputs
+    shared = root / ".git" / LIVE_RESERVATIONS
+    shared.mkdir()
+    with intake.exclusive(shared):
+        with pytest.raises(BlockingIOError):
+            run(
+                inputs,
+                output="concurrent-output",
+                provide=lambda _: pytest.fail("busy reservation reached transport"),
+            )
+        assert not list(shared.glob("window_*.json"))
+        assert not list((root / "concurrent-output").glob("window_*"))
+
+    (_, receipt), calls = run(inputs)
+    assert calls == [(meet, 1) for meet in range(1, 5)]
+    assert receipt["status"] == "captured_locally"
+
+
+def test_shared_claim_survives_local_reservation_failure(inputs, monkeypatch):
+    root, schedule = inputs
+    real_save = intake.save
+
+    def interrupt(path, value):
+        if path.name == "reservation.json":
+            raise OSError("local write interrupted")
+        return real_save(path, value)
+
+    def never(_):
+        pytest.fail("transport reached after a failed local reservation")
+
+    monkeypatch.setattr(intake, "save", interrupt)
+    with pytest.raises(OSError, match="local write interrupted"):
+        run(inputs, provide=never)
+    claim = root / ".git" / LIVE_RESERVATIONS / f"window_{DATE}.json"
+    before = claim.read_bytes()
+    assert json.loads(before) == {
+        "race_dates": [DATE],
+        "schedule_sha256": schedule["sha256"],
+        "first_block_cutoff": DUE.isoformat(),
+        "max_http_requests": 4,
+        "reserved_at": NOW.isoformat(),
+    }
+    assert not (root / "scoped" / f"window_{DATE}" / "receipt.json").exists()
+    with pytest.raises(ValueError, match="scope_intake_window_already_reserved"):
+        run(inputs, output="different-output", provide=never)
+    assert claim.read_bytes() == before
+
+
+def test_shared_claim_checks_date_overlap_not_filename_or_schedule(inputs):
+    root, _ = inputs
+    run(inputs)
+    later = "2026/10/17(\ud1a0)"
+    revised = capture(
+        root / "overlap-schedule",
+        pages={source: page(source, dates={4: later}) for source in SOURCE_URLS},
+    )
+    with pytest.raises(ValueError, match="scope_intake_window_already_reserved"):
+        run(
+            (root, pin(root, revised)),
+            race_dates=(DATE, "20261017"),
+            output="different-output",
+            provide=lambda _: pytest.fail("overlapping dates reached transport"),
+        )
+    independent = capture(
+        root / "independent-schedule",
+        pages={
+            source: page(source, dates=dict.fromkeys(range(1, 5), later))
+            for source in SOURCE_URLS
+        },
+    )
+    (_, receipt), calls = run(
+        (root, pin(root, independent)),
+        race_dates=("20261017",),
+        first_cutoff=(DUE + timedelta(days=1)).isoformat(),
+    )
+    assert len(calls) == 4
+    assert receipt["status"] == "captured_locally"
+
+
+def test_live_capture_requires_verified_checkout(tmp_path):
+    schedule = pin(tmp_path, capture(tmp_path / "schedule"))
+    assert (
+        plan_intake(tmp_path, schedule, [DATE], observed=NOW)["max_http_requests"] == 4
+    )
+    with pytest.raises(ValueError, match="scope_intake_requires_git_worktree_root"):
+        run(
+            (tmp_path, schedule),
+            provide=lambda _: pytest.fail("unreserved checkout reached transport"),
+        )
+    assert not list((tmp_path / "scoped").glob("window_*"))
 
 
 def model_rows(meet, fields=1):
@@ -161,8 +308,8 @@ def readback(inputs, ref, *, first_cutoff=DUE.isoformat(), clock=lambda: NOW):
 
 def test_preflight_returns_the_whole_card_for_both_fixed_arms(tmp_path, monkeypatch):
     sources = ("national", "region_1", "region_2", "region_3")
-    schedule = capture(
-        tmp_path / "schedule", pages={s: page(s, fields={1: 11}) for s in sources}
+    tested = make_intake_inputs(
+        tmp_path, pages={s: page(s, fields={1: 11}) for s in sources}
     )
     ticks = iter(NOW + timedelta(milliseconds=n) for n in range(1000))
 
@@ -172,7 +319,6 @@ def test_preflight_returns_the_whole_card_for_both_fixed_arms(tmp_path, monkeypa
             model_rows(meet, 11 if meet == 1 else 1), int(request.url.params["pageNo"])
         )
 
-    tested = tmp_path, pin(tmp_path, schedule)
     (path, receipt), calls = run(
         tested, provide=gateway, clock=lambda: next(ticks), limit=5
     )
@@ -226,6 +372,8 @@ def test_preflight_returns_the_whole_card_for_both_fixed_arms(tmp_path, monkeypa
 def test_preflight_reuses_only_the_reserved_sources(inputs):
     root, _ = inputs
     (_, first), _ = run(inputs, provide=model_gateway)
+    claims = (root / ".git" / LIVE_RESERVATIONS).glob("*.json")
+    original_claims = {p: p.read_bytes() for p in claims}
     refs = [row["capture"] for row in first["scopes"]]
     (path, receipt), calls = run(
         inputs,
@@ -238,6 +386,9 @@ def test_preflight_reuses_only_the_reserved_sources(inputs):
     assert calls == []
     assert receipt["actual_http_requests"] == 0
     assert [b["entry_manifest"] for b in prepared["bindings"]] == refs
+    assert {
+        p: p.read_bytes() for p in (root / ".git" / LIVE_RESERVATIONS).glob("*.json")
+    } == original_claims
 
 
 @pytest.mark.parametrize("issue", ["missing_key", "impossible_counts"])
