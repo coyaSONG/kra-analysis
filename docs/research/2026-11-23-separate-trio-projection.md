@@ -40,6 +40,18 @@ probabilities as logs even when ordinary exponentiation would lose
 them. If the checks fail or 4,096 sweeps do not suffice, return no
 distribution. The module exposes neither a mode nor a fallback.
 
+A weakly connected four-cell example demonstrates the distinction.
+Use runners 1 through 5 with missing sets {4} and {5}; index the cells
+by those two membership indicators. Set the base log weight of
+(1,4,5) to 0 and of (1,2,3) to -1e-12. The other trios in cell (1,1)
+have log weight -80; distribute log mass -90 uniformly in each
+off-diagonal cell. Add 64 times the column indicator minus 64 times
+the row indicator to each trio. This is only a row plus column tilt,
+so the true projection is the base. The floating-point computation
+passes with a 5.11e-12 margin log residual but reverses the order of
+the two nearly tied leading combinations. Do not use the result to
+select a trio without a separate way to certify that ordering.
+
 ## Offline checks on original field shapes
 
 A balanced four-cell example has an exact solution; an asymmetric
