@@ -116,6 +116,18 @@ references for 304 past result fields and independently reproduced the
 392/638 counts, two full fields and the 95 within-rating pairs.
 `gate_overlap.jq` repeats the two exact PDF joins; the canonical output
 SHA256 is `8755d59d8f7a0cd01140d9ba87a98c47bf9a0dba0dc663dcafc225735aebde38`.
+
+From the isolated checkout with the original archives present:
+
+```sh
+d=.cache/autoresearch/prior-result-rating-20261123
+export PYTHONPATH=packages/scripts:.cache/autoresearch/rating-trajectory-20261118:$d
+.venv/bin/python -B "$d/readback.py" verify
+ruby "$d/independent_counts.rb" "$d/prior-result-rating.json"
+jq -cS --slurpfile rating "$d/prior-result-rating.json" -f "$d/gate_overlap.jq" \
+  .cache/autoresearch/gate-training-source-20261123/gate-training-input-evidence.json
+```
+
 All 242 related tests, lint and formatting passed. No source data request,
 fitting, prediction, result rescoring or registration occurred. The three
 October commitment hashes and the 70 percent criterion are unchanged.
