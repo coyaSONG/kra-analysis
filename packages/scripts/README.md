@@ -394,6 +394,51 @@ PYTHONPATH=packages/scripts python -B docs/research/tools/kra_walk_forward_fold.
 결과 정답을 승인하는 도구가 아닙니다. 기록과 마감의 경계는
 [실행 계획](../../docs/execplans/kra-result-observation-custody.md)에 있습니다.
 
+#### 관측 창 한 번 실행과 종료 기록
+
+별도 검토를 마친 미래 연구에서만 `kra_result_slot_runner.py`를 사용합니다.
+규칙과 입력 묶음은 `.cache/autoresearch/` 아래에 비공개로 보존합니다.
+규칙은 `format: kra-walk-forward-result-slot-plan-v1`, `enrollment_sha256`,
+등록 순서의 `slots`를 담습니다. 각 항목은 한국시간 월요일 `week`, UTC
+`opens_at`·`closes_at`, 미리 정한 서로 다른 종료 공개 PR인 `receipt_pull`,
+전체 API 요청 한도 `api_request_budget`로 구성합니다. 시작일은 원래 마지막
+경주일의 다음 한국 날짜 이후여야 합니다. 이 규칙은 실제 경기 종료나 결과
+공개를 보증하지 않으므로 사전에 충분한 관측 여유를 정하세요.
+
+`rules-marker --rules PATH --rules-sha256 SHA256`의 두 필드를
+`docs/research/result-slot-plans/SHA256.json`에 넣어 첫 등록 경주의 원래
+마감 전에 병합합니다. 같은 인수에 `--rules-pull NUMBER`를 붙여
+`capture-rules`로 그 병합을 기록합니다. 별도의 주차 등록 공개 기록과
+해당 주까지의 원래 사전 입력 공개 기록도 필요합니다. 입력 묶음은
+`format: kra-result-slot-input-prefix-v1`와 `training`으로 구성합니다.
+`training`에는 위 전체표 계획의 `input` 객체만 첫 학습 주차부터 이 주차까지
+순서대로 넣습니다. 미래 평가 카드, 결과 경로, 예측은 넣지 않습니다.
+
+```bash
+PYTHONPATH=packages/scripts python -B docs/research/tools/kra_result_slot_runner.py collect \
+  --rules <규칙.json> --rules-sha256 <sha256> --rules-pull <번호> \
+  --enrollment <등록.json> --enrollment-sha256 <sha256> --enrollment-pull <번호> \
+  --inputs <입력-묶음.json> --inputs-sha256 <sha256> --week <YYYY-MM-DD> \
+  --api-key-file <비공개-키-파일>
+```
+
+첫 요청 전에 공유 Git 디렉터리에 주차를 한 번 예약합니다. 원래 경주표의
+날짜·개최지별 API214만 호출하고, API214가 개최지를 생략했을 때만 남은
+한도에서 기존 API26 식별 절차를 사용합니다. 이후 원래 경주의 공식 상세
+페이지와 기존 결과 보관 형식에 필요한 목록 12페이지를 한 번씩 읽습니다.
+인증 실패, 호출 제한, 미확인 빈 응답은 구분합니다. 실패하거나 중단된 창을
+다른 폴더나 규칙으로 다시 실행하지 않습니다. 이 예약은 같은 로컬 저장소의
+분리 작업 공간에 공유되며, 다른 장비의 외부 요청까지 막지는 않습니다.
+
+닫힌 뒤에는 같은 인수에서 비공개 키 인수를 빼고 `seal`을 실행합니다.
+실행 성공·실패·미실행 중 하나가 `terminal.json`에 고정됩니다. 표준 출력의
+해시 표식만 `docs/research/result-slot-witnesses/<규칙-sha256>/<주차>.json`에
+미리 정한 종료 PR로 공개합니다. 병합 뒤 같은 인수로 `witness`를 실행하면
+그 PR과 병합 파일만 저장합니다. 그 후 기존 판본 검증기가 실제 미래 카드의
+원래 마감과 대조합니다. 미완료 수집에는 결과 판본이 없으며, 사전 입력
+증명 자체가 없으면 전체 계획을 보류합니다. 관측 완료는 현재 정정 확인,
+학습 승인, 예측 발행 또는 성능 검증이 아닙니다.
+
 ### 학습 자료와 평가 입력의 분리 저장
 
 이전 전체표 결과와 별도 미래 전체표의 사전 입력을 위의 방식으로 확인한 뒤,
