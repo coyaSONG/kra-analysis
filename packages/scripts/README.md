@@ -385,6 +385,15 @@ PYTHONPATH=packages/scripts python -B docs/research/tools/kra_walk_forward_fold.
 검토자의 승인, 실제 적합과 사전 예측 공개는 각각 따로 증명해야 합니다.
 파일 형식과 명령은 [실행 계획](../../docs/execplans/kra-walk-forward-enrollment.md)에 있습니다.
 
+### 후행 결과 관측 판본 확인
+
+별도 사전 연구 규칙이 학습 주차마다 결과 관측 창과 단일 공개 위치를
+지정한 경우, `kra_result_slot_witness.py`로 그 위치의 기록과 원본
+수집 시각을 재생할 수 있습니다. 실패하거나 기록 밖의 다른 판본을
+가져오면 전체 학습 계획을 보류합니다. 이는 수집기를 실행하거나
+결과 정답을 승인하는 도구가 아닙니다. 기록과 마감의 경계는
+[실행 계획](../../docs/execplans/kra-result-observation-custody.md)에 있습니다.
+
 ### 학습 자료와 평가 입력의 분리 저장
 
 이전 전체표 결과와 별도 미래 전체표의 사전 입력을 위의 방식으로 확인한 뒤,
