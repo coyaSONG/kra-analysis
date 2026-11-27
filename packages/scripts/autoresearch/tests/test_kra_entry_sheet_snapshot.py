@@ -180,6 +180,12 @@ async def test_empty_yeongcheon_response_is_not_a_complete_race(tmp_path):
     assert result["collection_status"] == "validation_error"
     assert result["error"] == "no_entries_for_requested_race"
     assert result["entry_snapshot"] is None
+    assert result["availability_status"] == "empty_unconfirmed"
+    assert result["last_response"] == {
+        "page_no": 1,
+        "http_status": 200,
+        "api_result_code": "00",
+    }
 
 
 @pytest.mark.asyncio
@@ -291,6 +297,8 @@ async def test_pagination_preserves_original_bytes_hashes_and_last_capture_time(
         assert not client.is_closed
     assert result["collection_status"] == "captured"
     assert result["collected_at"] == (CAPTURED + timedelta(seconds=2)).isoformat()
+    assert result["availability_status"] == "entries_observed"
+    assert result["last_response"]["page_no"] == 2
     assert [params["pageNo"] for params in requested] == ["1", "2"]
     assert len(result["entry_snapshot"]["entries"]) == 2
     for observed, content in zip(result["pages"], contents, strict=True):
@@ -351,4 +359,157 @@ async def test_network_errors_and_invalid_bodies_do_not_leak_keys(
     assert result["entry_snapshot_path"] is None
     for path in tmp_path.rglob("*.json"):
         assert key not in path.read_text()
+        assert "serviceKey" not in path.read_text()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "code,status",
+    [
+        ("20", "authentication_or_permission_error"),
+        ("30", "authentication_or_permission_error"),
+        ("31", "authentication_or_permission_error"),
+        ("22", "daily_rate_limited"),
+        ("23", "per_second_rate_limited"),
+        ("29", "ip_access_denied"),
+        ("01", "upstream_error"),
+        ("04", "upstream_error"),
+        ("05", "upstream_error"),
+        ("10", "request_or_service_error"),
+        ("12", "request_or_service_error"),
+        ("99", "unclassified_api_error"),
+        (None, "unclassified_api_error"),
+        ("malformed-secret", "unclassified_api_error"),
+    ],
+)
+async def test_gateway_codes_are_diagnostics_not_empty_races(tmp_path, code, status):
+    calls = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(200, json={"response": {"header": {"resultCode": code}}})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=1,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: CAPTURED,
+        )
+    assert len(calls) == 1
+    assert result["collection_status"] == "validation_error"
+    assert result["availability_status"] == status
+    assert result["entry_snapshot"] is None and result["pages"] == []
+    assert result["last_response"]["http_status"] == 200
+    assert result["last_response"]["api_result_code"] == (
+        code if isinstance(code, str) and len(code) == 2 else None
+    )
+    assert "malformed-secret" not in Path(result["manifest_path"]).read_text()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "http_status,status",
+    [
+        (401, "http_access_denied"),
+        (403, "http_access_denied"),
+        (429, "http_rate_limited"),
+        (503, "http_error"),
+    ],
+)
+async def test_failed_second_page_does_not_reuse_first_page_success(
+    tmp_path, http_status, status
+):
+    calls = []
+    first = page([entry(1), entry(2)] + [entry(1, race_no=2)] * 98, total=101)
+
+    def handler(request):
+        calls.append(request)
+        return (
+            httpx.Response(200, json=first)
+            if len(calls) == 1
+            else (httpx.Response(http_status, text="test-credential"))
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=1,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: CAPTURED,
+        )
+    assert len(calls) == 2
+    assert result["collection_status"] == "fetch_error"
+    assert result["availability_status"] == status
+    assert result["last_response"] == {
+        "page_no": 2,
+        "http_status": http_status,
+        "api_result_code": None,
+    }
+    assert len(result["pages"]) == 1 and result["entry_snapshot"] is None
+    for path in tmp_path.rglob("*.json"):
+        assert "test-credential" not in path.read_text()
+        assert "serviceKey" not in path.read_text()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "failure,status,expected_code",
+    [
+        ("api_limit", "daily_rate_limited", "22"),
+        ("timeout", "transport_error", None),
+        ("xml", "invalid_or_unverified_response", None),
+        ("echo", "invalid_or_unverified_response", None),
+    ],
+)
+async def test_second_page_diagnostics_do_not_inherit_success_or_guess_xml(
+    tmp_path, failure, status, expected_code
+):
+    calls = []
+    first = page([entry(1), entry(2)] + [entry(1, race_no=2)] * 98, total=101)
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            return httpx.Response(200, json=first)
+        if failure == "timeout":
+            raise httpx.ReadTimeout(f"request failed {request.url}", request=request)
+        if failure == "xml":
+            return httpx.Response(200, text="<resultCode>22</resultCode>")
+        return httpx.Response(
+            200,
+            json={
+                "response": {"header": {"resultCode": "22"}},
+                "message": "test-credential" if failure == "echo" else "limited",
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        result = await snapshot.collect_entry_sheet_snapshot(
+            meet=1,
+            race_date="20260627",
+            race_no=1,
+            api_key="test-credential",
+            output_dir=tmp_path,
+            client=client,
+            clock=lambda: CAPTURED,
+        )
+    assert len(calls) == 2
+    assert result["availability_status"] == status
+    assert result["last_response"] == {
+        "page_no": 2,
+        "http_status": None if failure == "timeout" else 200,
+        "api_result_code": expected_code,
+    }
+    assert len(result["pages"]) == 1 and result["entry_snapshot"] is None
+    assert result["entry_snapshot_path"] is None
+    assert result["collected_at"] is None
+    for path in tmp_path.rglob("*.json"):
+        assert "test-credential" not in path.read_text()
         assert "serviceKey" not in path.read_text()

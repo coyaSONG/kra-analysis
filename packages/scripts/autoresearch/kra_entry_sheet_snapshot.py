@@ -23,6 +23,21 @@ ENTRY_URL = "https://apis.data.go.kr/B551015/API26_2/entrySheet_2"
 PAGE_SIZE = 100
 MAX_PAGE_BYTES = 5 * 1024 * 1024
 
+# API26 portal's documented gateway codes; unknown codes remain unresolved.
+API_FAILURE_STATUS = {
+    "01": "upstream_error",
+    "04": "upstream_error",
+    "05": "upstream_error",
+    "10": "request_or_service_error",
+    "12": "request_or_service_error",
+    "20": "authentication_or_permission_error",
+    "22": "daily_rate_limited",
+    "23": "per_second_rate_limited",
+    "29": "ip_access_denied",
+    "30": "authentication_or_permission_error",
+    "31": "authentication_or_permission_error",
+}
+
 
 def _timestamp(clock: Callable[[], datetime]) -> datetime:
     value = clock()
@@ -63,6 +78,8 @@ async def collect_entry_sheet_snapshot(
         "fetch_started_at": started.isoformat(),
         "collected_at": None,
         "collection_status": "fetch_error",
+        "availability_status": "unknown",
+        "last_response": None,
         "pages": [],
         "entry_snapshot": None,
         "manifest_path": str(path),
@@ -84,12 +101,19 @@ async def collect_entry_sheet_snapshot(
                 "pageNo": page_no,
                 "_type": "json",
             }
+            diagnostic = {
+                "page_no": page_no,
+                "http_status": None,
+                "api_result_code": None,
+            }
+            manifest["last_response"] = diagnostic
             async with client.stream(
                 "GET",
                 ENTRY_URL,
                 params={**params, "serviceKey": key},
                 follow_redirects=False,
             ) as response:
+                diagnostic["http_status"] = response.status_code
                 response.raise_for_status()
                 if str(response.url.copy_with(query=None)) != ENTRY_URL:
                     raise ValueError("noncanonical_entry_response")
@@ -109,6 +133,16 @@ async def collect_entry_sheet_snapshot(
                 payload = json.loads(content)
             except (UnicodeError, json.JSONDecodeError) as exc:
                 raise ValueError("invalid_entry_json") from exc
+            envelope = payload.get("response") if isinstance(payload, dict) else None
+            header = envelope.get("header") if isinstance(envelope, dict) else None
+            code = header.get("resultCode") if isinstance(header, dict) else None
+            if (
+                isinstance(code, str)
+                and len(code) == 2
+                and code.isascii()
+                and code.isdigit()
+            ):
+                diagnostic["api_result_code"] = code
             page_rows, page_total = parse_entry_sheet_page(
                 payload, page_no=page_no, page_size=PAGE_SIZE
             )
@@ -145,13 +179,35 @@ async def collect_entry_sheet_snapshot(
             entry_snapshot=entries,
             entry_snapshot_path=str(entry_path),
             collection_status="captured",
+            availability_status="entries_observed",
         )
     except httpx.HTTPError as exc:
         # HTTP exception strings can contain serviceKey in their request URL.
-        manifest.update(error_type=type(exc).__name__, error="entry_http_failure")
+        status = "transport_error"
+        if isinstance(exc, httpx.HTTPStatusError):
+            http_status = exc.response.status_code
+            status = (
+                "http_access_denied"
+                if http_status in (401, 403)
+                else "http_rate_limited"
+                if http_status == 429
+                else "http_error"
+            )
+        manifest.update(
+            error_type=type(exc).__name__,
+            error="entry_http_failure",
+            availability_status=status,
+        )
     except ValueError as exc:
+        status = "invalid_or_unverified_response"
+        if str(exc) == "no_entries_for_requested_race":
+            status = "empty_unconfirmed"
+        elif str(exc) == "entry_api_unsuccessful":
+            code = (manifest["last_response"] or {}).get("api_result_code")
+            status = API_FAILURE_STATUS.get(code, "unclassified_api_error")
         manifest.update(
             collection_status="validation_error",
+            availability_status=status,
             error_type=type(exc).__name__,
             error=str(exc),
         )

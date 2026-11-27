@@ -20,3 +20,9 @@ e3491e2a4cc77f784b52e3ef91e5b2420f6b961b:packages/scripts/autoresearch/observed_
 # Exact env-file false positive: api_key=key forwards a runtime variable.
 # Verified against the committed line; no credential literal. Do not skip paths.
 d95b0048841ca9e3ca61dec635a9c178f8fba838:packages/scripts/autoresearch/prospective_pdf_supplement.py:env-file:167
+# Exact env-file false positives in API26 availability regression tests.
+# These three committed keyword arguments use only the synthetic test-credential.
+# No path/rule exclusion; runtime credentials and other commits remain scanned.
+0cfedee1f30f8a082d32da1879f5f30280ba6487:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:397
+0cfedee1f30f8a082d32da1879f5f30280ba6487:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:442
+0cfedee1f30f8a082d32da1879f5f30280ba6487:packages/scripts/autoresearch/tests/test_kra_entry_sheet_snapshot.py:env-file:498
